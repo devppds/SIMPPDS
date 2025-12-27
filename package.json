@@ -11,6 +11,8 @@
     "deploy": "npm run build && npx wrangler pages deploy out --project-name simppds"
   },
   "dependencies": {
+    "moment": "^2.30.1",
+    "moment-hijri": "^3.0.0",
     "next": "15.1.3",
     "react": "19.0.0",
     "react-dom": "19.0.0"
