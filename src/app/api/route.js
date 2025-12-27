@@ -27,7 +27,12 @@ const headersConfig = {
     'arsip_pengurus_periode': ["periode_mulai", "periode_selesai", "nama", "jabatan", "divisi", "foto_pengurus", "keterangan"],
     'arsip_pengajar_periode': ["periode_mulai", "periode_selesai", "nama", "kelas_ampu", "foto_pengajar", "keterangan"],
     'absensi_formal': ["tanggal", "nama_santri", "lembaga", "status_absen", "keterangan", "petugas_piket"],
-    'lembaga': ["nama"]
+    'lembaga': ["nama"],
+    'master_kelas': ["lembaga", "nama_kelas", "urutan"],
+    'keamanan_absensi': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "keterangan", "petugas"],
+    'keuangan_tarif': ["kategori_status", "kelas", "nominal", "keterangan"],
+    'keuangan_pembayaran': ["santri_id", "nama_santri", "tanggal", "jenis_pembayaran", "bulan_tagihan", "nominal", "keterangan", "petugas"],
+    'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"]
 };
 
 export async function GET(request) { return handle(request); }
