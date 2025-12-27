@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
 export default function KeamananRegPage() {
-    const { isAdmin } = useAuth();
+    const { user, isAdmin } = useAuth();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -59,11 +59,23 @@ export default function KeamananRegPage() {
                 jenis_kendaraan: '-', jenis_elektronik: '-', plat_nomor: '-',
                 warna: '', merk: '', aksesoris_1: '-', aksesoris_2: '-', aksesoris_3: '-',
                 keadaan: 'Baik', kamar_penempatan: '', tanggal_registrasi: new Date().toISOString().split('T')[0],
-                petugas_penerima: '', keterangan: '', status_barang_reg: 'Aktif'
+                petugas_penerima: user?.nama || user?.username || '', keterangan: '', status_barang_reg: 'Aktif'
             });
         }
         setIsModalOpen(true);
     };
+
+    // Auto-fill kamar when santri is selected
+    const handleSantriChange = (nama) => {
+        const found = santriOptions.find(s => s.nama_siswa === nama);
+        setFormData(prev => ({
+            ...prev,
+            nama_santri: nama,
+            kamar_penempatan: found ? found.kamar : prev.kamar_penempatan
+        }));
+    };
+
+    const isMotor = formData.jenis_barang === 'Kendaraan' && (formData.detail_barang || '').toLowerCase().includes('motor');
 
     const openViewModal = (item) => {
         setViewData(item);
@@ -190,7 +202,7 @@ export default function KeamananRegPage() {
                             className="form-control"
                             list="santri-list"
                             value={formData.nama_santri}
-                            onChange={e => setFormData({ ...formData, nama_santri: e.target.value })}
+                            onChange={e => handleSantriChange(e.target.value)}
                             required
                             placeholder="Ketik nama untuk mencari..."
                         />
@@ -245,6 +257,21 @@ export default function KeamananRegPage() {
                             </datalist>
                         </div>
                     </div>
+
+                    {isMotor && (
+                        <div className="form-group animate-in">
+                            <label className="form-label">Nomor Plat</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.plat_nomor}
+                                onChange={e => setFormData({ ...formData, plat_nomor: e.target.value })}
+                                placeholder="Contoh: DD 1234 AB"
+                                required
+                            />
+                        </div>
+                    )}
+
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">Merk</label>
@@ -266,12 +293,12 @@ export default function KeamananRegPage() {
                         </div>
                         <div className="form-group">
                             <label className="form-label">Kamar Penempatan</label>
-                            <input type="text" className="form-control" value={formData.kamar_penempatan} onChange={e => setFormData({ ...formData, kamar_penempatan: e.target.value })} />
+                            <input type="text" className="form-control" value={formData.kamar_penempatan} onChange={e => setFormData({ ...formData, kamar_penempatan: e.target.value })} placeholder="Terisi otomatis jika santri dipilih" />
                         </div>
                     </div>
                     <div className="form-group">
                         <label className="form-label">Petugas Penerima</label>
-                        <input type="text" className="form-control" value={formData.petugas_penerima} onChange={e => setFormData({ ...formData, petugas_penerima: e.target.value })} />
+                        <input type="text" className="form-control" value={formData.petugas_penerima} onChange={e => setFormData({ ...formData, petugas_penerima: e.target.value })} readOnly={!isAdmin} />
                     </div>
                 </form>
             </Modal>
