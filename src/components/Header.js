@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/lib/AuthContext';
+import HijriDate from './HijriDate';
 
 export default function Header({ title }) {
     const { user } = useAuth();
@@ -22,6 +23,7 @@ export default function Header({ title }) {
             </div>
 
             <div className="header-actions">
+                <HijriDate />
                 <div className="user-profile">
                     <div className="user-info">
                         <span className="user-name">{user?.fullname?.split(' ')[0] || 'User'}</span>
