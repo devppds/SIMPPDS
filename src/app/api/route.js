@@ -25,51 +25,59 @@ const headersConfig = {
     'lembaga': ["nama"]
 };
 
-export async function GET(request) { return handle(request); }
-export async function POST(request) { return handle(request); }
+export async function GET(request) { return handleRequest(request); }
+export async function POST(request) { return handleRequest(request); }
 
-async function handle(request) {
+async function handleRequest(request) {
     let env;
     try {
-        const ctx = getRequestContext();
-        env = ctx.env;
+        const context = getRequestContext();
+        env = context?.env;
     } catch (e) {
         return Response.json({ status: "error", error: "Context Missing", details: e.message }, { status: 500 });
     }
 
     if (!env || !env.DB) {
-        return Response.json({ status: "error", error: "DATABASE_NOT_BOUND" }, { status: 500 });
+        return Response.json({
+            status: "error",
+            error: "DATABASE_NOT_BOUND",
+            message: "Binding database 'DB' tidak terdeteksi oleh Server. Cek Dashboard Cloudflare."
+        }, { status: 500 });
     }
 
     const db = env.DB;
-    const url = new URL(request.url);
-    const action = url.searchParams.get('action');
-    const type = url.searchParams.get('type');
-    const id = url.searchParams.get('id');
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
+    const type = searchParams.get('type');
+    const id = searchParams.get('id');
+
+    // TEST PING
+    if (action === 'ping') {
+        try {
+            await db.prepare("SELECT 1").run();
+            return Response.json({ status: "ok", message: "Database D1 Sukses Terhubung!" });
+        } catch (e) {
+            return Response.json({ status: "error", message: "D1 Gagal Merespon", details: e.message }, { status: 500 });
+        }
+    }
 
     try {
         if (action === 'getQuickStats') {
             const s = await db.prepare("SELECT COUNT(*) as total FROM santri").first();
             const u = await db.prepare("SELECT COUNT(*) as total FROM ustadz").first();
-            const k = await db.prepare("SELECT SUM(nominal) as total FROM keuangan WHERE tipe = 'Masuk'").first();
-            return Response.json({ santriTotal: s?.total || 0, ustadzTotal: u?.total || 0, keuanganTotal: k?.total || 0, kasTotal: 0 });
+            return Response.json({ santriTotal: s?.total || 0, ustadzTotal: u?.total || 0, keuanganTotal: 0, kasTotal: 0 });
         }
 
         if (action === 'getData') {
             if (!type || !headersConfig[type]) return Response.json({ error: "Invalid type" }, { status: 400 });
-            if (id) {
-                const res = await db.prepare(`SELECT * FROM ${type} WHERE id = ?`).bind(id).first();
-                return Response.json(res);
-            } else {
-                const { results } = await db.prepare(`SELECT * FROM ${type} ORDER BY id DESC`).all();
-                return Response.json(results || []);
-            }
+            const { results } = await db.prepare(`SELECT * FROM ${type} ORDER BY id DESC`).all();
+            return Response.json(results || []);
         }
 
         if (action === 'saveData') {
             const body = await request.json();
             const config = headersConfig[type];
-            if (!config) return Response.json({ error: "Invalid type: " + type }, { status: 400 });
+            if (!config) return Response.json({ error: "Invalid type" }, { status: 400 });
 
             const fields = [];
             const values = [];
@@ -92,11 +100,6 @@ async function handle(request) {
             }
         }
 
-        if (action === 'deleteData') {
-            await db.prepare(`DELETE FROM ${type} WHERE id = ?`).bind(id).run();
-            return Response.json({ success: true });
-        }
-
         if (action === 'getCloudinarySignature') {
             const body = await request.json();
             const paramsToSign = body.data?.paramsToSign || body.paramsToSign;
@@ -109,8 +112,8 @@ async function handle(request) {
             return Response.json({ signature, apiKey: env.CLOUDINARY_API_KEY, cloudName: env.CLOUDINARY_CLOUD_NAME });
         }
 
-        return Response.json({ error: "Unknown Action" }, { status: 404 });
+        return Response.json({ error: "Action Unknown" }, { status: 404 });
     } catch (err) {
-        return Response.json({ status: "error", error: "Runtime Error", details: err.message }, { status: 500 });
+        return Response.json({ status: "error", details: err.message }, { status: 500 });
     }
 }
