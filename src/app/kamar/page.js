@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function KamarPage() {
     const { isAdmin } = useAuth();
@@ -99,6 +100,48 @@ export default function KamarPage() {
         } catch (err) { alert(err.message); }
     };
 
+    const columns = [
+        { key: 'nama_kamar', label: 'Identitas Kamar', render: (row) => <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary-dark)' }}>{row.nama_kamar}</div> },
+        { key: 'asrama', label: 'Lokasi Asrama', render: (row) => <span className="th-badge" style={{ background: '#f1f5f9', color: 'var(--text-main)' }}>{row.asrama}</span> },
+        { key: 'kapasitas', label: 'Kapasitas', render: (row) => <span style={{ fontWeight: 600 }}>{row.kapasitas} Bed</span> },
+        {
+            key: 'terisi',
+            label: 'Tingkat Hunian',
+            render: (row) => {
+                const persentase = Math.min(100, Math.round(((row.terisi || 0) / (row.kapasitas || 1)) * 100));
+                let progressColor = 'var(--primary)';
+                if (persentase > 95) progressColor = 'var(--danger)';
+                else if (persentase > 75) progressColor = 'var(--warning)';
+
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '150px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700 }}>
+                            <span>{row.terisi} Terisi</span>
+                            <span style={{ color: progressColor }}>{persentase}%</span>
+                        </div>
+                        <div style={{ width: '100%', background: '#f1f5f9', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
+                            <div style={{ width: `${persentase}%`, background: progressColor, height: '100%', borderRadius: '5px', transition: 'width 0.5s ease' }}></div>
+                        </div>
+                    </div>
+                );
+            }
+        },
+        { key: 'penasihat', label: 'Ustadz Pembimbing', render: (row) => <span style={{ fontWeight: 600 }}>{row.penasihat || '-'}</span> },
+        {
+            key: 'actions',
+            label: 'Opsi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Penghuni"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="view-container">
             <div className="card">
@@ -136,59 +179,12 @@ export default function KamarPage() {
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Identitas Kamar</th>
-                                <th>Lokasi Asrama</th>
-                                <th>Kapasitas</th>
-                                <th>Tingkat Hunian</th>
-                                <th>Ustadz Pembimbing</th>
-                                <th style={{ width: '150px' }}>Opsi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Menganalisa okupansi kamar...</td></tr>
-                            ) : data.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Data kamar belum tersedia.</td></tr>
-                            ) : data.map(d => {
-                                const persentase = Math.min(100, Math.round(((d.terisi || 0) / (d.kapasitas || 1)) * 100));
-                                let progressColor = 'var(--primary)';
-                                if (persentase > 95) progressColor = 'var(--danger)';
-                                else if (persentase > 75) progressColor = 'var(--warning)';
-
-                                return (
-                                    <tr key={d.id}>
-                                        <td><div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary-dark)' }}>{d.nama_kamar}</div></td>
-                                        <td><span className="th-badge" style={{ background: '#f1f5f9', color: 'var(--text-main)' }}>{d.asrama}</span></td>
-                                        <td style={{ fontWeight: 600 }}>{d.kapasitas} Bed</td>
-                                        <td>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '150px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700 }}>
-                                                    <span>{d.terisi} Terisi</span>
-                                                    <span style={{ color: progressColor }}>{persentase}%</span>
-                                                </div>
-                                                <div style={{ width: '100%', background: '#f1f5f9', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
-                                                    <div style={{ width: `${persentase}%`, background: progressColor, height: '100%', borderRadius: '5px', transition: 'width 0.5s ease' }}></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style={{ fontWeight: 600 }}>{d.penasihat || '-'}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Penghuni"><i className="fas fa-eye"></i></button>
-                                                <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                                {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={data}
+                    loading={loading}
+                    emptyMessage="Data kamar belum tersedia."
+                />
             </div>
 
             {/* Modal Input/Edit */}

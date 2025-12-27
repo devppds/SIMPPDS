@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { apiCall } from '@/lib/utils';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function SettingsPage() {
     const { user, isAdmin, logout } = useAuth();
@@ -170,47 +171,52 @@ export default function SettingsPage() {
                                 </button>
                             </div>
 
-                            <div className="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Pengguna</th>
-                                            <th>Role System</th>
-                                            <th>Password (Plain)</th>
-                                            <th style={{ width: '50px' }}></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loadingUsers ? (
-                                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Akun...</td></tr>
-                                        ) : users.length === 0 ? (
-                                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '3rem' }}>Belum ada akun lain.</td></tr>
-                                        ) : users.map(u => (
-                                            <tr key={u.id}>
-                                                <td>
-                                                    <div style={{ fontWeight: 800 }}>{u.fullname}</div>
-                                                    <code style={{ fontSize: '0.75rem', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>@{u.username}</code>
-                                                </td>
-                                                <td>
-                                                    <span className="th-badge" style={{ background: u.role === 'admin' ? 'var(--primary)' : 'var(--primary-light)', color: u.role === 'admin' ? 'white' : 'var(--primary)' }}>
-                                                        {u.role?.toUpperCase()}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div style={{ fontFamily: 'monospace', letterSpacing: '1px', fontWeight: 600 }}>{u.password_plain || '********'}</div>
-                                                </td>
-                                                <td>
-                                                    {u.username !== 'admin' && (
-                                                        <button onClick={() => handleDeleteUser(u.id)} className="btn-vibrant btn-vibrant-red" style={{ width: '32px', height: '32px' }}>
-                                                            <i className="fas fa-trash" style={{ fontSize: '0.8rem' }}></i>
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+
+
+                            <SortableTable
+                                columns={[
+                                    {
+                                        key: 'fullname',
+                                        label: 'Pengguna',
+                                        render: (row) => (
+                                            <div>
+                                                <div style={{ fontWeight: 800 }}>{row.fullname}</div>
+                                                <code style={{ fontSize: '0.75rem', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>@{row.username}</code>
+                                            </div>
+                                        )
+                                    },
+                                    {
+                                        key: 'role',
+                                        label: 'Role System',
+                                        render: (row) => (
+                                            <span className="th-badge" style={{ background: row.role === 'admin' ? 'var(--primary)' : 'var(--primary-light)', color: row.role === 'admin' ? 'white' : 'var(--primary)' }}>
+                                                {row.role?.toUpperCase()}
+                                            </span>
+                                        )
+                                    },
+                                    {
+                                        key: 'password_plain',
+                                        label: 'Password (Plain)',
+                                        render: (row) => <div style={{ fontFamily: 'monospace', letterSpacing: '1px', fontWeight: 600 }}>{row.password_plain || '********'}</div>
+                                    },
+                                    {
+                                        key: 'actions',
+                                        label: '',
+                                        sortable: false,
+                                        width: '50px',
+                                        render: (row) => (
+                                            row.username !== 'admin' && (
+                                                <button onClick={() => handleDeleteUser(row.id)} className="btn-vibrant btn-vibrant-red" style={{ width: '32px', height: '32px' }} title="Hapus User">
+                                                    <i className="fas fa-trash" style={{ fontSize: '0.8rem' }}></i>
+                                                </button>
+                                            )
+                                        )
+                                    }
+                                ]}
+                                data={users}
+                                loading={loadingUsers}
+                                emptyMessage="Belum ada akun lain."
+                            />
                         </div>
                     )}
                 </div>
@@ -280,6 +286,6 @@ export default function SettingsPage() {
                     </div>
                 </form>
             </Modal>
-        </div>
+        </div >
     );
 }

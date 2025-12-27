@@ -5,6 +5,7 @@ import StatCard from '@/components/StatCard';
 import { useAuth } from '@/lib/AuthContext';
 import { formatCurrency, apiCall } from '@/lib/utils';
 import Link from 'next/link';
+import SortableTable from '@/components/SortableTable';
 
 export default function DashboardPage() {
     const { user } = useAuth();
@@ -91,45 +92,46 @@ export default function DashboardPage() {
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Aktivitas Transaksi Terbaru</h2>
                         <Link href="/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Lihat Laporan</Link>
                     </div>
-                    <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
-                        <table style={{ background: 'transparent', width: '100%' }}>
-                            <thead>
-                                <tr style={{ background: '#f8fafc' }}>
-                                    <th style={{ padding: '1rem 2rem', textAlign: 'left' }}>Kategori</th>
-                                    <th style={{ textAlign: 'left' }}>Nominal</th>
-                                    <th style={{ textAlign: 'left' }}>Tanggal</th>
-                                    <th style={{ padding: '1rem 2rem', textAlign: 'left' }}>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
-                                ) : lastActivities.length === 0 ? (
-                                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada riwayat hari ini.</td></tr>
-                                ) : lastActivities.map(act => (
-                                    <tr key={act.id}>
-                                        <td style={{ paddingLeft: '2rem' }}>
-                                            <div style={{ fontWeight: 700 }}>{act.kategori}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{act.keterangan || 'Gending'}</div>
-                                        </td>
-                                        <td style={{ fontWeight: 800, color: act.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)' }}>
-                                            {act.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(act.nominal)}
-                                        </td>
-                                        <td style={{ fontSize: '0.85rem' }}>{new Date(act.tanggal).toLocaleDateString('id-ID')}</td>
-                                        <td style={{ paddingRight: '2rem' }}>
-                                            <span className="th-badge" style={{
-                                                background: act.tipe === 'Masuk' ? '#dcfce7' : '#fee2e2',
-                                                color: act.tipe === 'Masuk' ? '#166534' : '#991b1b',
-                                                fontSize: '0.65rem'
-                                            }}>
-                                                {act.tipe === 'Masuk' ? 'PEMASUKAN' : 'PENGELUARAN'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <SortableTable
+                        columns={[
+                            {
+                                key: 'kategori',
+                                label: 'Kategori',
+                                render: (row) => (
+                                    <div style={{ paddingLeft: '1rem' }}>
+                                        <div style={{ fontWeight: 700 }}>{row.kategori}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.keterangan || 'Gending'}</div>
+                                    </div>
+                                )
+                            },
+                            {
+                                key: 'nominal',
+                                label: 'Nominal',
+                                render: (row) => (
+                                    <div style={{ fontWeight: 800, color: row.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)' }}>
+                                        {row.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(row.nominal)}
+                                    </div>
+                                )
+                            },
+                            {
+                                key: 'tanggal',
+                                label: 'Tanggal',
+                                render: (row) => <span style={{ fontSize: '0.85rem' }}>{new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
+                            },
+                            {
+                                key: 'status',
+                                label: 'Status',
+                                render: (row) => (
+                                    <span className="th-badge" style={{ background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700 }}>
+                                        Selesai
+                                    </span>
+                                )
+                            }
+                        ]}
+                        data={lastActivities}
+                        loading={loading}
+                        emptyMessage="Belum ada riwayat hari ini."
+                    />
                 </div>
 
                 {/* Right: Informational Widgets */}
