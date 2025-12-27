@@ -203,7 +203,7 @@ export default function KeamananRegPage() {
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">Jenis Barang</label>
-                            <select className="form-control" value={formData.jenis_barang} onChange={e => setFormData({ ...formData, jenis_barang: e.target.value })}>
+                            <select className="form-control" value={formData.jenis_barang} onChange={e => setFormData({ ...formData, jenis_barang: e.target.value, detail_barang: '' })}>
                                 <option value="Kendaraan">Kendaraan</option>
                                 <option value="Elektronik">Elektronik</option>
                                 <option value="Kompor">Kompor</option>
@@ -214,20 +214,34 @@ export default function KeamananRegPage() {
                             <input
                                 type="text"
                                 className="form-control"
-                                list="detail-barang-list"
+                                list="dynamic-detail-list"
                                 value={formData.detail_barang}
                                 onChange={e => setFormData({ ...formData, detail_barang: e.target.value })}
                                 required
-                                placeholder="Contoh: Motor Vario / Ontel Phoenix..."
+                                placeholder="Ketik atau pilih dari saran..."
                             />
-                            <datalist id="detail-barang-list">
-                                <option value="Motor Baru">Motor Baru</option>
-                                <option value="Motor Lama">Motor Lama</option>
-                                <option value="Ontel Baru">Ontel Baru</option>
-                                <option value="Ontel Lama">Ontel Lama</option>
-                                <option value="Laptop">Laptop</option>
-                                <option value="Hp">Hp (Handphone)</option>
-                                <option value="Kompor">Kompor</option>
+                            <datalist id="dynamic-detail-list">
+                                {formData.jenis_barang === 'Kendaraan' && (
+                                    <>
+                                        <option value="Motor Baru">Motor Baru</option>
+                                        <option value="Motor Lama">Motor Lama</option>
+                                        <option value="Ontel Baru">Ontel Baru</option>
+                                        <option value="Ontel Lama">Ontel Lama</option>
+                                    </>
+                                )}
+                                {formData.jenis_barang === 'Elektronik' && (
+                                    <>
+                                        <option value="Handphone">Handphone</option>
+                                        <option value="Laptop">Laptop</option>
+                                        <option value="Flashdisk">Flashdisk</option>
+                                    </>
+                                )}
+                                {formData.jenis_barang === 'Kompor' && (
+                                    <>
+                                        <option value="Kompor Baru">Kompor Baru</option>
+                                        <option value="Kompor Lama">Kompor Lama</option>
+                                    </>
+                                )}
                             </datalist>
                         </div>
                     </div>
