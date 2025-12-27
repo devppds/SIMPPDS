@@ -91,10 +91,13 @@ export default function LayananInfoPage() {
     };
 
     return (
-        <div className="view">
+        <div className="view-container">
             <div className="card">
                 <div className="card-header">
-                    <h2>Informasi & Tarif Layanan</h2>
+                    <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Informasi & Tarif Layanan</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Daftar resmi tarif layanan administrasi di lingkungan pondok.</p>
+                    </div>
                     <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
                         <i className="fas fa-plus"></i> Tambah Layanan
                     </button>

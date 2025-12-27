@@ -161,17 +161,17 @@ export default function LayananAdminPage() {
 
     return (
         <div className="view-container">
-            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-dark)', marginBottom: '8px' }}>Layanan Administrasi</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Pencatatan legalisir, surat keterangan, dan layanan sekretariat lainnya.</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => openModal()}>
-                    <i className="fas fa-plus"></i> Input Layanan Baru
-                </button>
-            </div>
-
             <div className="card">
+                <div className="card-header">
+                    <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Pencatatan Layanan Administrasi</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat legalisir, surat keterangan, dan layanan sekretariat lainnya.</p>
+                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
+                        <i className="fas fa-plus"></i> Input Layanan Baru
+                    </button>
+                </div>
+
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
@@ -234,14 +234,14 @@ export default function LayananAdminPage() {
                 title={editId ? "Pembaruan Riwayat Layanan" : "Registrasi Layanan Administrasi"}
                 footer={(
                     <>
-                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Kembali</button>
+                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Kembali</button>
                         <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
                             {submitting ? 'Menyimpan...' : 'Simpan Log'}
                         </button>
                     </>
                 )}
             >
-                <form onSubmit={handleSubmit} className="animate-in">
+                <form onSubmit={handleSubmit}>
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">Tanggal Pengajuan</label>
