@@ -15,6 +15,7 @@ export default function LaporanPimpinan() {
     });
     const [aiSuggestion, setAiSuggestion] = useState("Menganalisis data...");
     const [occupancy, setOccupancy] = useState(0);
+    const [loading, setLoading] = useState(true);
 
     const generateAiSuggestion = (data, totalCapacity) => {
         const { santriTotal, kesehatanTotal, pelanggaranTotal, pemasukanBulanIni, pengeluaranBulanIni } = data;
