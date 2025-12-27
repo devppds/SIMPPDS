@@ -1,12 +1,12 @@
 'use client';
 
-import React from 'react';
 import Header from '@/components/Header';
 import { useAuth } from '@/lib/AuthContext';
 import { usePathname } from 'next/navigation';
+import { NAV_ITEMS } from '@/lib/navConfig';
 
 export default function ContentWrapper({ children }) {
-    const { user, loading } = useAuth();
+    const { loading } = useAuth();
     const pathname = usePathname();
     const isLoginPage = pathname === '/login';
 
@@ -20,30 +20,22 @@ export default function ContentWrapper({ children }) {
 
     if (isLoginPage) return <>{children}</>;
 
+    // Find title from NAV_ITEMS
+    let pageTitle = 'SIM PPDS';
+    NAV_ITEMS.forEach(item => {
+        if (item.path === pathname) pageTitle = item.label;
+        if (item.submenu) {
+            const sub = item.submenu.find(s => s.path === pathname);
+            if (sub) pageTitle = sub.label;
+        }
+    });
+
     return (
         <div className="content-wrapper">
-            <Header title={getPageTitle(pathname)} />
-            <main className="view-container">
+            <Header title={pageTitle} />
+            <main id="main-content">
                 {children}
             </main>
         </div>
     );
-}
-
-function getPageTitle(path) {
-    const titles = {
-        '/dashboard': 'Dashboard Overview',
-        '/santri': 'Data Santri',
-        '/kamar': 'Asrama & Kamar',
-        '/ustadz': 'Data Pengajar (Ustadz)',
-        '/pengurus': 'Data Pengurus Pondok',
-        '/settings': 'Pengaturan Sistem',
-        '/keamanan': 'Bagian Keamanan',
-        '/pelanggaran': 'Catatan Pelanggaran',
-        '/izin': 'Perizinan Santri',
-        '/kesehatan': 'Layanan Kesehatan',
-        '/arus-kas': 'Arus Kas Pondok',
-        '/layanan-admin': 'Layanan & Administrasi'
-    };
-    return titles[path] || 'SIM PPDS';
 }

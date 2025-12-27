@@ -5,7 +5,7 @@ import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
-export default function IzinPage() {
+export default function KesehatanPage() {
     const { isAdmin } = useAuth();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,9 +15,9 @@ export default function IzinPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
-        tanggal_mulai: new Date().toISOString().split('T')[0],
-        tanggal_selesai: '', nama_santri: '', alasan: '',
-        keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: ''
+        tanggal: new Date().toISOString().split('T')[0],
+        nama_santri: '', keluhan: '', diagnosa: '',
+        tindakan: '', obat: '', petugas: '', status: 'Rawat Jalan'
     });
     const [submitting, setSubmitting] = useState(false);
 
@@ -28,7 +28,7 @@ export default function IzinPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'izin' });
+            const res = await apiCall('getData', 'GET', { type: 'kesehatan' });
             setData(res || []);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
@@ -41,9 +41,9 @@ export default function IzinPage() {
         } else {
             setEditId(null);
             setFormData({
-                tanggal_mulai: new Date().toISOString().split('T')[0],
-                tanggal_selesai: '', nama_santri: '', alasan: '',
-                keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: ''
+                tanggal: new Date().toISOString().split('T')[0],
+                nama_santri: '', keluhan: '', diagnosa: '',
+                tindakan: '', obat: '', petugas: '', status: 'Rawat Jalan'
             });
         }
         setIsModalOpen(true);
@@ -54,7 +54,7 @@ export default function IzinPage() {
         setSubmitting(true);
         try {
             await apiCall('saveData', 'POST', {
-                type: 'izin',
+                type: 'kesehatan',
                 data: editId ? { ...formData, id: editId } : formData
             });
             setIsModalOpen(false);
@@ -64,16 +64,16 @@ export default function IzinPage() {
     };
 
     const deleteItem = async (id) => {
-        if (!confirm('Hapus data perizinan ini?')) return;
+        if (!confirm('Hapus rekam medis ini?')) return;
         try {
-            await apiCall('deleteData', 'POST', { type: 'izin', id });
+            await apiCall('deleteData', 'POST', { type: 'kesehatan', id });
             loadData();
         } catch (err) { alert(err.message); }
     };
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.alasan || '').toLowerCase().includes(search.toLowerCase())
+        (d.keluhan || '').toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -81,12 +81,15 @@ export default function IzinPage() {
             <div className="card">
                 <div className="card-header">
                     <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Perizinan & Keluar Pondok</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mengelola {displayData.length} data izin santri.</p>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Layanan Kesehatan (BK)</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} riwayat pemeriksaan santri.</p>
                     </div>
                     <div className="card-actions">
+                        <button className="btn btn-secondary btn-sm" onClick={() => window.print()}>
+                            <i className="fas fa-print"></i>
+                        </button>
                         <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                            <i className="fas fa-plus"></i> Buat Surat Izin
+                            <i className="fas fa-plus"></i> Input Rekam Medis
                         </button>
                     </div>
                 </div>
@@ -97,7 +100,7 @@ export default function IzinPage() {
                         <input
                             type="text"
                             className="search-input"
-                            placeholder="Cari nama santri atau alasan..."
+                            placeholder="Cari nama santri atau keluhan..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -108,30 +111,29 @@ export default function IzinPage() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Berlaku</th>
+                                <th>Tanggal</th>
                                 <th>Nama Santri</th>
-                                <th>Keperluan</th>
+                                <th>Keluhan</th>
+                                <th>Diagnosa</th>
                                 <th>Status</th>
                                 <th style={{ width: '100px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data perizinan.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data pemeriksaan.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
-                                    <td style={{ fontSize: '0.85rem' }}>
-                                        {formatDate(d.tanggal_mulai)} <br />
-                                        <span style={{ opacity: 0.5 }}>s/d</span> {formatDate(d.tanggal_selesai)}
-                                    </td>
+                                    <td>{formatDate(d.tanggal)}</td>
                                     <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
-                                    <td>{d.keperluan}</td>
+                                    <td style={{ fontSize: '0.85rem' }}>{d.keluhan}</td>
+                                    <td style={{ fontSize: '0.85rem' }}>{d.diagnosa || '-'}</td>
                                     <td>
                                         <span className="th-badge" style={{
-                                            background: d.status === 'Aktif' ? '#dcfce7' : d.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9',
-                                            color: d.status === 'Aktif' ? '#166534' : d.status === 'Menunggu' ? '#9a3412' : '#475569'
+                                            background: d.status === 'Rawat Inap' ? '#fee2e2' : '#f1f5f9',
+                                            color: d.status === 'Rawat Inap' ? '#dc2626' : '#475569'
                                         }}>
                                             {d.status}
                                         </span>
@@ -152,7 +154,7 @@ export default function IzinPage() {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editId ? "Update Surat Izin" : "Buat Izin Baru"}
+                title={editId ? "Pembaruan Rekam Medis" : "Input Rekam Medis Baru"}
                 footer={(
                     <>
                         <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
@@ -165,45 +167,44 @@ export default function IzinPage() {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label">Nama Santri</label>
-                        <input type="text" className="form-control" value={formData.nama_santri} onChange={e => setFormData({ ...formData, nama_santri: e.target.value })} required />
+                        <input type="text" className="form-control" value={formData.nama_santri} onChange={e => setFormData({ ...formData, nama_santri: e.target.value })} required placeholder="Nama santri yang diperiksa" />
                     </div>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">Tanggal Mulai</label>
-                            <input type="date" className="form-control" value={formData.tanggal_mulai} onChange={e => setFormData({ ...formData, tanggal_mulai: e.target.value })} />
+                            <label className="form-label">Tanggal Pemeriksaan</label>
+                            <input type="date" className="form-control" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Estimasi Kembali</label>
-                            <input type="date" className="form-control" value={formData.tanggal_selesai} onChange={e => setFormData({ ...formData, tanggal_selesai: e.target.value })} />
-                        </div>
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Keperluan</label>
-                            <select className="form-control" value={formData.keperluan} onChange={e => setFormData({ ...formData, keperluan: e.target.value })}>
-                                <option value="Pulang Rumah">Pulang Rumah</option>
-                                <option value="Izin Keluar Sebentar">Izin Keluar Sebentar</option>
-                                <option value="Sakit / Berobat">Sakit / Berobat</option>
-                                <option value="Lainnya">Lainnya</option>
+                            <label className="form-label">Status Perawatan</label>
+                            <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                                <option value="Rawat Jalan">Rawat Jalan</option>
+                                <option value="Rawat Inap">Rawat Inap</option>
+                                <option value="Rujukan">Rujukan (RS)</option>
+                                <option value="Sembuh">Sembuh</option>
                             </select>
                         </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Keluhan Santri</label>
+                        <textarea className="form-control" value={formData.keluhan} onChange={e => setFormData({ ...formData, keluhan: e.target.value })} rows="2"></textarea>
+                    </div>
+                    <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">Penjemput (Wali)</label>
-                            <input type="text" className="form-control" value={formData.penjemput} onChange={e => setFormData({ ...formData, penjemput: e.target.value })} placeholder="Nama penjemput" />
+                            <label className="form-label">Diagnosa</label>
+                            <input type="text" className="form-control" value={formData.diagnosa} onChange={e => setFormData({ ...formData, diagnosa: e.target.value })} placeholder="Hasil analisa medis" />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Obat yang Diberikan</label>
+                            <input type="text" className="form-control" value={formData.obat} onChange={e => setFormData({ ...formData, obat: e.target.value })} placeholder="Jenis obat dan dosis" />
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Alasan Detail</label>
-                        <textarea className="form-control" value={formData.alasan} onChange={e => setFormData({ ...formData, alasan: e.target.value })} rows="3"></textarea>
+                        <label className="form-label">Tindakan Medis</label>
+                        <textarea className="form-control" value={formData.tindakan} onChange={e => setFormData({ ...formData, tindakan: e.target.value })} rows="2"></textarea>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Status Izin</label>
-                        <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                            <option value="Menunggu">Menunggu Persetujuan</option>
-                            <option value="Aktif">Disetujui (Aktif)</option>
-                            <option value="Kembali">Sudah Kembali</option>
-                            <option value="Terlambat">Terlambat Kembali</option>
-                        </select>
+                        <label className="form-label">Petugas Medis (Pemeriksa)</label>
+                        <input type="text" className="form-control" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} placeholder="Nama perawat atau ustadz BK" />
                     </div>
                 </form>
             </Modal>

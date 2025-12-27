@@ -59,7 +59,7 @@ export default function PelanggaranPage() {
             });
             setIsModalOpen(false);
             loadData();
-            alert('Data pelanggaran berhasil dicatat!');
+            // alert('Data pelanggaran berhasil dicatat!');
         } catch (err) { alert(err.message); }
         finally { setSubmitting(false); }
     };
@@ -77,19 +77,19 @@ export default function PelanggaranPage() {
     );
 
     return (
-        <div className="view-container">
+        <div className="view-container animate-in">
             <div className="card">
                 <div className="card-header">
                     <div>
-                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Catatan Pelanggaran & Takzir</h2>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} catatan ditemukan.</p>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Ringkasan Kedisiplinan</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} pelanggaran santri.</p>
                     </div>
                     <div className="card-actions">
-                        <button className="btn btn-secondary" onClick={() => window.print()}>
+                        <button className="btn btn-secondary btn-sm" onClick={() => window.print()} title="Cetak Laporan">
                             <i className="fas fa-print"></i>
                         </button>
-                        <button className="btn btn-primary" onClick={() => openModal()}>
-                            <i className="fas fa-plus-circle"></i> Input Pelanggaran
+                        <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
+                            <i className="fas fa-plus"></i> Input Baru
                         </button>
                     </div>
                 </div>
@@ -116,26 +116,22 @@ export default function PelanggaranPage() {
                                 <th>Jenis</th>
                                 <th>Poin</th>
                                 <th>Takzir (Sanksi)</th>
-                                <th>Aksi</th>
+                                <th style={{ width: '100px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Memasuki Arsip Keamanan...</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada catatan pelanggaran.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada catatan pelanggaran.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
                                     <td>{formatDate(d.tanggal)}</td>
-                                    <td><div style={{ fontWeight: 800 }}>{d.nama_santri}</div></td>
+                                    <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
                                     <td>
                                         <span className="th-badge" style={{
-                                            padding: '4px 12px',
-                                            borderRadius: '20px',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 700,
                                             background: d.jenis_pelanggaran === 'Berat' ? '#fee2e2' : d.jenis_pelanggaran === 'Sedang' ? '#fffbeb' : '#f1f5f9',
-                                            color: d.jenis_pelanggaran === 'Berat' ? '#dc2626' : d.jenis_pelanggaran === 'Sedang' ? '#d97706' : '#64748b'
+                                            color: d.jenis_pelanggaran === 'Berat' ? '#dc2626' : d.jenis_pelanggaran === 'Sedang' ? '#9a3412' : '#475569'
                                         }}>
                                             {d.jenis_pelanggaran}
                                         </span>
@@ -158,12 +154,12 @@ export default function PelanggaranPage() {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editId ? "Pembaruan Catatan Pelanggaran" : "Input Pelanggaran Baru"}
+                title={editId ? "Pembaruan Catatan" : "Catat Pelanggaran"}
                 footer={(
                     <>
-                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Batalkan</button>
+                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
                         <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                            {submitting ? 'Memproses...' : 'Simpan Catatan'}
+                            {submitting ? 'Proses...' : 'Simpan'}
                         </button>
                     </>
                 )}
