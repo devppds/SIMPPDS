@@ -35,18 +35,18 @@ export default function SantriPage() {
         // Minat & Bakat
         hobi: '', cita_cita: '',
         // Pendidikan Sebelumnya
-        asal_sekolah: '', npsn: '', alamat_sekolah: '', no_ijazah_skhun: '', no_peserta_ujian: '', tahun_lulus: '',
+        asal_sekolah: '', alamat_sekolah: '',
         // Pembiayaan & Bantuan
         // Pembiayaan & Bantuan
         no_kk: '',
         // Data Ayah
-        nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', status_ayah: 'Hidup', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
+        nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
         // Data Ibu
-        nama_ibu: '', nik_ibu: '', tempat_tanggal_lahir_ibu: '', status_ibu: 'Hidup', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
+        nama_ibu: '', nik_ibu: '', tempat_tanggal_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
         // Data Wali (Opsional)
-        nama_wali: '', nik_wali: '', tempat_tanggal_lahir_wali: '', status_wali: '', pendidikan_wali: '', pekerjaan_wali: '', penghasilan_wali: '', no_telp_wali: '', hubungan_wali: '',
+
         // Status & Berkas
-        status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '', berkas_pendukung: '',
+        status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '', foto_kk: '',
         pindah_ke: '', tahun_pindah: '', tanggal_boyong: ''
     });
     const [submitting, setSubmitting] = useState(false);
@@ -214,18 +214,18 @@ export default function SantriPage() {
                 // Minat & Bakat
                 hobi: '', cita_cita: '',
                 // Pendidikan Sebelumnya
-                asal_sekolah: '', npsn: '', alamat_sekolah: '', no_ijazah_skhun: '', no_peserta_ujian: '', tahun_lulus: '',
+                asal_sekolah: '', alamat_sekolah: '',
                 // Pembiayaan & Bantuan
                 // Pembiayaan & Bantuan
                 no_kk: '',
                 // Data Ayah
-                nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', status_ayah: 'Hidup', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
+                nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
                 // Data Ibu
-                nama_ibu: '', nik_ibu: '', tempat_tanggal_lahir_ibu: '', status_ibu: 'Hidup', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
+                nama_ibu: '', nik_ibu: '', tempat_tanggal_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
                 // Data Wali (Opsional)
-                nama_wali: '', nik_wali: '', tempat_tanggal_lahir_wali: '', status_wali: '', pendidikan_wali: '', pekerjaan_wali: '', penghasilan_wali: '', no_telp_wali: '', hubungan_wali: '',
+
                 // Status & Berkas
-                status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '', berkas_pendukung: '',
+                status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '', foto_kk: '',
                 pindah_ke: '', tahun_pindah: '', tanggal_boyong: ''
             });
         }
@@ -427,10 +427,8 @@ export default function SantriPage() {
                                 <div className="form-group"><label className="form-label">Stambuk Pondok</label><input type="text" className="form-control" value={formData.stambuk_pondok} onChange={e => setFormData({ ...formData, stambuk_pondok: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">Stambuk Madrasah</label><input type="text" className="form-control" value={formData.stambuk_madrasah} onChange={e => setFormData({ ...formData, stambuk_madrasah: e.target.value })} /></div>
                             </div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">NIK</label><input type="text" className="form-control" value={formData.nik} onChange={e => setFormData({ ...formData, nik: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">NISN</label><input type="text" className="form-control" value={formData.nisn} onChange={e => setFormData({ ...formData, nisn: e.target.value })} /></div>
-                            </div>
+                            <div className="form-group"><label className="form-label">NIK</label><input type="text" className="form-control" value={formData.nik} onChange={e => setFormData({ ...formData, nik: e.target.value })} /></div>
+
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label className="form-label">Kelas / Jenjang *</label>
@@ -494,15 +492,8 @@ export default function SantriPage() {
                     {activeTab === 'pendidikan' && (
                         <div className="tab-content animate-in">
                             <div className="form-group"><label className="form-label">Asal Sekolah</label><input type="text" className="form-control" value={formData.asal_sekolah} onChange={e => setFormData({ ...formData, asal_sekolah: e.target.value })} /></div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">NPSN Sekolah</label><input type="text" className="form-control" value={formData.npsn} onChange={e => setFormData({ ...formData, npsn: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Tahun Lulus</label><input type="text" className="form-control" value={formData.tahun_lulus} onChange={e => setFormData({ ...formData, tahun_lulus: e.target.value })} placeholder="2024" /></div>
-                            </div>
+                            <div className="form-group"><label className="form-label">NISN</label><input type="text" className="form-control" value={formData.nisn} onChange={e => setFormData({ ...formData, nisn: e.target.value })} /></div>
                             <div className="form-group"><label className="form-label">Alamat Sekolah</label><textarea className="form-control" value={formData.alamat_sekolah} onChange={e => setFormData({ ...formData, alamat_sekolah: e.target.value })} rows="2"></textarea></div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">No. Ijazah / SKHUN</label><input type="text" className="form-control" value={formData.no_ijazah_skhun} onChange={e => setFormData({ ...formData, no_ijazah_skhun: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">No. Peserta Ujian</label><input type="text" className="form-control" value={formData.no_peserta_ujian} onChange={e => setFormData({ ...formData, no_peserta_ujian: e.target.value })} /></div>
-                            </div>
                         </div>
                     )}
                     {activeTab === 'wali' && (
@@ -590,6 +581,16 @@ export default function SantriPage() {
                                     <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploading} />
                                 </label>
                             </div></div>
+                            <div className="form-group">
+                                <label className="form-label">Foto KK (Kartu Keluarga)</label>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    {formData.foto_kk && (
+                                        <img src={formData.foto_kk} alt="KK" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                    )}
+                                    <input type="file" accept="image/*" className="form-control" onChange={(e) => handleFileUpload(e, 'foto_kk')} disabled={uploading} />
+                                </div>
+                                <small style={{ color: '#64748b' }}>Upload foto scan Kartu Keluarga.</small>
+                            </div>
                             <div className="form-group"><label className="form-label">Berkas Pendukung (URL)</label><input type="text" className="form-control" value={formData.berkas_pendukung} onChange={e => setFormData({ ...formData, berkas_pendukung: e.target.value })} placeholder="https://..." /></div>
                         </div>
                     )}
