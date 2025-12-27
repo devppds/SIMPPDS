@@ -68,9 +68,19 @@ export default function LayananAdminPage() {
     });
     const [submitting, setSubmitting] = useState(false);
 
+    const [santriOptions, setSantriOptions] = useState([]);
+
     useEffect(() => {
         loadData();
+        fetchSantri();
     }, []);
+
+    const fetchSantri = async () => {
+        try {
+            const res = await apiCall('getData', 'GET', { type: 'santri' });
+            setSantriOptions(res || []);
+        } catch (e) { console.error(e); }
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -261,7 +271,20 @@ export default function LayananAdminPage() {
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">Nama Pemohon</label>
-                            <input type="text" className="form-control" value={formData.nama_santri} onChange={e => setFormData({ ...formData, nama_santri: e.target.value })} required />
+                            <input
+                                type="text"
+                                className="form-control"
+                                list="santri-list"
+                                value={formData.nama_santri}
+                                onChange={e => setFormData({ ...formData, nama_santri: e.target.value })}
+                                required
+                                placeholder="Ketik nama untuk mencari..."
+                            />
+                            <datalist id="santri-list">
+                                {santriOptions.map((s, idx) => (
+                                    <option key={idx} value={s.nama_siswa}>{s.stambuk_pondok ? `[${s.stambuk_pondok}] ` : ''}{s.kamar || ''}</option>
+                                ))}
+                            </datalist>
                         </div>
                         <div className="form-group">
                             <label className="form-label">Stambuk (Jika Ada)</label>

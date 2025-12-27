@@ -26,9 +26,26 @@ export default function ArusKasPage() {
     });
     const [submitting, setSubmitting] = useState(false);
 
+    const [pjOptions, setPjOptions] = useState([]);
+
     useEffect(() => {
         loadData();
+        fetchPJs();
     }, []);
+
+    const fetchPJs = async () => {
+        try {
+            const [ustadz, pengurus] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'ustadz' }),
+                apiCall('getData', 'GET', { type: 'pengurus' })
+            ]);
+            const combined = [
+                ...(ustadz || []).map(u => ({ nama: u.nama, role: 'Ustadz' })),
+                ...(pengurus || []).map(p => ({ nama: p.nama, role: 'Pengurus' }))
+            ];
+            setPjOptions(combined);
+        } catch (e) { console.error(e); }
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -299,7 +316,19 @@ export default function ArusKasPage() {
                     </div>
                     <div className="form-group">
                         <label className="form-label">Penanggung Jawab (PJ)</label>
-                        <input type="text" className="form-control" placeholder="Nama pelaksana transaksi" value={formData.pj} onChange={(e) => setFormData({ ...formData, pj: e.target.value })} />
+                        <input
+                            type="text"
+                            className="form-control"
+                            list="pj-list"
+                            placeholder="Nama pelaksana transaksi"
+                            value={formData.pj}
+                            onChange={(e) => setFormData({ ...formData, pj: e.target.value })}
+                        />
+                        <datalist id="pj-list">
+                            {pjOptions.map((pj, idx) => (
+                                <option key={idx} value={pj.nama}>{pj.role}</option>
+                            ))}
+                        </datalist>
                     </div>
                 </form>
             </Modal>
