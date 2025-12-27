@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiCall, formatCurrency, formatDate, exportToCSV } from '@/lib/utils';
+import { apiCall, formatCurrency, formatDate, exportToCSV, exportToExcel } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
@@ -60,7 +60,7 @@ export default function ArusKasPage() {
 
     const handleExport = () => {
         const headers = ['Tanggal', 'Tipe', 'Kategori', 'Nominal', 'Keterangan', 'PJ'];
-        exportToCSV(data, 'Arus_Kas_Pondok_Full', headers);
+        exportToExcel(data, 'Arus_Kas_Pondok_Full', headers);
     };
 
     const handleDownloadTemplate = () => {

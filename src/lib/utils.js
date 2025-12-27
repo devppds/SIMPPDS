@@ -76,3 +76,39 @@ export const exportToCSV = (data, filename, headers) => {
     link.click();
     document.body.removeChild(link);
 };
+
+export const exportToExcel = (data, filename, headers) => {
+    if (!data || !data.length) return;
+
+    // Create an HTML table string for Excel compatibility
+    let html = '<html><head><meta charset="utf-8"></head><body><table><thead><tr>';
+
+    // Header row
+    headers.forEach(h => {
+        html += `<th style="background-color: #1e40af; color: #ffffff; font-weight: bold; border: 1px solid #000000;">${h}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // Data rows
+    data.forEach(row => {
+        html += '<tr>';
+        headers.forEach(h => {
+            const key = h.toLowerCase().replace(/ /g, '_');
+            const val = row[key] || '';
+            html += `<td style="border: 1px solid #000000;">${val}</td>`;
+        });
+        html += '</tr>';
+    });
+
+    html += '</tbody></table></body></html>';
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};

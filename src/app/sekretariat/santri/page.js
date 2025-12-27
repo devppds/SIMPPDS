@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiCall, formatDate, exportToCSV } from '@/lib/utils';
+import { apiCall, formatDate, exportToCSV, exportToExcel } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
@@ -114,8 +114,8 @@ export default function SantriPage() {
     };
 
     const handleExport = () => {
-        const headers = ['Nama Siswa', 'Stambuk Pondok', 'NIK', 'Kelas', 'Kamar', 'Status Santri', 'Wali Ayah', 'Wali Ibu', 'Alamat'];
-        exportToCSV(santri, 'Data_Santri_Lengkap', headers);
+        const headers = ["Foto Santri", "Stambuk Pondok", "Stambuk Madrasah", "Tahun Masuk", "Kamar", "Status MB", "Madrasah", "Kelas", "NIK", "Nama Siswa", "NISN", "Tempat Tanggal Lahir", "Jenis Kelamin", "Agama", "Hobi", "Cita Cita", "Kewarganegaraan", "No KK", "NIK Ayah", "Nama Ayah", "Pekerjaan Ayah", "Pendidikan Ayah", "No Telp Ayah", "Penghasilan Ayah", "NIK Ibu", "Nama Ibu", "Pekerjaan Ibu", "Pendidikan Ibu", "No Telp Ibu", "Dusun Jalan", "RT RW", "Desa Kelurahan", "Kecamatan", "Kota Kabupaten", "Provinsi", "Kode Pos", "Status Santri", "Pindah Ke", "Tahun Pindah", "Tanggal Boyong"];
+        exportToExcel(santri, 'Data_Santri_Lengkap', headers);
     };
 
     const handleDownloadTemplate = () => {
