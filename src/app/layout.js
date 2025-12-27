@@ -4,8 +4,8 @@ import ContentWrapper from '@/components/ContentWrapper';
 import './globals.css';
 
 export const metadata = {
-  title: 'SIM PPDS - Sistem Informasi Pesantren',
-  description: 'Sistem Informasi Manajemen Terpadu Pondok Pesantren',
+  title: 'SIM-PPDS | SYSTEM INFORMASI SATU PINTU PONDOK PESANTREN DARUSSALAM LIRBOYO By. DevElz',
+  description: 'Sistem Informasi Manajemen Terpadu Pondok Pesantren Darussalam Lirboyo',
   icons: {
     icon: 'https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png',
   },

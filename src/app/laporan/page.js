@@ -125,6 +125,17 @@ export default function LaporanPimpinan() {
 
     return (
         <div className="view-container">
+            <div className="print-header-corporate" style={{ display: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '3px solid #1e3a8a', paddingBottom: '15px', marginBottom: '25px' }}>
+                    <img src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png" style={{ width: '80px' }} alt="Logo" />
+                    <div>
+                        <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#1e3a8a', fontWeight: 900 }}>PONDOK PESANTREN DARUSSALAM LIRBOYO</h1>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Sistem Informasi Manajemen Terpadu (SIM-PPDS)</p>
+                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#94a3b8' }}>Lirboyo, Kota Kediri, Jawa Timur</p>
+                    </div>
+                </div>
+            </div>
+
             <div className="card-header">
                 <div>
                     <h1 className="view-title">Laporan Pimpinan & Eksekutif</h1>
@@ -256,6 +267,13 @@ export default function LaporanPimpinan() {
                 </div>
             </div>
 
+            <div className="print-footer-corporate" style={{ display: 'none' }}>
+                <div style={{ marginTop: '50px', paddingTop: '10px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#94a3b8' }}>
+                    <span>Dicetak pada: {new Date().toLocaleString('id-ID')}</span>
+                    <span style={{ fontWeight: 700 }}>SIM-PPDS | SYSTEM INFORMASI SATU PINTU PONDOK PESANTREN DARUSSALAM LIRBOYO By. DevElz</span>
+                </div>
+            </div>
+
             <style jsx>{`
                 .financial-chart-view {
                     padding: 1rem 0;
@@ -338,6 +356,12 @@ export default function LaporanPimpinan() {
                         background-color: #f0f4ff !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                    }
+                    .print-header-corporate {
+                        display: block !important;
+                    }
+                    .print-footer-corporate {
+                        display: block !important;
                     }
                 }
             `}</style>
