@@ -248,3 +248,44 @@ CREATE TABLE IF NOT EXISTS layanan_master (
     harga REAL,
     keterangan TEXT
 );
+
+-- 6. WAJAR-MUROTTIL MODULE
+CREATE TABLE IF NOT EXISTS wajar_pengurus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama_pengurus TEXT NOT NULL,
+    kelompok TEXT,
+    jabatan TEXT,
+    keterangan TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS wajar_absensi (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER NOT NULL,
+    nama_santri TEXT,
+    kelas TEXT,
+    kelompok TEXT,
+    tanggal DATE NOT NULL,
+    status TEXT NOT NULL, -- H, S, I, A
+    tipe TEXT NOT NULL, -- 'Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'
+    petugas TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS wajar_nilai (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER NOT NULL,
+    nama_santri TEXT,
+    tanggal DATE NOT NULL,
+    tipe TEXT NOT NULL, -- 'Murottil Malam', etc
+    materi TEXT,
+    nilai TEXT,
+    keterangan TEXT,
+    petugas TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for Wajar-Murottil
+CREATE INDEX IF NOT EXISTS idx_wajar_absensi_tgl ON wajar_absensi(tanggal, tipe);
+CREATE INDEX IF NOT EXISTS idx_wajar_nilai_tgl ON wajar_nilai(tanggal, tipe);
+

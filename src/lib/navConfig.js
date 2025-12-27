@@ -61,8 +61,13 @@ export const NAV_ITEMS = [
     {
         label: 'Wajar-Murottil',
         icon: 'fas fa-microphone-alt',
-        path: '/pendidikan/wajar-murottil',
-        roles: ['admin', 'pendidikan']
+        roles: ['admin', 'pendidikan'],
+        submenu: [
+            { label: 'Wajib Belajar', path: '/wajar-murottil/wajib-belajar', icon: 'fas fa-book-reader' },
+            { label: 'Murottil Malam', path: '/wajar-murottil/murottil-malam', icon: 'fas fa-moon' },
+            { label: 'Murottil Pagi', path: '/wajar-murottil/murottil-pagi', icon: 'fas fa-sun' },
+            { label: 'Pengaturan Kelompok', path: '/wajar-murottil/pengaturan', icon: 'fas fa-users-cog' }
+        ]
     },
     {
         label: 'Kesehatan (BK)',
