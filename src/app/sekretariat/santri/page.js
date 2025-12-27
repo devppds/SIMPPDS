@@ -218,7 +218,15 @@ export default function SantriPage() {
             (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
             (s.nik || '').toLowerCase().includes(search.toLowerCase());
 
-        const matchMadrasah = filterMadrasah === 'Semua' || s.madrasah === filterMadrasah;
+        const mdr = (s.madrasah || '').toUpperCase();
+        const kls = (s.kelas || '').toUpperCase();
+
+        let matchMadrasah = filterMadrasah === 'Semua';
+        if (filterMadrasah === 'MHM') {
+            matchMadrasah = mdr.includes('MHM') || kls.includes('ULYA') || mdr.includes('HIDAYATUL');
+        } else if (filterMadrasah === 'MIU') {
+            matchMadrasah = mdr.includes('MIU') || kls.includes('ULA') || kls.includes('WUSTHO') || mdr.includes('IDADIYYAH');
+        }
 
         return matchSearch && matchMadrasah;
     });
@@ -256,7 +264,16 @@ export default function SantriPage() {
                 </span>
             )
         },
-        { key: 'kelas', label: 'Kelas' },
+        {
+            key: 'kelas',
+            label: 'Pendidikan',
+            render: (row) => (
+                <div>
+                    <div style={{ fontWeight: 700 }}>{row.kelas}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{row.madrasah}</div>
+                </div>
+            )
+        },
         {
             key: 'status_santri',
             label: 'Status',
