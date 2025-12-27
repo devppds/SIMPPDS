@@ -26,13 +26,12 @@ export default function SantriPage() {
     const [mutasiForm, setMutasiForm] = useState({ status_santri: 'Boyong', pindah_ke: '', tahun_pindah: '', tanggal_boyong: new Date().toISOString().split('T')[0] });
     const [formData, setFormData] = useState({
         // Identitas Pondok
-        stambuk_pondok: '', stambuk_madrasah: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
+        stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
         // Identitas Pribadi
-        nik: '', nama_siswa: '', nisn: '', tempat_lahir: '', tanggal_lahir: '', tempat_tanggal_lahir: '',
-        jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
-        anak_ke: '', jumlah_saudara: '', tinggi_badan: '', berat_badan: '', golongan_darah: '', penyakit_khusus: '',
+        nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
+        anak_ke: '', jumlah_saudara_kandung: '', jumlah_saudara_tiri: '', jumlah_saudara_angkat: '', status_anak: '',
         // Alamat
-        alamat_lengkap: '', rt_rw: '', dusun_jalan: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+        alamat: '', dusun_jalan: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
         // Minat & Bakat
         hobi: '', cita_cita: '',
         // Pendidikan Sebelumnya
@@ -155,13 +154,12 @@ export default function SantriPage() {
             setEditId(null);
             setFormData({
                 // Identitas Pondok
-                stambuk_pondok: '', stambuk_madrasah: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
+                stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
                 // Identitas Pribadi
-                nik: '', nama_siswa: '', nisn: '', tempat_lahir: '', tanggal_lahir: '', tempat_tanggal_lahir: '',
-                jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
-                anak_ke: '', jumlah_saudara: '', tinggi_badan: '', berat_badan: '', golongan_darah: '', penyakit_khusus: '',
+                nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
+                anak_ke: '', jumlah_saudara_kandung: '', jumlah_saudara_tiri: '', jumlah_saudara_angkat: '', status_anak: '',
                 // Alamat
-                alamat_lengkap: '', rt_rw: '', dusun_jalan: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+                alamat: '', dusun_jalan: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
                 // Minat & Bakat
                 hobi: '', cita_cita: '',
                 // Pendidikan Sebelumnya
@@ -415,11 +413,7 @@ export default function SantriPage() {
                     )}
                     {activeTab === 'pribadi' && (
                         <div className="tab-content animate-in">
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Tempat Lahir</label><input type="text" className="form-control" value={formData.tempat_lahir} onChange={e => setFormData({ ...formData, tempat_lahir: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Tanggal Lahir</label><input type="date" className="form-control" value={formData.tanggal_lahir} onChange={e => setFormData({ ...formData, tanggal_lahir: e.target.value })} /></div>
-                            </div>
-                            <div className="form-group"><label className="form-label">Tempat, Tanggal Lahir (Format Lengkap)</label><input type="text" className="form-control" value={formData.tempat_tanggal_lahir} onChange={e => setFormData({ ...formData, tempat_tanggal_lahir: e.target.value })} placeholder="Kediri, 01 Januari 2010" /></div>
+                            <div className="form-group"><label className="form-label">Tempat, Tanggal Lahir</label><input type="text" className="form-control" value={formData.tempat_tanggal_lahir} onChange={e => setFormData({ ...formData, tempat_tanggal_lahir: e.target.value })} placeholder="Kediri, 01 Januari 2010" /></div>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Jenis Kelamin</label><select className="form-control" value={formData.jenis_kelamin} onChange={e => setFormData({ ...formData, jenis_kelamin: e.target.value })}>
                                     <option value="Laki-laki">Laki-laki</option>
@@ -439,14 +433,13 @@ export default function SantriPage() {
                                 <div className="form-group"><label className="form-label">Anak Ke</label><input type="number" className="form-control" value={formData.anak_ke} onChange={e => setFormData({ ...formData, anak_ke: e.target.value })} /></div>
                             </div>
                             <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Jumlah Saudara</label><input type="number" className="form-control" value={formData.jumlah_saudara} onChange={e => setFormData({ ...formData, jumlah_saudara: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Golongan Darah</label><select className="form-control" value={formData.golongan_darah} onChange={e => setFormData({ ...formData, golongan_darah: e.target.value })}><option value="">-</option><option value="A">A</option><option value="B">B</option><option value="AB">AB</option><option value="O">O</option></select></div>
+                                <div className="form-group"><label className="form-label">Jumlah Saudara Kandung</label><input type="number" className="form-control" value={formData.jumlah_saudara_kandung} onChange={e => setFormData({ ...formData, jumlah_saudara_kandung: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">Jumlah Saudara Tiri</label><input type="number" className="form-control" value={formData.jumlah_saudara_tiri} onChange={e => setFormData({ ...formData, jumlah_saudara_tiri: e.target.value })} /></div>
                             </div>
                             <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Tinggi Badan (cm)</label><input type="number" className="form-control" value={formData.tinggi_badan} onChange={e => setFormData({ ...formData, tinggi_badan: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Berat Badan (kg)</label><input type="number" className="form-control" value={formData.berat_badan} onChange={e => setFormData({ ...formData, berat_badan: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">Jumlah Saudara Angkat</label><input type="number" className="form-control" value={formData.jumlah_saudara_angkat} onChange={e => setFormData({ ...formData, jumlah_saudara_angkat: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">Status Anak</label><input type="text" className="form-control" value={formData.status_anak} onChange={e => setFormData({ ...formData, status_anak: e.target.value })} placeholder="Kandung/Tiri/Angkat" /></div>
                             </div>
-                            <div className="form-group"><label className="form-label">Penyakit Khusus / Riwayat Penyakit</label><textarea className="form-control" value={formData.penyakit_khusus} onChange={e => setFormData({ ...formData, penyakit_khusus: e.target.value })} rows="2" placeholder="Asma, Alergi, dll"></textarea></div>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Hobi</label><input type="text" className="form-control" value={formData.hobi} onChange={e => setFormData({ ...formData, hobi: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">Cita-cita</label><input type="text" className="form-control" value={formData.cita_cita} onChange={e => setFormData({ ...formData, cita_cita: e.target.value })} /></div>
@@ -514,11 +507,8 @@ export default function SantriPage() {
                     )}
                     {activeTab === 'alamat' && (
                         <div className="tab-content animate-in">
-                            <div className="form-group"><label className="form-label">Alamat Lengkap</label><textarea className="form-control" value={formData.alamat_lengkap} onChange={e => setFormData({ ...formData, alamat_lengkap: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Dusun / Jalan</label><input type="text" className="form-control" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">RT / RW</label><input type="text" className="form-control" value={formData.rt_rw} onChange={e => setFormData({ ...formData, rt_rw: e.target.value })} placeholder="001/002" /></div>
-                            </div>
+                            <div className="form-group"><label className="form-label">Alamat</label><textarea className="form-control" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
+                            <div className="form-group"><label className="form-label">Dusun / Jalan</label><input type="text" className="form-control" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} /></div>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Desa / Kelurahan</label><input type="text" className="form-control" value={formData.desa_kelurahan} onChange={e => setFormData({ ...formData, desa_kelurahan: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">Kecamatan</label><input type="text" className="form-control" value={formData.kecamatan} onChange={e => setFormData({ ...formData, kecamatan: e.target.value })} /></div>
