@@ -16,11 +16,11 @@ export const NAV_ITEMS = [
         icon: 'fas fa-file-signature',
         roles: ['admin', 'sekretariat'],
         submenu: [
-            { label: 'Data Santri', path: '/santri', icon: 'fas fa-user-graduate' },
-            { label: 'Asrama & Kamar', path: '/kamar', icon: 'fas fa-bed' },
-            { label: 'Layanan Sekretariat', path: '/layanan-sekretariat', icon: 'fas fa-concierge-bell' },
-            { label: 'Data Ustadz', path: '/ustadz', icon: 'fas fa-chalkboard-teacher' },
-            { label: 'Data Pengurus', path: '/pengurus', icon: 'fas fa-user-tie' },
+            { label: 'Data Santri', path: '/sekretariat/santri', icon: 'fas fa-user-graduate' },
+            { label: 'Asrama & Kamar', path: '/sekretariat/kamar', icon: 'fas fa-bed' },
+            { label: 'Layanan Sekretariat', path: '/sekretariat/layanan', icon: 'fas fa-concierge-bell' },
+            { label: 'Data Ustadz', path: '/sekretariat/ustadz', icon: 'fas fa-chalkboard-teacher' },
+            { label: 'Data Pengurus', path: '/sekretariat/pengurus', icon: 'fas fa-user-tie' },
             {
                 label: 'Arsiparis',
                 icon: 'fas fa-archive',
@@ -41,11 +41,11 @@ export const NAV_ITEMS = [
         icon: 'fas fa-shield-alt',
         roles: ['admin', 'keamanan'],
         submenu: [
-            { label: 'Pelanggaran', path: '/pelanggaran', icon: 'fas fa-exclamation-triangle' },
-            { label: 'Perizinan Santri', path: '/izin', icon: 'fas fa-id-card' },
-            { label: 'Barang Sitaan', path: '/barang-sitaan', icon: 'fas fa-box-open' },
-            { label: 'Registrasi Barang', path: '/keamanan-reg', icon: 'fas fa-clipboard-list' },
-            { label: 'Layanan Keamanan', path: '/layanan-keamanan', icon: 'fas fa-concierge-bell' }
+            { label: 'Pelanggaran', path: '/keamanan/pelanggaran', icon: 'fas fa-exclamation-triangle' },
+            { label: 'Perizinan Santri', path: '/keamanan/izin', icon: 'fas fa-id-card' },
+            { label: 'Barang Sitaan', path: '/keamanan/barang-sitaan', icon: 'fas fa-box-open' },
+            { label: 'Registrasi Barang', path: '/keamanan/registrasi-barang', icon: 'fas fa-clipboard-list' },
+            { label: 'Layanan Keamanan', path: '/keamanan/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
     {
@@ -54,7 +54,7 @@ export const NAV_ITEMS = [
         roles: ['admin', 'pendidikan'],
         submenu: [
             { label: 'Agenda & Nilai', path: '/pendidikan', icon: 'fas fa-book' },
-            { label: 'Layanan Pendidikan', path: '/layanan-pendidikan', icon: 'fas fa-concierge-bell' }
+            { label: 'Layanan Pendidikan', path: '/pendidikan/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
     {
@@ -63,7 +63,7 @@ export const NAV_ITEMS = [
         roles: ['admin', 'kesehatan'],
         submenu: [
             { label: 'Data Kesehatan', path: '/kesehatan', icon: 'fas fa-notes-medical' },
-            { label: 'Layanan Kesehatan', path: '/layanan-kesehatan', icon: 'fas fa-concierge-bell' }
+            { label: 'Layanan Kesehatan', path: '/kesehatan/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
     {
@@ -71,10 +71,10 @@ export const NAV_ITEMS = [
         icon: 'fas fa-money-bill-wave',
         roles: ['admin', 'bendahara'],
         submenu: [
-            { label: 'Arus Kas Pondok', path: '/arus-kas', icon: 'fas fa-exchange-alt' },
-            { label: 'Setoran Unit', path: '/kas-unit', icon: 'fas fa-file-invoice-dollar' },
-            { label: 'Master Tagihan', path: '/jenis-tagihan', icon: 'fas fa-tags' },
-            { label: 'Atur Layanan', path: '/atur-layanan', icon: 'fas fa-cogs' }
+            { label: 'Arus Kas Pondok', path: '/bendahara/arus-kas', icon: 'fas fa-exchange-alt' },
+            { label: 'Setoran Unit', path: '/bendahara/kas-unit', icon: 'fas fa-file-invoice-dollar' },
+            { label: 'Master Tagihan', path: '/bendahara/jenis-tagihan', icon: 'fas fa-tags' },
+            { label: 'Atur Layanan', path: '/bendahara/atur-layanan', icon: 'fas fa-cogs' }
         ]
     },
     {
@@ -82,7 +82,7 @@ export const NAV_ITEMS = [
         icon: 'fas fa-users',
         roles: ['admin', 'jamiyyah'],
         submenu: [
-            { label: "Layanan Jam'iyyah", path: '/layanan-jamiyyah', icon: 'fas fa-concierge-bell' }
+            { label: "Layanan Jam'iyyah", path: '/jamiyyah/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
 
