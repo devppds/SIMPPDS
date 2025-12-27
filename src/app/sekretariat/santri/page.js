@@ -347,8 +347,8 @@ export default function SantriPage() {
                     </div>
                     <select className="form-control" style={{ width: '180px', fontWeight: 700 }} value={filterMadrasah} onChange={(e) => setFilterMadrasah(e.target.value)}>
                         <option value="Semua">Unit: Semua</option>
-                        <option value="MHM">MHM (Ma'hadul 'Ilmi)</option>
-                        <option value="MIU">MIU (I'dadiyyah)</option>
+                        <option value="MHM">MHM</option>
+                        <option value="MIU">MIU</option>
                     </select>
                     <select className="form-control" style={{ width: '220px', fontWeight: 700 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                         <option value="Aktif">Status: Aktif</option>
