@@ -305,9 +305,17 @@ export default function LayananUnitPage({ unit: forceUnit }) {
                                 className="form-control"
                                 list="santri-list"
                                 value={formData.nama_santri}
-                                onChange={e => setFormData({ ...formData, nama_santri: e.target.value })}
                                 required
                                 placeholder="Ketik nama untuk mencari..."
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    const found = santriOptions.find(s => s.nama_siswa.toLowerCase() === val.toLowerCase());
+                                    setFormData({
+                                        ...formData,
+                                        nama_santri: val,
+                                        stambuk: found?.stambuk_pondok || formData.stambuk
+                                    });
+                                }}
                             />
                             <datalist id="santri-list">
                                 {santriOptions.map((s, idx) => (
