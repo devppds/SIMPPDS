@@ -12,24 +12,16 @@ export const NAV_ITEMS = [
         roles: ['admin']
     },
     {
-        label: 'Data Santri',
-        icon: 'fas fa-user-graduate',
-        path: '/santri',
-        roles: ['admin', 'sekretariat', 'keamanan', 'pendidikan']
-    },
-    {
-        label: 'Asrama & Kamar',
-        icon: 'fas fa-bed',
-        path: '/kamar',
-        roles: ['admin', 'keamanan', 'sekretariat']
-    },
-    {
-        label: 'SDM Pondok',
-        icon: 'fas fa-users-cog',
+        label: 'Sekretariat',
+        icon: 'fas fa-file-signature',
         roles: ['admin', 'sekretariat'],
         submenu: [
+            { label: 'Data Santri', path: '/santri', icon: 'fas fa-user-graduate' },
+            { label: 'Asrama & Kamar', path: '/kamar', icon: 'fas fa-bed' },
+            { label: 'Layanan Sekretariat', path: '/layanan-sekretariat', icon: 'fas fa-concierge-bell' },
             { label: 'Data Ustadz', path: '/ustadz', icon: 'fas fa-chalkboard-teacher' },
-            { label: 'Data Pengurus', path: '/pengurus', icon: 'fas fa-user-tie' }
+            { label: 'Data Pengurus', path: '/pengurus', icon: 'fas fa-user-tie' },
+            { label: 'Arsiparis', path: '/arsiparis', icon: 'fas fa-archive' }
         ]
     },
     {
@@ -40,20 +32,27 @@ export const NAV_ITEMS = [
             { label: 'Pelanggaran', path: '/pelanggaran', icon: 'fas fa-exclamation-triangle' },
             { label: 'Perizinan Santri', path: '/izin', icon: 'fas fa-id-card' },
             { label: 'Barang Sitaan', path: '/barang-sitaan', icon: 'fas fa-box-open' },
-            { label: 'Registrasi Barang', path: '/keamanan-reg', icon: 'fas fa-clipboard-list' }
+            { label: 'Registrasi Barang', path: '/keamanan-reg', icon: 'fas fa-clipboard-list' },
+            { label: 'Layanan Keamanan', path: '/layanan-keamanan', icon: 'fas fa-concierge-bell' }
         ]
     },
     {
         label: 'Bagian Pendidikan',
         icon: 'fas fa-book-reader',
-        path: '/pendidikan',
-        roles: ['admin', 'pendidikan']
+        roles: ['admin', 'pendidikan'],
+        submenu: [
+            { label: 'Agenda & Nilai', path: '/pendidikan', icon: 'fas fa-book' },
+            { label: 'Layanan Pendidikan', path: '/layanan-pendidikan', icon: 'fas fa-concierge-bell' }
+        ]
     },
     {
         label: 'Kesehatan (BK)',
         icon: 'fas fa-heartbeat',
-        path: '/kesehatan',
-        roles: ['admin', 'kesehatan']
+        roles: ['admin', 'kesehatan'],
+        submenu: [
+            { label: 'Data Kesehatan', path: '/kesehatan', icon: 'fas fa-notes-medical' },
+            { label: 'Layanan Kesehatan', path: '/layanan-kesehatan', icon: 'fas fa-concierge-bell' }
+        ]
     },
     {
         label: 'Bendahara',
@@ -62,16 +61,16 @@ export const NAV_ITEMS = [
         submenu: [
             { label: 'Arus Kas Pondok', path: '/arus-kas', icon: 'fas fa-exchange-alt' },
             { label: 'Setoran Unit', path: '/kas-unit', icon: 'fas fa-file-invoice-dollar' },
-            { label: 'Master Tagihan', path: '/jenis-tagihan', icon: 'fas fa-tags' }
+            { label: 'Master Tagihan', path: '/jenis-tagihan', icon: 'fas fa-tags' },
+            { label: 'Layanan Bendahara', path: '/layanan-bendahara', icon: 'fas fa-concierge-bell' }
         ]
     },
     {
-        label: 'Layanan & Administrasi',
-        icon: 'fas fa-concierge-bell',
-        roles: ['admin', 'sekretariat', 'keamanan', 'pendidikan', 'kesehatan', 'jamiyyah'],
+        label: "Jam'iyyah",
+        icon: 'fas fa-users',
+        roles: ['admin', 'jamiyyah'],
         submenu: [
-            { label: 'Input Layanan', path: '/layanan-admin', icon: 'fas fa-plus-circle' },
-            { label: 'Master Harga', path: '/layanan-info', icon: 'fas fa-list-ul' }
+            { label: "Layanan Jam'iyyah", path: '/layanan-jamiyyah', icon: 'fas fa-concierge-bell' }
         ]
     },
     {
@@ -79,12 +78,6 @@ export const NAV_ITEMS = [
         icon: 'fas fa-school',
         path: '/madrasah-miu',
         roles: ['admin', 'madrasah_miu']
-    },
-    {
-        label: 'Arsiparis',
-        icon: 'fas fa-archive',
-        path: '/arsiparis',
-        roles: ['admin', 'sekretariat']
     },
     {
         label: 'Pengaturan',
