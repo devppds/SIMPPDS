@@ -68,11 +68,12 @@ h4,
 }
 
 .view-container {
-  padding: 2.5rem 3rem;
+  padding: 3rem;
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
   animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  position: relative;
 }
 
 /* Sidebar */
@@ -270,7 +271,9 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 /* Stats */

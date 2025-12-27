@@ -123,11 +123,11 @@ export default function Modal({ isOpen, onClose, title, children, footer, width 
                 }
 
                 .modal-footer {
-                    padding: 1.25rem 2rem;
+                    padding: 1.5rem 2rem;
                     border-top: 1px solid #f1f5f9;
                     display: flex;
-                    justify-content: flex-end;
-                    gap: 12px;
+                    justify-content: center;
+                    gap: 15px;
                     background: #f8fafc;
                     border-bottom-left-radius: 20px;
                     border-bottom-right-radius: 20px;
