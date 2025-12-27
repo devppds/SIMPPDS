@@ -17,7 +17,7 @@ export default function KeamananRegPage() {
     const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
-        nama_santri: '', jenis_barang: 'Elektronik', detail_barang: '',
+        nama_santri: '', jenis_barang: 'Kendaraan', detail_barang: '',
         jenis_kendaraan: '-', jenis_elektronik: '-', plat_nomor: '-',
         warna: '', merk: '', aksesoris_1: '-', aksesoris_2: '-', aksesoris_3: '-',
         keadaan: 'Baik', kamar_penempatan: '', tanggal_registrasi: new Date().toISOString().split('T')[0],
@@ -55,7 +55,7 @@ export default function KeamananRegPage() {
         } else {
             setEditId(null);
             setFormData({
-                nama_santri: '', jenis_barang: 'Elektronik', detail_barang: '',
+                nama_santri: '', jenis_barang: 'Kendaraan', detail_barang: '',
                 jenis_kendaraan: '-', jenis_elektronik: '-', plat_nomor: '-',
                 warna: '', merk: '', aksesoris_1: '-', aksesoris_2: '-', aksesoris_3: '-',
                 keadaan: 'Baik', kamar_penempatan: '', tanggal_registrasi: new Date().toISOString().split('T')[0],
@@ -204,10 +204,9 @@ export default function KeamananRegPage() {
                         <div className="form-group">
                             <label className="form-label">Jenis Barang</label>
                             <select className="form-control" value={formData.jenis_barang} onChange={e => setFormData({ ...formData, jenis_barang: e.target.value })}>
-                                <option value="Elektronik">Elektronik</option>
                                 <option value="Kendaraan">Kendaraan</option>
-                                <option value="Alat Musik">Alat Musik</option>
-                                <option value="Lainnya">Lainnya</option>
+                                <option value="Elektronik">Elektronik</option>
+                                <option value="Kompor">Kompor</option>
                             </select>
                         </div>
                         <div className="form-group">
