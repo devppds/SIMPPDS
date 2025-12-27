@@ -12,6 +12,7 @@ export default function SantriPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('Aktif');
+    const [filterMadrasah, setFilterMadrasah] = useState('Semua'); // Baru: Filter Madrasah (MHM/MIU)
     const [activeTab, setActiveTab] = useState('umum'); // For Modal Tabs
     const [listKelas, setListKelas] = useState([]); // Master Data Kelas
     const [listKamar, setListKamar] = useState([]); // Master Data Kamar
@@ -212,11 +213,15 @@ export default function SantriPage() {
         } catch (err) { alert('Gagal: ' + err.message); }
     };
 
-    const displayData = santri.filter(s =>
-        (s.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
-        (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
-        (s.nik || '').toLowerCase().includes(search.toLowerCase())
-    );
+    const displayData = santri.filter(s => {
+        const matchSearch = (s.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
+            (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
+            (s.nik || '').toLowerCase().includes(search.toLowerCase());
+
+        const matchMadrasah = filterMadrasah === 'Semua' || s.madrasah === filterMadrasah;
+
+        return matchSearch && matchMadrasah;
+    });
 
     const columns = [
         {
@@ -323,6 +328,11 @@ export default function SantriPage() {
                         <i className="fas fa-search"></i>
                         <input type="text" className="search-input" placeholder="Cari nama, stambuk, atau NIK..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
+                    <select className="form-control" style={{ width: '180px', fontWeight: 700 }} value={filterMadrasah} onChange={(e) => setFilterMadrasah(e.target.value)}>
+                        <option value="Semua">Unit: Semua</option>
+                        <option value="MHM">MHM (Ma'hadul 'Ilmi)</option>
+                        <option value="MIU">MIU (I'dadiyyah)</option>
+                    </select>
                     <select className="form-control" style={{ width: '220px', fontWeight: 700 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                         <option value="Aktif">Status: Aktif</option>
                         <option value="Boyong">Boyong</option>
