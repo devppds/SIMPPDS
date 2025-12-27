@@ -31,7 +31,7 @@ export default function SantriPage() {
         nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
         anak_ke: '', jumlah_saudara_kandung: '', jumlah_saudara_tiri: '', jumlah_saudara_angkat: '', status_anak: '',
         // Alamat
-        alamat: '', dusun_jalan: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+        alamat: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
         // Minat & Bakat
         hobi: '', cita_cita: '',
         // Pendidikan Sebelumnya
@@ -51,83 +51,55 @@ export default function SantriPage() {
     const [submitting, setSubmitting] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    // ---------- REGION DATA (full Indonesia) ----------
-    const [allRegions, setAllRegions] = useState({ provinces: [], cities: [], districts: [], villages: [] });
-    const [provinceList, setProvinceList] = useState([]);
-    const [cityList, setCityList] = useState([]);
-    const [districtList, setDistrictList] = useState([]);
-    const [villageList, setVillageList] = useState([]);
+    // ---------- REGION DATA (Cascading) ----------
+    const [provinces, setProvinces] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [districts, setDistricts] = useState([]);
+    const [villages, setVillages] = useState([]);
 
-    // Fetch all region data once on mount (using public repo data-indonesia)
+    // 1. Fetch Provinces on Mount
     useEffect(() => {
-        const fetchAll = async () => {
-            try {
-                const [provRes, cityRes, distRes, villRes] = await Promise.all([
-                    fetch('https://ibnux.github.io/data-indonesia/provinsi.json'),
-                    fetch('https://ibnux.github.io/data-indonesia/kabupaten.json'),
-                    fetch('https://ibnux.github.io/data-indonesia/kecamatan.json'),
-                    fetch('https://ibnux.github.io/data-indonesia/kelurahan.json')
-                ]);
-                const [provs, cities, districts, villages] = await Promise.all([
-                    provRes.json(), cityRes.json(), distRes.json(), villRes.json()
-                ]);
-                setAllRegions({ provinces: provs, cities, districts, villages });
-                setProvinceList(provs.map(p => p.nama));
-            } catch (e) {
-                console.error('Failed to load region data', e);
-            }
-        };
-        fetchAll();
+        fetch('https://ibnux.github.io/data-indonesia/provinsi.json')
+            .then(res => res.json())
+            .then(data => setProvinces(data))
+            .catch(err => console.error('Gagal ambil provinsi:', err));
     }, []);
 
-    // Update city list when province changes
+    // 2. Fetch Cities when Province changes
     useEffect(() => {
-        if (formData.provinsi) {
-            const filtered = allRegions.cities.filter(c => c.provinsi === formData.provinsi);
-            setCityList(filtered.map(c => c.nama));
-
-            // Check if current selection is still valid
-            const currentCityValid = filtered.some(c => c.nama === formData.kota_kabupaten);
-            if (!currentCityValid && formData.kota_kabupaten) {
-                setFormData(prev => ({ ...prev, kota_kabupaten: '', kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
-            }
-        } else {
-            setCityList([]);
-            setFormData(prev => ({ ...prev, kota_kabupaten: '', kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
+        if (!formData.provinsi) { setCities([]); return; }
+        const prov = provinces.find(p => p.nama.toLowerCase() === (formData.provinsi || '').toLowerCase());
+        if (prov) {
+            fetch(`https://ibnux.github.io/data-indonesia/kabupaten/${prov.id}.json`)
+                .then(res => res.json())
+                .then(data => setCities(data))
+                .catch(err => console.error('Gagal ambil kota:', err));
         }
-    }, [formData.provinsi, allRegions.cities]);
+    }, [formData.provinsi, provinces]);
 
-    // Update district list when city changes
+    // 3. Fetch Districts when City changes
     useEffect(() => {
-        if (formData.kota_kabupaten) {
-            const filtered = allRegions.districts.filter(d => d.kabupaten === formData.kota_kabupaten);
-            setDistrictList(filtered.map(d => d.nama));
-
-            const currentDistValid = filtered.some(d => d.nama === formData.kecamatan);
-            if (!currentDistValid && formData.kecamatan) {
-                setFormData(prev => ({ ...prev, kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
-            }
-        } else {
-            setDistrictList([]);
-            // setFormData(prev => ({ ...prev, kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
+        if (!formData.kota_kabupaten) { setDistricts([]); return; }
+        const city = cities.find(c => c.nama.toLowerCase() === (formData.kota_kabupaten || '').toLowerCase());
+        if (city) {
+            fetch(`https://ibnux.github.io/data-indonesia/kecamatan/${city.id}.json`)
+                .then(res => res.json())
+                .then(data => setDistricts(data))
+                .catch(err => console.error('Gagal ambil kecamatan:', err));
         }
-    }, [formData.kota_kabupaten, allRegions.districts]);
+    }, [formData.kota_kabupaten, cities]);
 
-    // Update village list when district changes
+    // 4. Fetch Villages when District changes
     useEffect(() => {
-        if (formData.kecamatan) {
-            const filtered = allRegions.villages.filter(v => v.kecamatan === formData.kecamatan);
-            setVillageList(filtered.map(v => ({ name: v.nama, postal_code: v.kodepos })));
-
-            const currentVillageValid = filtered.some(v => v.nama === formData.desa_kelurahan);
-            if (!currentVillageValid && formData.desa_kelurahan) {
-                setFormData(prev => ({ ...prev, desa_kelurahan: '', kode_pos: '' }));
-            }
-        } else {
-            setVillageList([]);
-            // setFormData(prev => ({ ...prev, desa_kelurahan: '', kode_pos: '' }));
+        if (!formData.kecamatan) { setVillages([]); return; }
+        const dist = districts.find(d => d.nama.toLowerCase() === (formData.kecamatan || '').toLowerCase());
+        if (dist) {
+            fetch(`https://ibnux.github.io/data-indonesia/kelurahan/${dist.id}.json`)
+                .then(res => res.json())
+                .then(data => setVillages(data))
+                .catch(err => console.error('Gagal ambil kelurahan:', err));
         }
-    }, [formData.kecamatan, allRegions.villages]);
+    }, [formData.kecamatan, districts]);
 
     useEffect(() => {
         loadData();
@@ -237,7 +209,7 @@ export default function SantriPage() {
                 nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
                 anak_ke: '', jumlah_saudara_kandung: '', jumlah_saudara_tiri: '', jumlah_saudara_angkat: '', status_anak: '',
                 // Alamat
-                alamat: '', dusun_jalan: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+                alamat: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
                 // Minat & Bakat
                 hobi: '', cita_cita: '',
                 // Pendidikan Sebelumnya
@@ -585,36 +557,36 @@ export default function SantriPage() {
                     )}
                     {activeTab === 'alamat' && (
                         <div className="tab-content animate-in">
-                            <div className="form-group"><label className="form-label">Alamat</label><textarea className="form-control" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
-                            <div className="form-group"><label className="form-label">Dusun / Jalan</label><input type="text" className="form-control" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} /></div>
+                            <div className="form-group"><label className="form-label">Alamat Lengkap</label><textarea className="form-control" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
+                            <div className="form-grid">
+                                <div className="form-group"><label className="form-label">Dusun / Jalan</label><input type="text" className="form-control" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">RT / RW</label><input type="text" className="form-control" value={formData.rt_rw} onChange={e => setFormData({ ...formData, rt_rw: e.target.value })} placeholder="001/002" /></div>
+                            </div>
                             <div className="form-group"><label className="form-label">Provinsi</label>
-                                <select className="form-control" value={formData.provinsi} onChange={e => setFormData({ ...formData, provinsi: e.target.value })}>
+                                <select className="form-control" value={formData.provinsi} onChange={e => setFormData({ ...formData, provinsi: e.target.value, kota_kabupaten: '', kecamatan: '', desa_kelurahan: '', kode_pos: '' })}>
                                     <option value="">-- Pilih Provinsi --</option>
-                                    {provinceList.map(p => (<option key={p} value={p}>{p}</option>))}
+                                    {provinces.map(p => (<option key={p.id} value={p.nama}>{p.nama}</option>))}
                                 </select>
                             </div>
                             <div className="form-group"><label className="form-label">Kota / Kabupaten</label>
-                                <select className="form-control" value={formData.kota_kabupaten} onChange={e => setFormData({ ...formData, kota_kabupaten: e.target.value })} disabled={!cityList.length}>
+                                <select className="form-control" value={formData.kota_kabupaten} onChange={e => setFormData({ ...formData, kota_kabupaten: e.target.value, kecamatan: '', desa_kelurahan: '', kode_pos: '' })} disabled={!cities.length}>
                                     <option value="">-- Pilih Kota/Kabupaten --</option>
-                                    {cityList.map(c => (<option key={c} value={c}>{c}</option>))}
+                                    {cities.map(c => (<option key={c.id} value={c.nama}>{c.nama}</option>))}
                                 </select>
                             </div>
                             <div className="form-group"><label className="form-label">Kecamatan</label>
-                                <select className="form-control" value={formData.kecamatan} onChange={e => setFormData({ ...formData, kecamatan: e.target.value })} disabled={!districtList.length}>
+                                <select className="form-control" value={formData.kecamatan} onChange={e => setFormData({ ...formData, kecamatan: e.target.value, desa_kelurahan: '', kode_pos: '' })} disabled={!districts.length}>
                                     <option value="">-- Pilih Kecamatan --</option>
-                                    {districtList.map(d => (<option key={d} value={d}>{d}</option>))}
+                                    {districts.map(d => (<option key={d.id} value={d.nama}>{d.nama}</option>))}
                                 </select>
                             </div>
                             <div className="form-group"><label className="form-label">Desa / Kelurahan</label>
-                                <select className="form-control" value={formData.desa_kelurahan} onChange={e => {
-                                    const selected = villageList.find(v => v.name === e.target.value);
-                                    setFormData(prev => ({ ...prev, desa_kelurahan: e.target.value, kode_pos: selected ? selected.postal_code : '' }));
-                                }} disabled={!villageList.length}>
+                                <select className="form-control" value={formData.desa_kelurahan} onChange={e => setFormData({ ...formData, desa_kelurahan: e.target.value })} disabled={!villages.length}>
                                     <option value="">-- Pilih Desa/Kelurahan --</option>
-                                    {villageList.map(v => (<option key={v.name} value={v.name}>{v.name}</option>))}
+                                    {villages.map(v => (<option key={v.id} value={v.nama}>{v.nama}</option>))}
                                 </select>
                             </div>
-                            <div className="form-group"><label className="form-label">Kode Pos</label><input type="text" className="form-control" value={formData.kode_pos} readOnly /></div>
+                            <div className="form-group"><label className="form-label">Kode Pos</label><input type="text" className="form-control" value={formData.kode_pos} onChange={e => setFormData({ ...formData, kode_pos: e.target.value })} placeholder="Masukkan Kode Pos" /></div>
                             <div className="form-group"><label className="form-label">Negara</label><input type="text" className="form-control" value="Indonesia" readOnly /></div>
                         </div>
                     )}
