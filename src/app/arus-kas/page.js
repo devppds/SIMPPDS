@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency, formatDate, exportToCSV } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function ArusKasPage() {
     const { isAdmin } = useAuth();
@@ -159,6 +160,50 @@ export default function ArusKasPage() {
     const totalKeluar = data.filter(d => d.tipe === 'Keluar').reduce((acc, d) => acc + parseInt(d.nominal || 0), 0);
     const saldo = totalMasuk - totalKeluar;
 
+    const columns = [
+        { key: 'tanggal', label: 'Tanggal', render: (row) => <span style={{ fontWeight: 600 }}>{formatDate(row.tanggal)}</span> },
+        {
+            key: 'tipe',
+            label: 'Jenis',
+            render: (row) => (
+                <span className="th-badge" style={{
+                    background: row.tipe === 'Masuk' ? '#dcfce7' : '#fee2e2',
+                    color: row.tipe === 'Masuk' ? '#166534' : '#991b1b',
+                    fontSize: '0.65rem',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    fontWeight: 700
+                }}>
+                    {row.tipe.toUpperCase()}
+                </span>
+            )
+        },
+        { key: 'kategori', label: 'Kategori', render: (row) => <strong>{row.kategori}</strong> },
+        {
+            key: 'nominal',
+            label: 'Nominal',
+            render: (row) => (
+                <span style={{ fontWeight: 800, color: row.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>
+                    {row.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(row.nominal)}
+                </span>
+            )
+        },
+        { key: 'pj', label: 'PJ', render: (row) => row.pj || '-' },
+        {
+            key: 'actions',
+            label: 'Aksi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="view-container animate-in">
             <div className="card">
@@ -215,55 +260,12 @@ export default function ArusKasPage() {
                     <button className="btn btn-outline" onClick={loadData} title="Refresh Data"><i className="fas fa-sync-alt"></i></button>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Jenis</th>
-                                <th>Kategori</th>
-                                <th>Nominal</th>
-                                <th>PJ</th>
-                                <th style={{ width: '150px' }}>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : filteredData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada catatan transaksi.</td></tr>
-                            ) : filteredData.map(d => (
-                                <tr key={d.id}>
-                                    <td style={{ fontWeight: 600 }}>{formatDate(d.tanggal)}</td>
-                                    <td>
-                                        <span className="th-badge" style={{
-                                            background: d.tipe === 'Masuk' ? '#dcfce7' : '#fee2e2',
-                                            color: d.tipe === 'Masuk' ? '#166534' : '#991b1b',
-                                            fontSize: '0.65rem',
-                                            padding: '4px 10px',
-                                            borderRadius: '20px',
-                                            fontWeight: 700
-                                        }}>
-                                            {d.tipe.toUpperCase()}
-                                        </span>
-                                    </td>
-                                    <td><strong>{d.kategori}</strong></td>
-                                    <td style={{ fontWeight: 800, color: d.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>
-                                        {d.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(d.nominal)}
-                                    </td>
-                                    <td>{d.pj || '-'}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={filteredData}
+                    loading={loading}
+                    emptyMessage="Belum ada catatan transaksi."
+                />
             </div>
 
             {/* Modal Input/Edit */}
