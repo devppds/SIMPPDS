@@ -8,45 +8,38 @@ import Modal from '@/components/Modal';
 // Service types by unit
 const SERVICE_TYPES = {
     'Sekretariat': [
-        'Legalisir Ijazah/Syahadah',
-        'Surat Keterangan Santri',
-        'Kartu Tanda Santri (KTS)',
-        'Cetak Sertifikat/Piagam',
-        'Mutasi Keluar/Pindah',
-        'Surat Rekomendasi',
-        'Lainnya'
-    ],
-    'Bendahara': [
-        'Pembayaran SPP',
-        'Pembayaran Syahriah',
-        'Biaya Pendaftaran',
-        'Biaya Ujian',
-        'Lainnya'
-    ],
-    'Pendidikan': [
-        'Pendaftaran Kelas',
-        'Ujian/Imtihan',
-        'Sertifikat Kelulusan',
-        'Lainnya'
+        'KTK',
+        'SIM',
+        'KTS',
+        'Surat Domisili',
+        'Surat Pindah',
+        'Surat Boyong'
     ],
     'Keamanan': [
-        'Izin Keluar/Pulang',
-        'Perizinan Khusus',
-        'Registrasi Barang',
-        'Lainnya'
+        'Izin KELUAR/PULANG',
+        'Video Call',
+        'Telfon biasa',
+        'Motor Baru',
+        'Motor Lama',
+        'Ontel Lama',
+        'Ontel Baru',
+        'Hp',
+        'Laptop',
+        'Surat kehilangan',
+        'Paket Wesel',
+        'Flashdisk',
+        'Kompor'
+    ],
+    'Pendidikan': [
+        'Izin SEKOLAH'
     ],
     'Kesehatan': [
-        'Konsultasi Kesehatan',
-        'Pemeriksaan Umum',
-        'Rujukan Medis',
-        'Obat & Alat Kesehatan',
-        'Lainnya'
+        'OBAT',
+        'IZIN SAKIT'
     ],
     "Jam'iyyah": [
-        'Kegiatan Jam\'iyyah',
-        'Perlengkapan Rebana',
-        'Kostum & Atribut',
-        'Lainnya'
+        'Alat Rebana 1 Set',
+        'Alat Rebana Perbaikan'
     ]
 };
 
