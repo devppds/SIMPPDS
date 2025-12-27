@@ -518,13 +518,10 @@ export default function SantriPage() {
                             </div>
                             <div className="form-group"><label className="form-label">Tempat, Tanggal Lahir Ayah</label><input type="text" className="form-control" value={formData.tempat_tanggal_lahir_ayah} onChange={e => setFormData({ ...formData, tempat_tanggal_lahir_ayah: e.target.value })} placeholder="Kediri, 01 Januari 1980" /></div>
                             <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Status Ayah</label><select className="form-control" value={formData.status_ayah} onChange={e => setFormData({ ...formData, status_ayah: e.target.value })}><option value="Hidup">Hidup</option><option value="Meninggal">Meninggal</option></select></div>
                                 <div className="form-group"><label className="form-label">Pendidikan Ayah</label><input type="text" className="form-control" value={formData.pendidikan_ayah} onChange={e => setFormData({ ...formData, pendidikan_ayah: e.target.value })} placeholder="S1, SMA, dll" /></div>
-                            </div>
-                            <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Pekerjaan Ayah</label><input type="text" className="form-control" value={formData.pekerjaan_ayah} onChange={e => setFormData({ ...formData, pekerjaan_ayah: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Penghasilan Ayah</label><input type="text" className="form-control" value={formData.penghasilan_ayah} onChange={e => setFormData({ ...formData, penghasilan_ayah: e.target.value })} placeholder="< 1 Juta, 1-3 Juta, dll" /></div>
                             </div>
+                            <div className="form-group"><label className="form-label">Penghasilan Ayah</label><input type="text" className="form-control" value={formData.penghasilan_ayah} onChange={e => setFormData({ ...formData, penghasilan_ayah: e.target.value })} placeholder="< 1 Juta, 1-3 Juta, dll" /></div>
                             <div className="form-group"><label className="form-label">No. WhatsApp Ayah</label><input type="text" className="form-control" value={formData.no_telp_ayah} onChange={e => setFormData({ ...formData, no_telp_ayah: e.target.value })} placeholder="08xxxxxxxxxx" /></div>
 
                             <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px', marginTop: '2rem' }}>Data Ibu</h4>
@@ -532,15 +529,12 @@ export default function SantriPage() {
                                 <div className="form-group"><label className="form-label">Nama Ibu</label><input type="text" className="form-control" value={formData.nama_ibu} onChange={e => setFormData({ ...formData, nama_ibu: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">NIK Ibu</label><input type="text" className="form-control" value={formData.nik_ibu} onChange={e => setFormData({ ...formData, nik_ibu: e.target.value })} /></div>
                             </div>
-                            <div className="form-group"><label className="form-label">Tempat, Tanggal Lahir Ibu</label><input type="text" className="form-control" value={formData.tempat_tanggal_lahir_ibu} onChange={e => setFormData({ ...formData, tempat_tanggal_lahir_ibu: e.target.value })} placeholder="Kediri, 01 Januari 1985" /></div>
+                            <div className="form-group"><label className="form-label">Tempat, Tanggal Lahir Ibu</label><input type="text" className="form-control" value={formData.tempat_tanggal_lahir_ibu} onChange={e => setFormData({ ...formData, tempat_tanggal_lahir_ibu: e.target.value })} placeholder="Kediri, 01 Januari 1980" /></div>
                             <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Status Ibu</label><select className="form-control" value={formData.status_ibu} onChange={e => setFormData({ ...formData, status_ibu: e.target.value })}><option value="Hidup">Hidup</option><option value="Meninggal">Meninggal</option></select></div>
                                 <div className="form-group"><label className="form-label">Pendidikan Ibu</label><input type="text" className="form-control" value={formData.pendidikan_ibu} onChange={e => setFormData({ ...formData, pendidikan_ibu: e.target.value })} placeholder="S1, SMA, dll" /></div>
-                            </div>
-                            <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Pekerjaan Ibu</label><input type="text" className="form-control" value={formData.pekerjaan_ibu} onChange={e => setFormData({ ...formData, pekerjaan_ibu: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Penghasilan Ibu</label><input type="text" className="form-control" value={formData.penghasilan_ibu} onChange={e => setFormData({ ...formData, penghasilan_ibu: e.target.value })} placeholder="< 1 Juta, 1-3 Juta, dll" /></div>
                             </div>
+                            <div className="form-group"><label className="form-label">Penghasilan Ibu</label><input type="text" className="form-control" value={formData.penghasilan_ibu} onChange={e => setFormData({ ...formData, penghasilan_ibu: e.target.value })} placeholder="< 1 Juta, 1-3 Juta, dll" /></div>
                             <div className="form-group"><label className="form-label">No. WhatsApp Ibu</label><input type="text" className="form-control" value={formData.no_telp_ibu} onChange={e => setFormData({ ...formData, no_telp_ibu: e.target.value })} placeholder="08xxxxxxxxxx" /></div>
                         </div>
                     )}
