@@ -222,34 +222,35 @@ export default function PengurusPage() {
                                 value={formData.jabatan}
                                 onChange={e => {
                                     const val = e.target.value;
-                                    setFormData({ ...formData, jabatan: val, divisi: listJabatan.some(j => j.nama_jabatan === val) ? '-' : formData.divisi });
+                                    const isDH = listJabatan.some(j => j.nama_jabatan === val);
+                                    const isPleno = listDivisi.some(d => d.nama_jabatan === val);
+                                    let div = '';
+                                    if (isDH) div = 'DEWAN HARIAN';
+                                    else if (isPleno) div = 'PLENO';
+                                    setFormData({ ...formData, jabatan: val, divisi: div });
                                 }}
                             >
                                 <option value="">- Pilih Jabatan -</option>
                                 <optgroup label="Dewan Harian">
                                     {listJabatan.map(j => <option key={j.id} value={j.nama_jabatan}>{j.nama_jabatan}</option>)}
                                 </optgroup>
-                                <optgroup label="Struktural Unit">
-                                    <option value="Ketua">Ketua</option>
-                                    <option value="Koordinator">Koordinator</option>
-                                    <option value="Anggota">Anggota</option>
-                                    <option value="Staf">Staf</option>
+                                <optgroup label="Unit Kerja (Pleno)">
+                                    {listDivisi.map(d => (
+                                        <option key={d.id} value={d.nama_jabatan}>{d.nama_jabatan}</option>
+                                    ))}
                                 </optgroup>
                             </select>
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Divisi / Unit Kerja</label>
-                            <select
+                            <label className="form-label">Divisi / Kelompok</label>
+                            <input
+                                type="text"
                                 className="form-control"
                                 value={formData.divisi}
-                                onChange={e => setFormData({ ...formData, divisi: e.target.value })}
-                            >
-                                <option value="">- Pilih Divisi -</option>
-                                <option value="-">- (Pimpinan / Non-Divisi)</option>
-                                {listDivisi.map(d => (
-                                    <option key={d.id} value={d.nama_jabatan}>{d.nama_jabatan}</option>
-                                ))}
-                            </select>
+                                readOnly
+                                placeholder="Otomatis (DEWAN HARIAN / PLENO)"
+                                style={{ background: '#f1f5f9', fontWeight: 700, color: 'var(--primary)' }}
+                            />
                         </div>
                     </div>
                     <div className="form-grid">
