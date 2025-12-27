@@ -7,31 +7,40 @@ import Modal from '@/components/Modal';
 
 // Service types by unit
 const SERVICE_TYPES = {
-    'Sekretariat': [
-        'KTK',
-        'SIM',
-        'KTS',
-        'Surat Domisili',
-        'Surat Pindah',
-        'Surat Boyong'
-    ],
-    'Keamanan': [
-        'Video Call',
-        'Telfon biasa',
-        'Surat kehilangan',
-        'Paket Wesel'
-    ],
-    'Pendidikan': [
-        'Izin SEKOLAH'
-    ],
-    'Kesehatan': [
-        'OBAT',
-        'IZIN SAKIT'
-    ],
-    "Jam'iyyah": [
-        'Alat Rebana 1 Set',
-        'Alat Rebana Perbaikan'
-    ]
+    'Sekretariat': ['KTK', 'SIM', 'KTS', 'Surat Domisili', 'Surat Pindah', 'Surat Boyong'],
+    'Keamanan': ['Izin KELUAR/PULANG', 'Motor Baru', 'Motor Lama', 'Ontel Baru', 'Ontel Lama', 'Hp', 'Laptop', 'Flashdisk', 'Kompor', 'Video Call', 'Telfon biasa', 'Surat kehilangan', 'Paket Wesel'],
+    'Pendidikan': ['Izin SEKOLAH'],
+    'Kesehatan': ['OBAT', 'IZIN SAKIT'],
+    "Jam'iyyah": ['Alat Rebana 1 Set', 'Alat Rebana Perbaikan']
+};
+
+const SERVICE_PRICES = {
+    // Sekretariat
+    'KTK': 5000,
+    'SIM': 5000,
+    'KTS': 15000,
+    'Surat Domisili': 2000,
+    'Surat Pindah': 5000,
+    'Surat Boyong': 5000,
+    // Keamanan
+    'Izin KELUAR/PULANG': 2000,
+    'Motor Baru': 100000,
+    'Motor Lama': 50000,
+    'Ontel Baru': 15000,
+    'Ontel Lama': 10000,
+    'Hp': 20000,
+    'Laptop': 25000,
+    'Flashdisk': 5000,
+    'Kompor': 10000,
+    'Video Call': 2000,
+    'Telfon biasa': 1000,
+    'Surat kehilangan': 2000,
+    'Paket Wesel': 2000,
+    // Pendidikan
+    'Izin SEKOLAH': 2000,
+    // Kesehatan
+    'OBAT': 5000,
+    'IZIN SAKIT': 2000
 };
 
 export default function LayananUnitPage({ unit: forceUnit }) {
@@ -248,13 +257,24 @@ export default function LayananUnitPage({ unit: forceUnit }) {
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">Jenis Layanan</label>
-                            <select className="form-control" value={formData.jenis_layanan} onChange={e => setFormData({ ...formData, jenis_layanan: e.target.value })}>
+                            <select
+                                className="form-control"
+                                value={formData.jenis_layanan}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setFormData({
+                                        ...formData,
+                                        jenis_layanan: val,
+                                        nominal: SERVICE_PRICES[val] || '0'
+                                    });
+                                }}
+                            >
                                 {(SERVICE_TYPES[forceUnit] || []).map(s => <option key={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="form-group">
                             <label className="form-label">Biaya (IDR)</label>
-                            <input type="number" className="form-control" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} />
+                            <input type="number" className="form-control" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} style={{ fontWeight: 800, color: 'var(--success)' }} />
                         </div>
                     </div>
                     <div className="form-group">
