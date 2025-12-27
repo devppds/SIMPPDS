@@ -157,50 +157,12 @@ export default function UstadzPage() {
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Profil</th><th>Nama Lengkap</th><th>NIK / NIP</th><th>Tugas Utama</th><th>Status</th><th>Opsi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada data asatidzah.</td></tr>
-                            ) : displayData.map(d => (
-                                <tr key={d.id}>
-                                    <td>
-                                        <img src={d.foto_ustadz || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.nama)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '45px', height: '45px', borderRadius: '12px', objectFit: 'cover' }} alt="" />
-                                    </td>
-                                    <td><div style={{ fontWeight: 800, color: 'var(--primary-dark)' }}>{d.nama}</div><div style={{ fontSize: '0.75rem' }}>{d.alamat || '-'}</div></td>
-                                    <td>{d.nik_nip || '-'}</td>
-                                    <td><span style={{ color: 'var(--primary)', fontWeight: 700 }}>{d.kelas || '-'}</span></td>
-                                    <td>
-                                        <span className="th-badge" style={{
-                                            background: d.status === 'Aktif' ? '#dcfce7' : '#fee2e2',
-                                            color: d.status === 'Aktif' ? '#166534' : '#991b1b',
-                                            padding: '4px 12px',
-                                            borderRadius: '20px',
-                                            fontSize: '0.7rem',
-                                            fontWeight: 700
-                                        }}>
-                                            {d.status?.toUpperCase() || 'AKTIF'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Profil"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={displayData}
+                    loading={loading}
+                    emptyMessage="Belum ada data asatidzah."
+                />
             </div>
 
             {/* Modal Input/Edit */}
