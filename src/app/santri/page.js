@@ -19,6 +19,9 @@ export default function SantriPage() {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [detailData, setDetailData] = useState(null);
     const [editId, setEditId] = useState(null);
+    const [isMutasiOpen, setIsMutasiOpen] = useState(false);
+    const [mutasiData, setMutasiData] = useState(null);
+    const [mutasiForm, setMutasiForm] = useState({ status_santri: 'Boyong', pindah_ke: '', tahun_pindah: '', tanggal_boyong: new Date().toISOString().split('T')[0] });
     const [formData, setFormData] = useState({
         nama_siswa: '', stambuk_pondok: '', stambuk_madrasah: '', tahun_masuk: '',
         kamar: '', status_mb: 'Baru', madrasah: '', kelas: 'I Ula', nik: '', nisn: '',
@@ -161,6 +164,32 @@ export default function SantriPage() {
         try { await apiCall('deleteData', 'POST', { type: 'santri', id }); loadData(); } catch (err) { alert(err.message); }
     };
 
+    const openMutasi = (santri) => {
+        setMutasiData(santri);
+        setMutasiForm({ status_santri: 'Boyong', pindah_ke: '', tahun_pindah: new Date().getFullYear().toString(), tanggal_boyong: new Date().toISOString().split('T')[0] });
+        setIsMutasiOpen(true);
+    };
+
+    const handleMutasi = async () => {
+        if (!mutasiData) return;
+        if (!confirm(`Yakin mengubah status ${mutasiData.nama_siswa} menjadi ${mutasiForm.status_santri}?`)) return;
+
+        try {
+            const updatedData = {
+                ...mutasiData,
+                status_santri: mutasiForm.status_santri,
+                pindah_ke: mutasiForm.status_santri === 'Pindah' ? mutasiForm.pindah_ke : '',
+                tahun_pindah: mutasiForm.status_santri === 'Pindah' || mutasiForm.status_santri === 'Lulus' ? mutasiForm.tahun_pindah : '',
+                tanggal_boyong: mutasiForm.status_santri === 'Boyong' ? mutasiForm.tanggal_boyong : ''
+            };
+
+            await apiCall('saveData', 'POST', { type: 'santri', data: updatedData });
+            setIsMutasiOpen(false);
+            loadData();
+            alert(`Status ${mutasiData.nama_siswa} berhasil diubah menjadi ${mutasiForm.status_santri}!`);
+        } catch (err) { alert('Gagal: ' + err.message); }
+    };
+
     const displayData = santri.filter(s =>
         (s.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
         (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -289,6 +318,7 @@ export default function SantriPage() {
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button className="btn-vibrant btn-vibrant-purple" onClick={() => openDetail(s)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
                                             <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(s)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {s.status_santri === 'Aktif' && <button className="btn-vibrant btn-vibrant-orange" onClick={() => openMutasi(s)} title="Mutasi Status" style={{ background: '#f59e0b', color: 'white' }}><i className="fas fa-exchange-alt"></i></button>}
                                             {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteSantri(s.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
@@ -440,6 +470,106 @@ export default function SantriPage() {
                                         {detailData.dusun_jalan}, {detailData.desa_kelurahan}, {detailData.kecamatan}
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Modal Mutasi Status */}
+            <Modal
+                isOpen={isMutasiOpen}
+                onClose={() => setIsMutasiOpen(false)}
+                title="Mutasi Status Santri"
+                footer={
+                    <button className="btn btn-primary" onClick={handleMutasi}>
+                        <i className="fas fa-exchange-alt"></i> Proses Mutasi
+                    </button>
+                }
+            >
+                {mutasiData && (
+                    <div style={{ padding: '1rem' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem', padding: '1rem', background: 'var(--primary-light)', borderRadius: '12px' }}>
+                            <img
+                                src={mutasiData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(mutasiData.nama_siswa)}&background=1e3a8a&color=fff&bold=true`}
+                                alt={mutasiData.nama_siswa}
+                                style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', marginBottom: '0.5rem' }}
+                            />
+                            <h3 style={{ marginTop: '0.5rem', fontWeight: 800 }}>{mutasiData.nama_siswa}</h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{mutasiData.stambuk_pondok} • {mutasiData.kamar}</p>
+                        </div>
+
+                        <div style={{ display: 'grid', gap: '1rem' }}>
+                            <div>
+                                <label style={{ fontWeight: 700, marginBottom: '0.5rem', display: 'block' }}>Status Baru</label>
+                                <select
+                                    className="form-control"
+                                    value={mutasiForm.status_santri}
+                                    onChange={e => setMutasiForm({ ...mutasiForm, status_santri: e.target.value })}
+                                    style={{ fontWeight: 700 }}
+                                >
+                                    <option value="Boyong">Boyong (Pulang Sementara)</option>
+                                    <option value="Pindah">Pindah (Ke Pondok Lain)</option>
+                                    <option value="Lulus">Lulus</option>
+                                </select>
+                            </div>
+
+                            {mutasiForm.status_santri === 'Pindah' && (
+                                <>
+                                    <div>
+                                        <label style={{ fontWeight: 700, marginBottom: '0.5rem', display: 'block' }}>Pindah Ke Pondok</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder="Nama pondok tujuan..."
+                                            value={mutasiForm.pindah_ke}
+                                            onChange={e => setMutasiForm({ ...mutasiForm, pindah_ke: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ fontWeight: 700, marginBottom: '0.5rem', display: 'block' }}>Tahun Pindah</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder="2024"
+                                            value={mutasiForm.tahun_pindah}
+                                            onChange={e => setMutasiForm({ ...mutasiForm, tahun_pindah: e.target.value })}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {mutasiForm.status_santri === 'Boyong' && (
+                                <div>
+                                    <label style={{ fontWeight: 700, marginBottom: '0.5rem', display: 'block' }}>Tanggal Boyong</label>
+                                    <input
+                                        type="date"
+                                        className="form-control"
+                                        value={mutasiForm.tanggal_boyong}
+                                        onChange={e => setMutasiForm({ ...mutasiForm, tanggal_boyong: e.target.value })}
+                                    />
+                                </div>
+                            )}
+
+                            {mutasiForm.status_santri === 'Lulus' && (
+                                <div>
+                                    <label style={{ fontWeight: 700, marginBottom: '0.5rem', display: 'block' }}>Tahun Lulus</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="2024"
+                                        value={mutasiForm.tahun_pindah}
+                                        onChange={e => setMutasiForm({ ...mutasiForm, tahun_pindah: e.target.value })}
+                                    />
+                                </div>
+                            )}
+
+                            <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fbbf24' }}>
+                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#92400e' }}>
+                                    <i className="fas fa-info-circle" style={{ marginRight: '8px' }}></i>
+                                    <strong>Perhatian:</strong> Setelah mutasi, data santri akan dipindahkan ke arsip dan status tidak bisa dikembalikan ke Aktif.
+                                </p>
                             </div>
                         </div>
                     </div>
