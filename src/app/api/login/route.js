@@ -1,6 +1,7 @@
 import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const runtime = 'edge';
+// Version: 1.0.1 - Deploy Refresh
 
 async function hashPassword(password) {
     const msgBuffer = new TextEncoder().encode(password);
