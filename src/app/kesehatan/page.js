@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiCall } from '@/lib/utils';
+import { apiCall, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
@@ -13,6 +13,8 @@ export default function KesehatanPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         nama_santri: '', mulai_sakit: new Date().toISOString().split('T')[0],
@@ -47,6 +49,11 @@ export default function KesehatanPage() {
             });
         }
         setIsModalOpen(true);
+    };
+
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
@@ -111,25 +118,23 @@ export default function KesehatanPage() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Tanggal Mulai</th>
+                                <th>Tanggal Sakit</th>
                                 <th>Nama Santri</th>
                                 <th>Gejala</th>
-                                <th>Obat/Tindakan</th>
                                 <th>Status</th>
-                                <th style={{ width: '100px' }}>Aksi</th>
+                                <th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
+                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data pemeriksaan.</td></tr>
+                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data pemeriksaan.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
                                     <td>{d.mulai_sakit}</td>
                                     <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
                                     <td style={{ fontSize: '0.85rem' }}>{d.gejala}</td>
-                                    <td style={{ fontSize: '0.85rem' }}>{d.obat_tindakan || '-'}</td>
                                     <td>
                                         <span className="th-badge" style={{
                                             background: d.status_periksa === 'Rawat Inap' ? '#fee2e2' : '#f1f5f9',
@@ -140,8 +145,9 @@ export default function KesehatanPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -151,6 +157,7 @@ export default function KesehatanPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -203,6 +210,54 @@ export default function KesehatanPage() {
                         </div>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal View Detail */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Detail Rekam Medis"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pasien / Santri</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                            <span className="th-badge" style={{
+                                background: viewData.status_periksa === 'Rawat Inap' ? '#fee2e2' : '#f1f5f9',
+                                color: viewData.status_periksa === 'Rawat Inap' ? '#dc2626' : '#475569',
+                                marginTop: '10px'
+                            }}>
+                                {viewData.status_periksa}
+                            </span>
+                        </div>
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Mulai Sakit</small>
+                                <div style={{ fontWeight: 600 }}>{viewData.mulai_sakit}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Biaya Obat</small>
+                                <div style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(viewData.biaya_obat)}</div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Gejala & Keluhan</small>
+                            <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginTop: '5px' }}>
+                                {viewData.gejala}
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Obat & Tindakan Diberikan</small>
+                            <div style={{ fontWeight: 600, marginTop: '5px' }}>{viewData.obat_tindakan || 'Belum diberikan tindakan'}</div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
+                            <p style={{ marginTop: '5px' }}>{viewData.keterangan || '-'}</p>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

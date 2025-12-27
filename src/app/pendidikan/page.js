@@ -13,6 +13,8 @@ export default function PendidikanPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         tanggal: new Date().toISOString().split('T')[0],
@@ -47,6 +49,11 @@ export default function PendidikanPage() {
             });
         }
         setIsModalOpen(true);
+    };
+
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
@@ -112,8 +119,8 @@ export default function PendidikanPage() {
                                 <th>Nama Santri</th>
                                 <th>Kegiatan</th>
                                 <th>Nilai</th>
-                                <th>Kehadiran</th>
-                                <th style={{ width: '100px' }}>Aksi</th>
+                                <th>Status</th>
+                                <th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,8 +144,9 @@ export default function PendidikanPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -148,6 +156,7 @@ export default function PendidikanPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -200,6 +209,56 @@ export default function PendidikanPage() {
                         <textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows="2"></textarea>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal View Detail */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Detail Catatan Pendidikan"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nama Santri</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                            <span className="th-badge" style={{
+                                background: viewData.kehadiran === 'Hadir' ? '#dcfce7' : '#fee2e2',
+                                color: viewData.kehadiran === 'Hadir' ? '#166534' : '#991b1b',
+                                marginTop: '10px'
+                            }}>
+                                Status {viewData.kehadiran}
+                            </span>
+                        </div>
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Jenis Kegiatan</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.kegiatan}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Tanggal</small>
+                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                            </div>
+                        </div>
+                        <div className="form-grid" style={{ marginTop: '1.5rem' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Nilai / Capaian</small>
+                                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)' }}>{viewData.nilai || '-'}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Ustadz / Pengajar</small>
+                                <div style={{ fontWeight: 600 }}>{viewData.ustadz || '-'}</div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Keterangan / Evaluasi</small>
+                            <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '8px', marginTop: '5px' }}>
+                                {viewData.keterangan || 'Tidak ada catatan tambahan.'}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

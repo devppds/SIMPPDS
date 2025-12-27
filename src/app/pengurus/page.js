@@ -13,6 +13,8 @@ export default function PengurusPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         nama: '', jabatan: '', divisi: '', no_hp: '', status: 'Aktif',
@@ -69,6 +71,11 @@ export default function PengurusPage() {
         setIsModalOpen(true);
     };
 
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         setSubmitting(true);
@@ -121,14 +128,14 @@ export default function PengurusPage() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Profil</th><th>Nama Lengkap</th><th>Jabatan</th><th>Divisi</th><th>Masa Bakti</th><th>Status</th><th>Opsi</th>
+                                <th>Profil</th><th>Nama Lengkap</th><th>Jabatan</th><th>Divisi</th><th>Status</th><th>Opsi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada data pengurus.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada data pengurus.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
                                     <td>
@@ -141,7 +148,6 @@ export default function PengurusPage() {
                                             {d.divisi || '-'}
                                         </span>
                                     </td>
-                                    <td style={{ fontWeight: 600 }}>{d.tahun_mulai} - {d.tahun_akhir || '∞'}</td>
                                     <td>
                                         <span className="th-badge" style={{
                                             background: d.status === 'Aktif' ? '#dcfce7' : '#f1f5f9',
@@ -156,8 +162,9 @@ export default function PengurusPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -167,6 +174,7 @@ export default function PengurusPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -214,6 +222,55 @@ export default function PengurusPage() {
                         </div>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal View Detail */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Profil Amanah Pengurus"
+                width="600px"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ width: '120px', height: '120px', borderRadius: '18px', overflow: 'hidden', margin: '0 auto 1.5rem', boxShadow: 'var(--shadow-lg)', border: '4px solid #fff' }}>
+                                <img src={viewData.foto_pengurus || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                            </div>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '5px' }}>{viewData.nama}</h2>
+                            <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>{viewData.jabatan}</div>
+                        </div>
+
+                        <div className="form-grid" style={{ background: '#f1f5f9', padding: '1.5rem', borderRadius: '20px', marginBottom: '2rem' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Divisi</small>
+                                <div style={{ fontWeight: 800 }}>{viewData.divisi || '-'}</div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Masa Bakti</small>
+                                <div style={{ fontWeight: 800 }}>{viewData.tahun_mulai} - {viewData.tahun_akhir || 'Sekarang'}</div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>WhatsApp</span>
+                                <span style={{ fontWeight: 800, color: '#25D366' }}><i className="fab fa-whatsapp"></i> {viewData.no_hp || '-'}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Status Keanggotaan</span>
+                                <span className="th-badge" style={{ background: viewData.status === 'Aktif' ? '#dcfce7' : '#f1f5f9', color: viewData.status === 'Aktif' ? '#166534' : '#64748b' }}>
+                                    {viewData.status}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.5, fontSize: '0.7rem' }}>
+                            Terdaftar dalam sistem sejak {viewData.tahun_mulai}
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

@@ -13,6 +13,8 @@ export default function UstadzPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         nama: '', nik_nip: '', kelas: '', alamat: '', no_hp: '', status: 'Aktif',
@@ -69,6 +71,11 @@ export default function UstadzPage() {
         setIsModalOpen(true);
     };
 
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         setSubmitting(true);
@@ -121,14 +128,14 @@ export default function UstadzPage() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Profil</th><th>Nama Lengkap</th><th>NIK / NIP</th><th>Tugas Utama</th><th>WhatsApp</th><th>Status</th><th>Opsi</th>
+                                <th>Profil</th><th>Nama Lengkap</th><th>NIK / NIP</th><th>Tugas Utama</th><th>Status</th><th>Opsi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada data asatidzah.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada data asatidzah.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
                                     <td>
@@ -137,7 +144,6 @@ export default function UstadzPage() {
                                     <td><div style={{ fontWeight: 800, color: 'var(--primary-dark)' }}>{d.nama}</div><div style={{ fontSize: '0.75rem' }}>{d.alamat || '-'}</div></td>
                                     <td>{d.nik_nip || '-'}</td>
                                     <td><span style={{ color: 'var(--primary)', fontWeight: 700 }}>{d.kelas || '-'}</span></td>
-                                    <td><i className="fab fa-whatsapp" style={{ color: '#25D366' }}></i> {d.no_hp || '-'}</td>
                                     <td>
                                         <span className="th-badge" style={{
                                             background: d.status === 'Aktif' ? '#dcfce7' : '#fee2e2',
@@ -152,8 +158,9 @@ export default function UstadzPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Profil"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -163,6 +170,7 @@ export default function UstadzPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -210,6 +218,51 @@ export default function UstadzPage() {
                         </div>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal View Detail */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Profil Lengkap Ustadz"
+                width="600px"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 1rem', border: '4px solid #fff', boxShadow: 'var(--shadow-lg)' }}>
+                                <img src={viewData.foto_ustadz || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                            </div>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '5px' }}>{viewData.nama}</h2>
+                            <div className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '5px 15px', fontSize: '0.8rem' }}>{viewData.nik_nip || 'NIP Belum Terdaftar'}</div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>WhatsApp</small>
+                                <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{viewData.no_hp || '-'}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Tugas Mengajar</small>
+                                <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--primary)' }}>{viewData.kelas || '-'}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Status Keaktifan</small>
+                                <div style={{ fontWeight: 700 }}>{viewData.status}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>ID Cloud</small>
+                                <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>{viewData.id}</div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '2rem' }}>
+                            <small style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Alamat Domisili</small>
+                            <p style={{ marginTop: '8px', fontSize: '1rem', lineHeight: '1.6' }}>{viewData.alamat || 'Alamat belum dilengkapi.'}</p>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

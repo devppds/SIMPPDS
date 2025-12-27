@@ -13,6 +13,8 @@ export default function BarangSitaanPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         tanggal: new Date().toISOString().split('T')[0],
@@ -47,6 +49,11 @@ export default function BarangSitaanPage() {
             });
         }
         setIsModalOpen(true);
+    };
+
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
@@ -111,22 +118,20 @@ export default function BarangSitaanPage() {
                                 <th>Tanggal Sita</th>
                                 <th>Nama Santri</th>
                                 <th>Nama Barang</th>
-                                <th>Alasan</th>
                                 <th>Status</th>
-                                <th style={{ width: '100px' }}>Aksi</th>
+                                <th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
+                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data barang sitaan.</td></tr>
+                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data barang sitaan.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
                                     <td>{formatDate(d.tanggal)}</td>
                                     <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
                                     <td>{d.nama_barang}</td>
-                                    <td style={{ fontSize: '0.85rem' }}>{d.alasan_sita}</td>
                                     <td>
                                         <span className="th-badge" style={{
                                             background: d.status === 'Dikembalikan' ? '#dcfce7' : '#fee2e2',
@@ -137,8 +142,9 @@ export default function BarangSitaanPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -148,6 +154,7 @@ export default function BarangSitaanPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -201,6 +208,56 @@ export default function BarangSitaanPage() {
                         </div>
                     )}
                 </form>
+            </Modal>
+
+            {/* Modal View Detail */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Detail Penyitaan Barang"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pelanggar / Santri</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                            <span className="th-badge" style={{
+                                background: viewData.status === 'Dikembalikan' ? '#dcfce7' : '#fee2e2',
+                                color: viewData.status === 'Dikembalikan' ? '#166534' : '#991b1b',
+                                marginTop: '10px'
+                            }}>
+                                Barang {viewData.status}
+                            </span>
+                        </div>
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Nama Barang</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.nama_barang}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Tanggal Sita</small>
+                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Alasan Penyitaan</small>
+                            <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginTop: '5px' }}>
+                                {viewData.alasan_sita || 'Tidak ada alasan detail.'}
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Petugas Penanggung Jawab</small>
+                            <div style={{ fontWeight: 600, marginTop: '5px' }}>{viewData.petugas || '-'}</div>
+                        </div>
+                        {viewData.status === 'Dikembalikan' && (
+                            <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#dcfce7', borderRadius: '8px' }}>
+                                <small style={{ color: '#166534' }}>Tanggal Pengembalian</small>
+                                <div style={{ fontWeight: 800, color: '#14532d' }}>{formatDate(viewData.tanggal_kembali)}</div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal>
         </div>
     );

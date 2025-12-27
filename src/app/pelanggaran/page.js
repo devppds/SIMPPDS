@@ -13,6 +13,8 @@ export default function PelanggaranPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         tanggal: new Date().toISOString().split('T')[0],
@@ -49,6 +51,11 @@ export default function PelanggaranPage() {
         setIsModalOpen(true);
     };
 
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         setSubmitting(true);
@@ -59,7 +66,6 @@ export default function PelanggaranPage() {
             });
             setIsModalOpen(false);
             loadData();
-            // alert('Data pelanggaran berhasil dicatat!');
         } catch (err) { alert(err.message); }
         finally { setSubmitting(false); }
     };
@@ -77,7 +83,7 @@ export default function PelanggaranPage() {
     );
 
     return (
-        <div className="view-container animate-in">
+        <div className="view-container">
             <div className="card">
                 <div className="card-header">
                     <div>
@@ -116,7 +122,7 @@ export default function PelanggaranPage() {
                                 <th>Jenis</th>
                                 <th>Poin</th>
                                 <th>Takzir (Sanksi)</th>
-                                <th style={{ width: '100px' }}>Aksi</th>
+                                <th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -140,8 +146,9 @@ export default function PelanggaranPage() {
                                     <td style={{ fontSize: '0.85rem' }}>{d.takzir || '-'}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -151,6 +158,7 @@ export default function PelanggaranPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -202,6 +210,54 @@ export default function PelanggaranPage() {
                         <textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows="2"></textarea>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal View Detail */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Detail Pelanggaran"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Nama Santri</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                            <span className="th-badge" style={{
+                                background: viewData.jenis_pelanggaran === 'Berat' ? '#fee2e2' : viewData.jenis_pelanggaran === 'Sedang' ? '#fffbeb' : '#f1f5f9',
+                                color: viewData.jenis_pelanggaran === 'Berat' ? '#dc2626' : viewData.jenis_pelanggaran === 'Sedang' ? '#9a3412' : '#475569',
+                                marginTop: '10px'
+                            }}>
+                                Pelanggaran {viewData.jenis_pelanggaran}
+                            </span>
+                        </div>
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Tanggal Kejadian</small>
+                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Poin Dicatat</small>
+                                <div style={{ fontWeight: 800, color: 'var(--danger)' }}>{viewData.poin} Poin</div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Takzir / Sanksi</small>
+                            <div style={{ padding: '1rem', background: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: '4px', margin: '5px 0', fontSize: '0.95rem' }}>
+                                {viewData.takzir || 'Tidak Ada Sanksi'}
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Petugas Penindak</small>
+                            <div style={{ fontWeight: 600 }}>{viewData.petugas || '-'}</div>
+                        </div>
+                        <div style={{ marginTop: '1rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{viewData.keterangan || 'Tidak ada catatan tambahan.'}</p>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

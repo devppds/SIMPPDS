@@ -13,6 +13,8 @@ export default function IzinPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         tanggal_mulai: new Date().toISOString().split('T')[0],
@@ -47,6 +49,11 @@ export default function IzinPage() {
             });
         }
         setIsModalOpen(true);
+    };
+
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
@@ -112,7 +119,7 @@ export default function IzinPage() {
                                 <th>Nama Santri</th>
                                 <th>Keperluan</th>
                                 <th>Status</th>
-                                <th style={{ width: '100px' }}>Aksi</th>
+                                <th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -138,8 +145,9 @@ export default function IzinPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -149,6 +157,7 @@ export default function IzinPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -206,6 +215,54 @@ export default function IzinPage() {
                         </select>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal View Detail */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Detail Perizinan"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nama Santri</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                            <span className="th-badge" style={{
+                                background: viewData.status === 'Aktif' ? '#dcfce7' : viewData.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9',
+                                color: viewData.status === 'Aktif' ? '#166534' : viewData.status === 'Menunggu' ? '#9a3412' : '#475569',
+                                marginTop: '10px'
+                            }}>
+                                Izin {viewData.status}
+                            </span>
+                        </div>
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Mulai Izin</small>
+                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_mulai)}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Rencana Kembali</small>
+                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_selesai)}</div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Tujuan / Keperluan</small>
+                            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)' }}>{viewData.keperluan}</div>
+                        </div>
+                        <div style={{ marginTop: '1rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Penjemput</small>
+                            <div style={{ fontWeight: 600 }}>{viewData.penjemput || 'Diijinkan Sendiri'}</div>
+                        </div>
+                        <div style={{ marginTop: '1rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Alasan Detail</small>
+                            <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '8px', marginTop: '5px' }}>
+                                {viewData.alasan || 'Tidak ada alasan detail.'}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );
