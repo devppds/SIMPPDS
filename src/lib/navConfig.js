@@ -45,6 +45,7 @@ export const NAV_ITEMS = [
             { label: 'Perizinan Santri', path: '/keamanan/izin', icon: 'fas fa-id-card' },
             { label: 'Barang Sitaan', path: '/keamanan/barang-sitaan', icon: 'fas fa-box-open' },
             { label: 'Registrasi Barang', path: '/keamanan/registrasi-barang', icon: 'fas fa-clipboard-list' },
+            { label: 'Absensi Formal', path: '/keamanan/absensi-formal', icon: 'fas fa-clipboard-check' },
             { label: 'Layanan Keamanan', path: '/keamanan/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
