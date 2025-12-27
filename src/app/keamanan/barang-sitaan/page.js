@@ -20,7 +20,7 @@ export default function BarangSitaanPage() {
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         tanggal: new Date().toISOString().split('T')[0],
-        nama_santri: '', nama_barang: '', alasan_sita: '',
+        nama_santri: '', kelas: '', nama_barang: '', alasan_sita: '',
         status: 'Disita', petugas: '', tanggal_kembali: ''
     });
     const [submitting, setSubmitting] = useState(false);
@@ -98,6 +98,7 @@ export default function BarangSitaanPage() {
     const columns = [
         { key: 'tanggal', label: 'Tanggal Sita', render: (row) => formatDate(row.tanggal) },
         { key: 'nama_santri', label: 'Nama Santri', render: (row) => <div style={{ fontWeight: 700 }}>{row.nama_santri}</div> },
+        { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
         { key: 'nama_barang', label: 'Nama Barang' },
         {
             key: 'status',
@@ -183,7 +184,7 @@ export default function BarangSitaanPage() {
                             options={santriOptions}
                             value={formData.nama_santri}
                             onChange={(val) => setFormData({ ...formData, nama_santri: val })}
-                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa })}
+                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })}
                             placeholder="Ketik nama santri untuk mencari..."
                             required
                         />
@@ -232,47 +233,69 @@ export default function BarangSitaanPage() {
                 title="Detail Penyitaan Barang"
                 footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
             >
-                {viewData && (
-                    <div className="detail-view">
-                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pelanggar / Santri</div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
-                            <span className="th-badge" style={{
-                                background: viewData.status === 'Dikembalikan' ? '#dcfce7' : '#fee2e2',
-                                color: viewData.status === 'Dikembalikan' ? '#166534' : '#991b1b',
-                                marginTop: '10px'
-                            }}>
-                                Barang {viewData.status}
-                            </span>
-                        </div>
-                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Nama Barang</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.nama_barang}</div>
+                {viewData && (() => {
+                    const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
+                    return (
+                        <div className="detail-view">
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: '4px solid var(--primary-light)',
+                                        background: '#f1f5f9'
+                                    }}>
+                                        {student?.foto_santri ? (
+                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+                                                <i className="fas fa-user fa-3x"></i>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pelanggar / Santri</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
+                                <span className="th-badge" style={{
+                                    background: viewData.status === 'Dikembalikan' ? '#dcfce7' : '#fee2e2',
+                                    color: viewData.status === 'Dikembalikan' ? '#166534' : '#991b1b',
+                                    marginTop: '10px'
+                                }}>
+                                    Barang {viewData.status}
+                                </span>
                             </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Tanggal Sita</small>
-                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                            <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Nama Barang</small>
+                                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.nama_barang}</div>
+                                </div>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Tanggal Sita</small>
+                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div style={{ marginTop: '1.5rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Alasan Penyitaan</small>
-                            <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginTop: '5px' }}>
-                                {viewData.alasan_sita || 'Tidak ada alasan detail.'}
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Alasan Penyitaan</small>
+                                <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginTop: '5px' }}>
+                                    {viewData.alasan_sita || 'Tidak ada alasan detail.'}
+                                </div>
                             </div>
-                        </div>
-                        <div style={{ marginTop: '1.5rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Petugas Penanggung Jawab</small>
-                            <div style={{ fontWeight: 600, marginTop: '5px' }}>{viewData.petugas || '-'}</div>
-                        </div>
-                        {viewData.status === 'Dikembalikan' && (
-                            <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#dcfce7', borderRadius: '8px' }}>
-                                <small style={{ color: '#166534' }}>Tanggal Pengembalian</small>
-                                <div style={{ fontWeight: 800, color: '#14532d' }}>{formatDate(viewData.tanggal_kembali)}</div>
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Petugas Penanggung Jawab</small>
+                                <div style={{ fontWeight: 600, marginTop: '5px' }}>{viewData.petugas || '-'}</div>
                             </div>
-                        )}
-                    </div>
-                )}
+                            {viewData.status === 'Dikembalikan' && (
+                                <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#dcfce7', borderRadius: '8px' }}>
+                                    <small style={{ color: '#166534' }}>Tanggal Pengembalian</small>
+                                    <div style={{ fontWeight: 800, color: '#14532d' }}>{formatDate(viewData.tanggal_kembali)}</div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
             </Modal>
         </div>
     );

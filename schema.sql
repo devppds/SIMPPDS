@@ -2,9 +2,9 @@
 -- This file contains all active tables used in the current version of the application.
 
 -- 1. CORE MODULE
+-- COMPLETE SANTRI TABLE (Synced with Remote D1 Database - 76 columns)
 CREATE TABLE IF NOT EXISTS santri (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    foto_santri TEXT,
     stambuk_pondok TEXT,
     stambuk_madrasah TEXT,
     tahun_masuk TEXT,
@@ -15,32 +15,72 @@ CREATE TABLE IF NOT EXISTS santri (
     nik TEXT,
     nama_siswa TEXT,
     nisn TEXT,
+    tempat_lahir TEXT,
+    tanggal_lahir TEXT,
     tempat_tanggal_lahir TEXT,
     jenis_kelamin TEXT,
     agama TEXT,
-    hobi TEXT,
-    cita_cita TEXT,
     kewarganegaraan TEXT,
-    no_kk TEXT,
-    nik_ayah TEXT,
-    nama_ayah TEXT,
-    pekerjaan_ayah TEXT,
-    pendidikan_ayah TEXT,
-    no_telp_ayah TEXT,
-    penghasilan_ayah TEXT,
-    nik_ibu TEXT,
-    nama_ibu TEXT,
-    pekerjaan_ibu TEXT,
-    pendidikan_ibu TEXT,
-    no_telp_ibu TEXT,
-    dusun_jalan TEXT,
+    anak_ke TEXT,
+    jumlah_saudara TEXT,
+    tinggi_badan TEXT,
+    berat_badan TEXT,
+    golongan_darah TEXT,
+    penyakit_khusus TEXT,
+    alamat_lengkap TEXT,
     rt_rw TEXT,
+    dusun_jalan TEXT,
     desa_kelurahan TEXT,
     kecamatan TEXT,
     kota_kabupaten TEXT,
     provinsi TEXT,
     kode_pos TEXT,
-    status_santri TEXT DEFAULT 'Aktif',
+    hobi TEXT,
+    cita_cita TEXT,
+    asal_sekolah TEXT,
+    npsn TEXT,
+    alamat_sekolah TEXT,
+    no_ijazah_skhun TEXT,
+    no_peserta_ujian TEXT,
+    tahun_lulus TEXT,
+    yang_membiayai TEXT,
+    kebutuhan_khusus TEXT,
+    kebutuhan_disabilitas TEXT,
+    no_kip TEXT,
+    no_kk TEXT,
+    nama_kepala_keluarga TEXT,
+    no_kks_kps TEXT,
+    nama_ayah TEXT,
+    nik_ayah TEXT,
+    tempat_tanggal_lahir_ayah TEXT,
+    status_ayah TEXT,
+    pendidikan_ayah TEXT,
+    pekerjaan_ayah TEXT,
+    penghasilan_ayah TEXT,
+    no_telp_ayah TEXT,
+    nama_ibu TEXT,
+    nik_ibu TEXT,
+    tempat_tanggal_lahir_ibu TEXT,
+    status_ibu TEXT,
+    pendidikan_ibu TEXT,
+    pekerjaan_ibu TEXT,
+    penghasilan_ibu TEXT,
+    no_telp_ibu TEXT,
+    nama_wali TEXT,
+    nik_wali TEXT,
+    tempat_tanggal_lahir_wali TEXT,
+    status_wali TEXT,
+    pendidikan_wali TEXT,
+    pekerjaan_wali TEXT,
+    penghasilan_wali TEXT,
+    no_telp_wali TEXT,
+    hubungan_wali TEXT,
+    status_santri TEXT,
+    tanggal_nonaktif TEXT,
+    alasan_nonaktif TEXT,
+    foto_santri TEXT,
+    berkas_pendukung TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     pindah_ke TEXT,
     tahun_pindah TEXT,
     tanggal_boyong TEXT
@@ -88,11 +128,12 @@ CREATE TABLE IF NOT EXISTS users (
     role TEXT DEFAULT 'sekretariat'
 );
 
--- 2. KEAMANAN & PENDIDIKAN MODULE
+-- 1. KEAMANAN & KETERTIBAN
 CREATE TABLE IF NOT EXISTS keamanan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
+    tanggal DATE,
     nama_santri TEXT,
+    kelas TEXT,
     jenis_pelanggaran TEXT,
     poin INTEGER,
     takzir TEXT,
@@ -100,9 +141,22 @@ CREATE TABLE IF NOT EXISTS keamanan (
     petugas TEXT
 );
 
+CREATE TABLE IF NOT EXISTS izin (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama_santri TEXT,
+    kelas TEXT,
+    alasan TEXT,
+    tanggal_pulang DATE,
+    tanggal_kembali DATE,
+    tipe_izin TEXT,
+    status_kembali TEXT DEFAULT 'Belum Kembali',
+    petugas TEXT
+);
+
 CREATE TABLE IF NOT EXISTS keamanan_reg (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nama_santri TEXT,
+    kelas TEXT,
     jenis_barang TEXT,
     detail_barang TEXT,
     kamar_penempatan TEXT,
@@ -115,6 +169,7 @@ CREATE TABLE IF NOT EXISTS barang_sitaan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tanggal TEXT,
     nama_santri TEXT,
+    kelas TEXT,
     jenis_barang TEXT,
     nama_barang TEXT,
     petugas TEXT,
@@ -122,35 +177,29 @@ CREATE TABLE IF NOT EXISTS barang_sitaan (
     keterangan TEXT
 );
 
-CREATE TABLE IF NOT EXISTS izin (
+-- 2. KESEHATAN (BK)
+CREATE TABLE IF NOT EXISTS kesehatan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nama_santri TEXT,
-    alasan TEXT,
-    tanggal_pulang TEXT,
-    tanggal_kembali TEXT,
-    tipe_izin TEXT,
-    petugas TEXT
-);
-
-CREATE TABLE IF NOT EXISTS keamanan_absensi (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    santri_id INTEGER NOT NULL,
     nama_santri TEXT,
     kelas TEXT,
-    tanggal DATE NOT NULL,
-    status TEXT NOT NULL,
-    keterangan TEXT,
-    petugas TEXT
+    mulai_sakit DATE,
+    gejala TEXT,
+    obat_tindakan TEXT,
+    status_periksa TEXT,
+    keterangan TEXT
 );
 
+-- 3. PENDIDIKAN & MATERI
 CREATE TABLE IF NOT EXISTS pendidikan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
+    tanggal DATE,
     nama_santri TEXT,
+    kelas TEXT,
     kegiatan TEXT,
+    materi TEXT,
     nilai REAL,
-    kehadiran TEXT,
-    ustadz TEXT
+    ustadz TEXT,
+    keterangan TEXT
 );
 
 -- 3. KEUANGAN MODULE

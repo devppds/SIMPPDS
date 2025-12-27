@@ -20,7 +20,7 @@ export default function IzinPage() {
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         tanggal_mulai: new Date().toISOString().split('T')[0],
-        tanggal_selesai: '', nama_santri: '', alasan: '',
+        tanggal_selesai: '', nama_santri: '', kelas: '', alasan: '',
         keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: ''
     });
     const [submitting, setSubmitting] = useState(false);
@@ -97,6 +97,7 @@ export default function IzinPage() {
 
     const columns = [
         { key: 'nama_santri', label: 'Nama Santri', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span> },
+        { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
         { key: 'alasan', label: 'Alasan' },
         { key: 'tanggal_pulang', label: 'Tgl Pulang', render: (row) => formatDate(row.tanggal_pulang) },
         { key: 'tanggal_kembali', label: 'Tgl Kembali', render: (row) => formatDate(row.tanggal_kembali) },
@@ -174,7 +175,7 @@ export default function IzinPage() {
                             options={santriOptions}
                             value={formData.nama_santri}
                             onChange={(val) => setFormData({ ...formData, nama_santri: val })}
-                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa })}
+                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })}
                             placeholder="Ketik nama santri untuk mencari..."
                             required
                         />
@@ -227,45 +228,67 @@ export default function IzinPage() {
                 title="Detail Perizinan"
                 footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
             >
-                {viewData && (
-                    <div className="detail-view">
-                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nama Santri</div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
-                            <span className="th-badge" style={{
-                                background: viewData.status === 'Aktif' ? '#dcfce7' : viewData.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9',
-                                color: viewData.status === 'Aktif' ? '#166534' : viewData.status === 'Menunggu' ? '#9a3412' : '#475569',
-                                marginTop: '10px'
-                            }}>
-                                Izin {viewData.status}
-                            </span>
-                        </div>
-                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Mulai Izin</small>
-                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_mulai)}</div>
+                {viewData && (() => {
+                    const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
+                    return (
+                        <div className="detail-view">
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: '4px solid var(--primary-light)',
+                                        background: '#f1f5f9'
+                                    }}>
+                                        {student?.foto_santri ? (
+                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+                                                <i className="fas fa-user fa-3x"></i>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nama Santri</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
+                                <span className="th-badge" style={{
+                                    background: viewData.status === 'Aktif' ? '#dcfce7' : viewData.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9',
+                                    color: viewData.status === 'Aktif' ? '#166534' : viewData.status === 'Menunggu' ? '#9a3412' : '#475569',
+                                    marginTop: '10px'
+                                }}>
+                                    Izin {viewData.status}
+                                </span>
                             </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Rencana Kembali</small>
-                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_selesai)}</div>
+                            <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Mulai Izin</small>
+                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_mulai)}</div>
+                                </div>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Rencana Kembali</small>
+                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_selesai)}</div>
+                                </div>
+                            </div>
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Tujuan / Keperluan</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)' }}>{viewData.keperluan}</div>
+                            </div>
+                            <div style={{ marginTop: '1rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Penjemput</small>
+                                <div style={{ fontWeight: 600 }}>{viewData.penjemput || 'Diijinkan Sendiri'}</div>
+                            </div>
+                            <div style={{ marginTop: '1rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Alasan Detail</small>
+                                <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '8px', marginTop: '5px' }}>
+                                    {viewData.alasan || 'Tidak ada alasan detail.'}
+                                </div>
                             </div>
                         </div>
-                        <div style={{ marginTop: '1.5rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Tujuan / Keperluan</small>
-                            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)' }}>{viewData.keperluan}</div>
-                        </div>
-                        <div style={{ marginTop: '1rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Penjemput</small>
-                            <div style={{ fontWeight: 600 }}>{viewData.penjemput || 'Diijinkan Sendiri'}</div>
-                        </div>
-                        <div style={{ marginTop: '1rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Alasan Detail</small>
-                            <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '8px', marginTop: '5px' }}>
-                                {viewData.alasan || 'Tidak ada alasan detail.'}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
             </Modal>
         </div>
     );

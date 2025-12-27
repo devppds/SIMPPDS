@@ -101,6 +101,7 @@ export default function PelanggaranPage() {
             label: 'Nama Santri',
             render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span>
         },
+        { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
         { key: 'jenis_pelanggaran', label: 'Jenis Pelanggaran' },
         {
             key: 'poin',
@@ -191,7 +192,7 @@ export default function PelanggaranPage() {
                             options={santriOptions}
                             value={formData.nama_santri}
                             onChange={(val) => setFormData({ ...formData, nama_santri: val })}
-                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa })}
+                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })}
                             placeholder="Ketik nama santri untuk mencari..."
                             required
                         />
@@ -238,45 +239,67 @@ export default function PelanggaranPage() {
                 title="Detail Pelanggaran"
                 footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
             >
-                {viewData && (
-                    <div className="detail-view">
-                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Nama Santri</div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
-                            <span className="th-badge" style={{
-                                background: viewData.jenis_pelanggaran === 'Berat' ? '#fee2e2' : viewData.jenis_pelanggaran === 'Sedang' ? '#fffbeb' : '#f1f5f9',
-                                color: viewData.jenis_pelanggaran === 'Berat' ? '#dc2626' : viewData.jenis_pelanggaran === 'Sedang' ? '#9a3412' : '#475569',
-                                marginTop: '10px'
-                            }}>
-                                Pelanggaran {viewData.jenis_pelanggaran}
-                            </span>
-                        </div>
-                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Tanggal Kejadian</small>
-                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                {viewData && (() => {
+                    const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
+                    return (
+                        <div className="detail-view">
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: '4px solid var(--primary-light)',
+                                        background: '#f1f5f9'
+                                    }}>
+                                        {student?.foto_santri ? (
+                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+                                                <i className="fas fa-user fa-3x"></i>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Nama Santri</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
+                                <span className="th-badge" style={{
+                                    background: viewData.jenis_pelanggaran === 'Berat' ? '#fee2e2' : viewData.jenis_pelanggaran === 'Sedang' ? '#fffbeb' : '#f1f5f9',
+                                    color: viewData.jenis_pelanggaran === 'Berat' ? '#dc2626' : viewData.jenis_pelanggaran === 'Sedang' ? '#9a3412' : '#475569',
+                                    marginTop: '10px'
+                                }}>
+                                    Pelanggaran {viewData.jenis_pelanggaran}
+                                </span>
                             </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Poin Dicatat</small>
-                                <div style={{ fontWeight: 800, color: 'var(--danger)' }}>{viewData.poin} Poin</div>
+                            <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Tanggal Kejadian</small>
+                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                                </div>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Poin Dicatat</small>
+                                    <div style={{ fontWeight: 800, color: 'var(--danger)' }}>{viewData.poin} Poin</div>
+                                </div>
+                            </div>
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Takzir / Sanksi</small>
+                                <div style={{ padding: '1rem', background: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: '4px', margin: '5px 0', fontSize: '0.95rem' }}>
+                                    {viewData.takzir || 'Tidak Ada Sanksi'}
+                                </div>
+                            </div>
+                            <div style={{ marginTop: '1rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Petugas Penindak</small>
+                                <div style={{ fontWeight: 600 }}>{viewData.petugas || '-'}</div>
+                            </div>
+                            <div style={{ marginTop: '1rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
+                                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{viewData.keterangan || 'Tidak ada catatan tambahan.'}</p>
                             </div>
                         </div>
-                        <div style={{ marginTop: '1.5rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Takzir / Sanksi</small>
-                            <div style={{ padding: '1rem', background: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: '4px', margin: '5px 0', fontSize: '0.95rem' }}>
-                                {viewData.takzir || 'Tidak Ada Sanksi'}
-                            </div>
-                        </div>
-                        <div style={{ marginTop: '1rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Petugas Penindak</small>
-                            <div style={{ fontWeight: 600 }}>{viewData.petugas || '-'}</div>
-                        </div>
-                        <div style={{ marginTop: '1rem' }}>
-                            <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{viewData.keterangan || 'Tidak ada catatan tambahan.'}</p>
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
             </Modal>
         </div>
     );

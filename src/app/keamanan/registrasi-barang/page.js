@@ -19,7 +19,7 @@ export default function KeamananRegPage() {
     const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
-        nama_santri: '', jenis_barang: 'Kendaraan', detail_barang: '',
+        nama_santri: '', kelas: '', jenis_barang: 'Kendaraan', detail_barang: '',
         jenis_kendaraan: '-', jenis_elektronik: '-', plat_nomor: '-',
         warna: '', merk: '', aksesoris_1: '-', aksesoris_2: '-', aksesoris_3: '-',
         keadaan: 'Baik', kamar_penempatan: '', tanggal_registrasi: new Date().toISOString().split('T')[0],
@@ -73,6 +73,7 @@ export default function KeamananRegPage() {
         setFormData(prev => ({
             ...prev,
             nama_santri: nama,
+            kelas: found ? found.kelas : prev.kelas,
             kamar_penempatan: found ? found.kamar : prev.kamar_penempatan
         }));
     };
@@ -121,6 +122,7 @@ export default function KeamananRegPage() {
     const columns = [
         { key: 'tanggal_registrasi', label: 'Tanggal', render: (row) => formatDate(row.tanggal_registrasi) },
         { key: 'nama_santri', label: 'Pemilik', render: (row) => <div style={{ fontWeight: 800 }}>{row.nama_santri}</div> },
+        { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
         { key: 'jenis_barang', label: 'Jenis' },
         { key: 'detail_barang', label: 'Detail Barang', render: (row) => `${row.detail_barang} ${row.merk ? `(${row.merk})` : ''}` },
         {
@@ -288,52 +290,74 @@ export default function KeamananRegPage() {
                 title="Detail Registrasi Keamanan"
                 footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
             >
-                {viewData && (
-                    <div className="detail-view">
-                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Pemilik Barang</div>
-                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary-dark)', margin: '5px 0' }}>{viewData.nama_santri}</h2>
-                            <div className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '5px 20px' }}>{viewData.kamar_penempatan || 'Kamar Belum Dicatat'}</div>
-                        </div>
+                {viewData && (() => {
+                    const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
+                    return (
+                        <div className="detail-view">
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: '4px solid var(--primary-light)',
+                                        background: '#f1f5f9'
+                                    }}>
+                                        {student?.foto_santri ? (
+                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+                                                <i className="fas fa-user fa-3x"></i>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Pemilik Barang</div>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-dark)', margin: '5px 0' }}>{viewData.nama_santri}</h2>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '10px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
+                                <div className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '5px 20px' }}>{viewData.kamar_penempatan || 'Kamar Belum Dicatat'}</div>
+                            </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Jenis Barang</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.jenis_barang}</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Jenis Barang</small>
+                                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.jenis_barang}</div>
+                                </div>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Nama & Merk</small>
+                                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.detail_barang} {viewData.merk && `(${viewData.merk})`}</div>
+                                </div>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Kondisi Fisik</small>
+                                    <div style={{ fontWeight: 700 }}>{viewData.keadaan}</div>
+                                </div>
+                                <div>
+                                    <small style={{ color: 'var(--text-muted)' }}>Warna</small>
+                                    <div style={{ fontWeight: 600 }}>{viewData.warna || '-'}</div>
+                                </div>
                             </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Nama & Merk</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.detail_barang} {viewData.merk && `(${viewData.merk})`}</div>
-                            </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Kondisi Fisik</small>
-                                <div style={{ fontWeight: 700 }}>{viewData.keadaan}</div>
-                            </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Warna</small>
-                                <div style={{ fontWeight: 600 }}>{viewData.warna || '-'}</div>
-                            </div>
-                        </div>
 
-                        <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
-                            <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-                                <small style={{ color: 'var(--text-muted)', display: 'block' }}>Petugas Registrasi</small>
-                                <span style={{ fontWeight: 700 }}>{viewData.petugas_penerima || '-'}</span>
+                            <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                                    <small style={{ color: 'var(--text-muted)', display: 'block' }}>Petugas Registrasi</small>
+                                    <span style={{ fontWeight: 700 }}>{viewData.petugas_penerima || '-'}</span>
+                                </div>
+                                <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                                    <small style={{ color: 'var(--text-muted)', display: 'block' }}>Tanggal Input</small>
+                                    <span style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal_registrasi)}</span>
+                                </div>
                             </div>
-                            <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-                                <small style={{ color: 'var(--text-muted)', display: 'block' }}>Tanggal Input</small>
-                                <span style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal_registrasi)}</span>
-                            </div>
-                        </div>
 
-                        {viewData.keterangan && (
-                            <div style={{ marginTop: '1rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
-                                <p style={{ marginTop: '5px', lineHeight: '1.6' }}>{viewData.keterangan}</p>
-                            </div>
-                        )}
-                    </div>
-                )}
+                            {viewData.keterangan && (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
+                                    <p style={{ marginTop: '5px', lineHeight: '1.6' }}>{viewData.keterangan}</p>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
             </Modal>
         </div>
     );
