@@ -44,8 +44,8 @@ export default function AbsensiFormalPage() {
     const loadMasterKelas = async () => {
         try {
             const res = await apiCall('getData', 'GET', { type: 'master_kelas' });
-            // Filter only Formal / MIU / MHM
-            const formal = (res || []).filter(k => ['MIU', 'MHM', 'MA\'HAD ALY'].includes(k.lembaga));
+            // Filter only MIU (Formal)
+            const formal = (res || []).filter(k => k.lembaga === 'MIU');
             setKelasOptions(formal.sort((a, b) => a.urutan - b.urutan));
         } catch (e) { console.error(e); }
     };
