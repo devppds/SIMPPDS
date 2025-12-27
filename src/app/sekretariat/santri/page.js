@@ -283,6 +283,22 @@ export default function SantriPage() {
 
     return (
         <div className="view-container animate-in">
+            {/* Professional Print Header */}
+            <div className="print-header-corporate">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <img src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png" style={{ width: '80px' }} alt="Logo" />
+                    <div>
+                        <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#1e3a8a', fontWeight: 900 }}>PONDOK PESANTREN DARUSSALAM LIRBOYO</h1>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Sistem Informasi Manajemen Terpadu (SIM-PPDS)</p>
+                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#94a3b8' }}>Lirboyo, Kota Kediri, Jawa Timur</p>
+                    </div>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '1.5rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, textTransform: 'uppercase' }}>Daftar Santri {filterStatus === 'Aktif' ? 'Aktif' : filterStatus}</h2>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Per Tanggal: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+            </div>
+
             <div className="card">
                 <div className="card-header">
                     <div>
@@ -603,6 +619,10 @@ export default function SantriPage() {
                     </div>
                 )}
             </Modal>
+            {/* Professional Print Footer */}
+            <div className="print-footer-corporate">
+                <span>Dokumen ini dihasilkan secara otomatis oleh SIM-PPDS Darussalam Lirboyo pada {new Date().toLocaleString('id-ID')}</span>
+            </div>
         </div>
     );
 }
