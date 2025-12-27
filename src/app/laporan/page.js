@@ -298,6 +298,48 @@ export default function LaporanPimpinan() {
                     color: #64748b;
                     margin: 0;
                 }
+
+                @media print {
+                    :global(.sidebar), :global(header), .card-actions {
+                        display: none !important;
+                    }
+                    :global(.content-wrapper) {
+                        margin-left: 0 !important;
+                        padding: 0 !important;
+                    }
+                    .view-container {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        max-width: 100% !important;
+                        animation: none !important;
+                    }
+                    .stats-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                        gap: 1rem !important;
+                    }
+                    .stat-card {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        box-shadow: none !important;
+                        border: 1px solid #ddd !important;
+                    }
+                    .report-row {
+                        grid-template-columns: 1fr !important;
+                        gap: 1.5rem !important;
+                    }
+                    .card {
+                        box-shadow: none !important;
+                        border: 1px solid #eee !important;
+                        break-inside: avoid;
+                    }
+                    .ai-report-box {
+                        animation: none !important;
+                        border: 1px solid #6366f1 !important;
+                        background-color: #f0f4ff !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                }
             `}</style>
         </div>
     );
