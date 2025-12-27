@@ -5,6 +5,7 @@ import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
+import ArsipFileUpload from '@/components/ArsipFileUpload';
 
 export default function ProposalPage() {
     const { isAdmin } = useAuth();
@@ -71,6 +72,11 @@ export default function ProposalPage() {
                     <div><label>Pengaju</label><input type="text" className="form-control" value={formData.pengaju} onChange={e => setFormData({ ...formData, pengaju: e.target.value })} required /></div>
                     <div><label>Nominal</label><input type="number" className="form-control" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required /></div>
                     <div><label>Status</label><select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} required><option value="Diajukan">Diajukan</option><option value="Disetujui">Disetujui</option><option value="Ditolak">Ditolak</option></select></div>
+                    <ArsipFileUpload
+                        label="File Proposal (PDF/Image, Max 15MB)"
+                        currentFile={formData.file_proposal}
+                        onUploadComplete={(url) => setFormData({ ...formData, file_proposal: url })}
+                    />
                     <div><label>Keterangan</label><textarea className="form-control" rows="3" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })}></textarea></div>
                 </form>
             </Modal>

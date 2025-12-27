@@ -94,6 +94,8 @@ export default function PengurusPage() {
         try { await apiCall('deleteData', 'POST', { type: 'pengurus', id }); loadData(); } catch (err) { alert(err.message); }
     };
 
+
+
     const displayData = data.filter(d =>
         (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
         (d.jabatan || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -101,30 +103,52 @@ export default function PengurusPage() {
     );
 
     const columns = [
-        { key: 'nama', label: 'Nama Pengurus', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
-        { key: 'jabatan', label: 'Jabatan', render: (row) => <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{row.jabatan}</span> },
-        { key: 'divisi', label: 'Divisi' },
-        { key: 'no_hp', label: 'No. HP' },
+        {
+            key: 'foto_pengurus',
+            label: 'Profil',
+            sortable: false,
+            width: '80px',
+            render: (row) => <img src={row.foto_pengurus || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '45px', height: '45px', borderRadius: '12px', objectFit: 'cover' }} alt="" />
+        },
+        {
+            key: 'nama',
+            label: 'Nama Lengkap',
+            render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama}</div><div style={{ fontSize: '0.75rem' }}>WA: {row.no_hp || '-'}</div></div>
+        },
+        {
+            key: 'jabatan',
+            label: 'Jabatan',
+            render: (row) => <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{row.jabatan || '-'}</span>
+        },
+        {
+            key: 'divisi',
+            label: 'Divisi',
+            render: (row) => <span className="th-badge" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.7rem' }}>{row.divisi || '-'}</span>
+        },
         {
             key: 'status',
             label: 'Status',
             render: (row) => (
                 <span className="th-badge" style={{
-                    background: row.status === 'Aktif' ? '#dcfce7' : '#fee2e2',
-                    color: row.status === 'Aktif' ? '#166534' : '#991b1b'
+                    background: row.status === 'Aktif' ? '#dcfce7' : '#f1f5f9',
+                    color: row.status === 'Aktif' ? '#166534' : '#64748b',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.7rem',
+                    fontWeight: 700
                 }}>
-                    {row.status}
+                    {row.status?.toUpperCase() || 'AKTIF'}
                 </span>
             )
         },
         {
             key: 'actions',
-            label: 'Aksi',
+            label: 'Opsi',
             sortable: false,
             width: '150px',
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
@@ -157,54 +181,12 @@ export default function PengurusPage() {
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Profil</th><th>Nama Lengkap</th><th>Jabatan</th><th>Divisi</th><th>Status</th><th>Opsi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada data pengurus.</td></tr>
-                            ) : displayData.map(d => (
-                                <tr key={d.id}>
-                                    <td>
-                                        <img src={d.foto_pengurus || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.nama)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '45px', height: '45px', borderRadius: '12px', objectFit: 'cover' }} alt="" />
-                                    </td>
-                                    <td><div style={{ fontWeight: 800 }}>{d.nama}</div><div style={{ fontSize: '0.75rem' }}>WA: {d.no_hp || '-'}</div></td>
-                                    <td><span style={{ fontWeight: 700, color: 'var(--primary)' }}>{d.jabatan || '-'}</span></td>
-                                    <td>
-                                        <span className="th-badge" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.7rem' }}>
-                                            {d.divisi || '-'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className="th-badge" style={{
-                                            background: d.status === 'Aktif' ? '#dcfce7' : '#f1f5f9',
-                                            color: d.status === 'Aktif' ? '#166534' : '#64748b',
-                                            padding: '4px 12px',
-                                            borderRadius: '20px',
-                                            fontSize: '0.7rem',
-                                            fontWeight: 700
-                                        }}>
-                                            {d.status?.toUpperCase() || 'AKTIF'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={displayData}
+                    loading={loading}
+                    emptyMessage="Belum ada data pengurus."
+                />
             </div>
 
             {/* Modal Input/Edit */}

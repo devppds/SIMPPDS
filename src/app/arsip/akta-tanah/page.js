@@ -5,6 +5,7 @@ import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
+import ArsipFileUpload from '@/components/ArsipFileUpload';
 
 export default function AktaTanahPage() {
     const { isAdmin } = useAuth();
@@ -60,6 +61,11 @@ export default function AktaTanahPage() {
                     <div><label>Luas Tanah (m²)</label><input type="text" className="form-control" value={formData.luas_tanah} onChange={e => setFormData({ ...formData, luas_tanah: e.target.value })} required /></div>
                     <div><label>Atas Nama</label><input type="text" className="form-control" value={formData.atas_nama} onChange={e => setFormData({ ...formData, atas_nama: e.target.value })} required /></div>
                     <div><label>Status Kepemilikan</label><select className="form-control" value={formData.status_kepemilikan} onChange={e => setFormData({ ...formData, status_kepemilikan: e.target.value })} required><option value="Milik Pondok">Milik Pondok</option><option value="Wakaf">Wakaf</option><option value="Sewa">Sewa</option></select></div>
+                    <ArsipFileUpload
+                        label="File Akta/Sertifikat (PDF/Image, Max 15MB)"
+                        currentFile={formData.file_akta}
+                        onUploadComplete={(url) => setFormData({ ...formData, file_akta: url })}
+                    />
                     <div><label>Keterangan</label><textarea className="form-control" rows="3" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })}></textarea></div>
                 </form>
             </Modal>

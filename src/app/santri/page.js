@@ -243,6 +243,7 @@ export default function SantriPage() {
             )
         },
         {
+
             key: 'actions',
             label: 'Aksi',
             sortable: false,
@@ -251,6 +252,7 @@ export default function SantriPage() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openDetail(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {row.status_santri === 'Aktif' && <button className="btn-vibrant btn-vibrant-orange" onClick={() => openMutasi(row)} title="Mutasi Status" style={{ background: '#f59e0b', color: 'white' }}><i className="fas fa-exchange-alt"></i></button>}
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteSantri(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
@@ -291,42 +293,12 @@ export default function SantriPage() {
                     </select>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Foto</th><th>Nama Lengkap</th><th>Stambuk</th><th>Unit / Kelas</th><th>Wali</th><th style={{ width: '150px' }}>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Memuat database...</td></tr>
-                            ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Tidak ada data santri.</td></tr>
-                            ) : displayData.map(s => (
-                                <tr key={s.id}>
-                                    <td>
-                                        <div style={{ position: 'relative', width: '40px', height: '40px' }}>
-                                            <img src={s.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', height: '100%', borderRadius: '10px', objectFit: 'cover' }} alt="" />
-                                        </div>
-                                    </td>
-                                    <td><div style={{ fontWeight: 800 }}>{s.nama_siswa}</div><div style={{ fontSize: '0.7rem' }}>NIK: {s.nik || '-'}</div></td>
-                                    <td>{s.stambuk_pondok || '-'}</td>
-                                    <td>{s.madrasah} • {s.kelas}</td>
-                                    <td>{s.nama_ayah || 'Wali'}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openDetail(s)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(s)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {s.status_santri === 'Aktif' && <button className="btn-vibrant btn-vibrant-orange" onClick={() => openMutasi(s)} title="Mutasi Status" style={{ background: '#f59e0b', color: 'white' }}><i className="fas fa-exchange-alt"></i></button>}
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteSantri(s.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={displayData}
+                    loading={loading}
+                    emptyMessage="Tidak ada data santri."
+                />
             </div>
 
             {/* Modal Input/Edit */}

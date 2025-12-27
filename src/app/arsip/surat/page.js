@@ -5,6 +5,7 @@ import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
+import ArsipFileUpload from '@/components/ArsipFileUpload';
 
 export default function SuratPage() {
     const { isAdmin } = useAuth();
@@ -131,6 +132,11 @@ export default function SuratPage() {
                     <div><label>Tipe</label><select className="form-control" value={formData.tipe} onChange={e => setFormData({ ...formData, tipe: e.target.value })} required><option value="Masuk">Masuk</option><option value="Keluar">Keluar</option></select></div>
                     <div><label>Pengirim/Penerima</label><input type="text" className="form-control" value={formData.pengirim_penerima} onChange={e => setFormData({ ...formData, pengirim_penerima: e.target.value })} required /></div>
                     <div><label>Perihal</label><input type="text" className="form-control" value={formData.perihal} onChange={e => setFormData({ ...formData, perihal: e.target.value })} required /></div>
+                    <ArsipFileUpload
+                        label="File Surat (Scan PDF/Image)"
+                        currentFile={formData.file_surat}
+                        onUploadComplete={(url) => setFormData({ ...formData, file_surat: url })}
+                    />
                     <div><label>Keterangan</label><textarea className="form-control" rows="3" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })}></textarea></div>
                 </form>
             </Modal>
