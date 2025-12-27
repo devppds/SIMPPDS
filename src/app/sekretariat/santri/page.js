@@ -123,7 +123,7 @@ export default function SantriPage() {
         } catch (e) { console.error(e); }
     };
 
-    const handleFileUpload = async (e) => {
+    const handleFileUpload = async (e, fieldName = 'foto_santri') => {
         const file = e.target.files[0];
         if (!file) return;
         setUploading(true);
@@ -139,8 +139,8 @@ export default function SantriPage() {
             const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: fd });
             const result = await res.json();
             if (result.secure_url) {
-                setFormData(prev => ({ ...prev, foto_santri: result.secure_url }));
-                alert('Berhasil mengunggah foto!');
+                setFormData(prev => ({ ...prev, [fieldName]: result.secure_url }));
+                alert(`Berhasil mengunggah ${fieldName === 'foto_santri' ? 'foto santri' : 'foto KK'}!`);
             } else {
                 throw new Error(result.error?.message || 'Gagal upload Cloudinary');
             }
