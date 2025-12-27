@@ -843,3 +843,45 @@ tr:hover td {
     transform: translateY(0);
   }
 }
+
+/* Detail View Styles */
+.detail-view {
+  padding: 1rem 0;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.detail-view label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.detail-view .value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.btn-vibrant-purple {
+  background: #f5f3ff;
+  color: #8b5cf6;
+}
+
+.btn-vibrant-purple:hover {
+  background: #8b5cf6;
+  color: white;
+}
+
+.btn-vibrant-green {
+  background: #f0fdf4;
+  color: #10b981;
+}
+
+.btn-vibrant-green:hover {
+  background: #10b981;
+  color: white;
+}

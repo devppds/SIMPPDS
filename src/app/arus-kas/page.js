@@ -13,6 +13,8 @@ export default function ArusKasPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         tanggal: new Date().toISOString().split('T')[0],
@@ -99,6 +101,11 @@ export default function ArusKasPage() {
         setIsModalOpen(true);
     };
 
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         setSubmitting(true);
@@ -136,43 +143,43 @@ export default function ArusKasPage() {
     const saldo = totalMasuk - totalKeluar;
 
     return (
-        <div className="view-container">
+        <div className="view-container animate-in">
             <div className="card">
                 <div className="card-header">
                     <div>
-                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Laporan Pembukuan Arus Kas</h2>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sinkronisasi keuangan pondok secara real-time.</p>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Laporan Pembukuan Arus Kas</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Sinkronisasi keuangan pondok secara real-time.</p>
                     </div>
-                    <div className="card-actions">
-                        <button className="btn btn-secondary" onClick={handleDownloadTemplate}>Template</button>
-                        <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                    <div className="card-actions" style={{ display: 'flex', gap: '8px' }}>
+                        <button className="btn btn-outline btn-sm" onClick={handleDownloadTemplate}>Template</button>
+                        <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
                             Import <input type="file" accept=".csv" onChange={handleImport} style={{ display: 'none' }} />
                         </label>
-                        <button className="btn btn-secondary" onClick={handleExport}>Export</button>
-                        <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Transaksi Baru</button>
+                        <button className="btn btn-outline btn-sm" onClick={handleExport}>Export</button>
+                        <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Transaksi Baru</button>
                     </div>
                 </div>
 
-                <div className="stats-grid" style={{ padding: '0 2rem 2rem 2rem', gap: '1.5rem' }}>
+                <div className="stats-grid" style={{ padding: '0 1.5rem 1.5rem', marginBottom: '1rem' }}>
                     <div className="stat-card" style={{ background: '#f0fdf4', border: '1px solid #dcfce7', boxShadow: 'none' }}>
                         <div className="stat-icon" style={{ background: '#dcfce7', color: '#166534' }}><i className="fas fa-arrow-trend-up"></i></div>
                         <div className="stat-info">
-                            <h3 style={{ color: '#166534' }}>Pemasukan</h3>
-                            <div className="value" style={{ color: '#166534', fontSize: '1.25rem' }}>{formatCurrency(totalMasuk)}</div>
+                            <h3 style={{ color: '#166534', fontSize: '0.7rem' }}>Pemasukan</h3>
+                            <div className="value" style={{ color: '#166534', fontSize: '1.1rem' }}>{formatCurrency(totalMasuk)}</div>
                         </div>
                     </div>
                     <div className="stat-card" style={{ background: '#fef2f2', border: '1px solid #fee2e2', boxShadow: 'none' }}>
                         <div className="stat-icon" style={{ background: '#fee2e2', color: '#991b1b' }}><i className="fas fa-arrow-trend-down"></i></div>
                         <div className="stat-info">
-                            <h3 style={{ color: '#991b1b' }}>Pengeluaran</h3>
-                            <div className="value" style={{ color: '#991b1b', fontSize: '1.25rem' }}>{formatCurrency(totalKeluar)}</div>
+                            <h3 style={{ color: '#991b1b', fontSize: '0.7rem' }}>Pengeluaran</h3>
+                            <div className="value" style={{ color: '#991b1b', fontSize: '1.1rem' }}>{formatCurrency(totalKeluar)}</div>
                         </div>
                     </div>
                     <div className="stat-card" style={{ background: '#eff6ff', border: '1px solid #dbeafe', boxShadow: 'none' }}>
                         <div className="stat-icon" style={{ background: '#dbeafe', color: '#1e40af' }}><i className="fas fa-vault"></i></div>
                         <div className="stat-info">
-                            <h3 style={{ color: '#1e40af' }}>Saldo</h3>
-                            <div className="value" style={{ color: '#1e40af', fontSize: '1.25rem' }}>{formatCurrency(saldo)}</div>
+                            <h3 style={{ color: '#1e40af', fontSize: '0.7rem' }}>Saldo Kas</h3>
+                            <div className="value" style={{ color: '#1e40af', fontSize: '1.1rem' }}>{formatCurrency(saldo)}</div>
                         </div>
                     </div>
                 </div>
@@ -188,7 +195,7 @@ export default function ArusKasPage() {
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <button className="btn btn-secondary" onClick={loadData} title="Refresh Data"><i className="fas fa-sync-alt"></i></button>
+                    <button className="btn btn-outline" onClick={loadData} title="Refresh Data"><i className="fas fa-sync-alt"></i></button>
                 </div>
 
                 <div className="table-container">
@@ -199,16 +206,15 @@ export default function ArusKasPage() {
                                 <th>Jenis</th>
                                 <th>Kategori</th>
                                 <th>Nominal</th>
-                                <th>Keterangan</th>
                                 <th>PJ</th>
-                                <th>Aksi</th>
+                                <th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
                             ) : filteredData.length === 0 ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada catatan transaksi.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada catatan transaksi.</td></tr>
                             ) : filteredData.map(d => (
                                 <tr key={d.id}>
                                     <td style={{ fontWeight: 600 }}>{formatDate(d.tanggal)}</td>
@@ -228,12 +234,12 @@ export default function ArusKasPage() {
                                     <td style={{ fontWeight: 800, color: d.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>
                                         {d.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(d.nominal)}
                                     </td>
-                                    <td style={{ maxWidth: '250px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{d.keterangan || '-'}</td>
                                     <td>{d.pj || '-'}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -243,13 +249,14 @@ export default function ArusKasPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={editId ? "Pembaruan Catatan Transaksi" : "Pencatatan Transaksi Baru"}
                 footer={(
                     <>
-                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Batalkan</button>
+                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batalkan</button>
                         <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
                             {submitting ? 'Menyimpan...' : 'Simpan Transaksi'}
                         </button>
@@ -295,6 +302,56 @@ export default function ArusKasPage() {
                         <input type="text" className="form-control" placeholder="Nama pelaksana transaksi" value={formData.pj} onChange={(e) => setFormData({ ...formData, pj: e.target.value })} />
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal Detail View */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Detail Transaksi Keuangan"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Nominal Transaksi</div>
+                            <div style={{ fontSize: '2.5rem', fontWeight: 900, color: viewData.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>
+                                {viewData.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(viewData.nominal)}
+                            </div>
+                            <span className="th-badge" style={{
+                                background: viewData.tipe === 'Masuk' ? '#dcfce7' : '#fee2e2',
+                                color: viewData.tipe === 'Masuk' ? '#166534' : '#991b1b',
+                                padding: '6px 15px',
+                                marginTop: '10px'
+                            }}>
+                                {viewData.tipe === 'Masuk' ? 'PEMASUKAN' : 'PENGELUARAN'}
+                            </span>
+                        </div>
+
+                        <div className="form-grid" style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Kategori</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.kategori}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Tanggal</small>
+                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <small style={{ color: 'var(--text-muted)' }}>Keterangan / Alasan Transaksi</small>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 500, lineHeight: '1.6', marginTop: '5px' }}>
+                                {viewData.keterangan || 'Tidak ada keterangan tambahan.'}
+                            </div>
+                        </div>
+
+                        <div style={{ padding: '1rem', background: 'var(--primary-light)', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 600, color: 'var(--primary)' }}>Penanggung Jawab:</span>
+                            <span style={{ fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.pj || '-'}</span>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

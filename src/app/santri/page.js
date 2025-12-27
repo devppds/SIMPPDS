@@ -167,22 +167,22 @@ export default function SantriPage() {
     );
 
     return (
-        <div className="view-container">
+        <div className="view-container animate-in">
             <div className="card">
                 <div className="card-header">
                     <div>
-                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Database Santri {filterStatus === 'Aktif' ? 'Aktif' : filterStatus}</h2>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} santri ditemukan.</p>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Database Santri {filterStatus === 'Aktif' ? 'Aktif' : filterStatus}</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total {displayData.length} santri ditemukan.</p>
                     </div>
-                    <div className="card-actions" style={{ display: 'flex', gap: '10px' }}>
-                        <button className="btn btn-secondary" onClick={() => window.print()}><i className="fas fa-print"></i></button>
-                        <button className="btn btn-secondary" onClick={handleDownloadTemplate}>Template</button>
-                        <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                    <div className="card-actions" style={{ display: 'flex', gap: '8px' }}>
+                        <button className="btn btn-outline btn-sm" onClick={() => window.print()} title="Cetak Daftar"><i className="fas fa-print"></i></button>
+                        <button className="btn btn-outline btn-sm" onClick={handleDownloadTemplate}>Template</button>
+                        <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
                             Import <input type="file" accept=".csv" onChange={handleImport} style={{ display: 'none' }} />
                         </label>
-                        <button className="btn btn-secondary" onClick={handleExport}>Export</button>
-                        <button className="btn btn-primary" onClick={() => openModal()}>
-                            <i className="fas fa-plus-circle"></i> Tambah Baru
+                        <button className="btn btn-outline btn-sm" onClick={handleExport}>Export</button>
+                        <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
+                            <i className="fas fa-plus"></i> Tambah Baru
                         </button>
                     </div>
                 </div>
@@ -204,7 +204,7 @@ export default function SantriPage() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Foto</th><th>Nama Lengkap</th><th>Stambuk</th><th>Unit / Kelas</th><th>Wali</th><th>Opsi</th>
+                                <th>Foto</th><th>Nama Lengkap</th><th>Stambuk</th><th>Unit / Kelas</th><th>Wali</th><th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -225,9 +225,9 @@ export default function SantriPage() {
                                     <td>{s.nama_ayah || 'Wali'}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openDetail(s)}><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-yellow" onClick={() => openModal(s)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteSantri(s.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openDetail(s)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(s)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteSantri(s.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -244,7 +244,7 @@ export default function SantriPage() {
                 title={editId ? "Pembaruan Data Santri" : "Pendaftaran Santri Baru"}
                 footer={(
                     <>
-                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Batalkan</button>
+                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batalkan</button>
                         <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
                             {submitting ? 'Memproses...' : 'Simpan Data'}
                         </button>
@@ -315,26 +315,69 @@ export default function SantriPage() {
                 </div>
             </Modal>
 
+            {/* Modal Detail Santri - Premium View */}
             <Modal
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
-                title="Detail Santri"
+                title="Profil Lengkap Santri"
                 width="800px"
-                footer={<button className="btn btn-primary" onClick={() => setIsDetailOpen(false)}>Tutup</button>}
+                footer={<button className="btn btn-primary" onClick={() => setIsDetailOpen(false)}>Selesai</button>}
             >
                 {detailData && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
-                        <div style={{ textAlign: 'center' }}>
-                            <img src={detailData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(detailData.nama_siswa)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', borderRadius: '24px', boxShadow: 'var(--shadow-lg)' }} alt="" />
-                        </div>
-                        <div>
-                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary)' }}>{detailData.nama_siswa}</h2>
-                            <p style={{ color: 'var(--text-muted)' }}>Stambuk: {detailData.stambuk_pondok || '-'}</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
-                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>Unit</label><div>{detailData.madrasah}</div></div>
-                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>Kelas</label><div>{detailData.kelas}</div></div>
-                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>Ayah</label><div>{detailData.nama_ayah}</div></div>
-                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>WhatsApp</label><div>{detailData.no_telp_ayah}</div></div>
+                    <div className="detail-view">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2.5rem', alignItems: 'start' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ position: 'relative', padding: '10px', background: '#fff', borderRadius: '28px', boxShadow: 'var(--shadow-lg)' }}>
+                                    <img src={detailData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(detailData.nama_siswa)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', borderRadius: '24px', display: 'block' }} alt="" />
+                                </div>
+                                <div style={{ marginTop: '1.5rem' }}>
+                                    <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '8px 20px', borderRadius: '30px', fontWeight: 800 }}>
+                                        SANTRI {detailData.status_santri?.toUpperCase() || 'AKTIF'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '5px' }}>{detailData.nama_siswa}</h2>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '1.5rem' }}>Stambuk: <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{detailData.stambuk_pondok || '-'}</span> | NIK: {detailData.nik || '-'}</p>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '20px' }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Madrasah / Unit</label>
+                                        <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{detailData.madrasah || '-'}</div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Kelas / Geding</label>
+                                        <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{detailData.kelas || '-'}</div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Kamar Hunian</label>
+                                        <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--success)' }}>{detailData.kamar || 'Pusat'}</div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tahun Masuk</label>
+                                        <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{detailData.tahun_masuk || '-'}</div>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: '2rem' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px' }}>Data Wali & Domisili</h4>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                        <div>
+                                            <small style={{ color: 'var(--text-muted)' }}>Nama Ayah (Wali)</small>
+                                            <div style={{ fontWeight: 600 }}>{detailData.nama_ayah || '-'}</div>
+                                            <div style={{ fontWeight: 800, color: '#25D366', fontSize: '0.8rem' }}><i className="fab fa-whatsapp"></i> {detailData.no_telp_ayah || '-'}</div>
+                                        </div>
+                                        <div>
+                                            <small style={{ color: 'var(--text-muted)' }}>Asal Daerah</small>
+                                            <div style={{ fontWeight: 600 }}>{detailData.kota_kabupaten || '-'}</div>
+                                            <div style={{ fontSize: '0.8rem' }}>{detailData.provinsi || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ marginTop: '1rem', padding: '1rem', background: '#f1f5f9', borderRadius: '12px', fontSize: '0.9rem' }}>
+                                        <i className="fas fa-map-marker-alt" style={{ marginRight: '8px', color: 'var(--danger)' }}></i>
+                                        {detailData.dusun_jalan}, {detailData.desa_kelurahan}, {detailData.kecamatan}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

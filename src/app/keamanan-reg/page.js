@@ -13,6 +13,8 @@ export default function KeamananRegPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
         nama_santri: '', jenis_barang: 'Elektronik', detail_barang: '',
@@ -53,6 +55,11 @@ export default function KeamananRegPage() {
         setIsModalOpen(true);
     };
 
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         setSubmitting(true);
@@ -63,6 +70,7 @@ export default function KeamananRegPage() {
             });
             setIsModalOpen(false);
             loadData();
+            alert('Data berhasil disimpan!');
         } catch (err) { alert(err.message); }
         finally { setSubmitting(false); }
     };
@@ -117,7 +125,7 @@ export default function KeamananRegPage() {
                                 <th>Jenis</th>
                                 <th>Detail Barang</th>
                                 <th>Status</th>
-                                <th style={{ width: '100px' }}>Aksi</th>
+                                <th style={{ width: '150px' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,18 +136,19 @@ export default function KeamananRegPage() {
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
                                     <td>{formatDate(d.tanggal_registrasi)}</td>
-                                    <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
+                                    <td><div style={{ fontWeight: 800 }}>{d.nama_santri}</div></td>
                                     <td>{d.jenis_barang}</td>
                                     <td>{d.detail_barang} {d.merk && `(${d.merk})`}</td>
                                     <td>
-                                        <span className="th-badge" style={{ background: '#f1f5f9', color: '#475569' }}>
-                                            {d.status_barang_reg}
+                                        <span className="th-badge" style={{ background: d.status_barang_reg === 'Aktif' ? '#dcfce7' : '#f1f5f9', color: d.status_barang_reg === 'Aktif' ? '#166534' : '#475569' }}>
+                                            {d.status_barang_reg?.toUpperCase() || 'AKTIF'}
                                         </span>
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -149,15 +158,16 @@ export default function KeamananRegPage() {
                 </div>
             </div>
 
+            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editId ? "Update Registrasi" : "Registrasi Barang Baru"}
+                title={editId ? "Pembaruan Registrasi Barang" : "Registrasi Barang Baru"}
                 footer={(
                     <>
-                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
+                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batalkan</button>
                         <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                            {submitting ? 'Memproses...' : 'Simpan'}
+                            {submitting ? 'Memproses...' : 'Simpan Data'}
                         </button>
                     </>
                 )}
@@ -206,7 +216,66 @@ export default function KeamananRegPage() {
                             <input type="text" className="form-control" value={formData.kamar_penempatan} onChange={e => setFormData({ ...formData, kamar_penempatan: e.target.value })} />
                         </div>
                     </div>
+                    <div className="form-group">
+                        <label className="form-label">Petugas Penerima</label>
+                        <input type="text" className="form-control" value={formData.petugas_penerima} onChange={e => setFormData({ ...formData, petugas_penerima: e.target.value })} />
+                    </div>
                 </form>
+            </Modal>
+
+            {/* Modal Detail View */}
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                title="Detail Registrasi Keamanan"
+                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
+            >
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Pemilik Barang</div>
+                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary-dark)', margin: '5px 0' }}>{viewData.nama_santri}</h2>
+                            <div className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '5px 20px' }}>{viewData.kamar_penempatan || 'Kamar Belum Dicatat'}</div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Jenis Barang</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.jenis_barang}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Nama & Merk</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.detail_barang} {viewData.merk && `(${viewData.merk})`}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Kondisi Fisik</small>
+                                <div style={{ fontWeight: 700 }}>{viewData.keadaan}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)' }}>Warna</small>
+                                <div style={{ fontWeight: 600 }}>{viewData.warna || '-'}</div>
+                            </div>
+                        </div>
+
+                        <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
+                            <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                                <small style={{ color: 'var(--text-muted)', display: 'block' }}>Petugas Registrasi</small>
+                                <span style={{ fontWeight: 700 }}>{viewData.petugas_penerima || '-'}</span>
+                            </div>
+                            <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                                <small style={{ color: 'var(--text-muted)', display: 'block' }}>Tanggal Input</small>
+                                <span style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal_registrasi)}</span>
+                            </div>
+                        </div>
+
+                        {viewData.keterangan && (
+                            <div style={{ marginTop: '1rem' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
+                                <p style={{ marginTop: '5px', lineHeight: '1.6' }}>{viewData.keterangan}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal>
         </div>
     );
