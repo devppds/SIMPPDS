@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function UstadzPage() {
     const { isAdmin } = useAuth();
@@ -98,6 +99,38 @@ export default function UstadzPage() {
         (d.nik_nip || '').toLowerCase().includes(search.toLowerCase()) ||
         (d.kelas || '').toLowerCase().includes(search.toLowerCase())
     );
+
+    const columns = [
+        { key: 'nama', label: 'Nama Ustadz', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
+        { key: 'nik_nip', label: 'NIK/NIP' },
+        { key: 'kelas', label: 'Kelas Ampu' },
+        { key: 'no_hp', label: 'No. HP' },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => (
+                <span className="th-badge" style={{
+                    background: row.status === 'Aktif' ? '#dcfce7' : '#fee2e2',
+                    color: row.status === 'Aktif' ? '#166534' : '#991b1b'
+                }}>
+                    {row.status}
+                </span>
+            )
+        },
+        {
+            key: 'actions',
+            label: 'Aksi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                </div>
+            )
+        }
+    ];
 
     return (
         <div className="view-container">
