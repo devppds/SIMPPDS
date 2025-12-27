@@ -21,6 +21,11 @@ const headersConfig = {
     'layanan_master': ["unit", "nama_layanan", "harga", "status"],
     'layanan_admin': ["tanggal", "unit", "nama_santri", "stambuk", "jenis_layanan", "nominal", "keterangan", "pj", "pemohon_tipe", "jumlah"],
     'arsiparis': ["tanggal_upload", "nama_dokumen", "kategori", "file_url", "keterangan", "pj"],
+    'arsip_surat': ["tanggal", "nomor_surat", "tipe", "pengirim_penerima", "perihal", "keterangan", "file_surat"],
+    'arsip_proposal': ["tanggal", "nomor_proposal", "judul", "pengaju", "nominal", "status", "file_proposal", "keterangan"],
+    'arsip_akta_tanah': ["nomor_akta", "tanggal", "lokasi", "luas_tanah", "atas_nama", "status_kepemilikan", "file_akta", "keterangan"],
+    'arsip_pengurus_periode': ["periode_mulai", "periode_selesai", "nama", "jabatan", "divisi", "foto_pengurus", "keterangan"],
+    'arsip_pengajar_periode': ["periode_mulai", "periode_selesai", "nama", "kelas_ampu", "foto_pengajar", "keterangan"],
     'absensi_formal': ["tanggal", "nama_santri", "lembaga", "status_absen", "keterangan", "petugas_piket"],
     'lembaga': ["nama"]
 };
