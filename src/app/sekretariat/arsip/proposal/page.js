@@ -13,6 +13,8 @@ export default function ProposalPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({ tanggal: new Date().toISOString().split('T')[0], nomor_proposal: '', judul: '', pengaju: '', nominal: '', status: 'Diajukan', file_proposal: '', keterangan: '' });
     const [submitting, setSubmitting] = useState(false);
@@ -29,6 +31,11 @@ export default function ProposalPage() {
         if (item) { setEditId(item.id); setFormData({ ...item }); }
         else { setEditId(null); setFormData({ tanggal: new Date().toISOString().split('T')[0], nomor_proposal: '', judul: '', pengaju: '', nominal: '', status: 'Diajukan', file_proposal: '', keterangan: '' }); }
         setIsModalOpen(true);
+    };
+
+    const openViewModal = (item) => {
+        setViewData(item);
+        setIsViewModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
@@ -51,7 +58,7 @@ export default function ProposalPage() {
         { key: 'pengaju', label: 'Pengaju' },
         { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 700, color: 'var(--success)' }}>{formatCurrency(row.nominal)}</span> },
         { key: 'status', label: 'Status', render: (row) => <span className="th-badge" style={{ background: row.status === 'Disetujui' ? '#dcfce7' : row.status === 'Ditolak' ? '#fee2e2' : '#fffbeb', color: row.status === 'Disetujui' ? '#166534' : row.status === 'Ditolak' ? '#991b1b' : '#9a3412' }}>{row.status}</span> },
-        { key: 'actions', label: 'Aksi', sortable: false, width: '150px', render: (row) => (<div style={{ display: 'flex', gap: '8px' }}><button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>{isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}</div>) }
+        { key: 'actions', label: 'Aksi', sortable: false, width: '150px', render: (row) => (<div style={{ display: 'flex', gap: '8px' }}><button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button><button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>{isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}</div>) }
     ];
 
     return (
@@ -79,6 +86,68 @@ export default function ProposalPage() {
                     />
                     <div><label>Keterangan</label><textarea className="form-control" rows="3" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })}></textarea></div>
                 </form>
+            </Modal>
+
+            {/* View Detail Modal */}
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Arsip Proposal" width="700px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Tutup</button>}>
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Judul Proposal</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-dark)', lineHeight: 1.3 }}>{viewData.judul}</div>
+                            <div style={{ marginTop: '10px' }}>
+                                <span className="th-badge" style={{
+                                    background: viewData.status === 'Disetujui' ? '#dcfce7' : viewData.status === 'Ditolak' ? '#fee2e2' : '#fffbeb',
+                                    color: viewData.status === 'Disetujui' ? '#166534' : viewData.status === 'Ditolak' ? '#991b1b' : '#9a3412',
+                                    padding: '6px 20px',
+                                    fontWeight: 800
+                                }}>
+                                    {viewData.status}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nominal Pengajuan</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--success)' }}>{formatCurrency(viewData.nominal)}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Pengaju / PJ</small>
+                                <div style={{ fontWeight: 700 }}>{viewData.pengaju}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tanggal Pengajuan</small>
+                                <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nomor Dokumen</small>
+                                <div style={{ fontWeight: 600 }}>{viewData.nomor_proposal || '-'}</div>
+                            </div>
+                        </div>
+
+                        {viewData.keterangan && (
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Keterangan / Alasan</small>
+                                <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }}>
+                                    {viewData.keterangan}
+                                </div>
+                            </div>
+                        )}
+
+                        {viewData.file_proposal && (
+                            <div style={{ marginTop: '2rem', borderTop: '2px dashed #e2e8f0', paddingTop: '1.5rem' }}>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>Berkas Proposal</small>
+                                <a href={viewData.file_proposal} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center', gap: '10px' }}>
+                                    <i className="fas fa-file-pdf"></i> Lihat Dokumen Lengkap
+                                </a>
+                                {viewData.file_proposal.match(/\.(jpg|jpeg|png|gif)$/i) && (
+                                    <img src={viewData.file_proposal} alt="Preview" style={{ width: '100%', marginTop: '15px', borderRadius: '12px', border: '1px solid #eee' }} />
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal>
         </div>
     );

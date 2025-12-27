@@ -1,5 +1,7 @@
--- SIM-PPDS D1 Schema (SQLite)
+-- SIM-PPDS ACTIVE SCHEMA (v2)
+-- This file contains all active tables used in the current version of the application.
 
+-- 1. CORE MODULE
 CREATE TABLE IF NOT EXISTS santri (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     foto_santri TEXT,
@@ -69,6 +71,24 @@ CREATE TABLE IF NOT EXISTS pengurus (
     tanggal_nonaktif TEXT
 );
 
+CREATE TABLE IF NOT EXISTS kamar (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama_kamar TEXT,
+    asrama TEXT,
+    kapasitas INTEGER,
+    penasihat TEXT
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    fullname TEXT,
+    password TEXT NOT NULL,
+    password_plain TEXT,
+    role TEXT DEFAULT 'sekretariat'
+);
+
+-- 2. KEAMANAN & PENDIDIKAN MODULE
 CREATE TABLE IF NOT EXISTS keamanan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tanggal TEXT,
@@ -80,98 +100,15 @@ CREATE TABLE IF NOT EXISTS keamanan (
     petugas TEXT
 );
 
-CREATE TABLE IF NOT EXISTS pendidikan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
-    nama_santri TEXT,
-    kegiatan TEXT,
-    nilai REAL,
-    kehadiran TEXT,
-    keterangan TEXT,
-    ustadz TEXT
-);
-
-CREATE TABLE IF NOT EXISTS keuangan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
-    nama_santri TEXT,
-    jenis_pembayaran TEXT,
-    nominal REAL,
-    metode TEXT,
-    status TEXT,
-    bendahara TEXT,
-    tipe TEXT
-);
-
-CREATE TABLE IF NOT EXISTS arus_kas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
-    tipe TEXT,
-    kategori TEXT,
-    nominal REAL,
-    keterangan TEXT,
-    pj TEXT
-);
-
-CREATE TABLE IF NOT EXISTS jenis_tagihan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nama_tagihan TEXT,
-    nominal REAL,
-    keterangan TEXT,
-    aktif INTEGER DEFAULT 1
-);
-
-CREATE TABLE IF NOT EXISTS kamar (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nama_kamar TEXT,
-    asrama TEXT,
-    kapasitas INTEGER,
-    penasihat TEXT
-);
-
 CREATE TABLE IF NOT EXISTS keamanan_reg (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nama_santri TEXT,
     jenis_barang TEXT,
     detail_barang TEXT,
-    jenis_kendaraan TEXT,
-    jenis_elektronik TEXT,
-    plat_nomor TEXT,
-    warna TEXT,
-    merk TEXT,
-    aksesoris_1 TEXT,
-    aksesoris_2 TEXT,
-    aksesoris_3 TEXT,
-    keadaan TEXT,
     kamar_penempatan TEXT,
     tanggal_registrasi TEXT,
     petugas_penerima TEXT,
-    keterangan TEXT,
     status_barang_reg TEXT
-);
-
-CREATE TABLE IF NOT EXISTS kesehatan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nama_santri TEXT,
-    mulai_sakit TEXT,
-    gejala TEXT,
-    obat_tindakan TEXT,
-    status_periksa TEXT,
-    keterangan TEXT,
-    biaya_obat REAL
-);
-
-CREATE TABLE IF NOT EXISTS izin (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nama_santri TEXT,
-    alasan TEXT,
-    tanggal_pulang TEXT,
-    tanggal_kembali TEXT,
-    jam_mulai TEXT,
-    jam_selesai TEXT,
-    tipe_izin TEXT,
-    petugas TEXT,
-    keterangan TEXT
 );
 
 CREATE TABLE IF NOT EXISTS barang_sitaan (
@@ -185,64 +122,129 @@ CREATE TABLE IF NOT EXISTS barang_sitaan (
     keterangan TEXT
 );
 
-CREATE TABLE IF NOT EXISTS arsiparis (
+CREATE TABLE IF NOT EXISTS izin (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal_upload TEXT,
-    nama_dokumen TEXT,
+    nama_santri TEXT,
+    alasan TEXT,
+    tanggal_pulang TEXT,
+    tanggal_kembali TEXT,
+    tipe_izin TEXT,
+    petugas TEXT
+);
+
+CREATE TABLE IF NOT EXISTS keamanan_absensi (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER NOT NULL,
+    nama_santri TEXT,
+    kelas TEXT,
+    tanggal DATE NOT NULL,
+    status TEXT NOT NULL,
+    keterangan TEXT,
+    petugas TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pendidikan (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal TEXT,
+    nama_santri TEXT,
+    kegiatan TEXT,
+    nilai REAL,
+    kehadiran TEXT,
+    ustadz TEXT
+);
+
+-- 3. KEUANGAN MODULE
+CREATE TABLE IF NOT EXISTS keuangan_tarif (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kategori_status TEXT NOT NULL, 
+    kelas TEXT DEFAULT 'Semua',    
+    nominal INTEGER NOT NULL DEFAULT 0,
+    keterangan TEXT
+);
+
+CREATE TABLE IF NOT EXISTS keuangan_pembayaran (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER NOT NULL,
+    nama_santri TEXT, 
+    tanggal DATE NOT NULL,
+    jenis_pembayaran TEXT,
+    bulan_tagihan TEXT,
+    nominal INTEGER NOT NULL,
+    keterangan TEXT,
+    petugas TEXT
+);
+
+CREATE TABLE IF NOT EXISTS keuangan_kas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal DATE NOT NULL,
+    tipe TEXT,
+    kategori TEXT, 
+    nominal INTEGER NOT NULL,
+    keterangan TEXT,
+    petugas TEXT
+);
+
+CREATE TABLE IF NOT EXISTS arus_kas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal TEXT,
+    tipe TEXT,
     kategori TEXT,
-    file_url TEXT,
+    nominal REAL,
     keterangan TEXT,
     pj TEXT
 );
 
-CREATE TABLE IF NOT EXISTS absensi_formal (
+-- 4. ARSIPARIS MODULE
+CREATE TABLE IF NOT EXISTS arsip_surat (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
-    nama_santri TEXT,
-    lembaga TEXT,
-    status_absen TEXT,
-    keterangan TEXT,
-    petugas_piket TEXT
+    tanggal TEXT NOT NULL,
+    nomor_surat TEXT NOT NULL,
+    tipe TEXT NOT NULL,
+    pengirim_penerima TEXT NOT NULL,
+    perihal TEXT NOT NULL,
+    file_surat TEXT
 );
 
-CREATE TABLE IF NOT EXISTS layanan_info (
+CREATE TABLE IF NOT EXISTS arsip_proposal (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal TEXT NOT NULL,
+    nomor_proposal TEXT NOT NULL,
+    judul TEXT NOT NULL,
+    pengaju TEXT NOT NULL,
+    nominal TEXT NOT NULL,
+    status TEXT NOT NULL,
+    file_proposal TEXT
+);
+
+CREATE TABLE IF NOT EXISTS arsip_akta_tanah (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nomor_akta TEXT NOT NULL,
+    tanggal TEXT NOT NULL,
+    lokasi TEXT NOT NULL,
+    luas_tanah TEXT NOT NULL,
+    atas_nama TEXT NOT NULL,
+    status_kepemilikan TEXT NOT NULL,
+    file_akta TEXT
+);
+
+-- 5. MASTER DATA MODULE
+CREATE TABLE IF NOT EXISTS master_kelas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lembaga TEXT NOT NULL,
+    nama_kelas TEXT NOT NULL,
+    urutan INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS master_jabatan (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama_jabatan TEXT NOT NULL,
+    divisi TEXT
+);
+
+CREATE TABLE IF NOT EXISTS layanan_master (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     unit TEXT,
     nama_layanan TEXT,
     harga REAL,
-    keterangan TEXT,
-    aktif INTEGER DEFAULT 1
-);
-
-CREATE TABLE IF NOT EXISTS kas_unit (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
-    unit TEXT,
-    tipe TEXT,
-    kategori TEXT,
-    nominal REAL,
-    nama_santri TEXT,
-    stambuk TEXT,
-    keterangan TEXT,
-    petugas TEXT,
-    status_setor TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layanan_admin (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
-    unit TEXT,
-    nama_santri TEXT,
-    stambuk TEXT,
-    jenis_layanan TEXT,
-    nominal REAL,
-    keterangan TEXT,
-    pj TEXT,
-    pemohon_tipe TEXT,
-    jumlah INTEGER
-);
-
-CREATE TABLE IF NOT EXISTS lembaga (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nama TEXT NOT NULL
+    keterangan TEXT
 );
