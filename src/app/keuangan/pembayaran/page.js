@@ -144,7 +144,7 @@ export default function PembayaranSantriPage() {
             // 2. Auto-Entry to Arus Kas (Masuk)
             // Note: We use savedPayment ID if available, otherwise just link logic
             await apiCall('saveData', 'POST', {
-                type: 'keuangan_arus_kas',
+                type: 'keuangan_kas',
                 data: {
                     tanggal: formData.tanggal,
                     tipe: 'Masuk',

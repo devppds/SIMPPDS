@@ -37,7 +37,7 @@ export default function PengaturanKeuanganPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'keuangan_tarif' });
+            const res = await apiCall('getData', 'GET', { type: 'keuangan_master_tarif' });
             setData(res || []);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }

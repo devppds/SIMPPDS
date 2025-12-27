@@ -30,7 +30,7 @@ export default function ArusKasKeuanganPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'keuangan_arus_kas' });
+            const res = await apiCall('getData', 'GET', { type: 'keuangan_kas' });
             const list = res || [];
 
             // Calculate Stats
@@ -63,7 +63,7 @@ export default function ArusKasKeuanganPage() {
         setSubmitting(true);
         try {
             await apiCall('saveData', 'POST', {
-                type: 'keuangan_arus_kas',
+                type: 'keuangan_kas',
                 data: {
                     ...formData,
                     nominal: parseInt(formData.nominal),
