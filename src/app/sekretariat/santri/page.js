@@ -35,7 +35,7 @@ export default function SantriPage() {
         // Minat & Bakat
         hobi: '', cita_cita: '',
         // Pendidikan Sebelumnya
-        asal_sekolah: '', alamat_sekolah: '',
+        pendidikan_terakhir: '', asal_sekolah: '', no_ijazah: '',
         // Pembiayaan & Bantuan
         // Pembiayaan & Bantuan
         no_kk: '',
@@ -214,7 +214,7 @@ export default function SantriPage() {
                 // Minat & Bakat
                 hobi: '', cita_cita: '',
                 // Pendidikan Sebelumnya
-                asal_sekolah: '', alamat_sekolah: '',
+                pendidikan_terakhir: '', asal_sekolah: '', no_ijazah: '',
                 // Pembiayaan & Bantuan
                 // Pembiayaan & Bantuan
                 no_kk: '',
@@ -491,9 +491,21 @@ export default function SantriPage() {
                     )}
                     {activeTab === 'pendidikan' && (
                         <div className="tab-content animate-in">
-                            <div className="form-group"><label className="form-label">Asal Sekolah</label><input type="text" className="form-control" value={formData.asal_sekolah} onChange={e => setFormData({ ...formData, asal_sekolah: e.target.value })} /></div>
+                            <div className="form-group">
+                                <label className="form-label">Pendidikan Terakhir</label>
+                                <select className="form-control" value={formData.pendidikan_terakhir} onChange={e => setFormData({ ...formData, pendidikan_terakhir: e.target.value })}>
+                                    <option value="">- Pilih Pendidikan -</option>
+                                    <option value="SD/MI">SD/MI</option>
+                                    <option value="SMP/MTS">SMP/MTS</option>
+                                    <option value="SMA/SMK/MA">SMA/SMK/MA</option>
+                                    <option value="D3">D3</option>
+                                    <option value="S1">S1</option>
+                                    <option value="S2">S2</option>
+                                </select>
+                            </div>
                             <div className="form-group"><label className="form-label">NISN</label><input type="text" className="form-control" value={formData.nisn} onChange={e => setFormData({ ...formData, nisn: e.target.value })} /></div>
-                            <div className="form-group"><label className="form-label">Alamat Sekolah</label><textarea className="form-control" value={formData.alamat_sekolah} onChange={e => setFormData({ ...formData, alamat_sekolah: e.target.value })} rows="2"></textarea></div>
+                            <div className="form-group"><label className="form-label">Asal Sekolah</label><input type="text" className="form-control" value={formData.asal_sekolah} onChange={e => setFormData({ ...formData, asal_sekolah: e.target.value })} placeholder="Nama Sekolah Asal" /></div>
+                            <div className="form-group"><label className="form-label">Nomor Ijazah</label><input type="text" className="form-control" value={formData.no_ijazah} onChange={e => setFormData({ ...formData, no_ijazah: e.target.value })} /></div>
                         </div>
                     )}
                     {activeTab === 'wali' && (
