@@ -29,7 +29,7 @@ export default function SantriPage() {
         stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
         // Identitas Pribadi
         nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
-        anak_ke: '', jumlah_saudara_kandung: '', jumlah_saudara_tiri: '', jumlah_saudara_angkat: '', status_anak: '',
+        anak_ke: '', jumlah_saudara: '',
         // Alamat
         alamat: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
         // Minat & Bakat
@@ -208,7 +208,7 @@ export default function SantriPage() {
                 stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
                 // Identitas Pribadi
                 nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
-                anak_ke: '', jumlah_saudara_kandung: '', jumlah_saudara_tiri: '', jumlah_saudara_angkat: '', status_anak: '',
+                anak_ke: '', jumlah_saudara: '',
                 // Alamat
                 alamat: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
                 // Minat & Bakat
@@ -484,14 +484,7 @@ export default function SantriPage() {
                                 <div className="form-group"><label className="form-label">Kewarganegaraan</label><input type="text" className="form-control" value={formData.kewarganegaraan} onChange={e => setFormData({ ...formData, kewarganegaraan: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">Anak Ke</label><input type="number" className="form-control" value={formData.anak_ke} onChange={e => setFormData({ ...formData, anak_ke: e.target.value })} /></div>
                             </div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Jumlah Saudara Kandung</label><input type="number" className="form-control" value={formData.jumlah_saudara_kandung} onChange={e => setFormData({ ...formData, jumlah_saudara_kandung: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Jumlah Saudara Tiri</label><input type="number" className="form-control" value={formData.jumlah_saudara_tiri} onChange={e => setFormData({ ...formData, jumlah_saudara_tiri: e.target.value })} /></div>
-                            </div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Jumlah Saudara Angkat</label><input type="number" className="form-control" value={formData.jumlah_saudara_angkat} onChange={e => setFormData({ ...formData, jumlah_saudara_angkat: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Status Anak</label><input type="text" className="form-control" value={formData.status_anak} onChange={e => setFormData({ ...formData, status_anak: e.target.value })} placeholder="Kandung/Tiri/Angkat" /></div>
-                            </div>
+                            <div className="form-group"><label className="form-label">Jumlah Saudara</label><input type="number" className="form-control" value={formData.jumlah_saudara} onChange={e => setFormData({ ...formData, jumlah_saudara: e.target.value })} /></div>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Hobi</label><input type="text" className="form-control" value={formData.hobi} onChange={e => setFormData({ ...formData, hobi: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">Cita-cita</label><input type="text" className="form-control" value={formData.cita_cita} onChange={e => setFormData({ ...formData, cita_cita: e.target.value })} /></div>
