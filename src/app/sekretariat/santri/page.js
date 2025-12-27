@@ -166,7 +166,7 @@ export default function SantriPage() {
     };
 
     const handleExport = () => {
-        const headers = ["Foto Santri", "Stambuk Pondok", "Stambuk Madrasah", "Tahun Masuk", "Kamar", "Status MB", "Madrasah", "Kelas", "NIK", "Nama Siswa", "NISN", "Tempat Tanggal Lahir", "Jenis Kelamin", "Agama", "Hobi", "Cita Cita", "Kewarganegaraan", "No KK", "NIK Ayah", "Nama Ayah", "Pekerjaan Ayah", "Pendidikan Ayah", "No Telp Ayah", "Penghasilan Ayah", "NIK Ibu", "Nama Ibu", "Pekerjaan Ibu", "Pendidikan Ibu", "No Telp Ibu", "Dusun Jalan", "RT RW", "Desa Kelurahan", "Kecamatan", "Kota Kabupaten", "Provinsi", "Kode Pos", "Status Santri", "Pindah Ke", "Tahun Pindah", "Tanggal Boyong"];
+        const headers = ["Foto Santri", "Stambuk Pondok", "Stambuk Madrasah", "Tahun Masuk", "Kamar", "Status MB", "Madrasah", "Kelas", "NIK", "Nama Siswa", "NISN", "Tempat Tanggal Lahir", "Jenis Kelamin", "Agama", "Hobi", "Cita Cita", "Kewarganegaraan", "Anak Ke", "Jumlah Saudara", "Pendidikan Terakhir", "Asal Sekolah", "No Ijazah", "No KK", "NIK Ayah", "Nama Ayah", "Pekerjaan Ayah", "Pendidikan Ayah", "No Telp Ayah", "Penghasilan Ayah", "NIK Ibu", "Nama Ibu", "Pekerjaan Ibu", "Pendidikan Ibu", "No Telp Ibu", "Alamat Lengkap", "Dusun Jalan", "RT RW", "Desa Kelurahan", "Kecamatan", "Kota Kabupaten", "Provinsi", "Kode Pos", "Status Santri", "Pindah Ke", "Tahun Pindah", "Tanggal Boyong"];
         exportToExcel(santri, 'Data_Santri_Lengkap', headers);
     };
 
