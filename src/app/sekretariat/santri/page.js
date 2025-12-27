@@ -131,6 +131,11 @@ export default function SantriPage() {
             const timestamp = Math.round(new Date().getTime() / 1000);
             const paramsToSign = { timestamp };
             const { signature, apiKey, cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign } });
+
+            if (!apiKey || !cloudName) {
+                throw new Error('Konfigurasi Cloudinary tidak ditemukan. Harap Re-deploy aplikasi di Cloudflare.');
+            }
+
             const fd = new FormData();
             fd.append('file', file);
             fd.append('api_key', apiKey);
