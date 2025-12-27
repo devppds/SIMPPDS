@@ -241,6 +241,12 @@ header {
   border-bottom: 1px solid #f1f5f9;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .user-profile {
   display: flex;
   align-items: center;
