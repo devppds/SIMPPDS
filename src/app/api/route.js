@@ -10,31 +10,27 @@ const headersConfig = {
     'pendidikan': ["tanggal", "nama_santri", "kegiatan", "nilai", "kehadiran", "keterangan", "ustadz"],
     'keuangan': ["tanggal", "nama_santri", "jenis_pembayaran", "nominal", "metode", "status", "bendahara", "tipe"],
     'arus_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pj"],
-    'users': ["fullname", "username", "password", "password_plain", "role"]
+    'users': ["fullname", "username", "password", "password_plain", "role"],
+    'kamar': ["nama_kamar", "asrama", "kapasitas", "penasihat"],
+    'kesehatan': ["nama_santri", "mulai_sakit", "gejala", "obat_tindakan", "status_periksa", "keterangan", "biaya_obat"],
+    'izin': ["nama_santri", "alasan", "tanggal_pulang", "tanggal_kembali", "jam_mulai", "jam_selesai", "tipe_izin", "petugas", "keterangan"]
 };
 
-export async function GET(request) {
-    return handleRequest(request);
-}
-
-export async function POST(request) {
-    return handleRequest(request);
-}
+export async function GET(request) { return handleRequest(request); }
+export async function POST(request) { return handleRequest(request); }
 
 async function handleRequest(request) {
-    let db;
+    let env;
     try {
         const context = getRequestContext();
-        db = context?.env?.DB;
+        env = context?.env;
     } catch (e) {
-        return Response.json({ error: "Cloudflare Context Error", details: e.message }, { status: 500 });
+        return Response.json({ error: "Context Error", details: e.message }, { status: 500 });
     }
 
+    const db = env?.DB;
     if (!db) {
-        return Response.json({
-            error: "DATABASE_NOT_BOUND",
-            message: "Binding 'DB' tidak terbaca di Runtime. Pastikan nama Binding di Dashboard Cloudflare adalah 'DB' (huruf besar)."
-        }, { status: 500 });
+        return Response.json({ error: "DATABASE_NOT_BOUND", message: "Binding 'DB' tidak ditemukan." }, { status: 500 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -44,21 +40,13 @@ async function handleRequest(request) {
 
     try {
         if (action === 'getQuickStats') {
-            const santriCount = await db.prepare("SELECT COUNT(*) as total FROM santri").first();
-            const ustadzCount = await db.prepare("SELECT COUNT(*) as total FROM ustadz").first();
-            const keuanganSum = await db.prepare("SELECT SUM(nominal) as total FROM keuangan WHERE tipe = 'Masuk'").first();
-            return Response.json({
-                santriTotal: santriCount?.total || 0,
-                ustadzTotal: ustadzCount?.total || 0,
-                keuanganTotal: keuanganSum?.total || 0,
-                kasTotal: 0
-            });
+            const s = await db.prepare("SELECT COUNT(*) as total FROM santri").first();
+            const u = await db.prepare("SELECT COUNT(*) as total FROM ustadz").first();
+            const k = await db.prepare("SELECT SUM(nominal) as total FROM keuangan WHERE tipe = 'Masuk'").first();
+            return Response.json({ santriTotal: s?.total || 0, ustadzTotal: u?.total || 0, keuanganTotal: k?.total || 0, kasTotal: 0 });
         }
 
         if (action === 'getData') {
-            if (!type || !headersConfig[type]) {
-                return Response.json({ error: "Invalid or missing type: " + type }, { status: 400 });
-            }
             if (id) {
                 const result = await db.prepare(`SELECT * FROM ${type} WHERE id = ?`).bind(id).first();
                 return Response.json(result);
@@ -71,12 +59,11 @@ async function handleRequest(request) {
         if (action === 'saveData') {
             const body = await request.json();
             const config = headersConfig[type];
-            if (!config) return Response.json({ error: "Invalid type" }, { status: 400 });
-
             const fields = [];
             const values = [];
+
             config.forEach(col => {
-                if (Object.prototype.hasOwnProperty.call(body, col)) {
+                if (body.hasOwnProperty(col)) {
                     fields.push(col);
                     values.push(body[col] === '' ? null : body[col]);
                 }
@@ -86,28 +73,39 @@ async function handleRequest(request) {
                 const updateStr = fields.map(f => `${f} = ?`).join(', ');
                 values.push(body.id);
                 await db.prepare(`UPDATE ${type} SET ${updateStr} WHERE id = ?`).bind(...values).run();
-                return Response.json({ success: true, message: "Data updated" });
+                return Response.json({ success: true });
             } else {
-                const placeholders = fields.map(() => '?').join(', ');
-                await db.prepare(`INSERT INTO ${type} (${fields.join(', ')}) VALUES (${placeholders})`).bind(...values).run();
-                return Response.json({ success: true, message: "Data created" });
+                const q = `INSERT INTO ${type} (${fields.join(', ')}) VALUES (${fields.map(() => '?').join(', ')})`;
+                await db.prepare(q).bind(...values).run();
+                return Response.json({ success: true });
             }
         }
 
         if (action === 'deleteData') {
-            if (!id || !type) return Response.json({ error: "Missing ID or Type" }, { status: 400 });
             await db.prepare(`DELETE FROM ${type} WHERE id = ?`).bind(id).run();
             return Response.json({ success: true });
         }
 
+        if (action === 'getCloudinarySignature') {
+            const body = await request.json();
+            const paramsToSign = body.data?.paramsToSign || body.paramsToSign;
+            const apiSecret = env.CLOUDINARY_API_SECRET;
+
+            const sortedKeys = Object.keys(paramsToSign).sort();
+            const signString = sortedKeys.map(k => `${k}=${paramsToSign[k]}`).join('&') + apiSecret;
+            const encoder = new TextEncoder();
+            const hashBuffer = await crypto.subtle.digest('SHA-1', encoder.encode(signString));
+            const signature = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            return Response.json({
+                signature,
+                apiKey: env.CLOUDINARY_API_KEY,
+                cloudName: env.CLOUDINARY_CLOUD_NAME
+            });
+        }
+
         return Response.json({ error: "Unknown action: " + action }, { status: 404 });
     } catch (err) {
-        console.error("D1 Execution Error:", err);
-        return Response.json({
-            error: "Database Execution Error",
-            details: err.message,
-            action,
-            type
-        }, { status: 500 });
+        return Response.json({ error: "Critical Execution Error", details: err.message }, { status: 500 });
     }
 }
