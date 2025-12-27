@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function KesehatanPage() {
     const { isAdmin } = useAuth();

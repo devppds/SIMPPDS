@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function KeamananRegPage() {
     const { user, isAdmin } = useAuth();
@@ -110,6 +111,38 @@ export default function KeamananRegPage() {
         (d.detail_barang || '').toLowerCase().includes(search.toLowerCase())
     );
 
+    const columns = [
+        { key: 'tanggal_registrasi', label: 'Tanggal', render: (row) => formatDate(row.tanggal_registrasi) },
+        { key: 'nama_santri', label: 'Pemilik', render: (row) => <div style={{ fontWeight: 800 }}>{row.nama_santri}</div> },
+        { key: 'jenis_barang', label: 'Jenis' },
+        { key: 'detail_barang', label: 'Detail Barang', render: (row) => `${row.detail_barang} ${row.merk ? `(${row.merk})` : ''}` },
+        {
+            key: 'status_barang_reg',
+            label: 'Status',
+            render: (row) => (
+                <span className="th-badge" style={{
+                    background: row.status_barang_reg === 'Aktif' ? '#dcfce7' : '#f1f5f9',
+                    color: row.status_barang_reg === 'Aktif' ? '#166534' : '#475569'
+                }}>
+                    {row.status_barang_reg?.toUpperCase() || 'AKTIF'}
+                </span>
+            )
+        },
+        {
+            key: 'actions',
+            label: 'Aksi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="view-container animate-in">
             <div className="card">
@@ -138,46 +171,12 @@ export default function KeamananRegPage() {
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Pemilik</th>
-                                <th>Jenis</th>
-                                <th>Detail Barang</th>
-                                <th>Status</th>
-                                <th style={{ width: '150px' }}>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data registrasi.</td></tr>
-                            ) : displayData.map(d => (
-                                <tr key={d.id}>
-                                    <td>{formatDate(d.tanggal_registrasi)}</td>
-                                    <td><div style={{ fontWeight: 800 }}>{d.nama_santri}</div></td>
-                                    <td>{d.jenis_barang}</td>
-                                    <td>{d.detail_barang} {d.merk && `(${d.merk})`}</td>
-                                    <td>
-                                        <span className="th-badge" style={{ background: d.status_barang_reg === 'Aktif' ? '#dcfce7' : '#f1f5f9', color: d.status_barang_reg === 'Aktif' ? '#166534' : '#475569' }}>
-                                            {d.status_barang_reg?.toUpperCase() || 'AKTIF'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={displayData}
+                    loading={loading}
+                    emptyMessage="Belum ada data registrasi."
+                />
             </div>
 
             {/* Modal Input/Edit */}
