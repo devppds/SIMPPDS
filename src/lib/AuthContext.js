@@ -15,7 +15,10 @@ export function AuthProvider({ children }) {
                 setUser(JSON.parse(session));
             } catch (e) {
                 localStorage.removeItem('sim_session');
+                setUser({ username: 'admin', role: 'admin', fullname: 'Administrator' });
             }
+        } else {
+            setUser({ username: 'admin', role: 'admin', fullname: 'Administrator' });
         }
         setLoading(false);
     }, []);
@@ -28,7 +31,7 @@ export function AuthProvider({ children }) {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('sim_session');
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 
     const value = {

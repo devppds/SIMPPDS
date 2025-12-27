@@ -9,14 +9,8 @@ export default function RootPage() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.push('/dashboard');
-      } else {
-        router.push('/login');
-      }
-    }
-  }, [user, loading, router]);
+    router.push('/dashboard');
+  }, [router]);
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100vw' }}>
