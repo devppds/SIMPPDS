@@ -5,6 +5,7 @@ import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
+import Autocomplete from '@/components/Autocomplete';
 
 export default function PendidikanPage() {
     const { isAdmin } = useAuth();
@@ -169,20 +170,14 @@ export default function PendidikanPage() {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label">Nama Santri</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            list="santri-list"
+                        <Autocomplete
+                            options={santriOptions}
                             value={formData.nama_santri}
-                            onChange={e => setFormData({ ...formData, nama_santri: e.target.value })}
+                            onChange={(val) => setFormData({ ...formData, nama_santri: val })}
+                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa })}
+                            placeholder="Ketik nama santri untuk mencari..."
                             required
-                            placeholder="Ketik nama untuk mencari..."
                         />
-                        <datalist id="santri-list">
-                            {santriOptions.map((s, idx) => (
-                                <option key={idx} value={s.nama_siswa}>{s.stambuk_pondok ? `[${s.stambuk_pondok}] ` : ''}{s.kamar || ''}</option>
-                            ))}
-                        </datalist>
                     </div>
                     <div className="form-grid">
                         <div className="form-group">

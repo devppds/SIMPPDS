@@ -5,6 +5,7 @@ import { apiCall, formatCurrency, formatDate, exportToCSV } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
+import Autocomplete from '@/components/Autocomplete';
 
 export default function ArusKasPage() {
     const { isAdmin } = useAuth();
@@ -318,19 +319,15 @@ export default function ArusKasPage() {
                     </div>
                     <div className="form-group">
                         <label className="form-label">Penanggung Jawab (PJ)</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            list="pj-list"
-                            placeholder="Nama pelaksana transaksi"
+                        <Autocomplete
+                            options={pjOptions}
                             value={formData.pj}
-                            onChange={(e) => setFormData({ ...formData, pj: e.target.value })}
+                            onChange={(val) => setFormData({ ...formData, pj: val })}
+                            onSelect={(s) => setFormData({ ...formData, pj: s.nama })}
+                            placeholder="Nama pelaksana transaksi"
+                            labelKey="nama"
+                            subLabelKey="role"
                         />
-                        <datalist id="pj-list">
-                            {pjOptions.map((pj, idx) => (
-                                <option key={idx} value={pj.nama}>{pj.role}</option>
-                            ))}
-                        </datalist>
                     </div>
                 </form>
             </Modal>

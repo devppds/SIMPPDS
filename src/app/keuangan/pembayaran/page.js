@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import SortableTable from '@/components/SortableTable';
+import Autocomplete from '@/components/Autocomplete';
 
 export default function PembayaranSantriPage() {
     const { user } = useAuth();
@@ -198,46 +199,34 @@ export default function PembayaranSantriPage() {
 
                     <div className="form-group" style={{ position: 'relative' }}>
                         <label className="form-label">Cari Santri</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Ketik Nama / Stambuk..."
-                            value={search}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                setSearch(val);
-                                if (!val && selectedSantri) setSelectedSantri(null);
-                            }}
-                            disabled={!!selectedSantri}
-                        />
-                        {selectedSantri && (
-                            <button
-                                onClick={handleReset}
-                                style={{ position: 'absolute', right: '10px', top: '38px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}
-                            >
-                                <i className="fas fa-times"></i>
-                            </button>
-                        )}
-                        {/* Suggestions Dropdown */}
-                        {suggestionList.length > 0 && !selectedSantri && (
-                            <div style={{
-                                position: 'absolute', top: '100%', left: 0, right: 0,
-                                background: 'white', border: '1px solid #ddd', borderRadius: '0 0 8px 8px',
-                                zIndex: 10, boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto'
-                            }}>
-                                {suggestionList.map(s => (
-                                    <div
-                                        key={s.id}
-                                        onClick={() => handleSelectSantri(s)}
-                                        style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
-                                        onMouseEnter={e => e.target.style.background = '#f8fafc'}
-                                        onMouseLeave={e => e.target.style.background = 'white'}
-                                    >
-                                        <div style={{ fontWeight: 700 }}>{s.nama_siswa}</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.stambuk_pondok} | {s.kelas || s.kelas_diniyah || s.kelas_formal}</div>
-                                    </div>
-                                ))}
+                        {selectedSantri ? (
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={selectedSantri.nama_siswa}
+                                    disabled
+                                    style={{ background: '#f8fafc', fontWeight: 800, color: 'var(--primary-dark)' }}
+                                />
+                                <button
+                                    onClick={handleReset}
+                                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.1rem' }}
+                                >
+                                    <i className="fas fa-times-circle"></i>
+                                </button>
                             </div>
+                        ) : (
+                            <Autocomplete
+                                options={santriOptions}
+                                value={search}
+                                onChange={(val) => {
+                                    setSearch(val);
+                                    if (!val && selectedSantri) setSelectedSantri(null);
+                                }}
+                                onSelect={(s) => handleSelectSantri(s)}
+                                placeholder="Ketik Nama / Stambuk..."
+                                required
+                            />
                         )}
                     </div>
 

@@ -5,6 +5,7 @@ import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
+import Autocomplete from './Autocomplete';
 
 // Service types by unit
 const SERVICE_TYPES = {
@@ -66,7 +67,6 @@ export default function LayananUnitPage({ unit: forceUnit }) {
     });
     const [submitting, setSubmitting] = useState(false);
     const [santriOptions, setSantriOptions] = useState([]);
-    const [showSantriList, setShowSantriList] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -301,84 +301,18 @@ export default function LayananUnitPage({ unit: forceUnit }) {
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">Nama Pemohon</label>
-                            <div style={{ position: 'relative' }}>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={formData.nama_santri}
-                                    required
-                                    placeholder="Ketik nama untuk mencari..."
-                                    onFocus={() => setShowSantriList(true)}
-                                    onChange={e => {
-                                        const val = e.target.value;
-                                        setFormData({
-                                            ...formData,
-                                            nama_santri: val
-                                        });
-                                        setShowSantriList(true);
-                                    }}
-                                    autoComplete="off"
-                                />
-                                {showSantriList && formData.nama_santri.length > 0 && (
-                                    <div className="custom-dropdown-menu" style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: 0,
-                                        right: 0,
-                                        maxHeight: '200px',
-                                        overflowY: 'auto',
-                                        background: '#fff',
-                                        border: '1px solid #e2e8f0',
-                                        borderRadius: '0 0 12px 12px',
-                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                        zIndex: 1000,
-                                        marginTop: '4px'
-                                    }}>
-                                        {santriOptions
-                                            .filter(s => (s.nama_siswa || '').toLowerCase().includes(formData.nama_santri.toLowerCase()))
-                                            .slice(0, 50)
-                                            .map((s, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    onClick={() => {
-                                                        setFormData({
-                                                            ...formData,
-                                                            nama_santri: s.nama_siswa,
-                                                            stambuk: s.stambuk_pondok || formData.stambuk
-                                                        });
-                                                        setShowSantriList(false);
-                                                    }}
-                                                    style={{
-                                                        padding: '10px 15px',
-                                                        cursor: 'pointer',
-                                                        borderBottom: '1px solid #f1f5f9',
-                                                        fontSize: '0.9rem',
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center',
-                                                        color: '#334155'
-                                                    }}
-                                                    onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
-                                                >
-                                                    <span style={{ fontWeight: 600 }}>{s.nama_siswa}</span>
-                                                    <span style={{ fontSize: '0.75rem', color: '#64748b', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>
-                                                        {s.kamar || 'Pusat'} {s.stambuk_pondok ? `• ${s.stambuk_pondok}` : ''}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        {santriOptions.filter(s => (s.nama_siswa || '').toLowerCase().includes(formData.nama_santri.toLowerCase())).length === 0 && (
-                                            <div style={{ padding: '10px', color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center' }}>Tidak ditemukan</div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            {showSantriList && (
-                                <div
-                                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
-                                    onClick={() => setShowSantriList(false)}
-                                />
-                            )}
+                            <Autocomplete
+                                options={santriOptions}
+                                value={formData.nama_santri}
+                                onChange={(val) => setFormData({ ...formData, nama_santri: val })}
+                                onSelect={(s) => setFormData({
+                                    ...formData,
+                                    nama_santri: s.nama_siswa,
+                                    stambuk: s.stambuk_pondok || formData.stambuk
+                                })}
+                                placeholder="Ketik nama santri..."
+                                required
+                            />
                         </div>
                         <div className="form-group">
                             <label className="form-label">Stambuk (Jika Ada)</label>

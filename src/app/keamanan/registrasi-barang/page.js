@@ -5,6 +5,7 @@ import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
+import Autocomplete from '@/components/Autocomplete';
 
 export default function KeamananRegPage() {
     const { user, isAdmin } = useAuth();
@@ -77,6 +78,12 @@ export default function KeamananRegPage() {
     };
 
     const isMotor = formData.jenis_barang === 'Kendaraan' && (formData.detail_barang || '').toLowerCase().includes('motor');
+
+    const itemSuggestions = {
+        'Kendaraan': [{ name: 'Motor Baru' }, { name: 'Motor Lama' }, { name: 'Ontel Baru' }, { name: 'Ontel Lama' }],
+        'Elektronik': [{ name: 'Handphone' }, { name: 'Laptop' }, { name: 'Flashdisk' }],
+        'Kompor': [{ name: 'Kompor Baru' }, { name: 'Kompor Lama' }]
+    };
 
     const openViewModal = (item) => {
         setViewData(item);
@@ -196,20 +203,14 @@ export default function KeamananRegPage() {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label">Nama Santri (Pemilik)</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            list="santri-list"
+                        <Autocomplete
+                            options={santriOptions}
                             value={formData.nama_santri}
-                            onChange={e => handleSantriChange(e.target.value)}
-                            required
+                            onChange={(val) => handleSantriChange(val)}
+                            onSelect={(s) => handleSantriChange(s.nama_siswa)}
                             placeholder="Ketik nama untuk mencari..."
+                            required
                         />
-                        <datalist id="santri-list">
-                            {santriOptions.map((s, idx) => (
-                                <option key={idx} value={s.nama_siswa}>{s.stambuk_pondok ? `[${s.stambuk_pondok}] ` : ''}{s.kamar || ''}</option>
-                            ))}
-                        </datalist>
                     </div>
                     <div className="form-grid">
                         <div className="form-group">
@@ -222,38 +223,16 @@ export default function KeamananRegPage() {
                         </div>
                         <div className="form-group">
                             <label className="form-label">Detail Nama Barang</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                list="dynamic-detail-list"
+                            <Autocomplete
+                                options={itemSuggestions[formData.jenis_barang] || []}
                                 value={formData.detail_barang}
-                                onChange={e => setFormData({ ...formData, detail_barang: e.target.value })}
-                                required
+                                onChange={(val) => setFormData({ ...formData, detail_barang: val })}
+                                onSelect={(s) => setFormData({ ...formData, detail_barang: s.name })}
                                 placeholder="Ketik atau pilih dari saran..."
+                                labelKey="name"
+                                subLabelKey="none"
+                                required
                             />
-                            <datalist id="dynamic-detail-list">
-                                {formData.jenis_barang === 'Kendaraan' && (
-                                    <>
-                                        <option value="Motor Baru">Motor Baru</option>
-                                        <option value="Motor Lama">Motor Lama</option>
-                                        <option value="Ontel Baru">Ontel Baru</option>
-                                        <option value="Ontel Lama">Ontel Lama</option>
-                                    </>
-                                )}
-                                {formData.jenis_barang === 'Elektronik' && (
-                                    <>
-                                        <option value="Handphone">Handphone</option>
-                                        <option value="Laptop">Laptop</option>
-                                        <option value="Flashdisk">Flashdisk</option>
-                                    </>
-                                )}
-                                {formData.jenis_barang === 'Kompor' && (
-                                    <>
-                                        <option value="Kompor Baru">Kompor Baru</option>
-                                        <option value="Kompor Lama">Kompor Lama</option>
-                                    </>
-                                )}
-                            </datalist>
                         </div>
                     </div>
 
