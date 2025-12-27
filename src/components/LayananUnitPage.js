@@ -49,6 +49,10 @@ export default function LayananUnitPage({ unit: forceUnit }) {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
+    // Dynamic Master Data State
+    const [dynamicServices, setDynamicServices] = useState([]);
+    const [dynamicPrices, setDynamicPrices] = useState({});
+
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -65,7 +69,39 @@ export default function LayananUnitPage({ unit: forceUnit }) {
     useEffect(() => {
         loadData();
         fetchSantri();
-    }, []);
+        fetchMasterLayanan();
+    }, [forceUnit]);
+
+    const fetchMasterLayanan = async () => {
+        try {
+            const res = await apiCall('getData', 'GET', { type: 'layanan_master' });
+            // Filter services for current unit and status 'Aktif'
+            const unitServices = (res || [])
+                .filter(s => s.unit === forceUnit && s.status === 'Aktif')
+                .map(s => s.nama_layanan);
+
+            // Build price mapping
+            const prices = {};
+            (res || []).forEach(s => {
+                prices[s.nama_layanan] = s.harga;
+            });
+
+            setDynamicServices(unitServices);
+            setDynamicPrices(prices);
+
+            // Set default service if none selected
+            if (unitServices.length > 0 && !formData.jenis_layanan) {
+                setFormData(prev => ({
+                    ...prev,
+                    jenis_layanan: unitServices[0],
+                    nominal: prices[unitServices[0]] || '0'
+                }));
+            }
+        } catch (e) {
+            console.error('Error fetching master layanan:', e);
+            // Fallback to static if needed (optional)
+        }
+    };
 
     const fetchSantri = async () => {
         try {
@@ -86,11 +122,14 @@ export default function LayananUnitPage({ unit: forceUnit }) {
     };
 
     useEffect(() => {
-        const availableServices = SERVICE_TYPES[forceUnit] || [];
-        if (availableServices.length > 0 && !availableServices.includes(formData.jenis_layanan)) {
-            setFormData(prev => ({ ...prev, jenis_layanan: availableServices[0] }));
+        if (dynamicServices.length > 0 && !dynamicServices.includes(formData.jenis_layanan)) {
+            setFormData(prev => ({
+                ...prev,
+                jenis_layanan: dynamicServices[0],
+                nominal: dynamicPrices[dynamicServices[0]] || '0'
+            }));
         }
-    }, [forceUnit]);
+    }, [dynamicServices]);
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -103,14 +142,14 @@ export default function LayananUnitPage({ unit: forceUnit }) {
             setFormData({ ...item });
         } else {
             setEditId(null);
-            const defaultService = SERVICE_TYPES[forceUnit]?.[0] || '';
+            const defaultService = dynamicServices?.[0] || '';
             setFormData({
                 tanggal: new Date().toISOString().split('T')[0],
                 unit: forceUnit,
                 nama_santri: '',
                 stambuk: '',
                 jenis_layanan: defaultService,
-                nominal: '0',
+                nominal: dynamicPrices[defaultService] || '0',
                 jumlah: '1',
                 keterangan: '',
                 pj: '',
@@ -265,11 +304,11 @@ export default function LayananUnitPage({ unit: forceUnit }) {
                                     setFormData({
                                         ...formData,
                                         jenis_layanan: val,
-                                        nominal: SERVICE_PRICES[val] || '0'
+                                        nominal: dynamicPrices[val] || '0'
                                     });
                                 }}
                             >
-                                {(SERVICE_TYPES[forceUnit] || []).map(s => <option key={s}>{s}</option>)}
+                                {(dynamicServices || []).map(s => <option key={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="form-group">

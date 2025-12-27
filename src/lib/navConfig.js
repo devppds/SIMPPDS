@@ -61,7 +61,8 @@ export const NAV_ITEMS = [
         submenu: [
             { label: 'Arus Kas Pondok', path: '/arus-kas', icon: 'fas fa-exchange-alt' },
             { label: 'Setoran Unit', path: '/kas-unit', icon: 'fas fa-file-invoice-dollar' },
-            { label: 'Master Tagihan', path: '/jenis-tagihan', icon: 'fas fa-tags' }
+            { label: 'Master Tagihan', path: '/jenis-tagihan', icon: 'fas fa-tags' },
+            { label: 'Atur Layanan', path: '/atur-layanan', icon: 'fas fa-cogs' }
         ]
     },
     {
