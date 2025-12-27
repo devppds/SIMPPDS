@@ -76,7 +76,7 @@ export default function PembayaranSantriPage() {
 
         // Logic for Syahriah
         const status = selectedSantri.status_santri || 'Biasa Baru'; // Fallback
-        const kelas = selectedSantri.kelas_diniyah || selectedSantri.kelas_formal || '1'; // Try to get class
+        const kelas = selectedSantri.kelas || selectedSantri.kelas_diniyah || selectedSantri.kelas_formal || 'All'; // Include new 'kelas' field
 
         // Find tariff
         // Priority 1: Status Match AND Class Match
@@ -234,7 +234,7 @@ export default function PembayaranSantriPage() {
                                         onMouseLeave={e => e.target.style.background = 'white'}
                                     >
                                         <div style={{ fontWeight: 700 }}>{s.nama_siswa}</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.stambuk_pondok} | {s.kelas_diniyah || s.kelas_formal}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.stambuk_pondok} | {s.kelas || s.kelas_diniyah || s.kelas_formal}</div>
                                     </div>
                                 ))}
                             </div>
@@ -244,7 +244,7 @@ export default function PembayaranSantriPage() {
                     {selectedSantri && (
                         <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px' }}>
                             <div style={{ fontSize: '0.9rem', color: '#666' }}>Status: <strong style={{ color: 'var(--primary)' }}>{selectedSantri.status_santri || 'Umum'}</strong></div>
-                            <div style={{ fontSize: '0.9rem', color: '#666' }}>Kelas: <strong>{selectedSantri.kelas_diniyah || selectedSantri.kelas_formal || '-'}</strong></div>
+                            <div style={{ fontSize: '0.9rem', color: '#666' }}>Kelas: <strong>{selectedSantri.kelas || selectedSantri.kelas_diniyah || selectedSantri.kelas_formal || '-'}</strong></div>
                         </div>
                     )}
 

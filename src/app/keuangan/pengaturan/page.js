@@ -28,7 +28,8 @@ export default function PengaturanKeuanganPage() {
         'PKJ', 'Nduduk', 'Dzuriyyah'
     ];
 
-    const KELAS_OPTIONS = ['Semua', '1', '2', '3', '4', '5', '6'];
+    const [listKelas, setListKelas] = useState([]); // Dynamic Classes
+    // const KELAS_OPTIONS = ['Semua', '1', '2', '3', '4', '5', '6'];
 
     useEffect(() => {
         loadData();
@@ -37,8 +38,14 @@ export default function PengaturanKeuanganPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'keuangan_master_tarif' });
-            setData(res || []);
+            const [resTarif, resKelas] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'keuangan_tarif' }), // Updated table name
+                apiCall('getData', 'GET', { type: 'master_kelas' })
+            ]);
+            setData(resTarif || []);
+
+            const sortedKelas = (resKelas || []).sort((a, b) => a.urutan - b.urutan);
+            setListKelas([{ nama_kelas: 'Semua', lembaga: 'Umum' }, ...sortedKelas]);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -153,8 +160,8 @@ export default function PengaturanKeuanganPage() {
                             value={formData.kelas}
                             onChange={e => setFormData({ ...formData, kelas: e.target.value })}
                         >
-                            {KELAS_OPTIONS.map(opt => (
-                                <option key={opt} value={opt}>{opt}</option>
+                            {listKelas.map((k, idx) => (
+                                <option key={idx} value={k.nama_kelas}>{k.nama_kelas} {k.lembaga !== 'Umum' ? `(${k.lembaga})` : ''}</option>
                             ))}
                         </select>
                         <small style={{ color: 'var(--text-muted)' }}>Pilih 'Semua' jika tarif ini berlaku untuk semua kelas dengan status tersebut.</small>

@@ -13,6 +13,7 @@ export default function SantriPage() {
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('Aktif');
     const [activeTab, setActiveTab] = useState('umum'); // For Modal Tabs
+    const [listKelas, setListKelas] = useState([]); // Master Data Kelas
 
     // Modal States
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,7 +39,15 @@ export default function SantriPage() {
 
     useEffect(() => {
         loadData();
+        loadMasterData();
     }, [filterStatus]);
+
+    const loadMasterData = async () => {
+        try {
+            const res = await apiCall('getData', 'GET', { type: 'master_kelas' });
+            setListKelas((res || []).sort((a, b) => a.urutan - b.urutan));
+        } catch (e) { console.error(e); }
+    };
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
@@ -331,7 +340,29 @@ export default function SantriPage() {
                                 <div className="form-group"><label className="form-label">NIK</label><input type="text" className="form-control" value={formData.nik} onChange={e => setFormData({ ...formData, nik: e.target.value })} /></div>
                             </div>
                             <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Madrasah</label><input type="text" className="form-control" value={formData.madrasah} onChange={e => setFormData({ ...formData, madrasah: e.target.value })} /></div>
+                                <div className="form-grid">
+                                    <div className="form-group">
+                                        <label className="form-label">Kelas / Jenjang</label>
+                                        <select
+                                            className="form-control"
+                                            value={formData.kelas}
+                                            onChange={e => {
+                                                const selected = listKelas.find(k => k.nama_kelas === e.target.value);
+                                                setFormData({
+                                                    ...formData,
+                                                    kelas: e.target.value,
+                                                    madrasah: selected ? selected.lembaga : '' // Auto-fill madrasah
+                                                });
+                                            }}
+                                        >
+                                            <option value="">- Pilih Kelas -</option>
+                                            {listKelas.map(k => (
+                                                <option key={k.id} value={k.nama_kelas}>{k.nama_kelas} ({k.lembaga})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group"><label className="form-label">Madrasah</label><input type="text" className="form-control" value={formData.madrasah} readOnly placeholder="Otomatis" /></div>
+                                </div>
                                 <div className="form-group"><label className="form-label">Kamar</label><input type="text" className="form-control" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} /></div>
                             </div>
                         </div>
