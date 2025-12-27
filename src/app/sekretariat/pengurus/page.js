@@ -70,11 +70,28 @@ export default function PengurusPage() {
     };
 
     const getAcademicYear = () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1; // 1-12
-        // Jika >= Juli (7), maka 2025/2026. Jika < Juli, maka 2024/2025
-        return month >= 7 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
+        try {
+            // Menggunakan Intl API untuk konversi ke Hijriah
+            const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+                day: 'numeric', month: 'numeric', year: 'numeric'
+            }).formatToParts(new Date());
+
+            const hYearStr = parts.find(p => p.type === 'year')?.value;
+            const hMonthStr = parts.find(p => p.type === 'month')?.value;
+
+            const hYear = parseInt(hYearStr ? hYearStr.split(' ')[0] : '1447'); // Handle "1447 AH"
+            const hMonth = parseInt(hMonthStr || '1');
+
+            // Pergantian Tahun setiap 1 Syawal (Bulan 10)
+            if (hMonth >= 10) {
+                return `${hYear}/${hYear + 1} H`;
+            } else {
+                return `${hYear - 1}/${hYear} H`;
+            }
+        } catch (e) {
+            console.error("Hijri calc error", e);
+            return "1446/1447 H"; // Fallback
+        }
     };
 
     const openModal = (item = null) => {
