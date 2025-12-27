@@ -13,30 +13,39 @@ const headersConfig = {
     'users': ["fullname", "username", "password", "password_plain", "role"],
     'kamar': ["nama_kamar", "asrama", "kapasitas", "penasihat"],
     'kesehatan': ["nama_santri", "mulai_sakit", "gejala", "obat_tindakan", "status_periksa", "keterangan", "biaya_obat"],
-    'izin': ["nama_santri", "alasan", "tanggal_pulang", "tanggal_kembali", "jam_mulai", "jam_selesai", "tipe_izin", "petugas", "keterangan"]
+    'izin': ["nama_santri", "alasan", "tanggal_pulang", "tanggal_kembali", "jam_mulai", "jam_selesai", "tipe_izin", "petugas", "keterangan"],
+    'barang_sitaan': ["tanggal", "nama_santri", "jenis_barang", "nama_barang", "petugas", "status_barang", "keterangan"],
+    'keamanan_reg': ["nama_santri", "jenis_barang", "detail_barang", "jenis_kendaraan", "jenis_elektronik", "plat_nomor", "warna", "merk", "aksesoris_1", "aksesoris_2", "aksesoris_3", "keadaan", "kamar_penempatan", "tanggal_registrasi", "petugas_penerima", "keterangan", "status_barang_reg"],
+    'kas_unit': ["tanggal", "unit", "tipe", "kategori", "nominal", "nama_santri", "stambuk", "keterangan", "petugas", "status_setor"],
+    'jenis_tagihan': ["nama_tagihan", "nominal", "keterangan", "aktif"],
+    'layanan_info': ["unit", "nama_layanan", "harga", "keterangan", "aktif"],
+    'layanan_admin': ["tanggal", "unit", "nama_santri", "stambuk", "jenis_layanan", "nominal", "keterangan", "pj", "pemohon_tipe", "jumlah"],
+    'arsiparis': ["tanggal_upload", "nama_dokumen", "kategori", "file_url", "keterangan", "pj"],
+    'absensi_formal': ["tanggal", "nama_santri", "lembaga", "status_absen", "keterangan", "petugas_piket"],
+    'lembaga': ["nama"]
 };
 
-export async function GET(request) { return handleRequest(request); }
-export async function POST(request) { return handleRequest(request); }
+export async function GET(request) { return handle(request); }
+export async function POST(request) { return handle(request); }
 
-async function handleRequest(request) {
+async function handle(request) {
     let env;
     try {
-        const context = getRequestContext();
-        env = context?.env;
+        const ctx = getRequestContext();
+        env = ctx.env;
     } catch (e) {
-        return Response.json({ error: "Context Error", details: e.message }, { status: 500 });
+        return Response.json({ status: "error", error: "Context Missing", details: e.message }, { status: 500 });
     }
 
-    const db = env?.DB;
-    if (!db) {
-        return Response.json({ error: "DATABASE_NOT_BOUND", message: "Binding 'DB' tidak ditemukan." }, { status: 500 });
+    if (!env || !env.DB) {
+        return Response.json({ status: "error", error: "DATABASE_NOT_BOUND" }, { status: 500 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-    const type = searchParams.get('type');
-    const id = searchParams.get('id');
+    const db = env.DB;
+    const url = new URL(request.url);
+    const action = url.searchParams.get('action');
+    const type = url.searchParams.get('type');
+    const id = url.searchParams.get('id');
 
     try {
         if (action === 'getQuickStats') {
@@ -47,9 +56,10 @@ async function handleRequest(request) {
         }
 
         if (action === 'getData') {
+            if (!type || !headersConfig[type]) return Response.json({ error: "Invalid type" }, { status: 400 });
             if (id) {
-                const result = await db.prepare(`SELECT * FROM ${type} WHERE id = ?`).bind(id).first();
-                return Response.json(result);
+                const res = await db.prepare(`SELECT * FROM ${type} WHERE id = ?`).bind(id).first();
+                return Response.json(res);
             } else {
                 const { results } = await db.prepare(`SELECT * FROM ${type} ORDER BY id DESC`).all();
                 return Response.json(results || []);
@@ -59,9 +69,10 @@ async function handleRequest(request) {
         if (action === 'saveData') {
             const body = await request.json();
             const config = headersConfig[type];
+            if (!config) return Response.json({ error: "Invalid type: " + type }, { status: 400 });
+
             const fields = [];
             const values = [];
-
             config.forEach(col => {
                 if (body.hasOwnProperty(col)) {
                     fields.push(col);
@@ -70,13 +81,13 @@ async function handleRequest(request) {
             });
 
             if (body.id) {
-                const updateStr = fields.map(f => `${f} = ?`).join(', ');
+                const setClause = fields.map(f => `${f} = ?`).join(', ');
                 values.push(body.id);
-                await db.prepare(`UPDATE ${type} SET ${updateStr} WHERE id = ?`).bind(...values).run();
+                await db.prepare(`UPDATE ${type} SET ${setClause} WHERE id = ?`).bind(...values).run();
                 return Response.json({ success: true });
             } else {
-                const q = `INSERT INTO ${type} (${fields.join(', ')}) VALUES (${fields.map(() => '?').join(', ')})`;
-                await db.prepare(q).bind(...values).run();
+                const placeholders = fields.map(() => '?').join(', ');
+                await db.prepare(`INSERT INTO ${type} (${fields.join(', ')}) VALUES (${placeholders})`).bind(...values).run();
                 return Response.json({ success: true });
             }
         }
@@ -90,22 +101,16 @@ async function handleRequest(request) {
             const body = await request.json();
             const paramsToSign = body.data?.paramsToSign || body.paramsToSign;
             const apiSecret = env.CLOUDINARY_API_SECRET;
-
             const sortedKeys = Object.keys(paramsToSign).sort();
             const signString = sortedKeys.map(k => `${k}=${paramsToSign[k]}`).join('&') + apiSecret;
             const encoder = new TextEncoder();
             const hashBuffer = await crypto.subtle.digest('SHA-1', encoder.encode(signString));
             const signature = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-            return Response.json({
-                signature,
-                apiKey: env.CLOUDINARY_API_KEY,
-                cloudName: env.CLOUDINARY_CLOUD_NAME
-            });
+            return Response.json({ signature, apiKey: env.CLOUDINARY_API_KEY, cloudName: env.CLOUDINARY_CLOUD_NAME });
         }
 
-        return Response.json({ error: "Unknown action: " + action }, { status: 404 });
+        return Response.json({ error: "Unknown Action" }, { status: 404 });
     } catch (err) {
-        return Response.json({ error: "Critical Execution Error", details: err.message }, { status: 500 });
+        return Response.json({ status: "error", error: "Runtime Error", details: err.message }, { status: 500 });
     }
 }
