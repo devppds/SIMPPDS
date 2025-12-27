@@ -14,7 +14,7 @@ export default function PembayaranSantriPage() {
     // Search State
     const [search, setSearch] = useState('');
     const [selectedSantri, setSelectedSantri] = useState(null);
-    const [suggestionList, setSuggestionList] = useState([]);
+
 
     // Form State
     const [formData, setFormData] = useState({
@@ -51,19 +51,7 @@ export default function PembayaranSantriPage() {
         finally { setLoading(false); }
     };
 
-    // Filter Suggestions based on search
-    useEffect(() => {
-        if (!search || selectedSantri) {
-            setSuggestionList([]);
-            return;
-        }
-        const lower = search.toLowerCase();
-        const filtered = santriList.filter(s =>
-            s.nama_siswa.toLowerCase().includes(lower) ||
-            (s.stambuk_pondok || '').includes(lower)
-        ).slice(0, 10);
-        setSuggestionList(filtered);
-    }, [search, santriList, selectedSantri]);
+
 
     // Calculate Fee when Santri or Type changes
     useEffect(() => {
@@ -104,7 +92,7 @@ export default function PembayaranSantriPage() {
     const handleSelectSantri = (s) => {
         setSelectedSantri(s);
         setSearch(`${s.nama_siswa} (${s.kelas_diniyah || '-'})`);
-        setSuggestionList([]);
+
     };
 
     const handleReset = () => {
@@ -217,7 +205,7 @@ export default function PembayaranSantriPage() {
                             </div>
                         ) : (
                             <Autocomplete
-                                options={santriOptions}
+                                options={santriList}
                                 value={search}
                                 onChange={(val) => {
                                     setSearch(val);
