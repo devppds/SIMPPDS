@@ -9,9 +9,10 @@ import SortableTable from '@/components/SortableTable';
 export default function PengaturanWajarPage() {
     const { isAdmin } = useAuth();
     const [data, setData] = useState([]);
+    const [jabatanList, setJabatanList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ nama_pengurus: '', kelompok: '', jabatan: '', keterangan: '' });
+    const [formData, setFormData] = useState({ nama_pengurus: '', kelompok: '', jabatan: 'Wajar & Murottil', keterangan: '' });
     const [editId, setEditId] = useState(null);
 
     useEffect(() => { loadData(); }, []);
@@ -19,8 +20,12 @@ export default function PengaturanWajarPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'wajar_pengurus' });
-            setData(res || []);
+            const [resPengurus, resJabatan] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'wajar_pengurus' }),
+                apiCall('getData', 'GET', { type: 'master_jabatan' })
+            ]);
+            setData(resPengurus || []);
+            setJabatanList(resJabatan || []);
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
@@ -98,8 +103,17 @@ export default function PengaturanWajarPage() {
                             <input type="text" className="form-control" value={formData.kelompok} onChange={e => setFormData({ ...formData, kelompok: e.target.value })} placeholder="Contoh: Kelompok 1" />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Jabatan</label>
-                            <input type="text" className="form-control" value={formData.jabatan} onChange={e => setFormData({ ...formData, jabatan: e.target.value })} placeholder="Contoh: Penguji" />
+                            <label className="form-label">Jabatan (Dari Master)</label>
+                            <select
+                                className="form-control"
+                                value={formData.jabatan}
+                                onChange={e => setFormData({ ...formData, jabatan: e.target.value })}
+                            >
+                                <option value="">- Pilih Jabatan -</option>
+                                {jabatanList.map((j, i) => (
+                                    <option key={i} value={j.nama_jabatan}>{j.nama_jabatan}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                     <div className="form-group">

@@ -269,6 +269,7 @@ export default function SettingsPage() {
                             >
                                 <option value="sekretariat">Sekretariat</option>
                                 <option value="bendahara">Bendahara</option>
+                                <option value="wajar_murottil">Wajar-Murottil</option>
                                 <option value="admin">Administrator Full</option>
                             </select>
                         </div>

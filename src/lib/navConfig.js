@@ -3,7 +3,7 @@ export const NAV_ITEMS = [
         label: 'Dashboard',
         icon: 'fas fa-th-large',
         path: '/dashboard',
-        roles: ['admin', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu']
+        roles: ['admin', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu', 'wajar_murottil']
     },
     {
         label: 'Laporan Pimpinan',
@@ -61,7 +61,7 @@ export const NAV_ITEMS = [
     {
         label: 'Wajar-Murottil',
         icon: 'fas fa-microphone-alt',
-        roles: ['admin', 'pendidikan'],
+        roles: ['admin', 'pendidikan', 'wajar_murottil'],
         submenu: [
             { label: 'Wajib Belajar', path: '/wajar-murottil/wajib-belajar', icon: 'fas fa-book-reader' },
             { label: 'Murottil Malam', path: '/wajar-murottil/murottil-malam', icon: 'fas fa-moon' },
@@ -118,6 +118,6 @@ export const NAV_ITEMS = [
         label: 'Pengaturan',
         icon: 'fas fa-cog',
         path: '/settings',
-        roles: ['admin', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu']
+        roles: ['admin', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu', 'wajar_murottil']
     }
 ];
