@@ -87,6 +87,17 @@ export const NAV_ITEMS = [
     },
 
     {
+        label: 'Keuangan Santri',
+        icon: 'fas fa-wallet',
+        roles: ['admin', 'keamanan', 'bendahara', 'sekretariat'], // Allowing wider access for now or specific roll
+        submenu: [
+            { label: 'Pembayaran Santri', path: '/keuangan/pembayaran', icon: 'fas fa-cash-register' },
+            { label: 'Arus Kas Harian', path: '/keuangan/arus-kas', icon: 'fas fa-book-open' },
+            { label: 'Pengaturan Tarif', path: '/keuangan/pengaturan', icon: 'fas fa-sliders-h' }
+        ]
+    },
+
+    {
         label: 'Madrasah MIU',
         icon: 'fas fa-school',
         path: '/madrasah-miu',
