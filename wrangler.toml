@@ -9,5 +9,5 @@ compatibility_flags = ["nodejs_compat"]
 
 [[d1_databases]]
 binding = "DB"
-database_name = "sim-ppds-db"
-database_id = "b6c86bc4-4c50-4256-97c2-463ab8dab602"
+database_name = "sim-ppds-db-v2"
+database_id = "27ec7392-6ac2-4bdc-8570-69ab4057e485"
