@@ -55,6 +55,7 @@ export const NAV_ITEMS = [
         roles: ['admin', 'pendidikan'],
         submenu: [
             { label: 'Agenda & Nilai', path: '/pendidikan', icon: 'fas fa-book' },
+            { label: 'Wajar-Murottil', path: '/pendidikan/wajar-murottil', icon: 'fas fa-microphone-alt' },
             { label: 'Layanan Pendidikan', path: '/pendidikan/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
