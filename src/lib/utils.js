@@ -15,7 +15,7 @@ export const formatDate = (dateStr) => {
 
 export const apiCall = async (action, method = 'GET', options = {}) => {
     const { type, id, data } = options;
-    let url = `/api?action=${action}`;
+    let url = `/api/data?action=${action}`;
     if (type) url += `&type=${type}`;
     if (id) url += `&id=${id}`;
 

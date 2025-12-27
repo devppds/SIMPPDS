@@ -77,27 +77,82 @@ async function handleRequest(request) {
                 santriTotal: santriCount?.total || 0,
                 ustadzTotal: ustadzCount?.total || 0,
                 keuanganTotal: keuanganSum?.total || 0,
-                kasTotal: 0 // Simplifikasi sementara
+                kasTotal: 0
             });
         }
 
         if (method === 'GET' && action === 'getData') {
             const { type: dataType, id } = params;
-            if (!headersConfig[dataType]) throw new Error('Invalid type');
+            if (!headersConfig[dataType]) throw new Error('Invalid type: ' + dataType);
 
             if (id) {
                 const data = await db.prepare(`SELECT * FROM ${dataType} WHERE id = ?`).bind(id).first();
                 return Response.json(data);
             } else {
                 const { results } = await db.prepare(`SELECT * FROM ${dataType} ORDER BY id DESC`).all();
-                return Response.json(results);
+                return Response.json(results || []);
             }
         }
 
-        // Action lainnya bisa ditambahkan nanti, fokus utama adalah LOGIN dulu
-        return Response.json({ error: "Action not implemented" }, { status: 404 });
+        if (method === 'POST' && action === 'saveData') {
+            const dataType = type;
+            const body = await request.json();
+            const config = headersConfig[dataType];
+
+            if (!config) throw new Error('Invalid type: ' + dataType);
+
+            const fields = [];
+            const placeholders = [];
+            const values = [];
+
+            config.forEach(col => {
+                if (body.hasOwnProperty(col)) {
+                    fields.push(col);
+                    placeholders.push('?');
+                    values.push(body[col] === '' ? null : body[col]);
+                }
+            });
+
+            if (body.id) {
+                const updateCols = fields.map(f => `${f} = ?`).join(', ');
+                values.push(body.id);
+                await db.prepare(`UPDATE ${dataType} SET ${updateCols} WHERE id = ?`).bind(...values).run();
+                return Response.json({ message: 'Updated' });
+            } else {
+                await db.prepare(`INSERT INTO ${dataType} (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`).bind(...values).run();
+                return Response.json({ message: 'Created' });
+            }
+        }
+
+        if (action === 'deleteData') {
+            const { type: dataType, id } = params;
+            if (!headersConfig[dataType]) throw new Error('Invalid type');
+            await db.prepare(`DELETE FROM ${dataType} WHERE id = ?`).bind(id).run();
+            return Response.json({ message: 'Deleted' });
+        }
+
+        if (method === 'POST' && action === 'getCloudinarySignature') {
+            const body = await request.json();
+            const paramsToSign = body.data?.paramsToSign || body.paramsToSign;
+            const apiSecret = env.CLOUDINARY_API_SECRET;
+
+            const sortedKeys = Object.keys(paramsToSign).sort();
+            const signString = sortedKeys.map(k => `${k}=${paramsToSign[k]}`).join('&') + apiSecret;
+            const encoder = new TextEncoder();
+            const hashBuffer = await crypto.subtle.digest('SHA-1', encoder.encode(signString));
+            const signature = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            return Response.json({
+                signature,
+                apiKey: env.CLOUDINARY_API_KEY,
+                cloudName: env.CLOUDINARY_CLOUD_NAME
+            });
+        }
+
+        return Response.json({ error: "Action not implemented: " + action }, { status: 404 });
 
     } catch (err) {
+        console.error("API Error Central:", err);
         return Response.json({ error: err.message }, { status: 500 });
     }
 }
