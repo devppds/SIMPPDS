@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiCall } from '@/lib/utils';
+import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
@@ -15,8 +15,9 @@ export default function PendidikanPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
-        nama_kegiatan: '', kategori: 'Kurikulum', tanggal: new Date().toISOString().split('T')[0],
-        pj: '', keterangan: '', status: 'Terlaksana'
+        tanggal: new Date().toISOString().split('T')[0],
+        nama_santri: '', kegiatan: '', nilai: '',
+        kehadiran: 'Hadir', keterangan: '', ustadz: ''
     });
     const [submitting, setSubmitting] = useState(false);
 
@@ -40,8 +41,9 @@ export default function PendidikanPage() {
         } else {
             setEditId(null);
             setFormData({
-                nama_kegiatan: '', kategori: 'Kurikulum', tanggal: new Date().toISOString().split('T')[0],
-                pj: '', keterangan: '', status: 'Terlaksana'
+                tanggal: new Date().toISOString().split('T')[0],
+                nama_santri: '', kegiatan: '', nilai: '',
+                kehadiran: 'Hadir', keterangan: '', ustadz: ''
             });
         }
         setIsModalOpen(true);
@@ -70,8 +72,8 @@ export default function PendidikanPage() {
     };
 
     const displayData = data.filter(d =>
-        (d.nama_kegiatan || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.pj || '').toLowerCase().includes(search.toLowerCase())
+        (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.kegiatan || '').toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -80,11 +82,11 @@ export default function PendidikanPage() {
                 <div className="card-header">
                     <div>
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Agenda & Data Pendidikan</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mengelola {displayData.length} catatan kegiatan akademik.</p>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} agenda kegiatan pendidikan.</p>
                     </div>
                     <div className="card-actions">
                         <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                            <i className="fas fa-plus"></i> Tambah Agenda
+                            <i className="fas fa-plus"></i> Input Nilai / Agenda
                         </button>
                     </div>
                 </div>
@@ -95,7 +97,7 @@ export default function PendidikanPage() {
                         <input
                             type="text"
                             className="search-input"
-                            placeholder="Cari agenda atau penanggung jawab..."
+                            placeholder="Cari nama santri atau kegiatan..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -107,10 +109,10 @@ export default function PendidikanPage() {
                         <thead>
                             <tr>
                                 <th>Tanggal</th>
-                                <th>Nama Kegiatan / Agenda</th>
-                                <th>Kategori</th>
-                                <th>Penanggung Jawab</th>
-                                <th>Status</th>
+                                <th>Nama Santri</th>
+                                <th>Kegiatan</th>
+                                <th>Nilai</th>
+                                <th>Kehadiran</th>
                                 <th style={{ width: '100px' }}>Aksi</th>
                             </tr>
                         </thead>
@@ -118,19 +120,19 @@ export default function PendidikanPage() {
                             {loading ? (
                                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada agenda pendidikan.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data pendidikan.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
-                                    <td>{new Date(d.tanggal).toLocaleDateString('id-ID')}</td>
-                                    <td><div style={{ fontWeight: 700 }}>{d.nama_kegiatan}</div></td>
-                                    <td>{d.kategori}</td>
-                                    <td>{d.pj}</td>
+                                    <td>{formatDate(d.tanggal)}</td>
+                                    <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
+                                    <td>{d.kegiatan}</td>
+                                    <td style={{ fontWeight: 800 }}>{d.nilai || '-'}</td>
                                     <td>
                                         <span className="th-badge" style={{
-                                            background: d.status === 'Terlaksana' ? '#dcfce7' : '#f1f5f9',
-                                            color: d.status === 'Terlaksana' ? '#166534' : '#475569'
+                                            background: d.kehadiran === 'Hadir' ? '#dcfce7' : '#fee2e2',
+                                            color: d.kehadiran === 'Hadir' ? '#166534' : '#991b1b'
                                         }}>
-                                            {d.status}
+                                            {d.kehadiran}
                                         </span>
                                     </td>
                                     <td>
@@ -149,7 +151,7 @@ export default function PendidikanPage() {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editId ? "Edit Agenda Pendidikan" : "Tambah Agenda Pendidikan Baru"}
+                title={editId ? "Update Data Pendidikan" : "Input Pendidikan Baru"}
                 footer={(
                     <>
                         <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
@@ -161,18 +163,13 @@ export default function PendidikanPage() {
             >
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label">Nama Kegiatan / Agenda</label>
-                        <input type="text" className="form-control" value={formData.nama_kegiatan} onChange={e => setFormData({ ...formData, nama_kegiatan: e.target.value })} required placeholder="Contoh: Ujian Semester Ganjil" />
+                        <label className="form-label">Nama Santri</label>
+                        <input type="text" className="form-control" value={formData.nama_santri} onChange={e => setFormData({ ...formData, nama_santri: e.target.value })} required />
                     </div>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">Kategori</label>
-                            <select className="form-control" value={formData.kategori} onChange={e => setFormData({ ...formData, kategori: e.target.value })}>
-                                <option value="Kurikulum">Kurikulum</option>
-                                <option value="Kesiswaan">Kesiswaan</option>
-                                <option value="Sarpras">Sarana Prasarana</option>
-                                <option value="Ekstrakurikuler">Ekstrakurikuler</option>
-                            </select>
+                            <label className="form-label">Nama Kegiatan</label>
+                            <input type="text" className="form-control" value={formData.kegiatan} onChange={e => setFormData({ ...formData, kegiatan: e.target.value })} required />
                         </div>
                         <div className="form-group">
                             <label className="form-label">Tanggal</label>
@@ -181,21 +178,26 @@ export default function PendidikanPage() {
                     </div>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">Penanggung Jawab</label>
-                            <input type="text" className="form-control" value={formData.pj} onChange={e => setFormData({ ...formData, pj: e.target.value })} placeholder="Nama koordinator" />
+                            <label className="form-label">Nilai / Hasil</label>
+                            <input type="text" className="form-control" value={formData.nilai} onChange={e => setFormData({ ...formData, nilai: e.target.value })} />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Status</label>
-                            <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                                <option value="Rencana">Rencana</option>
-                                <option value="Terlaksana">Terlaksana</option>
-                                <option value="Batal">Batal</option>
+                            <label className="form-label">Kehadiran</label>
+                            <select className="form-control" value={formData.kehadiran} onChange={e => setFormData({ ...formData, kehadiran: e.target.value })}>
+                                <option value="Hadir">Hadir</option>
+                                <option value="Izin">Izin</option>
+                                <option value="Sakit">Sakit</option>
+                                <option value="Alpha">Alpha</option>
                             </select>
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Keterangan Tambahan</label>
-                        <textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows="3"></textarea>
+                        <label className="form-label">Pengajar / Ustadz</label>
+                        <input type="text" className="form-control" value={formData.ustadz} onChange={e => setFormData({ ...formData, ustadz: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Keterangan</label>
+                        <textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows="2"></textarea>
                     </div>
                 </form>
             </Modal>
