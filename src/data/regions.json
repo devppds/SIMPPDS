@@ -1,0 +1,144 @@
+[
+    {
+        "province": "Jawa Tengah",
+        "cities": [
+            {
+                "name": "Tegal",
+                "districts": [
+                    {
+                        "name": "Margasari",
+                        "villages": [
+                            {
+                                "name": "Margasari Village",
+                                "postal_code": "52171"
+                            },
+                            {
+                                "name": "Kedungbanteng Village",
+                                "postal_code": "52172"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Bojong",
+                        "villages": [
+                            {
+                                "name": "Bojong Village",
+                                "postal_code": "52173"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Dukuhpakis",
+                        "villages": [
+                            {
+                                "name": "Dukuhpakis Village",
+                                "postal_code": "52174"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Kendal",
+                "districts": [
+                    {
+                        "name": "Kedungbanteng",
+                        "villages": [
+                            {
+                                "name": "Kedungbanteng Village",
+                                "postal_code": "51111"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Kaliwungu",
+                        "villages": [
+                            {
+                                "name": "Kaliwungu Village",
+                                "postal_code": "51112"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Kaliwungu Selatan",
+                        "villages": [
+                            {
+                                "name": "Kaliwungu Selatan Village",
+                                "postal_code": "51113"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "province": "Jawa Barat",
+        "cities": [
+            {
+                "name": "Bandung",
+                "districts": [
+                    {
+                        "name": "Coblong",
+                        "villages": [
+                            {
+                                "name": "Coblong Village",
+                                "postal_code": "40115"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Cicendo",
+                        "villages": [
+                            {
+                                "name": "Cicendo Village",
+                                "postal_code": "40116"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Lengkong",
+                        "villages": [
+                            {
+                                "name": "Lengkong Village",
+                                "postal_code": "40117"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Cirebon",
+                "districts": [
+                    {
+                        "name": "Kesambi",
+                        "villages": [
+                            {
+                                "name": "Kesambi Village",
+                                "postal_code": "45111"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Kejaksan",
+                        "villages": [
+                            {
+                                "name": "Kejaksan Village",
+                                "postal_code": "45112"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Pekalipan",
+                        "villages": [
+                            {
+                                "name": "Pekalipan Village",
+                                "postal_code": "45113"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -505,19 +505,57 @@ export default function SantriPage() {
                             </div>
                         </div>
                     )}
+// Old static region logic removed – using dynamic fetch of full Indonesia data (see later in file).
+
+                    // Update village list when district changes
+                    useEffect(() => {
+                      if (formData.kecamatan && formData.kota_kabupaten && formData.provinsi) {
+                        const provObj = regions.find(r => r.province === formData.provinsi);
+                        const cityObj = provObj?.cities.find(c => c.name === formData.kota_kabupaten);
+                        const districtObj = cityObj?.districts.find(d => d.name === formData.kecamatan);
+                    const villages = districtObj ? districtObj.villages : [];
+                    setVillageList(villages);
+                        // reset desa and kode pos
+                        setFormData(prev => ({...prev, desa_kelurahan: '', kode_pos: '' }));
+                      } else {
+                        setVillageList([]);
+                        setFormData(prev => ({...prev, desa_kelurahan: '', kode_pos: '' }));
+                      }
+                    }, [formData.kecamatan, formData.kota_kabupaten, formData.provinsi]);
+
                     {activeTab === 'alamat' && (
                         <div className="tab-content animate-in">
                             <div className="form-group"><label className="form-label">Alamat</label><textarea className="form-control" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
                             <div className="form-group"><label className="form-label">Dusun / Jalan</label><input type="text" className="form-control" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} /></div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Desa / Kelurahan</label><input type="text" className="form-control" value={formData.desa_kelurahan} onChange={e => setFormData({ ...formData, desa_kelurahan: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Kecamatan</label><input type="text" className="form-control" value={formData.kecamatan} onChange={e => setFormData({ ...formData, kecamatan: e.target.value })} /></div>
+                            <div className="form-group"><label className="form-label">Provinsi</label>
+                                <select className="form-control" value={formData.provinsi} onChange={e => setFormData({ ...formData, provinsi: e.target.value })}>
+                                    <option value="">-- Pilih Provinsi --</option>
+                                    {provinceList.map(p => (<option key={p} value={p}>{p}</option>))}
+                                </select>
                             </div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Kota / Kabupaten</label><input type="text" className="form-control" value={formData.kota_kabupaten} onChange={e => setFormData({ ...formData, kota_kabupaten: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Provinsi</label><input type="text" className="form-control" value={formData.provinsi} onChange={e => setFormData({ ...formData, provinsi: e.target.value })} /></div>
+                            <div className="form-group"><label className="form-label">Kota / Kabupaten</label>
+                                <select className="form-control" value={formData.kota_kabupaten} onChange={e => setFormData({ ...formData, kota_kabupaten: e.target.value })} disabled={!cityList.length}>
+                                    <option value="">-- Pilih Kota/Kabupaten --</option>
+                                    {cityList.map(c => (<option key={c} value={c}>{c}</option>))}
+                                </select>
                             </div>
-                            <div className="form-group"><label className="form-label">Kode Pos</label><input type="text" className="form-control" value={formData.kode_pos} onChange={e => setFormData({ ...formData, kode_pos: e.target.value })} /></div>
+                            <div className="form-group"><label className="form-label">Kecamatan</label>
+                                <select className="form-control" value={formData.kecamatan} onChange={e => setFormData({ ...formData, kecamatan: e.target.value })} disabled={!districtList.length}>
+                                    <option value="">-- Pilih Kecamatan --</option>
+                                    {districtList.map(d => (<option key={d} value={d}>{d}</option>))}
+                                </select>
+                            </div>
+                            <div className="form-group"><label className="form-label">Desa / Kelurahan</label>
+                                <select className="form-control" value={formData.desa_kelurahan} onChange={e => {
+                                    const selected = villageList.find(v => v.name === e.target.value);
+                                    setFormData(prev => ({ ...prev, desa_kelurahan: e.target.value, kode_pos: selected ? selected.postal_code : '' }));
+                                }} disabled={!villageList.length}>
+                                    <option value="">-- Pilih Desa/Kelurahan --</option>
+                                    {villageList.map(v => (<option key={v.name} value={v.name}>{v.name}</option>))}
+                                </select>
+                            </div>
+                            <div className="form-group"><label className="form-label">Kode Pos</label><input type="text" className="form-control" value={formData.kode_pos} readOnly /></div>
+                            <div className="form-group"><label className="form-label">Negara</label><input type="text" className="form-control" value="Indonesia" readOnly /></div>
                         </div>
                     )}
                     {activeTab === 'bantuan' && (
