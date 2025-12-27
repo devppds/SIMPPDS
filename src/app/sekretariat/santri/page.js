@@ -37,7 +37,8 @@ export default function SantriPage() {
         // Pendidikan Sebelumnya
         asal_sekolah: '', npsn: '', alamat_sekolah: '', no_ijazah_skhun: '', no_peserta_ujian: '', tahun_lulus: '',
         // Pembiayaan & Bantuan
-        yang_membiayai: 'Orang Tua', kebutuhan_khusus: '', kebutuhan_disabilitas: '', no_kip: '', no_kk: '', nama_kepala_keluarga: '', no_kks_kps: '',
+        // Pembiayaan & Bantuan
+        no_kk: '',
         // Data Ayah
         nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', status_ayah: 'Hidup', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
         // Data Ibu
@@ -215,7 +216,8 @@ export default function SantriPage() {
                 // Pendidikan Sebelumnya
                 asal_sekolah: '', npsn: '', alamat_sekolah: '', no_ijazah_skhun: '', no_peserta_ujian: '', tahun_lulus: '',
                 // Pembiayaan & Bantuan
-                yang_membiayai: 'Orang Tua', kebutuhan_khusus: '', kebutuhan_disabilitas: '', no_kip: '', no_kk: '', nama_kepala_keluarga: '', no_kks_kps: '',
+                // Pembiayaan & Bantuan
+                no_kk: '',
                 // Data Ayah
                 nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', status_ayah: 'Hidup', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
                 // Data Ibu
@@ -414,7 +416,7 @@ export default function SantriPage() {
                     <button type="button" className={`tab-btn ${activeTab === 'pendidikan' ? 'active' : ''}`} onClick={() => setActiveTab('pendidikan')}><i className="fas fa-graduation-cap"></i> Pendidikan</button>
                     <button type="button" className={`tab-btn ${activeTab === 'wali' ? 'active' : ''}`} onClick={() => setActiveTab('wali')}><i className="fas fa-users"></i> Wali / Ortu</button>
                     <button type="button" className={`tab-btn ${activeTab === 'alamat' ? 'active' : ''}`} onClick={() => setActiveTab('alamat')}><i className="fas fa-map-marked-alt"></i> Alamat</button>
-                    <button type="button" className={`tab-btn ${activeTab === 'bantuan' ? 'active' : ''}`} onClick={() => setActiveTab('bantuan')}><i className="fas fa-hand-holding-heart"></i> Bantuan</button>
+
                     <button type="button" className={`tab-btn ${activeTab === 'status' ? 'active' : ''}`} onClick={() => setActiveTab('status')}><i className="fas fa-file-alt"></i> Status</button>
                 </div>
                 <div style={{ marginTop: '1.5rem' }}>
@@ -512,6 +514,7 @@ export default function SantriPage() {
                     )}
                     {activeTab === 'wali' && (
                         <div className="tab-content animate-in">
+                            <div className="form-group"><label className="form-label">No. KK (Kartu Keluarga)</label><input type="text" className="form-control" value={formData.no_kk} onChange={e => setFormData({ ...formData, no_kk: e.target.value })} /></div>
                             <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px' }}>Data Ayah</h4>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Nama Ayah</label><input type="text" className="form-control" value={formData.nama_ayah} onChange={e => setFormData({ ...formData, nama_ayah: e.target.value })} /></div>
@@ -543,16 +546,6 @@ export default function SantriPage() {
                                 <div className="form-group"><label className="form-label">Penghasilan Ibu</label><input type="text" className="form-control" value={formData.penghasilan_ibu} onChange={e => setFormData({ ...formData, penghasilan_ibu: e.target.value })} placeholder="< 1 Juta, 1-3 Juta, dll" /></div>
                             </div>
                             <div className="form-group"><label className="form-label">No. WhatsApp Ibu</label><input type="text" className="form-control" value={formData.no_telp_ibu} onChange={e => setFormData({ ...formData, no_telp_ibu: e.target.value })} placeholder="08xxxxxxxxxx" /></div>
-
-                            <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px', marginTop: '2rem' }}>Data Wali (Opsional)</h4>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Nama Wali</label><input type="text" className="form-control" value={formData.nama_wali} onChange={e => setFormData({ ...formData, nama_wali: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">NIK Wali</label><input type="text" className="form-control" value={formData.nik_wali} onChange={e => setFormData({ ...formData, nik_wali: e.target.value })} /></div>
-                            </div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">Hubungan Wali</label><input type="text" className="form-control" value={formData.hubungan_wali} onChange={e => setFormData({ ...formData, hubungan_wali: e.target.value })} placeholder="Paman, Kakek, dll" /></div>
-                                <div className="form-group"><label className="form-label">No. WhatsApp Wali</label><input type="text" className="form-control" value={formData.no_telp_wali} onChange={e => setFormData({ ...formData, no_telp_wali: e.target.value })} placeholder="08xxxxxxxxxx" /></div>
-                            </div>
                         </div>
                     )}
                     {activeTab === 'alamat' && (
@@ -590,26 +583,7 @@ export default function SantriPage() {
                             <div className="form-group"><label className="form-label">Negara</label><input type="text" className="form-control" value="Indonesia" readOnly /></div>
                         </div>
                     )}
-                    {activeTab === 'bantuan' && (
-                        <div className="tab-content animate-in">
-                            <div className="form-group"><label className="form-label">Yang Membiayai Pendidikan</label><select className="form-control" value={formData.yang_membiayai} onChange={e => setFormData({ ...formData, yang_membiayai: e.target.value })}>
-                                <option value="Orang Tua">Orang Tua</option>
-                                <option value="Wali">Wali</option>
-                                <option value="Beasiswa">Beasiswa</option>
-                                <option value="Lainnya">Lainnya</option>
-                            </select></div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">No. KK (Kartu Keluarga)</label><input type="text" className="form-control" value={formData.no_kk} onChange={e => setFormData({ ...formData, no_kk: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">Nama Kepala Keluarga</label><input type="text" className="form-control" value={formData.nama_kepala_keluarga} onChange={e => setFormData({ ...formData, nama_kepala_keluarga: e.target.value })} /></div>
-                            </div>
-                            <div className="form-grid">
-                                <div className="form-group"><label className="form-label">No. KIP (Kartu Indonesia Pintar)</label><input type="text" className="form-control" value={formData.no_kip} onChange={e => setFormData({ ...formData, no_kip: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">No. KKS / KPS</label><input type="text" className="form-control" value={formData.no_kks_kps} onChange={e => setFormData({ ...formData, no_kks_kps: e.target.value })} /></div>
-                            </div>
-                            <div className="form-group"><label className="form-label">Kebutuhan Khusus</label><textarea className="form-control" value={formData.kebutuhan_khusus} onChange={e => setFormData({ ...formData, kebutuhan_khusus: e.target.value })} rows="2" placeholder="Jika ada kebutuhan khusus, sebutkan di sini"></textarea></div>
-                            <div className="form-group"><label className="form-label">Kebutuhan Disabilitas</label><textarea className="form-control" value={formData.kebutuhan_disabilitas} onChange={e => setFormData({ ...formData, kebutuhan_disabilitas: e.target.value })} rows="2" placeholder="Jika ada disabilitas, sebutkan di sini"></textarea></div>
-                        </div>
-                    )}
+
                     {activeTab === 'status' && (
                         <div className="tab-content animate-in">
                             <div className="form-group"><label className="form-label">Status Santri</label><select className="form-control" value={formData.status_santri} onChange={e => setFormData({ ...formData, status_santri: e.target.value })}>
