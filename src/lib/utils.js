@@ -50,7 +50,7 @@ export const apiCall = async (action, method = 'GET', options = {}) => {
 };
 
 export const exportToCSV = (data, filename, headers) => {
-    if (!data || !data.length) return;
+    if (!headers || !headers.length) return;
 
     const csvRows = [];
     // Header row
