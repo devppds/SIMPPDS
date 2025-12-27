@@ -259,7 +259,8 @@ CREATE TABLE IF NOT EXISTS wajar_pengurus (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS wajar_absensi (
+-- Separate Table for MHM (Ibtida'iyyah)
+CREATE TABLE IF NOT EXISTS wajar_mhm_absen (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     santri_id INTEGER NOT NULL,
     nama_santri TEXT,
@@ -267,7 +268,21 @@ CREATE TABLE IF NOT EXISTS wajar_absensi (
     kelompok TEXT,
     tanggal DATE NOT NULL,
     status TEXT NOT NULL, -- H, S, I, A
-    tipe TEXT NOT NULL, -- 'Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'
+    tipe TEXT NOT NULL, -- 'Wajib Belajar' or 'Murottil Malam'
+    petugas TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Separate Table for MIU (Ula, Wustho, Ulya)
+CREATE TABLE IF NOT EXISTS wajar_miu_absen (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER NOT NULL,
+    nama_santri TEXT,
+    kelas TEXT,
+    kelompok TEXT,
+    tanggal DATE NOT NULL,
+    status TEXT NOT NULL, -- H, S, I, A
+    tipe TEXT DEFAULT 'Murottil Pagi',
     petugas TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -286,6 +301,7 @@ CREATE TABLE IF NOT EXISTS wajar_nilai (
 );
 
 -- Index for Wajar-Murottil
-CREATE INDEX IF NOT EXISTS idx_wajar_absensi_tgl ON wajar_absensi(tanggal, tipe);
+CREATE INDEX IF NOT EXISTS idx_wajar_mhm_tgl ON wajar_mhm_absen(tanggal, tipe);
+CREATE INDEX IF NOT EXISTS idx_wajar_miu_tgl ON wajar_miu_absen(tanggal);
 CREATE INDEX IF NOT EXISTS idx_wajar_nilai_tgl ON wajar_nilai(tanggal, tipe);
 

@@ -40,8 +40,8 @@ export default function MurottilPagiPage() {
 
             setSantriList(students);
 
-            const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_absensi' });
-            const logs = (resAbsen || []).filter(l => l.tanggal === filterDate && l.tipe === 'Murottil Pagi');
+            const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_miu_absen' });
+            const logs = (resAbsen || []).filter(l => l.tanggal === filterDate);
 
             const state = {};
             students.forEach(s => {
@@ -59,7 +59,7 @@ export default function MurottilPagiPage() {
             const promises = santriList.map(s => {
                 const data = attendance[s.id];
                 return apiCall('saveData', 'POST', {
-                    type: 'wajar_absensi',
+                    type: 'wajar_miu_absen',
                     data: {
                         id: data.id,
                         santri_id: s.id,

@@ -18,14 +18,15 @@ export default function WajibBelajarPage() {
         setLoading(true);
         try {
             const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
-            // Filter MHM Ibtida'iyyah Only
+            // Strict Filter: MHM Ibtida'iyyah Only
             const mhmIbtida = (resSantri || []).filter(s =>
-                (s.madrasah === 'MHM') && (s.kelas || '').includes('Ibtida')
+                (s.madrasah === 'MHM' || (s.kelas || '').toUpperCase().includes('IBTIDA')) &&
+                !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO') || (s.kelas || '').toUpperCase().includes('ULYA'))
             ).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
             setSantriList(mhmIbtida);
 
-            const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_absensi' });
+            const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_mhm_absen' });
             const logs = (resAbsen || []).filter(l => l.tanggal === filterDate && l.tipe === 'Wajib Belajar');
 
             const state = {};
@@ -43,7 +44,7 @@ export default function WajibBelajarPage() {
             const promises = santriList.map(s => {
                 const data = attendance[s.id];
                 return apiCall('saveData', 'POST', {
-                    type: 'wajar_absensi',
+                    type: 'wajar_mhm_absen',
                     data: {
                         id: data.id,
                         santri_id: s.id,

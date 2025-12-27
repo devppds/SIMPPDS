@@ -19,13 +19,14 @@ export default function MurottilMalamPage() {
         try {
             const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
             const students = (resSantri || []).filter(s =>
-                (s.madrasah === 'MHM') && (s.kelas || '').includes('Ibtida')
+                (s.madrasah === 'MHM' || (s.kelas || '').toUpperCase().includes('IBTIDA')) &&
+                !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO') || (s.kelas || '').toUpperCase().includes('ULYA'))
             ).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
             setSantriList(students);
 
             const [resAbsen, resNilai] = await Promise.all([
-                apiCall('getData', 'GET', { type: 'wajar_absensi' }),
+                apiCall('getData', 'GET', { type: 'wajar_mhm_absen' }),
                 apiCall('getData', 'GET', { type: 'wajar_nilai' })
             ]);
 
@@ -54,7 +55,7 @@ export default function MurottilMalamPage() {
             const promises = santriList.map(s => {
                 const data = state[s.id];
                 const p1 = apiCall('saveData', 'POST', {
-                    type: 'wajar_absensi',
+                    type: 'wajar_mhm_absen',
                     data: {
                         id: data.id_absen,
                         santri_id: s.id,
