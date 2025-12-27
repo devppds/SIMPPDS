@@ -297,7 +297,7 @@ export default function ArusKasPage() {
                         <div className="form-group">
                             <label className="form-label">Kategori Anggaran</label>
                             <select className="form-control" value={formData.kategori} onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}>
-                                <option>Syahriah</option><option>Dana Sosial</option><option>Pembangunan</option><option>Kesehatan</option><option>Konsumsi</option><option>Administrasi</option><option>Sarana Prasarana</option><option>Lain-lain</option>
+                                <option>Syahriah</option><option>Dana Bantuan</option><option>Pembangunan</option><option>Kesehatan</option><option>Administrasi</option><option>Sarana Prasarana</option><option>Lain-lain</option>
                             </select>
                         </div>
                     </div>
