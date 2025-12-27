@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 // Service types by unit
 const SERVICE_TYPES = {
@@ -187,6 +188,63 @@ export default function LayananUnitPage({ unit: forceUnit }) {
         } catch (err) { alert(err.message); }
     };
 
+    const columns = [
+        {
+            key: 'tanggal',
+            label: 'Tanggal',
+            render: (row) => <span style={{ fontWeight: 600 }}>{formatDate(row.tanggal)}</span>
+        },
+        {
+            key: 'nama_santri',
+            label: 'Nama Pemohon',
+            render: (row) => (
+                <div>
+                    <div style={{ fontWeight: 800 }}>{row.nama_santri}</div>
+                    <div style={{ fontSize: '0.7rem' }}>Stambuk: {row.stambuk || '-'}</div>
+                </div>
+            )
+        },
+        {
+            key: 'jenis_layanan',
+            label: 'Layanan',
+            render: (row) => (
+                <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                    {row.jenis_layanan}
+                </span>
+            )
+        },
+        {
+            key: 'nominal',
+            label: 'Biaya',
+            render: (row) => (
+                <div style={{ fontWeight: 800, color: 'var(--success)' }}>
+                    {formatCurrency(row.nominal)}
+                </div>
+            )
+        },
+        {
+            key: 'actions',
+            label: 'Opsi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Detail">
+                        <i className="fas fa-eye"></i>
+                    </button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit">
+                        <i className="fas fa-edit"></i>
+                    </button>
+                    {isAdmin && (
+                        <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus">
+                            <i className="fas fa-trash"></i>
+                        </button>
+                    )}
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="view-container animate-in">
             <div className="card">
@@ -213,43 +271,12 @@ export default function LayananUnitPage({ unit: forceUnit }) {
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Nama Pemohon</th>
-                                <th>Layanan</th>
-                                <th>Biaya</th>
-                                <th style={{ width: '150px' }}>Opsi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : displayData.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada riwayat layanan {forceUnit}.</td></tr>
-                            ) : displayData.map(d => (
-                                <tr key={d.id}>
-                                    <td style={{ fontWeight: 600 }}>{formatDate(d.tanggal)}</td>
-                                    <td>
-                                        <div style={{ fontWeight: 800 }}>{d.nama_santri}</div>
-                                        <div style={{ fontSize: '0.7rem' }}>Stambuk: {d.stambuk || '-'}</div>
-                                    </td>
-                                    <td><span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{d.jenis_layanan}</span></td>
-                                    <td><div style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(d.nominal)}</div></td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={displayData}
+                    loading={loading}
+                    emptyMessage={`Belum ada riwayat layanan ${forceUnit}.`}
+                />
             </div>
 
             <Modal
