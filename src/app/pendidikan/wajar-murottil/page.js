@@ -13,18 +13,41 @@ export default function WajarMurottilPage() {
     const [search, setSearch] = useState('');
 
     useEffect(() => {
-        // Placeholder for data fetching
-        setLoading(false);
+        loadData();
     }, []);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            // Placeholder: Using 'pendidikan' type for now as 'wajar_murottil' table might not exist yet
+            const res = await apiCall('getData', 'GET', { type: 'pendidikan' });
+            setData(res || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const columns = [
         { key: 'tanggal', label: 'Tanggal', render: (row) => formatDate(row.tanggal) },
         { key: 'nama_santri', label: 'Nama Santri' },
-        { key: 'kelas', label: 'Kelas' },
-        { key: 'materi', label: 'Materi / Surah' },
-        { key: 'nilai', label: 'Nilai', render: (row) => <strong>{row.nilai}</strong> },
-        { key: 'keterangan', label: 'Keterangan' }
+        {
+            key: 'materi',
+            label: 'Materi / Surah',
+            render: (row) => row.materi || row.kegiatan || '-'
+        },
+        {
+            key: 'nilai',
+            label: 'Nilai',
+            render: (row) => <strong style={{ color: 'var(--primary)' }}>{row.nilai}</strong>
+        },
+        { key: 'petugas', label: 'Penguji', render: (row) => row.ustadz || '-' }
     ];
+
+    const displayData = data.filter(d =>
+        (d.nama_santri || '').toLowerCase().includes(search.toLowerCase())
+    );
 
     return (
         <div className="view-container animate-in">
@@ -35,10 +58,10 @@ export default function WajarMurottilPage() {
                             <i className="fas fa-microphone-alt" style={{ marginRight: '10px' }}></i>
                             Wajar-Murottil
                         </h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Manajemen nilai dan progres hafalan/bacaan santri.</p>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Monitoring progres bacaan dan hafalan santri.</p>
                     </div>
                     <button className="btn btn-primary btn-sm">
-                        <i className="fas fa-plus"></i> Tambah Progres
+                        <i className="fas fa-plus"></i> Input Nilai Baru
                     </button>
                 </div>
 
@@ -57,9 +80,9 @@ export default function WajarMurottilPage() {
 
                 <SortableTable
                     columns={columns}
-                    data={data}
+                    data={displayData}
                     loading={loading}
-                    emptyMessage="Belum ada data progres Wajar-Murottil."
+                    emptyMessage="Belum ada data Wajar-Murottil."
                 />
             </div>
         </div>
