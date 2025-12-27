@@ -51,6 +51,84 @@ export default function SantriPage() {
     const [submitting, setSubmitting] = useState(false);
     const [uploading, setUploading] = useState(false);
 
+    // ---------- REGION DATA (full Indonesia) ----------
+    const [allRegions, setAllRegions] = useState({ provinces: [], cities: [], districts: [], villages: [] });
+    const [provinceList, setProvinceList] = useState([]);
+    const [cityList, setCityList] = useState([]);
+    const [districtList, setDistrictList] = useState([]);
+    const [villageList, setVillageList] = useState([]);
+
+    // Fetch all region data once on mount (using public repo data-indonesia)
+    useEffect(() => {
+        const fetchAll = async () => {
+            try {
+                const [provRes, cityRes, distRes, villRes] = await Promise.all([
+                    fetch('https://ibnux.github.io/data-indonesia/provinsi.json'),
+                    fetch('https://ibnux.github.io/data-indonesia/kabupaten.json'),
+                    fetch('https://ibnux.github.io/data-indonesia/kecamatan.json'),
+                    fetch('https://ibnux.github.io/data-indonesia/kelurahan.json')
+                ]);
+                const [provs, cities, districts, villages] = await Promise.all([
+                    provRes.json(), cityRes.json(), distRes.json(), villRes.json()
+                ]);
+                setAllRegions({ provinces: provs, cities, districts, villages });
+                setProvinceList(provs.map(p => p.nama));
+            } catch (e) {
+                console.error('Failed to load region data', e);
+            }
+        };
+        fetchAll();
+    }, []);
+
+    // Update city list when province changes
+    useEffect(() => {
+        if (formData.provinsi) {
+            const filtered = allRegions.cities.filter(c => c.provinsi === formData.provinsi);
+            setCityList(filtered.map(c => c.nama));
+
+            // Check if current selection is still valid
+            const currentCityValid = filtered.some(c => c.nama === formData.kota_kabupaten);
+            if (!currentCityValid && formData.kota_kabupaten) {
+                setFormData(prev => ({ ...prev, kota_kabupaten: '', kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
+            }
+        } else {
+            setCityList([]);
+            setFormData(prev => ({ ...prev, kota_kabupaten: '', kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
+        }
+    }, [formData.provinsi, allRegions.cities]);
+
+    // Update district list when city changes
+    useEffect(() => {
+        if (formData.kota_kabupaten) {
+            const filtered = allRegions.districts.filter(d => d.kabupaten === formData.kota_kabupaten);
+            setDistrictList(filtered.map(d => d.nama));
+
+            const currentDistValid = filtered.some(d => d.nama === formData.kecamatan);
+            if (!currentDistValid && formData.kecamatan) {
+                setFormData(prev => ({ ...prev, kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
+            }
+        } else {
+            setDistrictList([]);
+            // setFormData(prev => ({ ...prev, kecamatan: '', desa_kelurahan: '', kode_pos: '' }));
+        }
+    }, [formData.kota_kabupaten, allRegions.districts]);
+
+    // Update village list when district changes
+    useEffect(() => {
+        if (formData.kecamatan) {
+            const filtered = allRegions.villages.filter(v => v.kecamatan === formData.kecamatan);
+            setVillageList(filtered.map(v => ({ name: v.nama, postal_code: v.kodepos })));
+
+            const currentVillageValid = filtered.some(v => v.nama === formData.desa_kelurahan);
+            if (!currentVillageValid && formData.desa_kelurahan) {
+                setFormData(prev => ({ ...prev, desa_kelurahan: '', kode_pos: '' }));
+            }
+        } else {
+            setVillageList([]);
+            // setFormData(prev => ({ ...prev, desa_kelurahan: '', kode_pos: '' }));
+        }
+    }, [formData.kecamatan, allRegions.villages]);
+
     useEffect(() => {
         loadData();
         loadMasterData();
@@ -505,24 +583,6 @@ export default function SantriPage() {
                             </div>
                         </div>
                     )}
-// Old static region logic removed – using dynamic fetch of full Indonesia data (see later in file).
-
-                    // Update village list when district changes
-                    useEffect(() => {
-                      if (formData.kecamatan && formData.kota_kabupaten && formData.provinsi) {
-                        const provObj = regions.find(r => r.province === formData.provinsi);
-                        const cityObj = provObj?.cities.find(c => c.name === formData.kota_kabupaten);
-                        const districtObj = cityObj?.districts.find(d => d.name === formData.kecamatan);
-                    const villages = districtObj ? districtObj.villages : [];
-                    setVillageList(villages);
-                        // reset desa and kode pos
-                        setFormData(prev => ({...prev, desa_kelurahan: '', kode_pos: '' }));
-                      } else {
-                        setVillageList([]);
-                        setFormData(prev => ({...prev, desa_kelurahan: '', kode_pos: '' }));
-                      }
-                    }, [formData.kecamatan, formData.kota_kabupaten, formData.provinsi]);
-
                     {activeTab === 'alamat' && (
                         <div className="tab-content animate-in">
                             <div className="form-group"><label className="form-label">Alamat</label><textarea className="form-control" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
