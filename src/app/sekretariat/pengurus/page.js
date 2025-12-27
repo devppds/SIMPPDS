@@ -69,13 +69,21 @@ export default function PengurusPage() {
         finally { setLoading(false); }
     };
 
+    const getAcademicYear = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1; // 1-12
+        // Jika >= Juli (7), maka 2025/2026. Jika < Juli, maka 2024/2025
+        return month >= 7 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
+    };
+
     const openModal = (item = null) => {
         if (item) { setEditId(item.id); setFormData({ ...item }); }
         else {
             setEditId(null);
             setFormData({
                 nama: '', jabatan: '', divisi: '', no_hp: '', status: 'Aktif',
-                tahun_mulai: '', tahun_akhir: '', foto_pengurus: '', tanggal_nonaktif: ''
+                tahun_mulai: getAcademicYear(), tahun_akhir: '', foto_pengurus: '', tanggal_nonaktif: ''
             });
         }
         setIsModalOpen(true);
