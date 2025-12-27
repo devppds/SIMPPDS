@@ -74,7 +74,6 @@ export const NAV_ITEMS = [
         submenu: [
             { label: 'Arus Kas Pondok', path: '/bendahara/arus-kas', icon: 'fas fa-exchange-alt' },
             { label: 'Setoran Unit', path: '/bendahara/kas-unit', icon: 'fas fa-file-invoice-dollar' },
-            { label: 'Master Tagihan', path: '/bendahara/jenis-tagihan', icon: 'fas fa-tags' },
             { label: 'Atur Layanan', path: '/bendahara/atur-layanan', icon: 'fas fa-cogs' }
         ]
     },
@@ -94,7 +93,7 @@ export const NAV_ITEMS = [
         submenu: [
             { label: 'Pembayaran Santri', path: '/keuangan/pembayaran', icon: 'fas fa-cash-register' },
             { label: 'Arus Kas Harian', path: '/keuangan/arus-kas', icon: 'fas fa-book-open' },
-            { label: 'Pengaturan Tarif', path: '/keuangan/pengaturan', icon: 'fas fa-sliders-h' }
+            { label: 'Atur Pembayaran', path: '/keuangan/pengaturan', icon: 'fas fa-sliders-h' }
         ]
     },
 

@@ -75,13 +75,13 @@ export default function PengaturanKeuanganPage() {
             });
             setIsModalOpen(false);
             loadData();
-            alert('Tarif berhasil disimpan!');
+            alert('Pengaturan pembayaran berhasil disimpan!');
         } catch (err) { alert(err.message); }
         finally { setSubmitting(false); }
     };
 
     const deleteItem = async (id) => {
-        if (!confirm('Hapus tarif ini?')) return;
+        if (!confirm('Hapus pengaturan pembayaran ini?')) return;
         try {
             await apiCall('deleteData', 'POST', { type: 'keuangan_tarif', id });
             loadData();
@@ -111,11 +111,11 @@ export default function PengaturanKeuanganPage() {
             <div className="card">
                 <div className="card-header">
                     <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Pengaturan Tarif Syahriah</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Atur besaran pembayaran sesuai Status dan Kelas santri.</p>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Atur Pembayaran Syahriah</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Kelola besaran pembayaran berdasarkan Status dan Kelas santri.</p>
                     </div>
                     <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Tambah Tarif
+                        <i className="fas fa-plus"></i> Tambah Pengaturan
                     </button>
                 </div>
 
@@ -123,14 +123,14 @@ export default function PengaturanKeuanganPage() {
                     columns={columns}
                     data={data}
                     loading={loading}
-                    emptyMessage="Belum ada data tarif."
+                    emptyMessage="Belum ada data pengaturan pembayaran."
                 />
             </div>
 
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editId ? "Edit Tarif" : "Tambah Tarif Baru"}
+                title={editId ? "Edit Pengaturan Pembayaran" : "Tambah Pengaturan Baru"}
                 footer={(
                     <>
                         <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
