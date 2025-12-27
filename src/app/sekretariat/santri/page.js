@@ -597,7 +597,6 @@ export default function SantriPage() {
                                 </div>
                                 <small style={{ color: '#64748b' }}>Upload foto scan Kartu Keluarga.</small>
                             </div>
-                            <div className="form-group"><label className="form-label">Berkas Pendukung (URL)</label><input type="text" className="form-control" value={formData.berkas_pendukung} onChange={e => setFormData({ ...formData, berkas_pendukung: e.target.value })} placeholder="https://..." /></div>
                         </div>
                     )}
                 </div>
@@ -628,7 +627,7 @@ export default function SantriPage() {
                                     <div><label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tahun Masuk</label><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{detailData.tahun_masuk || '-'}</div></div>
                                 </div>
                                 <div style={{ marginTop: '2rem' }}>
-                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px' }}>Data Wali & Domisili</h4>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px' }}>Orang Tua & Domisili</h4>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                         <div><small style={{ color: 'var(--text-muted)' }}>Nama Ayah (Wali)</small><div style={{ fontWeight: 600 }}>{detailData.nama_ayah || '-'}</div><div style={{ fontWeight: 800, color: '#25D366', fontSize: '0.8rem' }}><i className="fab fa-whatsapp"></i> {detailData.no_telp_ayah || '-'}</div></div>
                                         <div><small style={{ color: 'var(--text-muted)' }}>Asal Daerah</small><div style={{ fontWeight: 600 }}>{detailData.kota_kabupaten || '-'}</div><div style={{ fontSize: '0.8rem' }}>{detailData.provinsi || '-'}</div></div>
