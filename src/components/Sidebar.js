@@ -12,22 +12,32 @@ export default function Sidebar() {
     const [openSubmenus, setOpenSubmenus] = useState({});
 
     useEffect(() => {
-        // Auto-open submenu if a child is active
+        // Auto-open submenu if a child is active (Recursive)
         const newOpens = {};
-        NAV_ITEMS.forEach((item, index) => {
-            if (item.submenu) {
-                const isActive = item.submenu.some(sub => sub.path === pathname);
-                if (isActive) newOpens[index] = true;
-            }
-        });
+        const scan = (items) => {
+            let activeFound = false;
+            items.forEach(item => {
+                if (item.submenu) {
+                    const childActive = scan(item.submenu);
+                    if (childActive) {
+                        newOpens[item.label] = true;
+                        activeFound = true;
+                    }
+                } else if (item.path === pathname) {
+                    activeFound = true;
+                }
+            });
+            return activeFound;
+        };
+        scan(NAV_ITEMS);
         setOpenSubmenus(prev => ({ ...prev, ...newOpens }));
     }, [pathname]);
 
-    const toggleSubmenu = (index) => {
+    const toggleSubmenu = (label) => {
         if (user?.role !== 'admin') return;
         setOpenSubmenus(prev => ({
             ...prev,
-            [index]: !prev[index]
+            [label]: !prev[label]
         }));
     };
 
@@ -35,6 +45,53 @@ export default function Sidebar() {
         if (!roles) return true;
         if (!user) return false;
         return roles.includes(user.role);
+    };
+
+    const renderMenuItem = (item, index, level = 0) => {
+        if (!isVisible(item.roles)) return null;
+
+        if (item.submenu) {
+            const isOpen = user?.role === 'admin' ? !!openSubmenus[item.label] : true;
+
+            // Check recursive active
+            const isChildActive = (subItems) => subItems.some(sub => sub.path === pathname || (sub.submenu && isChildActive(sub.submenu)));
+            const isActive = isChildActive(item.submenu);
+
+            return (
+                <li key={index} className={`has-submenu ${isOpen ? 'open' : ''}`}>
+                    <div
+                        className={`nav-link ${isActive ? 'active' : ''}`}
+                        onClick={() => toggleSubmenu(item.label)}
+                        style={{ cursor: 'pointer', paddingLeft: `${1 + level * 0.8}rem`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <i className={item.icon} style={{ width: '24px', textAlign: 'center' }}></i>
+                            <span style={{ marginLeft: '10px' }}>{item.label}</span>
+                        </div>
+                        {user?.role === 'admin' && <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} submenu-arrow`} style={{ fontSize: '0.8rem' }}></i>}
+                    </div>
+                    {isOpen && (
+                        <ul className="submenu" style={{ display: 'block', paddingLeft: 0 }}>
+                            {item.submenu.map((sub, sIdx) => renderMenuItem(sub, sIdx, level + 1))}
+                        </ul>
+                    )}
+                </li>
+            );
+        }
+
+        return (
+            <li key={index}>
+                <Link
+                    href={item.path}
+                    className={`nav-link ${pathname === item.path ? 'active' : ''}`}
+                    style={{ paddingLeft: `${1 + level * 0.8}rem`, display: 'flex', alignItems: 'center' }}
+                    onClick={() => document.body.classList.remove('sidebar-open')}
+                >
+                    <i className={item.icon || 'fas fa-circle'} style={{ width: '24px', textAlign: 'center', fontSize: level > 0 ? '0.6rem' : '1rem', opacity: level > 0 ? 0.7 : 1 }}></i>
+                    <span style={{ marginLeft: '10px' }}>{item.label}</span>
+                </Link>
+            </li>
+        );
     };
 
     return (
@@ -53,55 +110,7 @@ export default function Sidebar() {
             <nav className="sidebar-nav">
                 <div className="menu-section">MENU UTAMA</div>
                 <ul>
-                    {NAV_ITEMS.map((item, index) => {
-                        if (!isVisible(item.roles)) return null;
-
-                        if (item.submenu) {
-                            const isOpen = user?.role === 'admin' ? !!openSubmenus[index] : true;
-                            const isParentActive = item.submenu.some(sub => sub.path === pathname);
-
-                            return (
-                                <li key={index} className={`has-submenu ${isOpen ? 'open' : ''}`}>
-                                    <div
-                                        className={`nav-link ${isParentActive ? 'active' : ''}`}
-                                        onClick={() => toggleSubmenu(index)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <i className={item.icon}></i>
-                                        <span>{item.label}</span>
-                                        {user?.role === 'admin' && <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} submenu-arrow`}></i>}
-                                    </div>
-                                    <ul className="submenu">
-                                        {item.submenu.map((sub, sIdx) => (
-                                            <li key={sIdx}>
-                                                <Link
-                                                    href={sub.path}
-                                                    className={`sub-nav-link ${pathname === sub.path ? 'active' : ''}`}
-                                                    onClick={() => document.body.classList.remove('sidebar-open')}
-                                                >
-                                                    <i className={sub.icon || 'fas fa-circle'}></i>
-                                                    <span>{sub.label}</span>
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </li>
-                            );
-                        }
-
-                        return (
-                            <li key={index}>
-                                <Link
-                                    href={item.path}
-                                    className={`nav-link ${pathname === item.path ? 'active' : ''}`}
-                                    onClick={() => document.body.classList.remove('sidebar-open')}
-                                >
-                                    <i className={item.icon}></i>
-                                    <span>{item.label}</span>
-                                </Link>
-                            </li>
-                        );
-                    })}
+                    {NAV_ITEMS.map((item, index) => renderMenuItem(item, index))}
                 </ul>
             </nav>
 
