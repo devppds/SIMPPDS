@@ -40,68 +40,73 @@ export default function Modal({ isOpen, onClose, title, children, footer, width 
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background: rgba(15, 23, 42, 0.6);
-                    backdrop-filter: blur(4px);
+                    background: rgba(15, 23, 42, 0.7);
+                    backdrop-filter: blur(8px);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    z-index: 2000;
-                    animation: fadeIn 0.2s ease-out;
-                    padding: 20px;
+                    z-index: 9999;
+                    animation: fadeIn 0.3s ease-out;
+                    padding: 40px 20px;
                 }
 
                 .modal-container {
                     background: white;
-                    width: 90%;
-                    max-width: ${width || '650px'};
-                    max-height: 90vh;
-                    border-radius: 20px;
+                    width: 100%;
+                    max-width: ${width || '700px'};
+                    max-height: calc(100vh - 80px);
+                    border-radius: 24px;
                     display: flex;
                     flex-direction: column;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-                    animation: slideUp 0.3s ease-out;
+                    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3);
+                    animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                     overflow: hidden;
+                    position: relative;
                 }
 
                 .modal-header {
-                    padding: 1.5rem 2rem;
+                    padding: 1.75rem 2.5rem;
                     border-bottom: 1px solid #f1f5f9;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    background: white;
                 }
 
                 .modal-header h3 {
                     font-family: 'Outfit', sans-serif;
-                    font-size: 1.25rem;
-                    color: var(--primary-dark);
+                    font-size: 1.4rem;
+                    font-weight: 700;
+                    color: #1e293b;
                     margin: 0;
                 }
 
                 .close-btn {
-                    background: #f1f5f9;
-                    border: none;
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    color: var(--text-muted);
+                    color: #64748b;
                     transition: all 0.2s;
                 }
 
                 .close-btn:hover {
-                    background: #fee2e2;
-                    color: #ef4444;
+                    background: #ef4444;
+                    color: white;
+                    border-color: #ef4444;
+                    transform: rotate(90deg);
                 }
 
                 .modal-body {
-                    padding: 2.5rem 2rem 2rem 2rem;
+                    padding: 2.5rem;
                     overflow-y: auto;
                     flex: 1;
-                    scroll-padding-top: 20px;
+                    scroll-behavior: smooth;
                 }
 
                 .modal-body::-webkit-scrollbar {
@@ -123,14 +128,14 @@ export default function Modal({ isOpen, onClose, title, children, footer, width 
                 }
 
                 .modal-footer {
-                    padding: 1.5rem 2rem;
+                    padding: 1.5rem 2.5rem;
                     border-top: 1px solid #f1f5f9;
                     display: flex;
                     justify-content: center;
-                    gap: 15px;
+                    gap: 1.5rem;
                     background: #f8fafc;
-                    border-bottom-left-radius: 20px;
-                    border-bottom-right-radius: 20px;
+                    border-bottom-left-radius: 24px;
+                    border-bottom-right-radius: 24px;
                 }
 
                 @keyframes fadeIn {
@@ -138,9 +143,15 @@ export default function Modal({ isOpen, onClose, title, children, footer, width 
                     to { opacity: 1; }
                 }
 
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
+                @keyframes modalSlideUp {
+                    from { 
+                        opacity: 0; 
+                        transform: translateY(40px) scale(0.95); 
+                    }
+                    to { 
+                        opacity: 1; 
+                        transform: translateY(0) scale(1); 
+                    }
                 }
 
                 @media (max-width: 768px) {
