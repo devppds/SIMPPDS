@@ -16,13 +16,8 @@ const SERVICE_TYPES = {
         'Surat Boyong'
     ],
     'Keamanan': [
-        'Izin KELUAR/PULANG',
         'Video Call',
         'Telfon biasa',
-        'Motor Baru',
-        'Motor Lama',
-        'Ontel Lama',
-        'Ontel Baru',
         'Hp',
         'Laptop',
         'Surat kehilangan',

@@ -211,7 +211,24 @@ export default function KeamananRegPage() {
                         </div>
                         <div className="form-group">
                             <label className="form-label">Detail Nama Barang</label>
-                            <input type="text" className="form-control" value={formData.detail_barang} onChange={e => setFormData({ ...formData, detail_barang: e.target.value })} required />
+                            <input
+                                type="text"
+                                className="form-control"
+                                list="detail-barang-list"
+                                value={formData.detail_barang}
+                                onChange={e => setFormData({ ...formData, detail_barang: e.target.value })}
+                                required
+                                placeholder="Contoh: Motor Vario / Ontel Phoenix..."
+                            />
+                            <datalist id="detail-barang-list">
+                                <option value="Motor Baru">Motor Baru</option>
+                                <option value="Motor Lama">Motor Lama</option>
+                                <option value="Ontel Baru">Ontel Baru</option>
+                                <option value="Ontel Lama">Ontel Lama</option>
+                                <option value="Laptop">Laptop</option>
+                                <option value="Hp">Hp (Handphone)</option>
+                                <option value="Kompor">Kompor</option>
+                            </datalist>
                         </div>
                     </div>
                     <div className="form-grid">
