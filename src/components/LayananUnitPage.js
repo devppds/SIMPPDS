@@ -18,12 +18,8 @@ const SERVICE_TYPES = {
     'Keamanan': [
         'Video Call',
         'Telfon biasa',
-        'Hp',
-        'Laptop',
         'Surat kehilangan',
-        'Paket Wesel',
-        'Flashdisk',
-        'Kompor'
+        'Paket Wesel'
     ],
     'Pendidikan': [
         'Izin SEKOLAH'
