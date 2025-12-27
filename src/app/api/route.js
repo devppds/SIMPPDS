@@ -25,43 +25,49 @@ const headersConfig = {
     'lembaga': ["nama"]
 };
 
-export async function GET(request) { return handleRequest(request); }
-export async function POST(request) { return handleRequest(request); }
+export async function GET(request) { return handle(request); }
+export async function POST(request) { return handle(request); }
 
-async function handleRequest(request) {
+async function handle(request) {
+    const url = new URL(request.url);
+    const action = url.searchParams.get('action');
+    const type = url.searchParams.get('type');
+    const id = url.searchParams.get('id');
+
+    // 1. Basic Test (No Context needed)
+    if (action === 'test') {
+        return Response.json({ status: "success", message: "API endpoint is reachable" });
+    }
+
     let env;
     try {
-        const context = getRequestContext();
-        env = context?.env;
+        const ctx = getRequestContext();
+        env = ctx?.env;
     } catch (e) {
-        return Response.json({ status: "error", error: "Context Missing", details: e.message }, { status: 500 });
+        return Response.json({
+            status: "error",
+            error: "CONTEXT_ERROR",
+            message: "Gagal mengambil Cloudflare Context. Pastikan file dikelola oleh next-on-pages.",
+            details: e.message
+        }, { status: 500 });
     }
 
     if (!env || !env.DB) {
         return Response.json({
             status: "error",
             error: "DATABASE_NOT_BOUND",
-            message: "Binding database 'DB' tidak terdeteksi oleh Server. Cek Dashboard Cloudflare."
+            message: "Database 'DB' tidak terbaca. Pastikan sudah di-bind di Dashboard Cloudflare."
         }, { status: 500 });
     }
 
-    const db = env.DB;
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-    const type = searchParams.get('type');
-    const id = searchParams.get('id');
-
-    // TEST PING
-    if (action === 'ping') {
-        try {
-            await db.prepare("SELECT 1").run();
-            return Response.json({ status: "ok", message: "Database D1 Sukses Terhubung!" });
-        } catch (e) {
-            return Response.json({ status: "error", message: "D1 Gagal Merespon", details: e.message }, { status: 500 });
-        }
-    }
+    const { DB: db } = env;
 
     try {
+        if (action === 'ping') {
+            await db.prepare("SELECT 1").run();
+            return Response.json({ status: "success", message: "Koneksi D1 Aktif!" });
+        }
+
         if (action === 'getQuickStats') {
             const s = await db.prepare("SELECT COUNT(*) as total FROM santri").first();
             const u = await db.prepare("SELECT COUNT(*) as total FROM ustadz").first();
@@ -82,7 +88,7 @@ async function handleRequest(request) {
             const fields = [];
             const values = [];
             config.forEach(col => {
-                if (body.hasOwnProperty(col)) {
+                if (Object.prototype.hasOwnProperty.call(body, col)) {
                     fields.push(col);
                     values.push(body[col] === '' ? null : body[col]);
                 }
@@ -100,6 +106,11 @@ async function handleRequest(request) {
             }
         }
 
+        if (action === 'deleteData') {
+            await db.prepare(`DELETE FROM ${type} WHERE id = ?`).bind(id).run();
+            return Response.json({ success: true });
+        }
+
         if (action === 'getCloudinarySignature') {
             const body = await request.json();
             const paramsToSign = body.data?.paramsToSign || body.paramsToSign;
@@ -114,6 +125,12 @@ async function handleRequest(request) {
 
         return Response.json({ error: "Action Unknown" }, { status: 404 });
     } catch (err) {
-        return Response.json({ status: "error", details: err.message }, { status: 500 });
+        return Response.json({
+            status: "error",
+            error: "DB_RUNTIME_ERROR",
+            details: err.message,
+            action,
+            type
+        }, { status: 500 });
     }
 }
