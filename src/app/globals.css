@@ -156,7 +156,7 @@ h4,
 }
 
 .has-submenu.open .submenu {
-  max-height: 600px;
+  max-height: 2000px;
   margin-bottom: 10px;
   margin-top: 2px;
 }
