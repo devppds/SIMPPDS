@@ -1,0 +1,25 @@
+{
+  "name": "sim-ppds",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:cf": "npx @cloudflare/next-on-pages",
+    "start": "next start",
+    "lint": "eslint",
+    "deploy": "npm run build && npx wrangler pages deploy out --project-name simppds"
+  },
+  "dependencies": {
+    "next": "15.0.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.1",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.54.0"
+  }
+}

@@ -1,0 +1,345 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { apiCall, formatDate, exportToCSV } from '@/lib/utils';
+import { useAuth } from '@/lib/AuthContext';
+import Modal from '@/components/Modal';
+
+export default function SantriPage() {
+    const { isAdmin } = useAuth();
+    const [santri, setSantri] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [filterStatus, setFilterStatus] = useState('Aktif');
+    const [activeTab, setActiveTab] = useState('umum'); // For Modal Tabs
+
+    // Modal States
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [detailData, setDetailData] = useState(null);
+    const [editId, setEditId] = useState(null);
+    const [formData, setFormData] = useState({
+        nama_siswa: '', stambuk_pondok: '', stambuk_madrasah: '', tahun_masuk: '',
+        kamar: '', status_mb: 'Baru', madrasah: '', kelas: 'I Ula', nik: '', nisn: '',
+        tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', hobi: '', cita_cita: '',
+        kewarganegaraan: 'WNI', no_kk: '', nik_ayah: '', nama_ayah: '', pekerjaan_ayah: '',
+        pendidikan_ayah: '', no_telp_ayah: '', penghasilan_ayah: '', nik_ibu: '', nama_ibu: '',
+        pekerjaan_ibu: '', pendidikan_ibu: '', no_telp_ibu: '', dusun_jalan: '', rt_rw: '',
+        desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+        status_santri: 'Aktif', pindah_ke: '', tahun_pindah: '', tanggal_boyong: '',
+        foto_santri: ''
+    });
+    const [submitting, setSubmitting] = useState(false);
+    const [uploading, setUploading] = useState(false);
+
+    useEffect(() => {
+        loadData();
+    }, [filterStatus]);
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const timestamp = Math.round(new Date().getTime() / 1000);
+            const paramsToSign = { timestamp };
+            const { signature, apiKey, cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign } });
+
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('api_key', apiKey);
+            fd.append('timestamp', timestamp);
+            fd.append('signature', signature);
+
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                method: 'POST',
+                body: fd
+            });
+            const result = await res.json();
+
+            if (result.secure_url) {
+                setFormData(prev => ({ ...prev, foto_santri: result.secure_url }));
+                alert("Berhasil mengunggah foto!");
+            } else {
+                throw new Error(result.error?.message || "Gagal upload Cloudinary");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Gagal mengunggah ke Cloudinary. Pastikan konfigurasi sudah benar.");
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const data = await apiCall('getData', 'GET', { type: 'santri' });
+            let filtered = data || [];
+            if (filterStatus === 'Aktif') {
+                filtered = filtered.filter(s => !s.status_santri || s.status_santri === 'Aktif');
+            } else {
+                filtered = filtered.filter(s => s.status_santri === filterStatus);
+            }
+            setSantri(filtered);
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    };
+
+    const handleExport = () => {
+        const headers = ['Nama Siswa', 'Stambuk Pondok', 'NIK', 'Kelas', 'Kamar', 'Status Santri', 'Wali Ayah', 'Wali Ibu', 'Alamat'];
+        exportToCSV(santri, 'Data_Santri_Lengkap', headers);
+    };
+
+    const handleDownloadTemplate = () => {
+        const headers = ["foto_santri", "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "status_mb", "madrasah", "kelas", "nik", "nama_siswa", "nisn", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "hobi", "cita_cita", "kewarganegaraan", "no_kk", "nik_ayah", "nama_ayah", "pekerjaan_ayah", "pendidikan_ayah", "no_telp_ayah", "penghasilan_ayah", "nik_ibu", "nama_ibu", "pekerjaan_ibu", "pendidikan_ibu", "no_telp_ibu", "dusun_jalan", "rt_rw", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos", "status_santri", "pindah_ke", "tahun_pindah", "tanggal_boyong"];
+        exportToCSV([], 'Template_Manual_Santri', headers);
+    };
+
+    const handleImport = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const text = event.target.result;
+            const rows = text.split('\n').filter(row => row.trim() !== '');
+            if (rows.length < 2) return;
+            const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            setSubmitting(true);
+            let successCount = 0;
+            for (let i = 1; i < rows.length; i++) {
+                const values = rows[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                const obj = {};
+                headers.forEach((header, index) => { obj[header] = values[index]; });
+                try { await apiCall('saveData', 'POST', { type: 'santri', data: obj }); successCount++; } catch (err) { console.error(err); }
+            }
+            setSubmitting(false);
+            alert(`Selesai! ${successCount} santri berhasil diimpor.`);
+            loadData();
+        };
+        reader.readAsText(file);
+    };
+
+    const openModal = (item = null) => {
+        if (item) { setEditId(item.id); setFormData({ ...item }); }
+        else {
+            setEditId(null);
+            setFormData({
+                nama_siswa: '', stambuk_pondok: '', stambuk_madrasah: '', tahun_masuk: '',
+                kamar: '', status_mb: 'Baru', madrasah: '', kelas: 'I Ula', nik: '', nisn: '',
+                tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', hobi: '', cita_cita: '',
+                kewarganegaraan: 'WNI', no_kk: '', nik_ayah: '', nama_ayah: '', pekerjaan_ayah: '',
+                pendidikan_ayah: '', no_telp_ayah: '', penghasilan_ayah: '', nik_ibu: '', nama_ibu: '',
+                pekerjaan_ibu: '', pendidikan_ibu: '', no_telp_ibu: '', dusun_jalan: '', rt_rw: '',
+                desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+                status_santri: 'Aktif', pindah_ke: '', tahun_pindah: '', tanggal_boyong: '',
+                foto_santri: ''
+            });
+        }
+        setActiveTab('umum');
+        setIsModalOpen(true);
+    };
+
+    const openDetail = (item) => { setDetailData(item); setIsDetailOpen(true); };
+
+    const handleSubmit = async (e) => {
+        if (e) e.preventDefault();
+        setSubmitting(true);
+        try {
+            await apiCall('saveData', 'POST', { type: 'santri', data: editId ? { ...formData, id: editId } : formData });
+            setIsModalOpen(false);
+            loadData();
+            alert(editId ? 'Perubahan berhasil disimpan!' : 'Data santri berhasil ditambahkan!');
+        } catch (err) { alert('Gagal: ' + err.message); }
+        finally { setSubmitting(false); }
+    };
+
+    const deleteSantri = async (id) => {
+        if (!confirm('Hapus data santri ini secara permanen?')) return;
+        try { await apiCall('deleteData', 'POST', { type: 'santri', id }); loadData(); } catch (err) { alert(err.message); }
+    };
+
+    const displayData = santri.filter(s =>
+        (s.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
+        (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
+        (s.nik || '').toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+        <div className="view-container">
+            <div className="card">
+                <div className="card-header">
+                    <div>
+                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Database Santri {filterStatus === 'Aktif' ? 'Aktif' : filterStatus}</h2>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} santri ditemukan.</p>
+                    </div>
+                    <div className="card-actions" style={{ display: 'flex', gap: '10px' }}>
+                        <button className="btn btn-secondary" onClick={() => window.print()}><i className="fas fa-print"></i></button>
+                        <button className="btn btn-secondary" onClick={handleDownloadTemplate}>Template</button>
+                        <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                            Import <input type="file" accept=".csv" onChange={handleImport} style={{ display: 'none' }} />
+                        </label>
+                        <button className="btn btn-secondary" onClick={handleExport}>Export</button>
+                        <button className="btn btn-primary" onClick={() => openModal()}>
+                            <i className="fas fa-plus-circle"></i> Tambah Baru
+                        </button>
+                    </div>
+                </div>
+
+                <div className="table-controls">
+                    <div className="search-wrapper">
+                        <i className="fas fa-search"></i>
+                        <input type="text" className="search-input" placeholder="Cari nama, stambuk, atau NIK..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </div>
+                    <select className="form-control" style={{ width: '220px', fontWeight: 700 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                        <option value="Aktif">Status: Aktif</option>
+                        <option value="Boyong">Boyong</option>
+                        <option value="Pindah">Pindah</option>
+                        <option value="Lulus">Lulus</option>
+                    </select>
+                </div>
+
+                <div className="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Foto</th><th>Nama Lengkap</th><th>Stambuk</th><th>Unit / Kelas</th><th>Wali</th><th>Opsi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Memuat database...</td></tr>
+                            ) : displayData.length === 0 ? (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Tidak ada data santri.</td></tr>
+                            ) : displayData.map(s => (
+                                <tr key={s.id}>
+                                    <td>
+                                        <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+                                            <img src={s.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', height: '100%', borderRadius: '10px', objectFit: 'cover' }} alt="" />
+                                        </div>
+                                    </td>
+                                    <td><div style={{ fontWeight: 800 }}>{s.nama_siswa}</div><div style={{ fontSize: '0.7rem' }}>NIK: {s.nik || '-'}</div></td>
+                                    <td>{s.stambuk_pondok || '-'}</td>
+                                    <td>{s.madrasah} • {s.kelas}</td>
+                                    <td>{s.nama_ayah || 'Wali'}</td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openDetail(s)}><i className="fas fa-eye"></i></button>
+                                            <button className="btn-vibrant btn-vibrant-yellow" onClick={() => openModal(s)}><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteSantri(s.id)}><i className="fas fa-trash"></i></button>}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Modal Input/Edit */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={editId ? "Pembaruan Data Santri" : "Pendaftaran Santri Baru"}
+                footer={(
+                    <>
+                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Batalkan</button>
+                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                            {submitting ? 'Memproses...' : 'Simpan Data'}
+                        </button>
+                    </>
+                )}
+            >
+                <div className="modal-tabs">
+                    <button type="button" className={`tab-btn ${activeTab === 'umum' ? 'active' : ''}`} onClick={() => setActiveTab('umum')}><i className="fas fa-user-tag"></i> Identitas</button>
+                    <button type="button" className={`tab-btn ${activeTab === 'wali' ? 'active' : ''}`} onClick={() => setActiveTab('wali')}><i className="fas fa-users"></i> Wali / Ortu</button>
+                    <button type="button" className={`tab-btn ${activeTab === 'alamat' ? 'active' : ''}`} onClick={() => setActiveTab('alamat')}><i className="fas fa-map-marked-alt"></i> Domisili</button>
+                    <button type="button" className={`tab-btn ${activeTab === 'status' ? 'active' : ''}`} onClick={() => setActiveTab('status')}><i className="fas fa-id-badge"></i> Status</button>
+                </div>
+
+                <div style={{ marginTop: '1.5rem' }}>
+                    {activeTab === 'umum' && (
+                        <div className="tab-content animate-in">
+                            <div className="form-group"><label className="form-label">Nama Lengkap</label><input type="text" className="form-control" value={formData.nama_siswa} onChange={e => setFormData({ ...formData, nama_siswa: e.target.value })} required /></div>
+                            <div className="form-grid">
+                                <div className="form-group"><label className="form-label">Stambuk</label><input type="text" className="form-control" value={formData.stambuk_pondok} onChange={e => setFormData({ ...formData, stambuk_pondok: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">NIK</label><input type="text" className="form-control" value={formData.nik} onChange={e => setFormData({ ...formData, nik: e.target.value })} /></div>
+                            </div>
+                            <div className="form-grid">
+                                <div className="form-group"><label className="form-label">Madrasah</label><input type="text" className="form-control" value={formData.madrasah} onChange={e => setFormData({ ...formData, madrasah: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">Kamar</label><input type="text" className="form-control" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} /></div>
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'wali' && (
+                        <div className="tab-content animate-in">
+                            <div className="form-grid">
+                                <div className="form-group"><label className="form-label">Nama Ayah</label><input type="text" className="form-control" value={formData.nama_ayah} onChange={e => setFormData({ ...formData, nama_ayah: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">WhatsApp</label><input type="text" className="form-control" value={formData.no_telp_ayah} onChange={e => setFormData({ ...formData, no_telp_ayah: e.target.value })} /></div>
+                            </div>
+                            <div className="form-group"><label className="form-label">Nama Ibu</label><input type="text" className="form-control" value={formData.nama_ibu} onChange={e => setFormData({ ...formData, nama_ibu: e.target.value })} /></div>
+                        </div>
+                    )}
+                    {activeTab === 'alamat' && (
+                        <div className="tab-content animate-in">
+                            <div className="form-group"><label className="form-label">Alamat Lengkap</label><input type="text" className="form-control" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} /></div>
+                            <div className="form-grid">
+                                <div className="form-group"><label className="form-label">Kecamatan</label><input type="text" className="form-control" value={formData.kecamatan} onChange={e => setFormData({ ...formData, kecamatan: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">Kota</label><input type="text" className="form-control" value={formData.kota_kabupaten} onChange={e => setFormData({ ...formData, kota_kabupaten: e.target.value })} /></div>
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'status' && (
+                        <div className="tab-content animate-in">
+                            <div className="form-group">
+                                <label className="form-label">Status Santri</label>
+                                <select className="form-control" value={formData.status_santri} onChange={e => setFormData({ ...formData, status_santri: e.target.value })}>
+                                    <option>Aktif</option><option>Boyong</option><option>Lulus</option><option>Pindah</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Foto Profil</label>
+                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', background: '#f8fafc', padding: '15px', borderRadius: '14px', border: '2px dashed #e2e8f0' }}>
+                                    <div style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', background: '#fff' }}>
+                                        <img src={formData.foto_santri || `https://ui-avatars.com/api/?name=S&background=f1f5f9&color=cbd5e1`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                    </div>
+                                    <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                                        {uploading ? 'Proses...' : 'Unggah Foto'}
+                                        <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploading} />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={isDetailOpen}
+                onClose={() => setIsDetailOpen(false)}
+                title="Detail Santri"
+                width="800px"
+                footer={<button className="btn btn-primary" onClick={() => setIsDetailOpen(false)}>Tutup</button>}
+            >
+                {detailData && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <img src={detailData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(detailData.nama_siswa)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', borderRadius: '24px', boxShadow: 'var(--shadow-lg)' }} alt="" />
+                        </div>
+                        <div>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary)' }}>{detailData.nama_siswa}</h2>
+                            <p style={{ color: 'var(--text-muted)' }}>Stambuk: {detailData.stambuk_pondok || '-'}</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>Unit</label><div>{detailData.madrasah}</div></div>
+                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>Kelas</label><div>{detailData.kelas}</div></div>
+                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>Ayah</label><div>{detailData.nama_ayah}</div></div>
+                                <div><label style={{ fontSize: '0.7rem', fontWeight: 800 }}>WhatsApp</label><div>{detailData.no_telp_ayah}</div></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+        </div>
+    );
+}

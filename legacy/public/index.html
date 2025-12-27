@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database PP Darussalam</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/santri-cards.css">
+    <link rel="stylesheet" href="css/login.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <h1 class="login-title">SIM PPDS</h1>
+            <p class="login-desc">Sistem Informasi Pondok Pesantren Darussalam</p>
+
+            <form id="login-form" style="width: 100%; margin-top: 1.5rem;">
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">Unit / Role</label>
+                    <select id="login-role" class="form-control"
+                        style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">
+                        <option value="admin" style="color:black;">Admin Utama</option>
+                        <option value="keamanan" style="color:black;">Keamanan</option>
+                        <option value="pendidikan" style="color:black;">Pendidikan</option>
+                        <option value="kesehatan" style="color:black;">Kesehatan</option>
+                        <option value="bendahara" style="color:black;">Bendahara</option>
+                        <option value="sekretariat" style="color:black;">Sekretariat</option>
+                        <option value="jamiyyah" style="color:black;">Jam'iyyah</option>
+                        <option value="madrasah_miu" style="color:black;">Madrasah MIU</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">Password</label>
+                    <input type="password" id="login-password" class="form-control"
+                        style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;"
+                        placeholder="••••••">
+                </div>
+                <button type="submit" class="btn btn-vibrant btn-blue"
+                    style="width: 100%; margin-top: 1.5rem;">MASUK</button>
+            </form>
+
+            <div id="login-feedback" style="color: #ef4444; margin-top: 10px; font-size: 0.9rem; min-height: 20px;">
+            </div>
+        </div>
+
+        <div class="login-footer">
+            &copy; 2025 PP. Darussalam Lirboyo - Developed by Secretary25
+        </div>
+    </div>
+
+    <!-- App Root -->
+    <div id="app">
+        <!-- Loading Overlay (DISPENSED) -->
+        <div id="loading-overlay" style="display: none !important;"></div>
+
+
+        <div id="dashboard-main" style="display: flex;">
+            <div id="sidebar-container"></div>
+
+            <main>
+                <div id="header-container"></div>
+
+                <div id="views-container">
+                    <!-- Dashboard View -->
+                    <div id="dashboard-view" class="view">
+                        <!-- Welcome Hero Section -->
+                        <div id="dashboard-hero" class="card"
+                            style="padding: 2rem; background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%); border: none; position: relative; overflow: hidden; margin-bottom: 2rem;">
+                            <div
+                                style="position: absolute; right: -50px; top: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%;">
+                            </div>
+                            <div
+                                style="position: absolute; left: 10%; bottom: -30px; width: 100px; height: 100px; background: rgba(255,255,255,0.03); border-radius: 50%;">
+                            </div>
+
+                            <div
+                                style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2rem;">
+                                <div style="color: white; flex: 1; min-width: 300px;">
+                                    <h2
+                                        style="font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: white;">
+                                        Selamat Datang, Khodimin!</h2>
+                                    <p style="opacity: 0.9; font-size: 1rem; max-width: 500px;">Pantau perkembangan
+                                        santri, manajemen SDM, dan administrasi Pondok Pesantren Darussalam dalam satu
+                                        pintu dashboard terintegrasi.</p>
+                                    <div style="margin-top: 1.5rem; display: flex; gap: 10px;">
+                                        <button class="btn" style="background: var(--gold); color: white; border: none;"
+                                            onclick="navigate('santri')">Data Kesiswaan</button>
+                                        <button class="btn"
+                                            style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);"
+                                            onclick="navigate('madrasah_miu')">Madrasah Ihya' Ulumuddin</button>
+                                    </div>
+                                </div>
+                                <div
+                                    style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2); min-width: 250px; text-align: center;">
+                                    <div
+                                        style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; opacity: 0.8; color: white;">
+                                        Tahun Ajaran Aktif</div>
+                                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--gold);">1446 - 1447 H
+                                    </div>
+                                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0;"></div>
+                                    <div style="display: flex; justify-content: space-around;">
+                                        <div>
+                                            <div style="font-size: 1.2rem; font-weight: 700; color: white;"
+                                                id="hero-total-santri">0</div>
+                                            <div style="font-size: 0.65rem; opacity: 0.7; color: white;">Total Santri
+                                            </div>
+                                        </div>
+                                        <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                                        <div>
+                                            <div style="font-size: 1.2rem; font-weight: 700; color: white;"
+                                                id="hero-total-miu">0</div>
+                                            <div style="font-size: 0.65rem; opacity: 0.7; color: white;">Siswa MIU</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dashboard Grid for Main Stats -->
+                        <div class="stats-grid" id="group-stats">
+                            <div class="stat-card" style="cursor: pointer;" onclick="navigate('santri')">
+                                <div class="stat-icon stat-blue"><i class="fas fa-user-graduate"></i></div>
+                                <div>
+                                    <div class="stat-value" id="stats-santri">0</div>
+                                    <div class="stat-label">Total Santri</div>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="cursor: pointer;" onclick="navigate('ustadz')">
+                                <div class="stat-icon stat-green"><i class="fas fa-chalkboard-teacher"></i></div>
+                                <div>
+                                    <div class="stat-value" id="stats-ustadz">0</div>
+                                    <div class="stat-label">Total Pengajar</div>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="cursor: pointer;" onclick="navigate('pengurus')">
+                                <div class="stat-icon stat-purple"><i class="fas fa-user-shield"></i></div>
+                                <div>
+                                    <div class="stat-value" id="stats-pengurus">0</div>
+                                    <div class="stat-label">Total Pengurus</div>
+                                </div>
+                            </div>
+                            <div class="stat-card"
+                                style="cursor: pointer; position: relative; border-left: 5px solid var(--gold); background: linear-gradient(to right, #fff, #fffbeb);"
+                                onclick="navigate('madrasah_miu', 'siswa')">
+                                <div class="stat-icon"
+                                    style="background: var(--gold); color: white; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);">
+                                    <i class="fas fa-school"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value" id="stats-miu" style="color: #b45309;">0</div>
+                                    <div class="stat-label" style="color: #d4af37;">MADRASAH MIU</div>
+                                </div>
+                                <div
+                                    style="position: absolute; right: 20px; bottom: 10px; font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">
+                                    Unit Formal <i class="fas fa-chevron-right ml-1"></i></div>
+                            </div>
+                        </div>
+
+                        <div id="module-dashboard-panel" style="margin-top: 2rem;">
+
+                            <!-- Main Overview Grid (Dashboard Utama) -->
+                            <div id="dashboard-overview-grid"
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                                <!-- Kesiswaan -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid var(--primary); transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('santri')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:var(--primary-light); padding:10px; border-radius:12px; color:var(--primary);">
+                                            <i class="fas fa-user-graduate" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:var(--primary-light); color:var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Data
+                                            Master</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Kesiswaan</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Manajemen
+                                        data santri, status, dan kamar.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="font-weight:700; font-size:1.2rem;" id="overview-santri-total">0
+                                            Santri</span>
+                                        <span style="color:var(--primary); font-size:0.85rem;">Lihat Detail <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Keuangan (Santri) -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid #10b981; transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('keuangan')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#d1fae5; padding:10px; border-radius:12px; color:#059669;">
+                                            <i class="fas fa-wallet" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#d1fae5; color:#059669; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Transaksi</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Keuangan Santri</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Syahriah,
+                                        tagihan, dan tabungan santri.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="display:flex; flex-direction:column;">
+                                            <span style="font-size:0.8rem; color:var(--text-muted);">Tabungan</span>
+                                            <span style="font-weight:700;" id="overview-keuangan-tabungan">Rp 0</span>
+                                        </div>
+                                        <span style="color:#059669; font-size:0.85rem;">Buka <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Bendahara (Pondok) -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid #f59e0b; transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('arus_kas', 'rekap')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#fef3c7; padding:10px; border-radius:12px; color:#d97706;">
+                                            <i class="fas fa-calculator" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#fef3c7; color:#d97706; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Kas
+                                            Pondok</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Bendahara</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Arus kas
+                                        operasional pondok dan rekapitulasi.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="display:flex; flex-direction:column;">
+                                            <span style="font-size:0.8rem; color:var(--text-muted);">Saldo Kas</span>
+                                            <span style="font-weight:700;" id="overview-bendahara-saldo">Rp 0</span>
+                                        </div>
+                                        <span style="color:#d97706; font-size:0.85rem;">Buka <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Keamanan -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid #ef4444; transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('keamanan')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#fee2e2; padding:10px; border-radius:12px; color:#dc2626;">
+                                            <i class="fas fa-shield-alt" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#fee2e2; color:#dc2626; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Unit</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Keamanan</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">
+                                        Pelanggaran, perizinan, dan ketertiban.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="font-weight:700; font-size:1.2rem;" id="overview-keamanan-kasus">0
+                                            Kasus</span>
+                                        <span style="color:#dc2626; font-size:0.85rem;">Buka <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Pendidikan -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid #3b82f6; transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('pendidikan', 'pendidikan_all')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#dbeafe; padding:10px; border-radius:12px; color:#2563eb;">
+                                            <i class="fas fa-book-reader" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#dbeafe; color:#2563eb; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Unit</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Pendidikan</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Laporan
+                                        kegiatan belajar dan absensi.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="color:#2563eb; font-size:0.85rem;">Lihat Laporan <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Kesehatan -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid #ec4899; transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('kesehatan')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#fce7f3; padding:10px; border-radius:12px; color:#db2777;">
+                                            <i class="fas fa-heartbeat" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#fce7f3; color:#db2777; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Unit</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Kesehatan</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Data sakit
+                                        santri dan pos kesehatan.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="color:#db2777; font-size:0.85rem;">Buka <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Sekretariat -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid #8b5cf6; transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('layanan_admin', 'sekretariat')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#ede9fe; padding:10px; border-radius:12px; color:#7c3aed;">
+                                            <i class="fas fa-file-signature" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#ede9fe; color:#7c3aed; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Unit</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Sekretariat</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Layanan
+                                        surat menyurat dan administrasi.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="color:#7c3aed; font-size:0.85rem;">Buka <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Jam'iyyah -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid #14b8a6; transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('layanan_admin', 'jamiyyah')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#ccfbf1; padding:10px; border-radius:12px; color:#0d9488;">
+                                            <i class="fas fa-drum" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#ccfbf1; color:#0d9488; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Unit</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Jam'iyyah</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Kegiatan
+                                        ekstrakurikuler dan alat.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="color:#0d9488; font-size:0.85rem;">Buka <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Madrasah MIU -->
+                                <div class="card"
+                                    style="padding: 1.5rem; border-top: 4px solid var(--gold); transition: transform 0.2s; cursor: pointer;"
+                                    onclick="navigate('madrasah_miu')">
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                                        <div
+                                            style="background:#fffbeb; padding:10px; border-radius:12px; color:#b45309;">
+                                            <i class="fas fa-school" style="font-size:1.5rem;"></i>
+                                        </div>
+                                        <span class="badge"
+                                            style="background:#fffbeb; color:#b45309; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Otonom</span>
+                                    </div>
+                                    <h3 style="margin-bottom:0.5rem;">Madrasah MIU</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Akademik,
+                                        siswa, dan pengajar MIU.</p>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="color:#b45309; font-size:0.85rem;">Buka <i
+                                                class="fas fa-arrow-right"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Santri Dashboard Extension -->
+                            <div class="dashboard-group" id="group-santri">
+                                <h3
+                                    style="margin-bottom: 1rem; color: var(--text-dark); border-left: 4px solid var(--primary); padding-left: 10px;">
+                                    Ringkasan Data Santri</h3>
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                                    <div class="card"
+                                        style="padding: 1rem; border-top: 3px solid #10b981; cursor: pointer;"
+                                        onclick="navigate('santri', 'santri_aktif')">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            SANTRI AKTIF</div>
+                                        <div class="stat-value" id="stats-santri-aktif" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card"
+                                        style="padding: 1rem; border-top: 3px solid #3b82f6; cursor: pointer;"
+                                        onclick="navigate('santri', 'santri_pindah')">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            SANTRI PINDAH</div>
+                                        <div class="stat-value" id="stats-santri-pindah" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card"
+                                        style="padding: 1rem; border-top: 3px solid #f97316; cursor: pointer;"
+                                        onclick="navigate('santri', 'santri_boyong')">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            SANTRI BOYONG</div>
+                                        <div class="stat-value" id="stats-santri-boyong" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid"
+                                    style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                                    <div class="card" style="min-height: 400px;">
+                                        <h4>Grafik Perkembangan Santri</h4>
+                                        <div style="position: relative; height: 300px; width: 100%; margin-top: 1rem;">
+                                            <canvas id="santriChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- MIU Dashboard Extension -->
+                            <div class="dashboard-group" id="group-madrasah_miu">
+                                <h3
+                                    style="margin-bottom: 1rem; color: var(--text-dark); border-left: 4px solid var(--gold); padding-left: 10px;">
+                                    Ringkasan Siswa MIU</h3>
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                                    <div class="card" style="padding: 1.5rem; border-top: 3px solid var(--gold);">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            TERDAFTAR DI MIU</div>
+                                        <div class="stat-value" id="stats-miu-total"
+                                            style="font-size: 2.2rem; color: var(--primary);">0</div>
+                                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">Siswa
+                                            aktif di unit madrasah formal</p>
+                                    </div>
+                                    <div class="card" style="padding: 1.5rem; border-top: 3px solid #0ea5e9;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            TINGKAT KELAS</div>
+                                        <div id="miu-kelas-dist" style="margin-top: 10px; font-size: 0.85rem;">
+                                            <!-- Injected via JS -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-group" id="group-keamanan">
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                                    <h3
+                                        style="color: var(--text-dark); border-left: 4px solid #ef4444; padding-left: 10px; margin:0;">
+                                        Dashboard Keamanan
+                                    </h3>
+                                    <div style="display:flex; gap:10px;">
+                                        <button class="btn btn-sm" onclick="openForm('keamanan')"
+                                            style="background:#fee2e2; color:#dc2626; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                            <i class="fas fa-plus"></i> Pelanggaran
+                                        </button>
+                                        <button class="btn btn-sm" onclick="openForm('keamanan_reg')"
+                                            style="background:#ffedd5; color:#c2410c; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                            <i class="fas fa-box"></i> Barang
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #facc15;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            PELANGGARAN RINGAN</div>
+                                        <div class="stat-value" id="stats-security-ringan" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #f97316;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            PELANGGARAN SEDANG</div>
+                                        <div class="stat-value" id="stats-security-sedang" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #ef4444;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            PELANGGARAN BERAT</div>
+                                        <div class="stat-value" id="stats-security-berat" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid-responsive"
+                                    style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                                    <div class="card" style="padding:1.5rem; min-height: 400px;">
+                                        <h4 style="margin-bottom:1rem;">Trend Pelanggaran Tahun Ini</h4>
+                                        <div style="height: 300px; width: 100%;">
+                                            <canvas id="keamananChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding:1.5rem; display: flex; flex-direction: column;">
+                                        <h4 style="margin-bottom:1rem;">Pelanggaran Terbaru</h4>
+                                        <div id="recent-pelanggaran-list"
+                                            style="overflow-y:auto; flex: 1; min-height: 200px;">
+                                            <p style="text-align:center; color:#9cb3c9; margin-top:50px;">Memuat data...
+                                            </p>
+                                        </div>
+                                        <div style="text-align:center; margin-top:1rem;">
+                                            <button class="btn btn-sm" onclick="navigate('keamanan')"
+                                                style="border: 1px solid var(--primary); color: var(--primary); background: transparent; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Lihat
+                                                Semua</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pendidikan Dashboard -->
+                            <div class="dashboard-group" id="group-pendidikan" style="display:none;">
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                                    <h3
+                                        style="color: var(--text-dark); border-left: 4px solid #3b82f6; padding-left: 10px; margin:0;">
+                                        Dashboard Pendidikan
+                                    </h3>
+                                    <div style="display:flex; gap:10px;">
+                                        <button class="btn btn-sm" onclick="openForm('pendidikan')"
+                                            style="background:#dbeafe; color:#2563eb; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                            <i class="fas fa-plus"></i> Input Laporan
+                                        </button>
+                                        <button class="btn btn-sm" onclick="openForm('absensi_formal')"
+                                            style="background:#e0f2fe; color:#0284c7; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                            <i class="fas fa-clipboard-check"></i> Absensi
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="grid-responsive"
+                                    style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                                    <div class="card" style="padding:1.5rem;">
+                                        <h4 style="margin-bottom:1rem;">Aktivitas Belajar & Mengajar</h4>
+                                        <div style="height: 300px; width: 100%;">
+                                            <canvas id="pendidikanChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding:1.5rem; display: flex; flex-direction: column;">
+                                        <h4 style="margin-bottom:1rem;">Laporan Terbaru</h4>
+                                        <div id="recent-pendidikan-list"
+                                            style="overflow-y:auto; flex: 1; min-height: 200px;">
+                                            <p style="text-align:center; color:#9cb3c9; margin-top:50px;">Memuat data...
+                                            </p>
+                                        </div>
+                                        <div style="text-align:center; margin-top:1rem;">
+                                            <button class="btn btn-sm" onclick="navigate('pendidikan')"
+                                                style="border: 1px solid var(--primary); color: var(--primary); background: transparent; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Lihat
+                                                Semua</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kesehatan Dashboard -->
+                            <div class="dashboard-group" id="group-kesehatan" style="display:none;">
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                                    <h3
+                                        style="color: var(--text-dark); border-left: 4px solid #ec4899; padding-left: 10px; margin:0;">
+                                        Dashboard Kesehatan
+                                    </h3>
+                                    <button class="btn btn-sm" onclick="openForm('kesehatan')"
+                                        style="background:#fce7f3; color:#db2777; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                        <i class="fas fa-plus"></i> Input Data Kesehatan
+                                    </button>
+                                </div>
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #ec4899;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            SAKIT HARI INI</div>
+                                        <div class="stat-value" id="stats-kesehatan-harian" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #8b5cf6;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            DIRAWAT (PESANTREN / RS)</div>
+                                        <div class="stat-value" id="stats-kesehatan-dirawat" style="font-size: 1.8rem;">
+                                            0</div>
+                                    </div>
+                                </div>
+                                <div class="card" style="padding:1.5rem;">
+                                    <h4 style="margin-bottom:1rem;">Riwayat Kesehatan Santri Terbaru</h4>
+                                    <div class="table-container">
+                                        <table id="recent-kesehatan-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tanggal</th>
+                                                    <th>Nama Santri</th>
+                                                    <th>Keluhan</th>
+                                                    <th>Diagnosa/Tindakan</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="recent-kesehatan-list">
+                                                <!-- Populated by JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="text-align:center; margin-top:1rem;">
+                                        <button class="btn btn-sm" onclick="navigate('kesehatan')"
+                                            style="border: 1px solid var(--primary); color: var(--primary); background: transparent; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Lihat
+                                            Semua</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ustadz Dashboard -->
+                            <div class="dashboard-group" id="group-ustadz">
+                                <h3
+                                    style="margin-bottom: 1rem; color: var(--text-dark); border-left: 4px solid #3b82f6; padding-left: 10px;">
+                                    Ringkasan Data Pengajar</h3>
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #10b981;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            PENGAJAR AKTIF</div>
+                                        <div class="stat-value" id="stats-ustadz-aktif" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #ef4444;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            PENGAJAR NON-AKTIF</div>
+                                        <div class="stat-value" id="stats-ustadz-nonaktif" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #3b82f6;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            TOTAL TERDAFTAR</div>
+                                        <div class="stat-value" id="stats-ustadz-total" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <h4 style="margin-bottom: 1rem;">Daftar Pengajar</h4>
+                                    <div id="recent-ustadz-list"
+                                        style="margin-top:1rem; max-height: 400px; overflow-y: auto;">
+                                        <p style="text-align:center; padding:20px; color:#94a3b8;">Memuat data...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pengurus Dashboard -->
+                            <div class="dashboard-group" id="group-pengurus">
+                                <h3
+                                    style="margin-bottom: 1rem; color: var(--text-dark); border-left: 4px solid #a855f7; padding-left: 10px;">
+                                    Ringkasan Data Pengurus</h3>
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #10b981;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            PENGURUS AKTIF</div>
+                                        <div class="stat-value" id="stats-pengurus-aktif" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #ef4444;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            PENGURUS NON-AKTIF</div>
+                                        <div class="stat-value" id="stats-pengurus-nonaktif" style="font-size: 1.8rem;">
+                                            0
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding: 1rem; border-top: 3px solid #a855f7;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            TOTAL TERDAFTAR</div>
+                                        <div class="stat-value" id="stats-pengurus-total" style="font-size: 1.8rem;">0
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pendidikan Dashboard -->
+                            <div class="dashboard-group" id="group-pendidikan">
+                                <h3
+                                    style="margin-bottom: 1rem; color: var(--text-dark); border-left: 4px solid var(--primary); padding-left: 10px;">
+                                    Ringkasan Pendidikan</h3>
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                                    <div class="card" style="padding: 1rem;">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                                            RATA-RATA KEHADIRAN</div>
+                                        <div class="stat-value" id="stats-edu-attendance" style="font-size: 1.8rem;">0%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <h4>Laporan Kegiatan Terbaru</h4>
+                                    <div id="education-activity-list"
+                                        style="margin-top:1rem; max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                                        <!-- Injected via JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Keuangan Dashboard (Syahriah) -->
+                            <div class="dashboard-group" id="group-keuangan" style="display:none;">
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                                    <h3
+                                        style="color: var(--text-dark); border-left: 4px solid #0ea5e9; padding-left: 10px; margin:0;">
+                                        Dashboard Keuangan Santri
+                                    </h3>
+                                    <button class="btn btn-sm" onclick="window.KeuanganModule.openKeuanganForm()"
+                                        style="background:#e0f2fe; color:#0284c7; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                        <i class="fas fa-plus"></i> Input Pembayaran
+                                    </button>
+                                </div>
+
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                                    <div class="card" style="padding: 1.5rem; border-left: 4px solid #22c55e;">
+                                        <div
+                                            style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform:uppercase;">
+                                            Santri Lunas</div>
+                                        <div class="stat-value" id="stats-fin-lunas"
+                                            style="font-size: 2rem; color:#15803d;">0</div>
+                                    </div>
+                                    <div class="card" style="padding: 1.5rem; border-left: 4px solid #eab308;">
+                                        <div
+                                            style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform:uppercase;">
+                                            Santri Menunggak</div>
+                                        <div class="stat-value" id="stats-fin-nunggak"
+                                            style="font-size: 2rem; color:#ca8a04;">0</div>
+                                    </div>
+                                    <div class="card" style="padding: 1.5rem; border-left: 4px solid #6366f1;">
+                                        <div
+                                            style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform:uppercase;">
+                                            Total Tabungan</div>
+                                        <div class="stat-value" id="stats-fin-tabungan"
+                                            style="font-size: 2rem; color:#4f46e5;">Rp 0</div>
+                                    </div>
+                                </div>
+
+                                <div class="grid-responsive"
+                                    style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                                    <div class="card" style="padding:1.5rem;">
+                                        <h4 style="margin-bottom:1rem;">Tren Pembayaran Tahun Ini</h4>
+                                        <div style="height: 300px; width: 100%;">
+                                            <canvas id="keuanganChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding:1.5rem; display: flex; flex-direction: column;">
+                                        <h4 style="margin-bottom:1rem;">Pembayaran Terbaru</h4>
+                                        <div id="recent-keuangan-list"
+                                            style="overflow-y:auto; flex: 1; min-height: 200px;">
+                                            <!-- List -->
+                                        </div>
+                                        <div style="text-align:center; margin-top:1rem;">
+                                            <button class="btn btn-sm" onclick="navigate('keuangan')"
+                                                style="border: 1px solid var(--primary); color: var(--primary); background: transparent; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Lihat
+                                                Semua</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bendahara Dashboard (Arus Kas) -->
+                            <div class="dashboard-group" id="group-bendahara" style="display:none;">
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                                    <h3
+                                        style="color: var(--text-dark); border-left: 4px solid #8b5cf6; padding-left: 10px; margin:0;">
+                                        Dashboard Bendahara (Arus Kas)
+                                    </h3>
+                                    <div style="display:flex; gap:10px;">
+                                        <button class="btn btn-sm"
+                                            onclick="window.openForm('arus_kas', {jenis_transaksi: 'Masuk'})"
+                                            style="background:#dcfce7; color:#16a34a; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+                                            <i class="fas fa-arrow-down"></i> Pemasukan
+                                        </button>
+                                        <button class="btn btn-sm"
+                                            onclick="window.openForm('arus_kas', {jenis_transaksi: 'Keluar'})"
+                                            style="background:#fee2e2; color:#dc2626; border:none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+                                            <i class="fas fa-arrow-up"></i> Pengeluaran
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                                    <div class="card"
+                                        style="padding: 1.5rem; background: linear-gradient(to right, #ffffff, #f0fdf4);">
+                                        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                                            TOTAL UANG MASUK</div>
+                                        <div class="stat-value" id="stats-bend-masuk"
+                                            style="font-size: 2rem; color: #15803d;">Rp 0</div>
+                                    </div>
+                                    <div class="card"
+                                        style="padding: 1.5rem; background: linear-gradient(to right, #ffffff, #fef2f2);">
+                                        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                                            TOTAL UANG KELUAR</div>
+                                        <div class="stat-value" id="stats-bend-keluar"
+                                            style="font-size: 2rem; color: #b91c1c;">Rp 0</div>
+                                    </div>
+                                    <div class="card"
+                                        style="padding: 1.5rem; background: #fafafa; border: 2px dashed #ddd;">
+                                        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                                            SALDO SAAT INI</div>
+                                        <div class="stat-value" id="stats-bend-saldo"
+                                            style="font-size: 2rem; color: var(--primary);">Rp 0</div>
+                                    </div>
+                                </div>
+
+                                <div class="grid-responsive"
+                                    style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                                    <div class="card" style="padding:1.5rem;">
+                                        <h4 style="margin-bottom:1rem;">Arus Kas Tahun Ini</h4>
+                                        <div style="height: 300px; width: 100%;">
+                                            <canvas id="bendaharaChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="card" style="padding:1.5rem; display: flex; flex-direction: column;">
+                                        <h4 style="margin-bottom:1rem;">Transaksi Terakhir</h4>
+                                        <div id="recent-bendahara-list"
+                                            style="overflow-y:auto; flex: 1; min-height: 200px;">
+                                            <!-- List -->
+                                        </div>
+                                        <div style="text-align:center; margin-top:1rem;">
+                                            <button class="btn btn-sm" onclick="navigate('arus_kas')"
+                                                style="border: 1px solid var(--primary); color: var(--primary); background: transparent; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Lihat
+                                                Semua</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Aktifitas Terbaru</h2>
+                            </div>
+                            <p style="color: var(--text-muted);">Belum ada riwayat aktifitas terbaru untuk ditampilkan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Laporan (Executive) View -->
+                    <div id="laporan-view" class="view"
+                        style="display:none; background: #525659; min-height: 100vh; padding: 40px 20px;">
+
+                        <!-- Control Bar -->
+                        <div class="control-bar"
+                            style="background:white; padding:15px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between; width:210mm; margin:0 auto 20px auto; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <i class="fas fa-print" style="font-size:1.2rem; color:#475569;"></i>
+                                <div>
+                                    <div style="font-weight:700; color:#1e293b;">Preview Laporan</div>
+                                    <div style="font-size:0.75rem; color:#64748b;">A4 Document Layout</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <select id="laporan-month" class="btn"
+                                    style="border:1px solid #cbd5e1; padding:5px 10px; border-radius:6px;"
+                                    onchange="LaporanModule.loadData()">
+                                    <option value="1">Januari</option>
+                                    <option value="2">Februari</option>
+                                    <option value="3">Maret</option>
+                                    <option value="4">April</option>
+                                    <option value="5">Mei</option>
+                                    <option value="6">Juni</option>
+                                    <option value="7">Juli</option>
+                                    <option value="8">Agustus</option>
+                                    <option value="9">September</option>
+                                    <option value="10">Oktober</option>
+                                    <option value="11">November</option>
+                                    <option value="12">Desember</option>
+                                </select>
+                                <button class="btn btn-secondary" onclick="LaporanModule.downloadText()"><i
+                                        class="fas fa-file-alt"></i> TXT</button>
+                                <button class="btn btn-primary" style="background:#dc2626; border-color:#dc2626;"
+                                    onclick="LaporanModule.exportPDF(this)"><i class="fas fa-file-pdf"></i> Download
+                                    PDF</button>
+                            </div>
+                        </div>
+
+                        <div id="laporan-canvas"
+                            style="background:white; width:210mm; min-height:297mm; margin:0 auto; padding:20mm; box-shadow:0 0 20px rgba(0,0,0,0.5); color:black; font-family:'Times New Roman', Times, serif; position:relative;">
+
+                            <!-- KOP SURAT -->
+                            <div
+                                style="display:flex; border-bottom:4px double #000; padding-bottom:20px; margin-bottom:30px; align-items:center; gap:25px;">
+                                <img src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"
+                                    style="width:90px; height:auto;">
+                                <div style="text-align:center; flex:1;">
+                                    <h3
+                                        style="margin:0; font-size:14pt; font-weight:bold; color:#0f172a; text-transform:uppercase; letter-spacing:1px;">
+                                        Yayasan Pondok Pesantren</h3>
+                                    <h1
+                                        style="margin:5px 0; font-size:24pt; font-weight:900; color:#000; text-transform:uppercase; font-family:'Times New Roman', serif;">
+                                        Darussalam Ngasem</h1>
+                                    <p style="margin:0; font-size:10pt; font-style:italic;">Jl. Melati No. 12, Desa
+                                        Ngasem, Kec. Ngasem, Kab. Kediri, Jawa Timur</p>
+                                    <p style="margin:2px 0 0; font-size:9pt;">Telp: (0354) 123456 | Email:
+                                        sekretariat@ppds.com</p>
+                                </div>
+                            </div>
+
+                            <!-- Judul Laporan -->
+                            <div style="text-align:center; margin-bottom:40px;">
+                                <h2
+                                    style="text-decoration:underline; font-size:16pt; font-weight:bold; margin:0; text-transform:uppercase;">
+                                    Laporan Eksekutif Bulanan</h2>
+                                <p style="margin:5px 0 0; font-size:12pt;">Periode: <b id="laporan-periode-text">[Bulan]
+                                        [Tahun]</b></p>
+                            </div>
+
+                            <!-- Executive Summary Cards -->
+                            <div id="laporan-summary-grid"
+                                style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
+                                <!-- Populated by JS -->
+                            </div>
+
+                            <!-- Detailed Analysis Sections -->
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+                                <!-- Left Column: Keuangan & Pendidikan -->
+                                <div style="display:flex; flex-direction:column; gap:2rem;">
+                                    <div class="card" style="margin:0; background:#f8fafc; border:1px solid #e2e8f0;">
+                                        <h4
+                                            style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid #cbd5e1; padding-bottom:0.5rem;">
+                                            <i class="fas fa-wallet"></i> Resume Keuangan
+                                        </h4>
+                                        <div id="laporan-keuangan-detail">Memuat data...</div>
+                                    </div>
+
+                                    <div class="card" style="margin:0; background:#f8fafc; border:1px solid #e2e8f0;">
+                                        <h4
+                                            style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid #cbd5e1; padding-bottom:0.5rem;">
+                                            <i class="fas fa-book-reader"></i> Kualitas Pendidikan
+                                        </h4>
+                                        <div id="laporan-pendidikan-detail">Memuat data...</div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Keamanan & Kesehatan -->
+                                <div style="display:flex; flex-direction:column; gap:2rem;">
+                                    <div class="card" style="margin:0; background:#fef2f2; border:1px solid #fee2e2;">
+                                        <h4
+                                            style="margin-bottom:1rem; color:#dc2626; border-bottom:1px solid #fca5a5; padding-bottom:0.5rem;">
+                                            <i class="fas fa-shield-alt"></i> Indeks Keamanan
+                                        </h4>
+                                        <div id="laporan-keamanan-detail">Memuat data...</div>
+                                    </div>
+
+                                    <div class="card" style="margin:0; background:#f0fdf4; border:1px solid #dcfce7;">
+                                        <h4
+                                            style="margin-bottom:1rem; color:#16a34a; border-bottom:1px solid #86efac; padding-bottom:0.5rem;">
+                                            <i class="fas fa-heartbeat"></i> Kesehatan Santri
+                                        </h4>
+                                        <div id="laporan-kesehatan-detail">Memuat data...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Approval Section -->
+                            <div class="approval-section"
+                                style="margin-top:4rem; display:flex; justify-content:flex-end; gap:4rem; padding-right:2rem; page-break-inside: avoid;">
+                                <div style="text-align:center;">
+                                    <p>Kediri, <span id="laporan-print-date"></span></p>
+                                    <p style="margin-bottom:4rem;">Ketua Pondok</p>
+                                    <p style="font-weight:700; border-bottom:1px solid #000; padding-bottom:2px;">(
+                                        ........................... )</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Santri View -->
+                    <div id="santri-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Stambuk & Database Santri</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Manajemen data 35 kolom
+                                        (Biodata Lengkap & Data Orang Tua).</p>
+                                </div>
+                                <div class="card-actions"
+                                    style="display: flex; gap: 10px; flex-wrap:wrap; justify-content: flex-end;">
+                                    <button class="btn btn-secondary" onclick="SantriModule.downloadTemplate()"><i
+                                            class="fas fa-file-download"></i> Template</button>
+                                    <button class="btn btn-secondary" onclick="SantriModule.triggerImport()"><i
+                                            class="fas fa-file-import"></i> Import</button>
+                                    <button class="btn btn-secondary" onclick="SantriModule.exportData()"><i
+                                            class="fas fa-file-excel"></i> Export</button>
+                                    <button class="btn btn-primary" onclick="openForm('santri')"><i
+                                            class="fas fa-plus-circle"></i> Tambah</button>
+                                    <input type="file" id="import-file-santri" style="display:none"
+                                        onchange="SantriModule.handleFileImport(this)" accept=".xlsx, .xls">
+                                </div>
+                            </div>
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-santri" class="search-input"
+                                        placeholder="Cari Nama, NIK, atau Stambuk...">
+                                </div>
+                                <select id="filter-kelas-santri" class="filter-select">
+                                    <option value="">Semua Kelas</option>
+                                </select>
+                            </div>
+                            <div class="table-container">
+                                <table id="santri-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 50px;">Foto</th>
+                                            <th>Nama Siswa</th>
+                                            <th>STB. Pondok</th>
+                                            <th>STB. Madrasah</th>
+                                            <th>NIK</th>
+                                            <th>Kelas</th>
+                                            <th>Kamar</th>
+                                            <th style="width: 100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="8"
+                                                style="text-align:center;padding:50px;color:var(--text-muted);">
+                                                <i class="fas fa-circle-notch fa-spin"></i> Menghubungkan...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kamar View -->
+                    <div id="kamar-view" class="view" style="display:none;">
+                        <!-- Header & Actions -->
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                            <div>
+                                <h2
+                                    style="font-family:'Outfit', sans-serif; color:var(--primary); font-size:1.5rem; font-weight:800;">
+                                    Manajemen Asrama & Kamar</h2>
+                                <p style="color:var(--text-muted); font-size:0.9rem;">Pantau kapasitas dan hunian santri
+                                    per asrama.</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="openForm('kamar')">
+                                <i class="fas fa-plus-circle"></i> Tambah Kamar
+                            </button>
+                        </div>
+
+                        <!-- Top Quick Stats -->
+                        <div id="kamar-top-stats" class="kamar-top-stats-row">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <!-- Asrama Summary (Large Cards) -->
+                        <h3
+                            style="margin: 2.5rem 0 1.5rem 0; font-family:'Outfit', sans-serif; font-weight:700; color:var(--primary-dark);">
+                            Ringkasan Per Asrama</h3>
+                        <div id="kamar-summary" class="kamar-summary-grid">
+                            <!-- Will be populated by JS -->
+                        </div>
+
+                        <!-- Detailed Table Card -->
+                        <div class="card" style="padding: 2rem;">
+                            <div class="card-header" style="border:none; margin-bottom:1.5rem; padding:0;">
+                                <h3>Detail Daftar Kamar</h3>
+                            </div>
+                            <div class="table-controls" style="margin-bottom:1.5rem;">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-kamar" class="search-input"
+                                        placeholder="Cari nama kamar atau asrama...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="kamar-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Kamar</th>
+                                            <th>Asrama / Blok</th>
+                                            <th>Penasihat</th>
+                                            <th>Kapasitas</th>
+                                            <th style="width:120px;">Penghuni</th>
+                                            <th style="width: 100px; text-align:center;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="6" style="text-align:center;padding:50px;"><i
+                                                    class="fas fa-spinner fa-spin"></i> Memuat data kamar...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ustadz View -->
+                    <div id="ustadz-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="ustadz-title">Data Pengajar (Ustadz/ah)</h2>
+                                    <p id="ustadz-desc" style="font-size: 0.85rem; color: var(--text-muted);">Kelola
+                                        data guru dan staf
+                                        pengajar pondok.</p>
+                                </div>
+                                <button id="ustadz-btn" class="btn btn-primary" onclick="openForm('ustadz')"><i
+                                        class="fas fa-plus-circle"></i> Tambah Pengajar</button>
+                            </div>
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-ustadz" class="search-input"
+                                        placeholder="Cari Nama Pengajar, NIK...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="ustadz-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:50px;">Foto</th>
+                                            <th>Nama Lengkap</th>
+                                            <th>NIK/NIP</th>
+                                            <th>Kelas</th>
+                                            <th>No. Telp</th>
+                                            <th style="width: 100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="10" style="text-align:center;padding:50px;"><i
+                                                    class="fas fa-spinner fa-spin"></i> Memuat...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pengurus View -->
+                    <div id="pengurus-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="pengurus-title">Struktur & Data Pengurus</h2>
+                                    <p id="pengurus-desc" style="font-size: 0.85rem; color: var(--text-muted);">
+                                        Informasi jabatan dan
+                                        divisi
+                                        pengurus.</p>
+                                </div>
+                                <button id="pengurus-btn" class="btn btn-primary" onclick="openForm('pengurus')"><i
+                                        class="fas fa-plus-circle"></i> Tambah Pengurus</button>
+                            </div>
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-pengurus" class="search-input"
+                                        placeholder="Cari Nama Pengurus, Divisi...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="pengurus-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:50px;">Foto</th>
+                                            <th>Nama Pengurus</th>
+                                            <th>Jabatan</th>
+                                            <th>Divisi/Bidang</th>
+                                            <th>No. Telp</th>
+                                            <th style="width: 100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="10" style="text-align:center;padding:50px;"><i
+                                                    class="fas fa-spinner fa-spin"></i> Memuat...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keamanan View -->
+                    <div id="keamanan-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Laporan Keamanan</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Pencatatan pelanggaran dan
+                                        takzir.</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="openForm('keamanan')"><i
+                                        class="fas fa-plus-circle"></i> Catat Pelanggaran</button>
+                            </div>
+
+                            <!-- Keamanan Stats Grid -->
+                            <div class="stats-grid" id="keamanan-stats" style="margin-bottom: 2rem;">
+                                <!-- Will be populated by JS -->
+                            </div>
+
+                            <div class="table-container">
+                                <table id="keamanan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Nama Santri</th>
+                                            <th>Jenis</th>
+                                            <th>Takzir</th>
+                                            <th>Petugas</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="6" style="text-align:center;padding:50px;">Memuat...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pendidikan View -->
+                    <div id="pendidikan-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="pendidikan-title">Laporan Pendidikan</h2>
+                                    <p id="pendidikan-desc" style="font-size: 0.85rem; color: var(--text-muted);">
+                                        Pencatatan nilai dan
+                                        kehadiran.
+                                    </p>
+                                </div>
+                                <button class="btn btn-primary" onclick="openForm('pendidikan')"><i
+                                        class="fas fa-plus-circle"></i> Input Nilai</button>
+                            </div>
+
+                            <!-- Pendidikan Stats Grid -->
+                            <div class="stats-grid" id="pendidikan-stats" style="margin-bottom: 2rem;">
+                                <!-- Will be populated by JS -->
+                            </div>
+
+                            <div class="table-container">
+                                <table id="pendidikan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Nama Santri</th>
+                                            <th>Kegiatan</th>
+                                            <th>Nilai</th>
+                                            <th>Ustadz</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="6" style="text-align:center;padding:50px;">Memuat...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Madrasah MIU View -->
+                    <div id="madrasah_miu-view" class="view" style="display: none;">
+                        <div class="card" style="margin-bottom: 2rem; border-top: 4px solid var(--gold);">
+                            <div class="card-header" style="border: none; padding-bottom: 0;">
+                                <div>
+                                    <h2 id="miu-title" style="color: var(--gold); font-size: 1.8rem;">Daftar Siswa MIU
+                                    </h2>
+                                    <p id="miu-desc" style="color: var(--text-muted); font-size: 0.9rem;">Manajemen
+                                        terpadu unit formal Madrasah Ihya' Ulumuddin.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Multi-Action MIU Toolbar -->
+                        <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+                                <div style="display: flex; gap: 1rem; align-items: center; flex: 1; min-width: 300px;">
+                                    <div class="search-wrapper" style="max-width: 100%;">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="search-miu" class="search-input"
+                                            placeholder="Cari Nama, No. Stambuk, atau Jabatan...">
+                                    </div>
+                                    <div id="miu-filter-container">
+                                        <select id="filter-miu-kelas" class="search-input"
+                                            style="padding-left: 1rem; width: 160px; height: 48px;">
+                                            <option value="">Semua Kelas</option>
+                                            <option value="I Ula">I Ula</option>
+                                            <option value="II Ula">II Ula</option>
+                                            <option value="III Ula">III Ula</option>
+                                            <option value="I Wustho">I Wustho</option>
+                                            <option value="II Wustho">II Wustho</option>
+                                            <option value="III Wustho">III Wustho</option>
+                                            <option value="I Ulya">I Ulya</option>
+                                            <option value="II Ulya">II Ulya</option>
+                                            <option value="III Ulya">III Ulya</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <div style="text-align: right; margin-right: 1rem;">
+                                        <div
+                                            style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
+                                            Total Data</div>
+                                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--gold);"
+                                            id="miu-total-count">0</div>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="MadrasahMiuModule.exportData()"
+                                        style="padding: 0.8rem 1.5rem;">
+                                        <i class="fas fa-file-excel"></i> Export MIU
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card"
+                            style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-md);">
+                            <div class="table-container" style="border: none; border-radius: 0;">
+                                <table id="miu-table" style="margin-bottom: 0;">
+                                    <thead style="background: #f8fafc;">
+                                        <!-- Headers injected by JS -->
+                                    </thead>
+                                    <tbody style="font-size: 0.9rem;">
+                                        <!-- Data injected by JS -->
+                                        <tr>
+                                            <td colspan="10"
+                                                style="text-align:center;padding:50px;color:var(--text-muted);">Sedang
+                                                memproses data...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keuangan View -->
+                    <div id="keuangan-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Laporan Keuangan (Syahriah)</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Pencatatan syahriah dan
+                                        tagihan santri.</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="window.KeuanganModule.openKeuanganForm()"><i
+                                        class="fas fa-plus-circle"></i> Input Pembayaran</button>
+                            </div>
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-keuangan" class="search-input"
+                                        placeholder="Cari Nama Santri atau Keterangan...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="keuangan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Keterangan / Nama</th>
+                                            <th>Nominal</th>
+                                            <th>Status</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="5" style="text-align:center;padding:50px;">Memuat...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Pembayaran (Master Tagihan) View -->
+                    <div id="jenis_tagihan-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Master Data Tagihan</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Kelola jenis pembayaran dan
+                                        tagihan santri.</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="openForm('jenis_tagihan')"><i
+                                        class="fas fa-plus-circle"></i> Tambah Tagihan Baru</button>
+                            </div>
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-jenis_tagihan" class="search-input"
+                                        placeholder="Cari Nama Tagihan...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="jenis_tagihan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Tagihan</th>
+                                            <th>Nominal (Rp)</th>
+                                            <th>Keterangan</th>
+                                            <th>Status</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="5" style="text-align:center;padding:50px;">Memuat data
+                                                tagihan...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arus Kas (Bendahara) View -->
+                    <div id="arus_kas-view" class="view" style="display:none;">
+                        <div id="bendahara-top-stats" class="kamar-top-stats-row" style="margin-bottom: 2rem;">
+                            <!-- Populated by JS: Total Masuk, Total Keluar, Saldo -->
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="arus_kas-title">Arus Kas Pondok</h2>
+                                    <p id="arus_kas-desc" style="font-size: 0.85rem; color: var(--text-muted);">Kelola
+                                        pemasukan dan
+                                        pengeluaran umum pondok.</p>
+                                </div>
+                                <div class="card-actions" style="display: flex; gap: 10px;">
+                                    <button class="btn btn-secondary" onclick="exportData('arus_kas')"><i
+                                            class="fas fa-file-excel"></i> Export</button>
+                                    <button class="btn btn-primary" onclick="openForm('arus_kas')"><i
+                                            class="fas fa-plus-circle"></i> Catat Transaksi</button>
+                                </div>
+                            </div>
+                            <div class="table-controls" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <select id="filter-month-arus_kas" class="form-input"
+                                    style="width: auto; padding: 8px;">
+                                    <option value="">Semua Bulan</option>
+                                    <option value="1">Januari</option>
+                                    <option value="2">Februari</option>
+                                    <option value="3">Maret</option>
+                                    <option value="4">April</option>
+                                    <option value="5">Mei</option>
+                                    <option value="6">Juni</option>
+                                    <option value="7">Juli</option>
+                                    <option value="8">Agustus</option>
+                                    <option value="9">September</option>
+                                    <option value="10">Oktober</option>
+                                    <option value="11">November</option>
+                                    <option value="12">Desember</option>
+                                </select>
+                                <select id="filter-year-arus_kas" class="form-input" style="width: auto; padding: 8px;">
+                                    <option value="">Semua Tahun</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                                <div class="search-wrapper" style="flex: 1;">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-arus_kas" class="search-input"
+                                        placeholder="Cari Kategori, Keterangan...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="arus_kas-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Tipe</th>
+                                            <th>Kategori</th>
+                                            <th>Nominal</th>
+                                            <th>Keterangan</th>
+                                            <th>PJ</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="7" style="text-align:center;padding:50px;">Memuat transaksi...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keamanan Registrasi View -->
+                    <div id="keamanan_reg-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="keamanan_reg-title">Registrasi Barang Santri</h2>
+                                    <p id="keamanan_reg-desc" style="font-size: 0.85rem; color: var(--text-muted);">
+                                        Pendataan Kendaraan,
+                                        Elektronik, dan Kompor santri.</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-secondary" onclick="exportData('keamanan_reg')"><i
+                                            class="fas fa-file-excel"></i> Export</button>
+                                    <button id="keamanan_reg-btn" class="btn btn-primary"
+                                        onclick="window.KeamananRegModule.openRegistrationForm()"><i
+                                            class="fas fa-plus-circle"></i> Registrasi Baru</button>
+                                </div>
+                            </div>
+
+                            <div class="tabs-nav" style="margin-left: 1.5rem; margin-bottom: 2rem;">
+                                <button class="tab-btn active"
+                                    onclick="window.KeamananRegModule.switchTab('Kendaraan', this)">
+                                    <i class="fas fa-car-side"></i> Kendaraan
+                                </button>
+                                <button class="tab-btn"
+                                    onclick="window.KeamananRegModule.switchTab('Elektronik', this)">
+                                    <i class="fas fa-laptop"></i> Elektronik
+                                </button>
+                                <button class="tab-btn" onclick="window.KeamananRegModule.switchTab('Kompor', this)">
+                                    <i class="fas fa-fire"></i> Kompor
+                                </button>
+                            </div>
+
+                            <!-- Registrasi Barang Stats Grid -->
+                            <div class="stats-grid" id="keamanan_reg-stats"
+                                style="margin-bottom: 2rem; padding: 0 1.5rem;">
+                                <!-- Will be populated by JS -->
+                            </div>
+
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-keamanan_reg" class="search-input"
+                                        placeholder="Cari Nama Santri, Jenis Barang...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="keamanan_reg-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Santri</th>
+                                            <th>Jenis</th>
+                                            <th>Detail / Nama</th>
+                                            <th>Plat / Aksesoris</th>
+                                            <th>Warna / Keadaan</th>
+                                            <th>Penerima</th>
+                                            <th>TGL Reg</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Izin View -->
+                    <div id="izin-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="izin-title">Perizinan Santri</h2>
+                                    <p id="izin-desc" style="font-size: 0.85rem; color: var(--text-muted);">Manajemen
+                                        izin pulang dan sakit santri.</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-secondary" onclick="exportData('izin')"><i
+                                            class="fas fa-file-excel"></i> Export</button>
+                                    <button id="izin-btn" class="btn btn-primary"
+                                        onclick="window.IzinModule.openIzinForm()"><i class="fas fa-plus-circle"></i>
+                                        Tambah Izin</button>
+                                </div>
+                            </div>
+
+                            <!-- Perizinan Stats Grid -->
+                            <div class="stats-grid" id="izin-stats" style="margin-bottom: 2rem;">
+                                <!-- Will be populated by JS -->
+                            </div>
+
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-izin" class="search-input"
+                                        placeholder="Cari Nama Santri, Alasan...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="izin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Santri</th>
+                                            <th>Alasan</th>
+                                            <th>Dari</th>
+                                            <th>Sampai</th>
+                                            <th>Status</th>
+                                            <th>Petugas</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barang Sitaan View -->
+                    <div id="barang_sitaan-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="barang_sitaan-title">Data Barang Sitaan</h2>
+                                    <p id="barang_sitaan-desc" style="font-size: 0.85rem; color: var(--text-muted);">
+                                        Pendataan barang-barang santri yang disita pihak keamanan.</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-secondary" onclick="exportData('barang_sitaan')"><i
+                                            class="fas fa-file-excel"></i> Export</button>
+                                    <button id="barang_sitaan-btn" class="btn btn-primary"
+                                        onclick="window.BarangSitaanModule.openForm()"><i
+                                            class="fas fa-plus-circle"></i>
+                                        Tambah Sitaan</button>
+                                </div>
+                            </div>
+
+                            <!-- Stats Grid -->
+                            <div class="stats-grid" id="barang_sitaan-stats"
+                                style="margin-bottom: 2rem; padding: 0 1.5rem;">
+                                <!-- Will be populated by JS -->
+                            </div>
+
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-barang_sitaan" class="search-input"
+                                        placeholder="Cari Nama Santri, Barang...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="barang_sitaan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Nama Santri</th>
+                                            <th>Jenis Barang</th>
+                                            <th>Nama/Merk</th>
+                                            <th>Petugas</th>
+                                            <th>Status</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kesehatan View -->
+                    <div id="kesehatan-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Data Santri Sakit</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Pantau kondisi kesehatan
+                                        dan pengobatan santri.</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-secondary" onclick="exportData('kesehatan')"><i
+                                            class="fas fa-file-excel"></i> Export</button>
+                                    <button class="btn btn-primary" onclick="openForm('kesehatan')"><i
+                                            class="fas fa-plus-circle"></i> Input Data Sakit</button>
+                                </div>
+                            </div>
+
+                            <!-- Kesehatan Stats Grid -->
+                            <div class="stats-grid" id="kesehatan-stats" style="margin-bottom: 2rem;">
+                                <!-- Will be populated by JS -->
+                            </div>
+
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-kesehatan" class="search-input"
+                                        placeholder="Cari Nama Santri, Gejala...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="kesehatan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Santri</th>
+                                            <th>Mulai Sakit</th>
+                                            <th>Gejala</th>
+                                            <th>Obat / Tindakan</th>
+                                            <th>Status / Periksa</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Arsiparis View -->
+                    <div id="arsiparis-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2
+                                        style="font-family:'Outfit', sans-serif; color:var(--primary); font-size:1.5rem; font-weight:800;">
+                                        Arsiparis & Digital File</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Manajemen dokumen,
+                                        surat menyurat, dan arsip penting pondok.</p>
+                                </div>
+                                <div class="card-actions" style="display: flex; gap: 10px;">
+                                    <button class="btn btn-primary" onclick="ArsiparisModule.openUploadModal()">
+                                        <i class="fas fa-file-upload"></i> Upload Dokumen
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-controls" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <div class="search-wrapper" style="flex: 1; max-width: 300px;">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-arsiparis" class="search-input"
+                                        placeholder="Cari nama dokumen...">
+                                </div>
+                                <select id="filter-kategori-arsiparis" class="filter-select" style="width: auto;">
+                                    <option value="">Semua Kategori</option>
+                                    <option value="Surat Masuk">Surat Masuk</option>
+                                    <option value="Surat Keluar">Surat Keluar</option>
+                                    <option value="SK Pengurus">SK Pengurus</option>
+                                    <option value="Proposal">Proposal</option>
+                                    <option value="Sertifikat/Aset">Sertifikat/Aset</option>
+                                    <option value="Laporan Seksi">Laporan Seksi</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+
+                            <div class="table-container">
+                                <table id="arsiparis-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tgl Upload</th>
+                                            <th>Nama Dokumen</th>
+                                            <th>Kategori</th>
+                                            <th>PJ</th>
+                                            <th style="width: 150px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="arsiparis-tbody">
+                                        <tr>
+                                            <td colspan="5"
+                                                style="text-align:center;padding:50px;color:var(--text-muted);">
+                                                <i class="fas fa-folder-open"
+                                                    style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                                                Memuat arsip...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div> <!-- End of Arsiparis View -->
+
+                    <!-- Absensi Sekolah Formal View -->
+                    <div id="absensi_formal-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2
+                                        style="font-family:'Outfit', sans-serif; color:var(--primary); font-size:1.5rem; font-weight:800;">
+                                        Absensi Sekolah Formal</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Pencatatan kehadiran santri
+                                        di lembaga formal (SD/SMP/SMA/Lainnya).</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary btn-add-data" onclick="openForm('absensi_formal')">
+                                        <i class="fas fa-plus"></i> Input Absensi Baru
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-absensi_formal" class="search-input"
+                                        placeholder="Cari nama santri...">
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <table id="absensi_formal-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Nama Santri</th>
+                                            <th>Lembaga</th>
+                                            <th>Status</th>
+                                            <th>Petugas</th>
+                                            <th style="width: 150px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="6"
+                                                style="text-align:center;padding:50px;color:var(--text-muted);">
+                                                Memuat data absensi...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div> <!-- End of Absensi Formal View -->
+
+
+
+                    <!-- Layanan Admin View (Sekretariat) -->
+                    <div id="layanan_admin-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Layanan Administrasi & Peminjaman</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Pengurusan surat-surat,
+                                        alat, dan administrasi lainnya.</p>
+                                </div>
+                                <button id="layanan_admin-btn" class="btn btn-primary"
+                                    onclick="openForm('layanan_admin')"><i class="fas fa-plus-circle"></i> Input Layanan
+                                    Baru</button>
+                            </div>
+                            <div class="table-controls">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-layanan_admin" class="search-input"
+                                        placeholder="Cari Nama Santri atau Jenis Layanan...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="layanan_admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Nama Santri</th>
+                                            <th>Jenis Layanan</th>
+                                            <th>Nominal</th>
+                                            <th>PJ</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kas Unit View (Rekap Keuangan Per Divisi) -->
+                    <div id="kas_unit-view" class="view" style="display:none;">
+                        <div id="kas_unit-stats" class="stats-grid" style="margin-bottom: 2rem;">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Rekap Kas Operasional Unit</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Monitoring saldo
+                                        masuk/keluar di tiap seksi.</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-secondary" onclick="exportData('kas_unit')"><i
+                                            class="fas fa-file-excel"></i> Export</button>
+                                    <button class="btn btn-primary" onclick="openForm('kas_unit')"><i
+                                            class="fas fa-plus-circle"></i> Input Kas Manual</button>
+                                </div>
+                            </div>
+                            <div class="table-controls">
+                                <select id="filter-unit-kas" class="search-input" style="width: auto;"
+                                    onchange="Router.modules.kas_unit.loadAndRender()">
+                                    <option value="">-- Pilih Unit --</option>
+                                    <option value="Keamanan">Keamanan</option>
+                                    <option value="Pendidikan">Pendidikan</option>
+                                    <option value="Kesehatan">Kesehatan</option>
+                                    <option value="Sekretariat">Sekretariat</option>
+                                    <option value="Jam'iyyah">Jam'iyyah</option>
+                                </select>
+                                <button class="btn btn-primary" style="background-color: var(--gold); border: none;"
+                                    onclick="Router.modules.kas_unit.setorkan(document.getElementById('filter-unit-kas').value)">
+                                    <i class="fas fa-hand-holding-usd"></i> Setorkan ke Bendahara
+                                </button>
+                                <div class="search-wrapper" style="flex:1;">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-kas_unit" class="search-input"
+                                        placeholder="Cari kategori atau keterangan...">
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="kas_unit-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Unit</th>
+                                            <th>Kategori</th>
+                                            <th>Nominal</th>
+                                            <th>Status Setor</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarif Layanan (Layanan Info) View -->
+                    <div id="layanan_info-view" class="view" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2>Pengaturan Tarif Layanan Unit</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Pusat kendali harga layanan
+                                        operasional pondok.</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="openForm('layanan_info')"><i
+                                        class="fas fa-plus-circle"></i> Tambah Tarif Baru</button>
+                            </div>
+                            <div class="table-container">
+                                <table id="layanan_info-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Unit</th>
+                                            <th>Nama Layanan</th>
+                                            <th>Harga (Rp)</th>
+                                            <th>Status</th>
+                                            <th style="width:100px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Santri List View (Shared Directory) -->
+                    <div id="santri_list-view" class="view" style="display:none;">
+                        <div id="santri_list-stats" class="stats-grid" style="margin-bottom: 2rem;">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="santri_list-title">Daftar Santri</h2>
+                                    <p id="santri_list-desc" style="font-size: 0.85rem; color: var(--text-muted);">
+                                        Direktori santri aktif.</p>
+                                </div>
+                            </div>
+
+                            <div class="table-controls santri-filters"
+                                style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+                                <div class="search-wrapper" style="flex:1; min-width: 250px;">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search-santri_list" class="search-input"
+                                        placeholder="Cari nama, stambuk, atau kamar...">
+                                </div>
+                                <select id="filter-kelas" class="search-input" style="width: auto;">
+                                    <option value="">-- Semua Kelas --</option>
+                                    <option value="I Ula">I Ula</option>
+                                    <option value="II Ula">II Ula</option>
+                                    <option value="III Ula">III Ula</option>
+                                    <option value="I Wustho">I Wustho</option>
+                                    <option value="II Wustho">II Wustho</option>
+                                    <option value="III Wustho">III Wustho</option>
+                                    <option value="I Ulya">I Ulya</option>
+                                    <option value="II Ulya">II Ulya</option>
+                                    <option value="III Ulya">III Ulya</option>
+                                </select>
+                                <select id="filter-status" class="search-input" style="width: auto;">
+                                    <option value="Aktif">Status: Aktif</option>
+                                    <option value="">Semua Status</option>
+                                    <option value="Boyong">Boyong</option>
+                                    <option value="Pindah">Pindah</option>
+                                    <option value="Alumni">Alumni</option>
+                                </select>
+                            </div>
+
+                            <div id="santri-cards-container">
+                                <!-- Cards populated by JS -->
+                            </div>
+                        </div>
+                        <!-- Settings View -->
+                        <div id="settings-view" class="view" style="display:none;">
+                            <div style="max-width: 1000px; margin: 0 auto; padding: 2rem;">
+                                <!-- Header Section -->
+                                <div style="margin-bottom: 2.5rem;">
+                                    <h1
+                                        style="font-family:'Outfit', sans-serif; font-weight:800; color:var(--primary-dark); font-size:2rem; margin-bottom:0.5rem;">
+                                        Pengaturan Sistem
+                                    </h1>
+                                    <p style="color:var(--text-muted); font-size:1rem;">Kelola keamanan akun dan hak
+                                        akses pengguna
+                                        seksi.</p>
+                                </div>
+
+                                <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap: 2rem;">
+                                    <!-- Left Col: Password -->
+                                    <div>
+                                        <div class="card"
+                                            style="padding: 2rem; border-radius:24px; border:none; box-shadow: var(--shadow-md);">
+                                            <h3
+                                                style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; color:var(--primary);">
+                                                <i class="fas fa-lock"></i> Ganti Password
+                                            </h3>
+
+                                            <div class="form-group" style="margin-bottom: 1.2rem;">
+                                                <label
+                                                    style="font-weight: 600; color:var(--text-main); font-size:0.9rem;">Password
+                                                    Lama</label>
+                                                <input type="password" id="set-pass-old"
+                                                    placeholder="Masukkan password saat ini"
+                                                    style="padding: 12px; border: 2px solid #f1f5f9; width: 100%; border-radius: 12px; transition:all 0.3s; background:#f8fafc;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 1.2rem;">
+                                                <label
+                                                    style="font-weight: 600; color:var(--text-main); font-size:0.9rem;">Password
+                                                    Baru</label>
+                                                <input type="password" id="set-pass-new"
+                                                    placeholder="Minimal 6 karakter"
+                                                    style="padding: 12px; border: 2px solid #f1f5f9; width: 100%; border-radius: 12px; transition:all 0.3s; background:#f8fafc;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 2rem;">
+                                                <label
+                                                    style="font-weight: 600; color:var(--text-main); font-size:0.9rem;">Konfirmasi
+                                                    Password</label>
+                                                <input type="password" id="set-pass-confirm"
+                                                    placeholder="Ulangi password baru"
+                                                    style="padding: 12px; border: 2px solid #f1f5f9; width: 100%; border-radius: 12px; transition:all 0.3s; background:#f8fafc;">
+                                            </div>
+
+                                            <button class="btn btn-primary"
+                                                onclick="SettingsModule.changePassword(this)"
+                                                style="width: 100%; padding: 14px; font-weight: 700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);">
+                                                Update Password
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Col: User Management (Admin Only) -->
+                                    <div data-allowed-roles="admin" style="display:none;">
+                                        <div class="card"
+                                            style="padding: 2rem; border-radius:24px; border:none; box-shadow: var(--shadow-md); min-height:100%;">
+                                            <div
+                                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+                                                <h3
+                                                    style="display: flex; align-items: center; gap: 10px; color:var(--primary); margin:0;">
+                                                    <i class="fas fa-users-cog"></i> Akun Pengguna
+                                                </h3>
+                                                <button class="btn btn-sm" onclick="SettingsModule.openAddUserForm()"
+                                                    style="background: var(--primary-light); color: var(--primary); border: none; font-weight:700; padding: 8px 16px; border-radius:10px;">
+                                                    <i class="fas fa-plus"></i> Tambah Akun
+                                                </button>
+                                            </div>
+
+                                            <div class="table-container" style="border:none; margin-top:1rem;">
+                                                <table id="users-table" style="font-size: 0.85rem;">
+                                                    <thead
+                                                        style="background:transparent; border-bottom: 1px solid #f1f5f9;">
+                                                        <tr>
+                                                            <th
+                                                                style="padding:12px 10px; color:var(--text-muted); text-align:left;">
+                                                                FULLNAME</th>
+                                                            <th
+                                                                style="padding:12px 10px; color:var(--text-muted); text-align:left;">
+                                                                USERNAME</th>
+                                                            <th
+                                                                style="padding:12px 10px; color:var(--text-muted); text-align:left;">
+                                                                PASS</th>
+                                                            <th
+                                                                style="padding:12px 10px; color:var(--text-muted); text-align:left;">
+                                                                ROLE</th>
+                                                            <th
+                                                                style="padding:12px 10px; color:var(--text-muted); width:40px;">
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="users-list-body">
+                                                        <!-- Loaded via JS -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- End of views-container -->
+                    <!-- Footer Placeholder -->
+                    <div id="footer-container"></div>
+            </main>
+        </div>
+
+
+        <!-- Datalist for Autocomplete -->
+        <datalist id="santri-list"></datalist>
+
+        <div id="detail-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2 id="detail-title">Detail Data</h2>
+                    <button class="close-modal" onclick="closeModal('detail-modal')">&times;</button>
+                </div>
+                <div id="detail-content" style="display: grid; grid-template-columns: 150px 1fr; gap: 2rem;">
+                    <!-- Content injected via JS -->
+                </div>
+                <div class="form-actions" style="margin-top:2rem; display:flex; justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('detail-modal')">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="form-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Form Input</h2><button class="close-modal"
+                        onclick="closeModal('form-modal')">&times;</button>
+                </div>
+                <form id="dynamic-form" class="modal-body">
+                    <input type="hidden" name="row_index" id="row_index">
+                    <div id="form-fields"></div>
+                    <div class="form-actions"
+                        style="margin-top:2rem; display:flex; gap:1rem; justify-content:flex-end;">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="closeModal('form-modal')">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btn-save-generic">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="user-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Manajemen Akun</h2><button class="close-modal"
+                        onclick="closeModal('user-modal')">&times;</button>
+                </div>
+                <form id="user-form" class="modal-body">
+                    <input type="hidden" name="rowIndex" id="user_rowIndex">
+                    <div class="form-group"><label>Nama Lengkap</label><input type="text" name="name" required></div>
+                    <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
+                    <div class="form-group"><label>Password</label><input type="text" name="password" required></div>
+                    <div class="form-group"><label>Hak Akses</label>
+                        <select name="role">
+                            <option value="Admin">Admin</option>
+                            <option value="Sekretaris">Sekretaris</option>
+                            <option value="Keamanan">Keamanan</option>
+                            <option value="Pendidikan">Pendidikan</option>
+                            <option value="Keuangan">Keuangan</option>
+                        </select>
+                    </div>
+                    <div class="form-actions"
+                        style="margin-top:2rem; display:flex; gap:1rem; justify-content:flex-end;">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="closeModal('user-modal')">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mutasi Modal -->
+        <div id="mutasi-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2>Status Santri (Mutasi)</h2>
+                    <button class="close-modal" onclick="closeModal('mutasi-modal')">&times;</button>
+                </div>
+                <form id="mutasi-form" class="modal-body">
+                    <input type="hidden" id="mutasi-id" name="id">
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block;margin-bottom:5px;font-weight:bold;">Nama Santri</label>
+                        <input type="text" id="mutasi-nama" disabled
+                            style="width:100%;padding:8px;background:#f3f4f6;border:1px solid #ddd;border-radius:4px;">
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block;margin-bottom:5px;font-weight:bold;">Status</label>
+                        <select id="mutasi-status" name="status_santri"
+                            style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;"
+                            onchange="toggleMutasiFields()">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Pindah">Pindah</option>
+                            <option value="Boyong">Boyong</option>
+                            <option value="Lulus">Lulus (Alumni)</option>
+                        </select>
+                    </div>
+
+                    <div id="field-pindah" style="display:none;">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;margin-bottom:5px;font-weight:bold;">Pindah Ke</label>
+                            <input type="text" name="pindah_ke" placeholder="Nama Sekolah/Pondok"
+                                style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                        </div>
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;margin-bottom:5px;font-weight:bold;">Tahun Pindah</label>
+                            <input type="number" name="tahun_pindah" placeholder="Contoh: 2024">
+                        </div>
+                    </div>
+
+                    <div id="field-boyong" style="display:none;">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;margin-bottom:5px;font-weight:bold;">Tanggal Boyong</label>
+                            <input type="date" name="tanggal_boyong">
+                        </div>
+                    </div>
+
+                    <div id="field-lulus" style="display:none;">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;margin-bottom:5px;font-weight:bold;">Tahun Lulus</label>
+                            <input type="number" name="tahun_lulus" placeholder="Contoh: 2025"
+                                style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%">Simpan Status</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pengurus End Term Modal -->
+        <div id="end-term-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2>Akhir Masa Jabatan</h2>
+                    <button class="close-modal" onclick="closeModal('end-term-modal')">&times;</button>
+                </div>
+                <form id="end-term-form" class="modal-body">
+                    <input type="hidden" id="term-id" name="id">
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block;margin-bottom:5px;font-weight:bold;">Nama Pengurus</label>
+                        <input type="text" id="term-nama" disabled>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block;margin-bottom:5px;font-weight:bold;">Tahun Akhir Menjabat</label>
+                        <input type="number" name="tahun_akhir" id="term-tahun" placeholder="Contoh: 2025" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Simpan</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Arsiparis Upload Modal -->
+        <div id="arsiparis-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2>Upload ke Arsiparis</h2>
+                    <button class="close-modal" onclick="closeModal('arsiparis-modal')">&times;</button>
+                </div>
+                <form id="arsiparis-form" class="modal-body">
+                    <div class="form-group">
+                        <label>Nama/Judul Dokumen</label>
+                        <input type="text" name="nama_dokumen" placeholder="Contoh: SK Pengurus 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select name="kategori" required>
+                            <option value="Surat Masuk">Surat Masuk</option>
+                            <option value="Surat Keluar">Surat Keluar</option>
+                            <option value="SK Pengurus">SK Pengurus</option>
+                            <option value="Proposal">Proposal</option>
+                            <option value="Sertifikat/Aset">Sertifikat/Aset</option>
+                            <option value="Laporan Seksi">Laporan Seksi</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>File (PDF/Gambar/Doc)</label>
+                        <input type="file" id="arsiparis-file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+                        <small style="color: var(--text-muted);">Maksimal 10MB</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Keterangan Tambahan</label>
+                        <textarea name="keterangan" rows="3" placeholder="Opsional..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-cloud-upload-alt"></i> Mulai Unggah
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Promote to Staff Modal -->
+        <div id="promote-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 450px; text-align: center;">
+                <div class="modal-header">
+                    <h2>Pengangkatan Staf (Khidmah)</h2>
+                    <button class="close-modal" onclick="closeModal('promote-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="promote-info" style="margin-bottom: 1.5rem;">
+                        <img id="promote-img" src=""
+                            style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary); margin-bottom: 0.5rem; object-fit: cover;">
+                        <h3 id="promote-name" style="color: var(--primary-dark);">Nama Santri</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Pilih jabatan pengabdian untuk alumni
+                            ini:</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="card promote-option" onclick="SantriModule.confirmPromotion('1')"
+                            style="cursor: pointer; padding: 1.5rem; transition: all 0.3s ease; border: 2px solid transparent;">
+                            <div style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem;">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h4 style="margin: 0;">Pengajar</h4>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Ustadz / Tahfidz
+                            </p>
+                        </div>
+                        <div class="card promote-option" onclick="SantriModule.confirmPromotion('2')"
+                            style="cursor: pointer; padding: 1.5rem; transition: all 0.3s ease; border: 2px solid transparent;">
+                            <div style="font-size: 2rem; color: #a855f7; margin-bottom: 0.5rem;">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <h4 style="margin: 0;">Pengurus</h4>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Harian / Pleno</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div id="sidebar-overlay" onclick="toggleSidebar()"
+            style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1900; display:none;"></div>
+
+        <datalist id="santri-list"></datalist>
+
+        <!-- Scripts -->
+        <!-- SheetJS for Excel Import/Export -->
+        <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+        <script type="module" src="app.js?v=4.5"></script>
+    </div> <!-- End of #app -->
+</body>
+
+</html>

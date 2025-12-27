@@ -1,0 +1,143 @@
+/* =========================================
+   SANTRI CARD STYLES (Card View for Student Directory)
+   ========================================= */
+
+#santri-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.santri-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.santri-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+}
+
+.santri-card-photo {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--gold-light) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.santri-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.santri-card:hover .santri-card-photo img {
+    transform: scale(1.05);
+}
+
+.santri-card-info {
+    padding: 1.25rem;
+}
+
+.santri-card-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin: 0 0 0.75rem 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.santri-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.santri-card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.santri-card-meta i {
+    color: var(--primary);
+    font-size: 0.75rem;
+}
+
+/* Filter Section */
+.santri-filters {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.santri-filters select {
+    padding: 0.6rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 150px;
+}
+
+.santri-filters select:hover {
+    border-color: var(--primary);
+}
+
+.santri-filters select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #santri-cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .santri-card-photo {
+        height: 150px;
+    }
+
+    .santri-card-name {
+        font-size: 1rem;
+    }
+
+    .santri-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .santri-filters select {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    #santri-cards-container {
+        grid-template-columns: 1fr;
+    }
+}

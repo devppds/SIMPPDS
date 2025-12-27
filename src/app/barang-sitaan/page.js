@@ -1,0 +1,1 @@
+export default function Page() { return <div className='view'><div className='card'><h2>Halaman barang-sitaan</h2><p>Halaman ini sedang dalam tahap migrasi.</p></div></div>; }
