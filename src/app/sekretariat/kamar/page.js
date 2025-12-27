@@ -19,9 +19,10 @@ export default function KamarPage() {
     const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
-        nama_kamar: '', asrama: 'Pondok Pusat', kapasitas: '10', penasihat: ''
+        nama_kamar: '1', asrama: 'DS A', kapasitas: '10', penasihat: ''
     });
     const [submitting, setSubmitting] = useState(false);
+    const [penasihatList, setPenasihatList] = useState([]); // List of Staff
 
     useEffect(() => {
         loadData();
@@ -30,9 +31,20 @@ export default function KamarPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'kamar' });
-            const santri = await apiCall('getData', 'GET', { type: 'santri' });
+            const [res, santri, resUstadz, resPengurus] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'kamar' }),
+                apiCall('getData', 'GET', { type: 'santri' }),
+                apiCall('getData', 'GET', { type: 'ustadz' }),
+                apiCall('getData', 'GET', { type: 'pengurus' })
+            ]);
             setAllSantri(santri || []);
+
+            // Combine Staff Data
+            const staff = [
+                ...(resUstadz || []).map(u => ({ id: `u-${u.id}`, nama: u.nama, role: 'Pengajar' })),
+                ...(resPengurus || []).map(p => ({ id: `p-${p.id}`, nama: p.nama, role: p.jabatan || 'Pengurus' }))
+            ].sort((a, b) => a.nama.localeCompare(b.nama));
+            setPenasihatList(staff);
 
             const rooms = res || [];
             const occupancies = {};
@@ -43,10 +55,13 @@ export default function KamarPage() {
                 }
             });
 
-            const enrichedRooms = rooms.map(r => ({
-                ...r,
-                terisi: occupancies[r.nama_kamar] || 0
-            }));
+            const enrichedRooms = rooms.map(r => {
+                const fullName = `${r.asrama} - ${r.nama_kamar}`;
+                return {
+                    ...r,
+                    terisi: occupancies[fullName] || occupancies[r.nama_kamar] || 0
+                };
+            });
 
             setData(enrichedRooms);
 
@@ -65,14 +80,15 @@ export default function KamarPage() {
         } else {
             setEditId(null);
             setFormData({
-                nama_kamar: '', asrama: 'Pondok Pusat', kapasitas: '10', penasihat: ''
+                nama_kamar: '1', asrama: 'DS A', kapasitas: '10', penasihat: ''
             });
         }
         setIsModalOpen(true);
     };
 
     const openViewModal = (item) => {
-        const occupants = allSantri.filter(s => s.kamar === item.nama_kamar);
+        const fullName = `${item.asrama} - ${item.nama_kamar}`;
+        const occupants = allSantri.filter(s => s.kamar === fullName || s.kamar === item.nama_kamar);
         setViewData({ ...item, occupants });
         setIsViewModalOpen(true);
     };
@@ -101,8 +117,7 @@ export default function KamarPage() {
     };
 
     const columns = [
-        { key: 'nama_kamar', label: 'Identitas Kamar', render: (row) => <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary-dark)' }}>{row.nama_kamar}</div> },
-        { key: 'asrama', label: 'Lokasi Asrama', render: (row) => <span className="th-badge" style={{ background: '#f1f5f9', color: 'var(--text-main)' }}>{row.asrama}</span> },
+        { key: 'nama_kamar', label: 'Nama Kamar', render: (row) => <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary-dark)' }}>{row.asrama} - {row.nama_kamar}</div> },
         { key: 'kapasitas', label: 'Kapasitas', render: (row) => <span style={{ fontWeight: 600 }}>{row.kapasitas} Bed</span> },
         {
             key: 'terisi',
@@ -126,7 +141,7 @@ export default function KamarPage() {
                 );
             }
         },
-        { key: 'penasihat', label: 'Ustadz Pembimbing', render: (row) => <span style={{ fontWeight: 600 }}>{row.penasihat || '-'}</span> },
+        { key: 'penasihat', label: 'Pengurus / Pengajar', render: (row) => <span style={{ fontWeight: 600 }}>{row.penasihat || '-'}</span> },
         {
             key: 'actions',
             label: 'Opsi',
@@ -202,23 +217,36 @@ export default function KamarPage() {
                 )}
             >
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Nama Kamar / Gending</label>
-                        <input type="text" className="form-control" value={formData.nama_kamar} onChange={e => setFormData({ ...formData, nama_kamar: e.target.value })} required placeholder="Contoh: Bilal Bin Rabah 05" />
-                    </div>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">Gedung / Kompleks Asrama</label>
-                            <input type="text" className="form-control" value={formData.asrama} onChange={e => setFormData({ ...formData, asrama: e.target.value })} placeholder="Contoh: Gedung A Lt. 2" />
+                            <label className="form-label">Blok / Kompleks (Komplek)</label>
+                            <select className="form-control" value={formData.asrama} onChange={e => setFormData({ ...formData, asrama: e.target.value })}>
+                                {['DS A', 'DS B', 'DS C'].map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Maksimal Kapasitas (Bed)</label>
-                            <input type="number" className="form-control" value={formData.kapasitas} onChange={e => setFormData({ ...formData, kapasitas: e.target.value })} />
+                            <label className="form-label">Nomor Kamar</label>
+                            <select className="form-control" value={formData.nama_kamar} onChange={e => setFormData({ ...formData, nama_kamar: e.target.value })}>
+                                {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                                    <option key={num} value={num}>{num}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Ustadz Penasihat Kamar</label>
-                        <input type="text" className="form-control" value={formData.penasihat} onChange={e => setFormData({ ...formData, penasihat: e.target.value })} placeholder="Nama lengkap pembimbing kamar" />
+                        <label className="form-label">Maksimal Kapasitas (Bed)</label>
+                        <input type="number" className="form-control" value={formData.kapasitas} onChange={e => setFormData({ ...formData, kapasitas: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Pengurus / Pengajar (Penasihat)</label>
+                        <select className="form-control" value={formData.penasihat} onChange={e => setFormData({ ...formData, penasihat: e.target.value })}>
+                            <option value="">- Pilih Penasihat -</option>
+                            {penasihatList.map(p => (
+                                <option key={p.id} value={p.nama}>{p.nama} ({p.role})</option>
+                            ))}
+                        </select>
                     </div>
                 </form>
             </Modal>
