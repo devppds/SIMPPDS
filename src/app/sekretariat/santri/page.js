@@ -14,6 +14,7 @@ export default function SantriPage() {
     const [filterStatus, setFilterStatus] = useState('Aktif');
     const [activeTab, setActiveTab] = useState('umum'); // For Modal Tabs
     const [listKelas, setListKelas] = useState([]); // Master Data Kelas
+    const [listKamar, setListKamar] = useState([]); // Master Data Kamar
 
     // Modal States
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,8 +45,20 @@ export default function SantriPage() {
 
     const loadMasterData = async () => {
         try {
-            const res = await apiCall('getData', 'GET', { type: 'master_kelas' });
-            setListKelas((res || []).sort((a, b) => a.urutan - b.urutan));
+            const [resKelas, resKamar] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'master_kelas' }),
+                apiCall('getData', 'GET', { type: 'kamar' })
+            ]);
+            setListKelas((resKelas || []).sort((a, b) => a.urutan - b.urutan));
+
+            // Format Kamar: "DS A 01"
+            const formattedRooms = (resKamar || []).map(r => {
+                const num = r.nama_kamar.toString().padStart(2, '0');
+                const label = `${r.asrama} ${num}`;
+                return { id: r.id, label, value: label };
+            }).sort((a, b) => a.label.localeCompare(b.label));
+            setListKamar(formattedRooms);
+
         } catch (e) { console.error(e); }
     };
 
@@ -363,7 +376,19 @@ export default function SantriPage() {
                                     </div>
                                     <div className="form-group"><label className="form-label">Madrasah</label><input type="text" className="form-control" value={formData.madrasah} readOnly placeholder="Otomatis" /></div>
                                 </div>
-                                <div className="form-group"><label className="form-label">Kamar</label><input type="text" className="form-control" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} /></div>
+                                <div className="form-group">
+                                    <label className="form-label">Kamar</label>
+                                    <select
+                                        className="form-control"
+                                        value={formData.kamar}
+                                        onChange={e => setFormData({ ...formData, kamar: e.target.value })}
+                                    >
+                                        <option value="">- Pilih Kamar -</option>
+                                        {listKamar.map(r => (
+                                            <option key={r.id} value={r.value}>{r.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     )}

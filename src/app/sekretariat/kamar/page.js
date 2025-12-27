@@ -56,10 +56,17 @@ export default function KamarPage() {
             });
 
             const enrichedRooms = rooms.map(r => {
-                const fullName = `${r.asrama} - ${r.nama_kamar}`;
+                // Format logic: "DS A 01"
+                const num = r.nama_kamar.toString().padStart(2, '0');
+                const fullName = `${r.asrama} ${num}`;
+
+                // Matches "DS A 01" OR "DS A - 1" (legacy) OR raw "1"
+                const occupiedCount = occupancies[fullName] || occupancies[`${r.asrama} - ${r.nama_kamar}`] || occupancies[r.nama_kamar] || 0;
+
                 return {
                     ...r,
-                    terisi: occupancies[fullName] || occupancies[r.nama_kamar] || 0
+                    formattedName: fullName, // Store for easy access
+                    terisi: occupiedCount
                 };
             });
 
@@ -117,7 +124,7 @@ export default function KamarPage() {
     };
 
     const columns = [
-        { key: 'nama_kamar', label: 'Nama Kamar', render: (row) => <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary-dark)' }}>{row.asrama} - {row.nama_kamar}</div> },
+        { key: 'nama_kamar', label: 'Nama Kamar', render: (row) => <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary-dark)' }}>{row.formattedName || `${row.asrama} ${row.nama_kamar}`}</div> },
         { key: 'kapasitas', label: 'Kapasitas', render: (row) => <span style={{ fontWeight: 600 }}>{row.kapasitas} Bed</span> },
         {
             key: 'terisi',
