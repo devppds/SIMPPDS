@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function PendidikanPage() {
     const { isAdmin } = useAuth();
@@ -93,6 +94,28 @@ export default function PendidikanPage() {
         (d.kegiatan || '').toLowerCase().includes(search.toLowerCase())
     );
 
+    const columns = [
+        { key: 'tanggal', label: 'Tanggal', render: (row) => formatDate(row.tanggal) },
+        { key: 'nama_santri', label: 'Nama Santri', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span> },
+        { key: 'kegiatan', label: 'Kegiatan' },
+        { key: 'nilai', label: 'Nilai', render: (row) => <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{row.nilai}</span> },
+        { key: 'kehadiran', label: 'Kehadiran' },
+        { key: 'ustadz', label: 'Ustadz' },
+        {
+            key: 'actions',
+            label: 'Aksi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="view-container animate-in">
             <div className="card">
@@ -121,49 +144,12 @@ export default function PendidikanPage() {
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Nama Santri</th>
-                                <th>Kegiatan</th>
-                                <th>Nilai</th>
-                                <th>Status</th>
-                                <th style={{ width: '150px' }}>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data pendidikan.</td></tr>
-                            ) : displayData.map(d => (
-                                <tr key={d.id}>
-                                    <td>{formatDate(d.tanggal)}</td>
-                                    <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
-                                    <td>{d.kegiatan}</td>
-                                    <td style={{ fontWeight: 800 }}>{d.nilai || '-'}</td>
-                                    <td>
-                                        <span className="th-badge" style={{
-                                            background: d.kehadiran === 'Hadir' ? '#dcfce7' : '#fee2e2',
-                                            color: d.kehadiran === 'Hadir' ? '#166534' : '#991b1b'
-                                        }}>
-                                            {d.kehadiran}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={displayData}
+                    loading={loading}
+                    emptyMessage="Belum ada data pendidikan."
+                />
             </div>
 
             {/* Modal Input/Edit */}
