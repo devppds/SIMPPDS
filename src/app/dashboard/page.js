@@ -152,7 +152,7 @@ export default function DashboardPage() {
                             <p style={{ opacity: 0.85, fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
                                 Memantau seluruh perkembangan santri dan arus kas unit secara real-time dari satu dashboard tunggal.
                             </p>
-                            <Link href="/santri" className="btn" style={{ background: 'white', color: 'var(--primary)', padding: '12px 24px' }}>
+                            <Link href="/sekretariat/santri" className="btn" style={{ background: 'white', color: 'var(--primary)', padding: '12px 24px' }}>
                                 Lihat Database Santri <i className="fas fa-arrow-right"></i>
                             </Link>
                         </div>
