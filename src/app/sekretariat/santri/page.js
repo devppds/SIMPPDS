@@ -223,9 +223,19 @@ export default function SantriPage() {
 
         let matchMadrasah = filterMadrasah === 'Semua';
         if (filterMadrasah === 'MHM') {
-            matchMadrasah = mdr.includes('MHM') || kls.includes('ULYA') || mdr.includes('HIDAYATUL');
+            // Berdasarkan Gambar: Ibtida'iyyah, Tsanawiyyah, Aliyyah, Ma'had Aly
+            matchMadrasah = mdr === 'MHM' ||
+                kls.includes('IBTIDA') ||
+                kls.includes('TSANAWI') ||
+                kls.includes('ALIYYAH') ||
+                kls.includes('MA\'HAD ALY');
         } else if (filterMadrasah === 'MIU') {
-            matchMadrasah = mdr.includes('MIU') || kls.includes('ULA') || kls.includes('WUSTHO') || mdr.includes('IDADIYYAH');
+            // Berdasarkan Gambar: Ula, Wustho, Ulya
+            matchMadrasah = mdr === 'MIU' ||
+                kls.includes('ULA') ||
+                kls.includes('WUSTHO') ||
+                kls.includes('ULYA') ||
+                mdr.includes('IDADIYYAH');
         }
 
         return matchSearch && matchMadrasah;
