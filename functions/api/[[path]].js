@@ -1,4 +1,4 @@
-const APP_VERSION = '4.2.0-d1';
+const APP_VERSION = '4.2.1-d1-redeploy';
 
 const headersConfig = {
     'santri': [
