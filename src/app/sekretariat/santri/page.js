@@ -31,7 +31,7 @@ export default function SantriPage() {
         nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
         anak_ke: '', jumlah_saudara: '',
         // Alamat
-        alamat: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+        alamat_lengkap: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
         // Minat & Bakat
         hobi: '', cita_cita: '',
         // Pendidikan Sebelumnya
@@ -210,7 +210,7 @@ export default function SantriPage() {
                 nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
                 anak_ke: '', jumlah_saudara: '',
                 // Alamat
-                alamat: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
+                alamat_lengkap: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
                 // Minat & Bakat
                 hobi: '', cita_cita: '',
                 // Pendidikan Sebelumnya
@@ -546,7 +546,7 @@ export default function SantriPage() {
                     )}
                     {activeTab === 'alamat' && (
                         <div className="tab-content animate-in">
-                            <div className="form-group"><label className="form-label">Alamat Lengkap</label><textarea className="form-control" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
+                            <div className="form-group"><label className="form-label">Alamat Lengkap</label><textarea className="form-control" value={formData.alamat_lengkap} onChange={e => setFormData({ ...formData, alamat_lengkap: e.target.value })} rows="2" placeholder="Jl. Contoh No. 123"></textarea></div>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Dusun / Jalan</label><input type="text" className="form-control" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">RT / RW</label><input type="text" className="form-control" value={formData.rt_rw} onChange={e => setFormData({ ...formData, rt_rw: e.target.value })} placeholder="001/002" /></div>
