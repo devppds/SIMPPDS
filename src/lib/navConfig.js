@@ -74,6 +74,20 @@ export const NAV_ITEMS = [
         ]
     },
     {
+        label: 'Arsiparis',
+        icon: 'fas fa-archive',
+        roles: ['admin', 'arsiparis'],
+        submenu: [
+            { label: 'Alumni Santri', path: '/arsip/alumni', icon: 'fas fa-user-graduate' },
+            { label: 'Santri Boyong/Pindah', path: '/arsip/mutasi-santri', icon: 'fas fa-exchange-alt' },
+            { label: 'Surat Masuk/Keluar', path: '/arsip/surat', icon: 'fas fa-envelope' },
+            { label: 'Proposal', path: '/arsip/proposal', icon: 'fas fa-file-alt' },
+            { label: 'Akta Tanah', path: '/arsip/akta-tanah', icon: 'fas fa-file-contract' },
+            { label: 'Pengurus (Per-Periode)', path: '/arsip/pengurus-periode', icon: 'fas fa-users-cog' },
+            { label: 'Pengajar (Per-Periode)', path: '/arsip/pengajar-periode', icon: 'fas fa-chalkboard-teacher' }
+        ]
+    },
+    {
         label: 'Madrasah MIU',
         icon: 'fas fa-school',
         path: '/madrasah-miu',
