@@ -90,7 +90,7 @@ export default function DashboardPage() {
                 <div className="card" style={{ padding: '0' }}>
                     <div className="card-header" style={{ padding: '2rem', borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Aktivitas Transaksi Terbaru</h2>
-                        <Link href="/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Lihat Laporan</Link>
+                        <Link href="/bendahara/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Lihat Laporan</Link>
                     </div>
                     <SortableTable
                         columns={[
