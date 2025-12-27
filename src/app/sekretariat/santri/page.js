@@ -414,7 +414,7 @@ export default function SantriPage() {
                     <button type="button" className={`tab-btn ${activeTab === 'umum' ? 'active' : ''}`} onClick={() => setActiveTab('umum')}><i className="fas fa-id-card"></i> Identitas</button>
                     <button type="button" className={`tab-btn ${activeTab === 'pribadi' ? 'active' : ''}`} onClick={() => setActiveTab('pribadi')}><i className="fas fa-user"></i> Pribadi</button>
                     <button type="button" className={`tab-btn ${activeTab === 'pendidikan' ? 'active' : ''}`} onClick={() => setActiveTab('pendidikan')}><i className="fas fa-graduation-cap"></i> Pendidikan</button>
-                    <button type="button" className={`tab-btn ${activeTab === 'wali' ? 'active' : ''}`} onClick={() => setActiveTab('wali')}><i className="fas fa-users"></i> Wali / Ortu</button>
+                    <button type="button" className={`tab-btn ${activeTab === 'wali' ? 'active' : ''}`} onClick={() => setActiveTab('wali')}><i className="fas fa-users"></i> Orang Tua</button>
                     <button type="button" className={`tab-btn ${activeTab === 'alamat' ? 'active' : ''}`} onClick={() => setActiveTab('alamat')}><i className="fas fa-map-marked-alt"></i> Alamat</button>
 
                     <button type="button" className={`tab-btn ${activeTab === 'status' ? 'active' : ''}`} onClick={() => setActiveTab('status')}><i className="fas fa-file-alt"></i> Status</button>
