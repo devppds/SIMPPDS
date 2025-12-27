@@ -50,7 +50,7 @@ export default function PelanggaranPage() {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setSubmitting(true);
         try {
             await apiCall('saveData', 'POST', {
@@ -77,16 +77,24 @@ export default function PelanggaranPage() {
     );
 
     return (
-        <div className="view">
+        <div className="view-container">
             <div className="card">
                 <div className="card-header">
-                    <h2>Catatan Pelanggaran & Takzir</h2>
-                    <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Input Pelanggaran
-                    </button>
+                    <div>
+                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Catatan Pelanggaran & Takzir</h2>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} catatan ditemukan.</p>
+                    </div>
+                    <div className="card-actions">
+                        <button className="btn btn-secondary" onClick={() => window.print()}>
+                            <i className="fas fa-print"></i>
+                        </button>
+                        <button className="btn btn-primary" onClick={() => openModal()}>
+                            <i className="fas fa-plus-circle"></i> Input Pelanggaran
+                        </button>
+                    </div>
                 </div>
 
-                <div className="table-controls" style={{ marginBottom: '1.5rem' }}>
+                <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
                         <input
@@ -113,15 +121,19 @@ export default function PelanggaranPage() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center' }}>Memasuki Arsip Keamanan...</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>Memasuki Arsip Keamanan...</td></tr>
                             ) : displayData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center' }}>Belum ada catatan pelanggaran.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada catatan pelanggaran.</td></tr>
                             ) : displayData.map(d => (
                                 <tr key={d.id}>
                                     <td>{formatDate(d.tanggal)}</td>
-                                    <td><strong>{d.nama_santri}</strong></td>
+                                    <td><div style={{ fontWeight: 800 }}>{d.nama_santri}</div></td>
                                     <td>
                                         <span className="th-badge" style={{
+                                            padding: '4px 12px',
+                                            borderRadius: '20px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
                                             background: d.jenis_pelanggaran === 'Berat' ? '#fee2e2' : d.jenis_pelanggaran === 'Sedang' ? '#fffbeb' : '#f1f5f9',
                                             color: d.jenis_pelanggaran === 'Berat' ? '#dc2626' : d.jenis_pelanggaran === 'Sedang' ? '#d97706' : '#64748b'
                                         }}>
@@ -131,9 +143,9 @@ export default function PelanggaranPage() {
                                     <td style={{ fontWeight: 800 }}>{d.poin || 0}</td>
                                     <td style={{ fontSize: '0.85rem' }}>{d.takzir || '-'}</td>
                                     <td>
-                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue btn-action" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-yellow btn-action" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -146,11 +158,13 @@ export default function PelanggaranPage() {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editId ? "Ubah Catatan Pelanggaran" : "Catat Pelanggaran Baru"}
+                title={editId ? "Pembaruan Catatan Pelanggaran" : "Input Pelanggaran Baru"}
                 footer={(
                     <>
-                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>Simpan</button>
+                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Batalkan</button>
+                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                            {submitting ? 'Memproses...' : 'Simpan Catatan'}
+                        </button>
                     </>
                 )}
             >
@@ -167,9 +181,9 @@ export default function PelanggaranPage() {
                         <div className="form-group">
                             <label className="form-label">Jenis Pelanggaran</label>
                             <select className="form-control" value={formData.jenis_pelanggaran} onChange={e => setFormData({ ...formData, jenis_pelanggaran: e.target.value })}>
-                                <option>Ringan</option>
-                                <option>Sedang</option>
-                                <option>Berat</option>
+                                <option value="Ringan">Ringan</option>
+                                <option value="Sedang">Sedang</option>
+                                <option value="Berat">Berat</option>
                             </select>
                         </div>
                     </div>

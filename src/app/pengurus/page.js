@@ -94,17 +94,22 @@ export default function PengurusPage() {
 
     return (
         <div className="view-container">
-            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-dark)', marginBottom: '8px' }}>Struktur Organisasi</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Manajemen pengurus pondok dan dewan asatidzah.</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => openModal()}>
-                    <i className="fas fa-plus"></i> Tambah Pengurus
-                </button>
-            </div>
-
             <div className="card">
+                <div className="card-header">
+                    <div>
+                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Struktur Organisasi & Pengurus</h2>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} pengurus aktif.</p>
+                    </div>
+                    <div className="card-actions">
+                        <button className="btn btn-secondary" onClick={() => window.print()}>
+                            <i className="fas fa-print"></i>
+                        </button>
+                        <button className="btn btn-primary" onClick={() => openModal()}>
+                            <i className="fas fa-plus-circle"></i> Tambah Pengurus
+                        </button>
+                    </div>
+                </div>
+
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
@@ -131,9 +136,24 @@ export default function PengurusPage() {
                                     </td>
                                     <td><div style={{ fontWeight: 800 }}>{d.nama}</div><div style={{ fontSize: '0.75rem' }}>WA: {d.no_hp || '-'}</div></td>
                                     <td><span style={{ fontWeight: 700, color: 'var(--primary)' }}>{d.jabatan || '-'}</span></td>
-                                    <td><span className="th-badge" style={{ background: '#f1f5f9', color: 'var(--text-main)' }}>{d.divisi || '-'}</span></td>
+                                    <td>
+                                        <span className="th-badge" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.7rem' }}>
+                                            {d.divisi || '-'}
+                                        </span>
+                                    </td>
                                     <td style={{ fontWeight: 600 }}>{d.tahun_mulai} - {d.tahun_akhir || '∞'}</td>
-                                    <td><span className="th-badge" style={{ background: d.status === 'Aktif' ? '#dcfce7' : '#f1f5f9', color: d.status === 'Aktif' ? '#166534' : '#64748b' }}>{d.status?.toUpperCase() || 'AKTIF'}</span></td>
+                                    <td>
+                                        <span className="th-badge" style={{
+                                            background: d.status === 'Aktif' ? '#dcfce7' : '#f1f5f9',
+                                            color: d.status === 'Aktif' ? '#166534' : '#64748b',
+                                            padding: '4px 12px',
+                                            borderRadius: '20px',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 700
+                                        }}>
+                                            {d.status?.toUpperCase() || 'AKTIF'}
+                                        </span>
+                                    </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
@@ -160,7 +180,7 @@ export default function PengurusPage() {
                     </>
                 )}
             >
-                <form onSubmit={handleSubmit} className="animate-in">
+                <form onSubmit={handleSubmit}>
                     <div className="form-group"><label className="form-label">Nama Lengkap Pengurus</label><input type="text" className="form-control" value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })} required /></div>
                     <div className="form-grid">
                         <div className="form-group"><label className="form-label">Jabatan Struktural</label><input type="text" className="form-control" value={formData.jabatan} onChange={e => setFormData({ ...formData, jabatan: e.target.value })} /></div>
@@ -171,11 +191,13 @@ export default function PengurusPage() {
                         <div className="form-group"><label className="form-label">Tahun Akhir</label><input type="text" className="form-control" value={formData.tahun_akhir} onChange={e => setFormData({ ...formData, tahun_akhir: e.target.value })} placeholder="Kosongkan jika aktif" /></div>
                     </div>
                     <div className="form-grid">
-                        <div className="form-group"><label className="form-label">No. WA</label><input type="text" className="form-control" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} /></div>
+                        <div className="form-group"><label className="form-label">No. WA Aktif</label><input type="text" className="form-control" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} /></div>
                         <div className="form-group">
                             <label className="form-label">Status</label>
                             <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                                <option>Aktif</option><option>Demisioner</option><option>Non-Aktif</option>
+                                <option value="Aktif">Aktif</option>
+                                <option value="Demisioner">Demisioner</option>
+                                <option value="Non-Aktif">Non-Aktif</option>
                             </select>
                         </div>
                     </div>

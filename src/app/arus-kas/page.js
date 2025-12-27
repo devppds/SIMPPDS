@@ -137,47 +137,46 @@ export default function ArusKasPage() {
 
     return (
         <div className="view-container">
-            {/* Header Arus Kas */}
-            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-dark)', marginBottom: '8px' }}>Laporan Arus Kas</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Manajemen keuangan unit dan riwayat transaksi pondok.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn btn-secondary" onClick={handleDownloadTemplate}>Template</button>
-                    <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
-                        Import <input type="file" accept=".csv" onChange={handleImport} style={{ display: 'none' }} />
-                    </label>
-                    <button className="btn btn-secondary" onClick={handleExport}>Export Full</button>
-                    <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Transaksi Baru</button>
-                </div>
-            </div>
-
-            <div className="stats-grid" style={{ marginBottom: '2.5rem' }}>
-                <div className="stat-card" style={{ borderLeft: '5px solid #10b981' }}>
-                    <div className="stat-icon" style={{ background: '#dcfce7', color: '#059669' }}><i className="fas fa-arrow-trend-up"></i></div>
-                    <div className="stat-info">
-                        <div className="stat-label">Total Pemasukan</div>
-                        <div className="stat-value" style={{ color: '#059669' }}>{formatCurrency(totalMasuk)}</div>
-                    </div>
-                </div>
-                <div className="stat-card" style={{ borderLeft: '5px solid #ef4444' }}>
-                    <div className="stat-icon" style={{ background: '#fee2e2', color: '#dc2626' }}><i className="fas fa-arrow-trend-down"></i></div>
-                    <div className="stat-info">
-                        <div className="stat-label">Total Pengeluaran</div>
-                        <div className="stat-value" style={{ color: '#dc2626' }}>{formatCurrency(totalKeluar)}</div>
-                    </div>
-                </div>
-                <div className="stat-card" style={{ borderLeft: '5px solid var(--primary)' }}>
-                    <div className="stat-icon" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}><i className="fas fa-vault"></i></div>
-                    <div className="stat-info">
-                        <div className="stat-label">Saldo Saat Ini</div>
-                        <div className="stat-value" style={{ color: 'var(--primary)' }}>{formatCurrency(saldo)}</div>
-                    </div>
-                </div>
-            </div>
-
             <div className="card">
+                <div className="card-header">
+                    <div>
+                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Laporan Pembukuan Arus Kas</h2>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sinkronisasi keuangan pondok secara real-time.</p>
+                    </div>
+                    <div className="card-actions">
+                        <button className="btn btn-secondary" onClick={handleDownloadTemplate}>Template</button>
+                        <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                            Import <input type="file" accept=".csv" onChange={handleImport} style={{ display: 'none' }} />
+                        </label>
+                        <button className="btn btn-secondary" onClick={handleExport}>Export</button>
+                        <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Transaksi Baru</button>
+                    </div>
+                </div>
+
+                <div className="stats-grid" style={{ padding: '0 2rem 2rem 2rem', gap: '1.5rem' }}>
+                    <div className="stat-card" style={{ background: '#f0fdf4', border: '1px solid #dcfce7', boxShadow: 'none' }}>
+                        <div className="stat-icon" style={{ background: '#dcfce7', color: '#166534' }}><i className="fas fa-arrow-trend-up"></i></div>
+                        <div className="stat-info">
+                            <h3 style={{ color: '#166534' }}>Pemasukan</h3>
+                            <div className="value" style={{ color: '#166534', fontSize: '1.25rem' }}>{formatCurrency(totalMasuk)}</div>
+                        </div>
+                    </div>
+                    <div className="stat-card" style={{ background: '#fef2f2', border: '1px solid #fee2e2', boxShadow: 'none' }}>
+                        <div className="stat-icon" style={{ background: '#fee2e2', color: '#991b1b' }}><i className="fas fa-arrow-trend-down"></i></div>
+                        <div className="stat-info">
+                            <h3 style={{ color: '#991b1b' }}>Pengeluaran</h3>
+                            <div className="value" style={{ color: '#991b1b', fontSize: '1.25rem' }}>{formatCurrency(totalKeluar)}</div>
+                        </div>
+                    </div>
+                    <div className="stat-card" style={{ background: '#eff6ff', border: '1px solid #dbeafe', boxShadow: 'none' }}>
+                        <div className="stat-icon" style={{ background: '#dbeafe', color: '#1e40af' }}><i className="fas fa-vault"></i></div>
+                        <div className="stat-info">
+                            <h3 style={{ color: '#1e40af' }}>Saldo</h3>
+                            <div className="value" style={{ color: '#1e40af', fontSize: '1.25rem' }}>{formatCurrency(saldo)}</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
@@ -201,15 +200,15 @@ export default function ArusKasPage() {
                                 <th>Kategori</th>
                                 <th>Nominal</th>
                                 <th>Keterangan</th>
-                                <th>Penanggung Jawab</th>
-                                <th style={{ width: '120px' }}>Opsi</th>
+                                <th>PJ</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
                             ) : filteredData.length === 0 ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada catatan transaksi yang ditemukan.</td></tr>
+                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada catatan transaksi.</td></tr>
                             ) : filteredData.map(d => (
                                 <tr key={d.id}>
                                     <td style={{ fontWeight: 600 }}>{formatDate(d.tanggal)}</td>
@@ -217,21 +216,24 @@ export default function ArusKasPage() {
                                         <span className="th-badge" style={{
                                             background: d.tipe === 'Masuk' ? '#dcfce7' : '#fee2e2',
                                             color: d.tipe === 'Masuk' ? '#166534' : '#991b1b',
-                                            fontSize: '0.65rem'
+                                            fontSize: '0.65rem',
+                                            padding: '4px 10px',
+                                            borderRadius: '20px',
+                                            fontWeight: 700
                                         }}>
                                             {d.tipe.toUpperCase()}
                                         </span>
                                     </td>
                                     <td><strong>{d.kategori}</strong></td>
-                                    <td style={{ fontWeight: 800, fontSize: '1rem', color: d.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>
+                                    <td style={{ fontWeight: 800, color: d.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>
                                         {d.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(d.nominal)}
                                     </td>
                                     <td style={{ maxWidth: '250px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{d.keterangan || '-'}</td>
-                                    <td style={{ fontWeight: 600 }}>{d.pj || '-'}</td>
+                                    <td>{d.pj || '-'}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
+                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)}><i className="fas fa-trash"></i></button>}
                                         </div>
                                     </td>
                                 </tr>
@@ -241,59 +243,37 @@ export default function ArusKasPage() {
                 </div>
             </div>
 
-            {/* Modal Transaksi Baru */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={editId ? "Pembaruan Catatan Transaksi" : "Pencatatan Transaksi Baru"}
                 footer={(
                     <>
-                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Kembali</button>
+                        <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Batalkan</button>
                         <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
                             {submitting ? 'Menyimpan...' : 'Simpan Transaksi'}
                         </button>
                     </>
                 )}
             >
-                <div className="animate-in">
+                <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label">Tanggal Transaksi</label>
-                        <input
-                            type="date"
-                            className="form-control"
-                            value={formData.tanggal}
-                            onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
-                        />
+                        <input type="date" className="form-control" value={formData.tanggal} onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })} />
                     </div>
 
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">Jenis Arus Kas</label>
-                            <select
-                                className="form-control"
-                                value={formData.tipe}
-                                onChange={(e) => setFormData({ ...formData, tipe: e.target.value })}
-                                style={{ fontWeight: 800, color: formData.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)' }}
-                            >
+                            <select className="form-control" value={formData.tipe} onChange={(e) => setFormData({ ...formData, tipe: e.target.value })} style={{ fontWeight: 800, color: formData.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>
                                 <option value="Masuk">MASUK (DEBET)</option>
                                 <option value="Keluar">KELUAR (KREDIT)</option>
                             </select>
                         </div>
                         <div className="form-group">
                             <label className="form-label">Kategori Anggaran</label>
-                            <select
-                                className="form-control"
-                                value={formData.kategori}
-                                onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
-                            >
-                                <option>Syahriah</option>
-                                <option>Dana Sosial</option>
-                                <option>Pembangunan</option>
-                                <option>Kesehatan</option>
-                                <option>Konsumsi</option>
-                                <option>Administrasi</option>
-                                <option>Sarana Prasarana</option>
-                                <option>Lain-lain</option>
+                            <select className="form-control" value={formData.kategori} onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}>
+                                <option>Syahriah</option><option>Dana Sosial</option><option>Pembangunan</option><option>Kesehatan</option><option>Konsumsi</option><option>Administrasi</option><option>Sarana Prasarana</option><option>Lain-lain</option>
                             </select>
                         </div>
                     </div>
@@ -301,41 +281,20 @@ export default function ArusKasPage() {
                     <div className="form-group">
                         <label className="form-label">Nominal Transaksi (Rupiah)</label>
                         <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: 'var(--text-muted)' }}>Rp</span>
-                            <input
-                                type="number"
-                                className="form-control"
-                                style={{ paddingLeft: '45px', fontWeight: 800, color: 'var(--primary)', fontSize: '1.1rem' }}
-                                placeholder="0"
-                                value={formData.nominal}
-                                onChange={(e) => setFormData({ ...formData, nominal: e.target.value })}
-                            />
+                            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#94a3b8' }}>Rp</span>
+                            <input type="number" className="form-control" style={{ paddingLeft: '45px', fontWeight: 800, color: '#2563eb' }} placeholder="0" value={formData.nominal} onChange={(e) => setFormData({ ...formData, nominal: e.target.value })} />
                         </div>
                     </div>
 
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Keterangan Lengkap</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Contoh: Iuran syahriah bulan juli"
-                                value={formData.keterangan}
-                                onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Penanggung Jawab / PJ</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Nama pelaksana transaksi"
-                                value={formData.pj}
-                                onChange={(e) => setFormData({ ...formData, pj: e.target.value })}
-                            />
-                        </div>
+                    <div className="form-group">
+                        <label className="form-label">Keterangan Transaksi</label>
+                        <input type="text" className="form-control" placeholder="Contoh: Iuran syahriah bulan juli" value={formData.keterangan} onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })} />
                     </div>
-                </div>
+                    <div className="form-group">
+                        <label className="form-label">Penanggung Jawab (PJ)</label>
+                        <input type="text" className="form-control" placeholder="Nama pelaksana transaksi" value={formData.pj} onChange={(e) => setFormData({ ...formData, pj: e.target.value })} />
+                    </div>
+                </form>
             </Modal>
         </div>
     );

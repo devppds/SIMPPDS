@@ -94,17 +94,22 @@ export default function UstadzPage() {
 
     return (
         <div className="view-container">
-            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-dark)', marginBottom: '8px' }}>Direktori Asatidzah</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Database pengajar dan sumber daya manusia kependidikan.</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => openModal()}>
-                    <i className="fas fa-plus"></i> Tambah Ustadz
-                </button>
-            </div>
-
             <div className="card">
+                <div className="card-header">
+                    <div>
+                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Direktori Asatidzah & Pengajar</h2>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} ustadz terdaftar.</p>
+                    </div>
+                    <div className="card-actions">
+                        <button className="btn btn-secondary" onClick={() => window.print()}>
+                            <i className="fas fa-print"></i>
+                        </button>
+                        <button className="btn btn-primary" onClick={() => openModal()}>
+                            <i className="fas fa-plus-circle"></i> Tambah Ustadz
+                        </button>
+                    </div>
+                </div>
+
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
@@ -133,7 +138,18 @@ export default function UstadzPage() {
                                     <td>{d.nik_nip || '-'}</td>
                                     <td><span style={{ color: 'var(--primary)', fontWeight: 700 }}>{d.kelas || '-'}</span></td>
                                     <td><i className="fab fa-whatsapp" style={{ color: '#25D366' }}></i> {d.no_hp || '-'}</td>
-                                    <td><span className="th-badge" style={{ background: d.status === 'Aktif' ? '#dcfce7' : '#fee2e2', color: d.status === 'Aktif' ? '#166534' : '#991b1b' }}>{d.status?.toUpperCase() || 'AKTIF'}</span></td>
+                                    <td>
+                                        <span className="th-badge" style={{
+                                            background: d.status === 'Aktif' ? '#dcfce7' : '#fee2e2',
+                                            color: d.status === 'Aktif' ? '#166534' : '#991b1b',
+                                            padding: '4px 12px',
+                                            borderRadius: '20px',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 700
+                                        }}>
+                                            {d.status?.toUpperCase() || 'AKTIF'}
+                                        </span>
+                                    </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)}><i className="fas fa-edit"></i></button>
@@ -160,7 +176,7 @@ export default function UstadzPage() {
                     </>
                 )}
             >
-                <form onSubmit={handleSubmit} className="animate-in">
+                <form onSubmit={handleSubmit}>
                     <div className="form-group"><label className="form-label">Nama Lengkap & Gelar</label><input type="text" className="form-control" value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })} required /></div>
                     <div className="form-grid">
                         <div className="form-group"><label className="form-label">NIK / NIP</label><input type="text" className="form-control" value={formData.nik_nip} onChange={e => setFormData({ ...formData, nik_nip: e.target.value })} /></div>
@@ -171,9 +187,15 @@ export default function UstadzPage() {
                         <div className="form-group">
                             <label className="form-label">Status</label>
                             <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                                <option>Aktif</option><option>Non-Aktif</option><option>Cuti</option>
+                                <option value="Aktif">Aktif</option>
+                                <option value="Non-Aktif">Non-Aktif</option>
+                                <option value="Cuti">Cuti</option>
                             </select>
                         </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Alamat Lengkap</label>
+                        <textarea className="form-control" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} rows="2"></textarea>
                     </div>
                     <div className="form-group">
                         <label className="form-label">Foto Profil</label>
