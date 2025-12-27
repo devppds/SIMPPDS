@@ -94,6 +94,38 @@ export default function KesehatanPage() {
         (d.gejala || '').toLowerCase().includes(search.toLowerCase())
     );
 
+    const columns = [
+        { key: 'nama_santri', label: 'Nama Santri', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span> },
+        { key: 'gejala', label: 'Gejala' },
+        { key: 'obat_tindakan', label: 'Obat/Tindakan' },
+        {
+            key: 'status_periksa',
+            label: 'Status',
+            render: (row) => (
+                <span className="th-badge" style={{
+                    background: row.status_periksa === 'Sembuh' ? '#dcfce7' : '#fffbeb',
+                    color: row.status_periksa === 'Sembuh' ? '#166534' : '#9a3412'
+                }}>
+                    {row.status_periksa}
+                </span>
+            )
+        },
+        { key: 'biaya_obat', label: 'Biaya', render: (row) => <span style={{ fontWeight: 700, color: 'var(--success)' }}>{formatCurrency(row.biaya_obat)}</span> },
+        {
+            key: 'actions',
+            label: 'Aksi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="view-container animate-in">
             <div className="card">
@@ -125,47 +157,12 @@ export default function KesehatanPage() {
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal Sakit</th>
-                                <th>Nama Santri</th>
-                                <th>Gejala</th>
-                                <th>Status</th>
-                                <th style={{ width: '150px' }}>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : displayData.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Belum ada data pemeriksaan.</td></tr>
-                            ) : displayData.map(d => (
-                                <tr key={d.id}>
-                                    <td>{d.mulai_sakit}</td>
-                                    <td><div style={{ fontWeight: 700 }}>{d.nama_santri}</div></td>
-                                    <td style={{ fontSize: '0.85rem' }}>{d.gejala}</td>
-                                    <td>
-                                        <span className="th-badge" style={{
-                                            background: d.status_periksa === 'Rawat Inap' ? '#fee2e2' : '#f1f5f9',
-                                            color: d.status_periksa === 'Rawat Inap' ? '#dc2626' : '#475569'
-                                        }}>
-                                            {d.status_periksa}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(d)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={displayData}
+                    loading={loading}
+                    emptyMessage="Belum ada data pemeriksaan."
+                />
             </div>
 
             {/* Modal Input/Edit */}
