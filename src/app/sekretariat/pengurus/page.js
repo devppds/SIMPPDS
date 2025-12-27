@@ -23,6 +23,8 @@ export default function PengurusPage() {
     });
     const [submitting, setSubmitting] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [listJabatan, setListJabatan] = useState([]); // Dewan Harian
+    const [listDivisi, setListDivisi] = useState([]); // Pleno
 
     useEffect(() => {
         loadData();
@@ -54,8 +56,15 @@ export default function PengurusPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'pengurus' });
+            const [res, resMaster] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'pengurus' }),
+                apiCall('getData', 'GET', { type: 'master_jabatan' })
+            ]);
             setData(res || []);
+
+            const master = (resMaster || []).sort((a, b) => a.urutan - b.urutan);
+            setListJabatan(master.filter(x => x.kelompok === 'Dewan Harian'));
+            setListDivisi(master.filter(x => x.kelompok === 'Pleno'));
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -206,8 +215,42 @@ export default function PengurusPage() {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group"><label className="form-label">Nama Lengkap Pengurus</label><input type="text" className="form-control" value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })} required /></div>
                     <div className="form-grid">
-                        <div className="form-group"><label className="form-label">Jabatan Struktural</label><input type="text" className="form-control" value={formData.jabatan} onChange={e => setFormData({ ...formData, jabatan: e.target.value })} /></div>
-                        <div className="form-group"><label className="form-label">Divisi / Unit Kerja</label><input type="text" className="form-control" value={formData.divisi} onChange={e => setFormData({ ...formData, divisi: e.target.value })} /></div>
+                        <div className="form-group">
+                            <label className="form-label">Jabatan Struktural</label>
+                            <select
+                                className="form-control"
+                                value={formData.jabatan}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setFormData({ ...formData, jabatan: val, divisi: listJabatan.some(j => j.nama_jabatan === val) ? '-' : formData.divisi });
+                                }}
+                            >
+                                <option value="">- Pilih Jabatan -</option>
+                                <optgroup label="Dewan Harian">
+                                    {listJabatan.map(j => <option key={j.id} value={j.nama_jabatan}>{j.nama_jabatan}</option>)}
+                                </optgroup>
+                                <optgroup label="Struktural Unit">
+                                    <option value="Ketua">Ketua</option>
+                                    <option value="Koordinator">Koordinator</option>
+                                    <option value="Anggota">Anggota</option>
+                                    <option value="Staf">Staf</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Divisi / Unit Kerja</label>
+                            <select
+                                className="form-control"
+                                value={formData.divisi}
+                                onChange={e => setFormData({ ...formData, divisi: e.target.value })}
+                            >
+                                <option value="">- Pilih Divisi -</option>
+                                <option value="-">- (Pimpinan / Non-Divisi)</option>
+                                {listDivisi.map(d => (
+                                    <option key={d.id} value={d.nama_jabatan}>{d.nama_jabatan}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     <div className="form-grid">
                         <div className="form-group"><label className="form-label">Tahun Mulai</label><input type="text" className="form-control" value={formData.tahun_mulai} onChange={e => setFormData({ ...formData, tahun_mulai: e.target.value })} /></div>
