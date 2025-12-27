@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
+import SortableTable from '@/components/SortableTable';
 
 export default function AturLayananPage() {
     const { isAdmin } = useAuth();
@@ -35,7 +36,6 @@ export default function AturLayananPage() {
             setData(res || []);
         } catch (e) {
             console.error(e);
-            // If table doesn't exist, we'll get an empty array or error
             setData([]);
         }
         finally { setLoading(false); }
@@ -88,6 +88,58 @@ export default function AturLayananPage() {
         (d.unit || '').toLowerCase().includes(search.toLowerCase())
     );
 
+    const columns = [
+        {
+            key: 'unit',
+            label: 'Unit',
+            render: (row) => (
+                <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                    {row.unit}
+                </span>
+            )
+        },
+        {
+            key: 'nama_layanan',
+            label: 'Nama Layanan',
+            render: (row) => <span style={{ fontWeight: 700 }}>{row.nama_layanan}</span>
+        },
+        {
+            key: 'harga',
+            label: 'Harga (Tarif)',
+            render: (row) => <span style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(row.harga)}</span>
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => (
+                <span className="th-badge" style={{
+                    background: row.status === 'Aktif' ? '#dcfce7' : '#fee2e2',
+                    color: row.status === 'Aktif' ? '#166534' : '#991b1b',
+                }}>
+                    {row.status}
+                </span>
+            )
+        },
+        {
+            key: 'actions',
+            label: 'Aksi',
+            sortable: false,
+            width: '150px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit">
+                        <i className="fas fa-edit"></i>
+                    </button>
+                    {isAdmin && (
+                        <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus">
+                            <i className="fas fa-trash"></i>
+                        </button>
+                    )}
+                </div>
+            )
+        }
+    ];
+
     return (
         <div className="view-container animate-in">
             <div className="card">
@@ -115,46 +167,12 @@ export default function AturLayananPage() {
                     <button className="btn btn-outline" onClick={loadData} title="Refresh Data"><i className="fas fa-sync-alt"></i></button>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Unit</th>
-                                <th>Nama Layanan</th>
-                                <th>Harga (Tarif)</th>
-                                <th>Status</th>
-                                <th style={{ width: '150px' }}>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '4rem' }}>Sinkronisasi Data...</td></tr>
-                            ) : filteredData.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>Belum ada data layanan. Tambahkan sekarang!</td></tr>
-                            ) : filteredData.map(d => (
-                                <tr key={d.id}>
-                                    <td><span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{d.unit}</span></td>
-                                    <td style={{ fontWeight: 700 }}>{d.nama_layanan}</td>
-                                    <td style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(d.harga)}</td>
-                                    <td>
-                                        <span className={`th-badge ${d.status === 'Aktif' ? 'badge-success' : 'badge-danger'}`} style={{
-                                            background: d.status === 'Aktif' ? '#dcfce7' : '#fee2e2',
-                                            color: d.status === 'Aktif' ? '#166534' : '#991b1b',
-                                        }}>
-                                            {d.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(d)} title="Edit"><i className="fas fa-edit"></i></button>
-                                            {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(d.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SortableTable
+                    columns={columns}
+                    data={filteredData}
+                    loading={loading}
+                    emptyMessage="Belum ada data layanan. Tambahkan sekarang!"
+                />
             </div>
 
             <Modal
