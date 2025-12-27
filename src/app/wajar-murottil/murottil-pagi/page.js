@@ -27,7 +27,12 @@ export default function MurottilPagiPage() {
             // Filter MIU Only
             setKelasOptions(resKelas.filter(k => k.lembaga === 'MIU'));
 
-            let students = (resSantri || []).filter(s => s.madrasah === 'MIU');
+            let students = (resSantri || []).filter(s =>
+                s.madrasah === 'MIU' ||
+                (s.kelas || '').toUpperCase().includes('ULA') ||
+                (s.kelas || '').toUpperCase().includes('WUSTHO') ||
+                (s.kelas || '').toUpperCase().includes('ULYA')
+            );
             if (filterKelas !== 'Semua') {
                 students = students.filter(s => s.kelas === filterKelas);
             }
