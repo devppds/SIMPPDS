@@ -89,7 +89,7 @@ export default function LayananUnitPage({ unit: forceUnit }) {
         } else { baseOpenModal(item); }
     };
 
-    const displayData = data.filter(d => (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) || (d.jenis_layanan || '').toLowerCase().includes(search.toLowerCase()));
+    const displayData = data.filter(d => d.unit === forceUnit && ((d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) || (d.jenis_layanan || '').toLowerCase().includes(search.toLowerCase())));
 
     const columns = [
         { key: 'tanggal', label: 'Tanggal', render: (row) => <span style={{ fontWeight: 600 }}>{formatDate(row.tanggal)}</span> },
