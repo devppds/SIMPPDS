@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS santri (
     status_mb TEXT,
     madrasah TEXT,
     kelas TEXT,
-    nik TEXT,
     nisn TEXT,
     nama_siswa TEXT,
     tempat_tanggal_lahir TEXT,
@@ -30,16 +29,13 @@ CREATE TABLE IF NOT EXISTS santri (
     hobi TEXT,
     cita_cita TEXT,
     asal_sekolah TEXT,
-    no_kk TEXT,
     nama_ayah TEXT,
-    nik_ayah TEXT,
     tempat_tanggal_lahir_ayah TEXT,
     pendidikan_ayah TEXT,
     pekerjaan_ayah TEXT,
     penghasilan_ayah TEXT,
     no_telp_ayah TEXT,
     nama_ibu TEXT,
-    nik_ibu TEXT,
     tempat_tanggal_lahir_ibu TEXT,
     pendidikan_ibu TEXT,
     pekerjaan_ibu TEXT,
@@ -57,15 +53,13 @@ CREATE TABLE IF NOT EXISTS santri (
     pendidikan_terakhir TEXT,
     no_ijazah TEXT,
     tempat_lahir TEXT,
-    tanggal_lahir TEXT,
-    foto_kk TEXT
+    tanggal_lahir TEXT
 );
 
 CREATE TABLE IF NOT EXISTS ustadz (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     foto_ustadz TEXT,
     nama TEXT,
-    nik_nip TEXT,
     kelas TEXT,
     alamat TEXT,
     no_hp TEXT,
@@ -332,7 +326,9 @@ CREATE INDEX IF NOT EXISTS idx_wajar_nilai_tgl ON wajar_nilai(tanggal, tipe);
 -- 10. SECRETARIAT MODULE EXTENSION
 CREATE TABLE IF NOT EXISTS kalender_kerja (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal_kegiatan TEXT,
+    hari TEXT,
+    tanggal_masehi TEXT,
+    tanggal_hijriyah TEXT,
     nama_kegiatan TEXT,
     kategori TEXT,
     file_kalender TEXT,

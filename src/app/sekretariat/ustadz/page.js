@@ -20,7 +20,7 @@ export default function PengajarPage() {
     const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
-        nama: '', nik_nip: '', kelas: '', alamat: '', no_hp: '', status: 'Aktif',
+        nama: '', kelas: '', alamat: '', no_hp: '', status: 'Aktif',
         foto_ustadz: '', tanggal_nonaktif: ''
     });
     const [submitting, setSubmitting] = useState(false);
@@ -75,7 +75,7 @@ export default function PengajarPage() {
         else {
             setEditId(null);
             setFormData({
-                nama: '', nik_nip: '', kelas: '', alamat: '', no_hp: '', status: 'Aktif',
+                nama: '', kelas: '', alamat: '', no_hp: '', status: 'Aktif',
                 foto_ustadz: '', tanggal_nonaktif: ''
             });
         }
@@ -106,13 +106,11 @@ export default function PengajarPage() {
 
     const displayData = data.filter(d =>
         (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.nik_nip || '').toLowerCase().includes(search.toLowerCase()) ||
         (d.kelas || '').toLowerCase().includes(search.toLowerCase())
     );
 
     const columns = [
         { key: 'nama', label: 'Nama Pengajar', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
-        { key: 'nik_nip', label: 'NIK/NIP' },
         { key: 'kelas', label: 'Kelas Ampu' },
         { key: 'no_hp', label: 'No. HP' },
         {
@@ -163,7 +161,7 @@ export default function PengajarPage() {
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari nama, NIP, atau tugas mengajar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                        <input type="text" className="search-input" placeholder="Cari nama atau tugas mengajar..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
                 </div>
 
@@ -191,10 +189,7 @@ export default function PengajarPage() {
             >
                 <form onSubmit={handleSubmit}>
                     <div className="form-group"><label className="form-label">Nama Lengkap & Gelar</label><input type="text" className="form-control" value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })} required /></div>
-                    <div className="form-grid">
-                        <div className="form-group"><label className="form-label">NIK / NIP</label><input type="text" className="form-control" value={formData.nik_nip} onChange={e => setFormData({ ...formData, nik_nip: e.target.value })} /></div>
-                        <div className="form-group"><label className="form-label">Tugas Mengajar</label><input type="text" className="form-control" value={formData.kelas} onChange={e => setFormData({ ...formData, kelas: e.target.value })} /></div>
-                    </div>
+                    <div className="form-group"><label className="form-label">Tugas Mengajar</label><input type="text" className="form-control" value={formData.kelas} onChange={e => setFormData({ ...formData, kelas: e.target.value })} /></div>
                     <div className="form-grid">
                         <div className="form-group"><label className="form-label">WA Aktif</label><input type="text" className="form-control" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} /></div>
                         <div className="form-group">
@@ -240,7 +235,6 @@ export default function PengajarPage() {
                                 <img src={viewData.foto_ustadz || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                             </div>
                             <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '5px' }}>{viewData.nama}</h2>
-                            <div className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '5px 15px', fontSize: '0.8rem' }}>{viewData.nik_nip || 'NIP Belum Terdaftar'}</div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>

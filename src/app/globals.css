@@ -1228,3 +1228,45 @@ tr:hover td {
     transform: translateY(0);
   }
 }
+
+/* Print Utilities */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .only-print {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  .view-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+}
+
+.only-print {
+  display: none;
+}
+
+.print-header-corporate {
+  display: none;
+}
+
+@media print {
+  .print-header-corporate {
+    display: block;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

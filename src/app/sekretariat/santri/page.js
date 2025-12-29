@@ -30,7 +30,7 @@ export default function SantriPage() {
         // Identitas Pondok
         stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
         // Identitas Pribadi
-        nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
+        nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
         anak_ke: '', jumlah_saudara: '',
         // Alamat
         alamat_lengkap: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
@@ -38,17 +38,12 @@ export default function SantriPage() {
         hobi: '', cita_cita: '',
         // Pendidikan Sebelumnya
         pendidikan_terakhir: '', asal_sekolah: '', no_ijazah: '',
-        // Pembiayaan & Bantuan
-        // Pembiayaan & Bantuan
-        no_kk: '',
         // Data Ayah
-        nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
+        nama_ayah: '', tempat_tanggal_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
         // Data Ibu
-        nama_ibu: '', nik_ibu: '', tempat_tanggal_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
-        // Data Wali (Opsional)
-
+        nama_ibu: '', tempat_tanggal_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
         // Status & Berkas
-        status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '', foto_kk: '',
+        status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '',
         pindah_ke: '', tahun_pindah: '', tanggal_boyong: ''
     });
     const [submitting, setSubmitting] = useState(false);
@@ -148,7 +143,7 @@ export default function SantriPage() {
             const result = await res.json();
             if (result.secure_url) {
                 setFormData(prev => ({ ...prev, [fieldName]: result.secure_url }));
-                showToast(`Berhasil mengunggah ${fieldName === 'foto_santri' ? 'foto santri' : 'foto KK'}!`, 'success');
+                showToast(`Berhasil mengunggah foto santri!`, 'success');
             } else {
                 throw new Error(result.error?.message || 'Gagal upload Cloudinary');
             }
@@ -174,12 +169,12 @@ export default function SantriPage() {
     };
 
     const handleExport = () => {
-        const headers = ["Foto Santri", "Stambuk Pondok", "Stambuk Madrasah", "Tahun Masuk", "Kamar", "Status MB", "Madrasah", "Kelas", "NIK", "Nama Siswa", "NISN", "Tempat Tanggal Lahir", "Jenis Kelamin", "Agama", "Hobi", "Cita Cita", "Kewarganegaraan", "Anak Ke", "Jumlah Saudara", "Pendidikan Terakhir", "Asal Sekolah", "No Ijazah", "No KK", "NIK Ayah", "Nama Ayah", "Pekerjaan Ayah", "Pendidikan Ayah", "No Telp Ayah", "Penghasilan Ayah", "NIK Ibu", "Nama Ibu", "Pekerjaan Ibu", "Pendidikan Ibu", "No Telp Ibu", "Alamat Lengkap", "Dusun Jalan", "RT RW", "Desa Kelurahan", "Kecamatan", "Kota Kabupaten", "Provinsi", "Kode Pos", "Status Santri", "Pindah Ke", "Tahun Pindah", "Tanggal Boyong"];
+        const headers = ["Foto Santri", "Stambuk Pondok", "Stambuk Madrasah", "Tahun Masuk", "Kamar", "Status MB", "Madrasah", "Kelas", "Nama Siswa", "NISN", "Tempat Tanggal Lahir", "Jenis Kelamin", "Agama", "Hobi", "Cita Cita", "Kewarganegaraan", "Anak Ke", "Jumlah Saudara", "Pendidikan Terakhir", "Asal Sekolah", "No Ijazah", "Nama Ayah", "Pekerjaan Ayah", "Pendidikan Ayah", "No Telp Ayah", "Penghasilan Ayah", "Nama Ibu", "Pekerjaan Ibu", "Pendidikan Ibu", "No Telp Ibu", "Alamat Lengkap", "Dusun Jalan", "RT RW", "Desa Kelurahan", "Kecamatan", "Kota Kabupaten", "Provinsi", "Kode Pos", "Status Santri", "Pindah Ke", "Tahun Pindah", "Tanggal Boyong"];
         exportToExcel(santri, 'Data_Santri_Lengkap', headers);
     };
 
     const handleDownloadTemplate = () => {
-        const headers = ["foto_santri", "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "status_mb", "madrasah", "kelas", "nik", "nama_siswa", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "hobi", "cita_cita", "kewarganegaraan", "anak_ke", "jumlah_saudara", "pendidikan_terakhir", "asal_sekolah", "nisn", "no_ijazah", "no_kk", "nik_ayah", "nama_ayah", "pekerjaan_ayah", "pendidikan_ayah", "no_telp_ayah", "penghasilan_ayah", "nik_ibu", "nama_ibu", "pekerjaan_ibu", "pendidikan_ibu", "no_telp_ibu", "dusun_jalan", "rt_rw", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos", "status_santri", "pindah_ke", "tahun_pindah", "tanggal_boyong"];
+        const headers = ["foto_santri", "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "status_mb", "madrasah", "kelas", "nama_siswa", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "hobi", "cita_cita", "kewarganegaraan", "anak_ke", "jumlah_saudara", "pendidikan_terakhir", "asal_sekolah", "nisn", "no_ijazah", "nama_ayah", "pekerjaan_ayah", "pendidikan_ayah", "no_telp_ayah", "penghasilan_ayah", "nama_ibu", "pekerjaan_ibu", "pendidikan_ibu", "no_telp_ibu", "dusun_jalan", "rt_rw", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos", "status_santri", "pindah_ke", "tahun_pindah", "tanggal_boyong"];
         exportToCSV([], 'Template_Manual_Santri', headers);
     };
 
@@ -215,7 +210,7 @@ export default function SantriPage() {
                 // Identitas Pondok
                 stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
                 // Identitas Pribadi
-                nik: '', nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
+                nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
                 anak_ke: '', jumlah_saudara: '',
                 // Alamat
                 alamat_lengkap: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '', kota_kabupaten: '', provinsi: '', kode_pos: '',
@@ -223,17 +218,12 @@ export default function SantriPage() {
                 hobi: '', cita_cita: '',
                 // Pendidikan Sebelumnya
                 pendidikan_terakhir: '', asal_sekolah: '', no_ijazah: '',
-                // Pembiayaan & Bantuan
-                // Pembiayaan & Bantuan
-                no_kk: '',
                 // Data Ayah
-                nama_ayah: '', nik_ayah: '', tempat_tanggal_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
+                nama_ayah: '', tempat_tanggal_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
                 // Data Ibu
-                nama_ibu: '', nik_ibu: '', tempat_tanggal_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
-                // Data Wali (Opsional)
-
+                nama_ibu: '', tempat_tanggal_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
                 // Status & Berkas
-                status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '', foto_kk: '',
+                status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '',
                 pindah_ke: '', tahun_pindah: '', tanggal_boyong: ''
             });
         }
@@ -286,8 +276,7 @@ export default function SantriPage() {
 
     const displayData = santri.filter(s => {
         const matchSearch = (s.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
-            (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
-            (s.nik || '').toLowerCase().includes(search.toLowerCase());
+            (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase());
         const mdr = (s.madrasah || '').toUpperCase();
         const kls = (s.kelas || '').toUpperCase();
         let matchMadrasah = filterMadrasah === 'Semua';
@@ -395,7 +384,7 @@ export default function SantriPage() {
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari nama, stambuk, atau NIK..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                        <input type="text" className="search-input" placeholder="Cari nama atau stambuk..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
                     <select className="form-control" style={{ width: '180px', fontWeight: 700 }} value={filterMadrasah} onChange={(e) => setFilterMadrasah(e.target.value)}>
                         <option value="Semua">Unit: Semua</option>
@@ -424,7 +413,6 @@ export default function SantriPage() {
                     <button type="button" className={`tab-btn ${activeTab === 'pendidikan' ? 'active' : ''}`} onClick={() => setActiveTab('pendidikan')}><i className="fas fa-graduation-cap"></i> Pendidikan</button>
                     <button type="button" className={`tab-btn ${activeTab === 'wali' ? 'active' : ''}`} onClick={() => setActiveTab('wali')}><i className="fas fa-users"></i> Orang Tua</button>
                     <button type="button" className={`tab-btn ${activeTab === 'alamat' ? 'active' : ''}`} onClick={() => setActiveTab('alamat')}><i className="fas fa-map-marked-alt"></i> Alamat</button>
-
                     <button type="button" className={`tab-btn ${activeTab === 'status' ? 'active' : ''}`} onClick={() => setActiveTab('status')}><i className="fas fa-file-alt"></i> Status</button>
                 </div>
                 <div style={{ marginTop: '1.5rem' }}>
@@ -435,8 +423,6 @@ export default function SantriPage() {
                                 <div className="form-group"><label className="form-label">Stambuk Pondok</label><input type="text" className="form-control" value={formData.stambuk_pondok} onChange={e => setFormData({ ...formData, stambuk_pondok: e.target.value })} /></div>
                                 <div className="form-group"><label className="form-label">Stambuk Madrasah</label><input type="text" className="form-control" value={formData.stambuk_madrasah} onChange={e => setFormData({ ...formData, stambuk_madrasah: e.target.value })} /></div>
                             </div>
-                            <div className="form-group"><label className="form-label">NIK</label><input type="text" className="form-control" value={formData.nik} onChange={e => setFormData({ ...formData, nik: e.target.value })} /></div>
-
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label className="form-label">Kelas / Jenjang *</label>
@@ -518,11 +504,9 @@ export default function SantriPage() {
                     )}
                     {activeTab === 'wali' && (
                         <div className="tab-content animate-in">
-                            <div className="form-group"><label className="form-label">No. KK (Kartu Keluarga)</label><input type="text" className="form-control" value={formData.no_kk} onChange={e => setFormData({ ...formData, no_kk: e.target.value })} /></div>
                             <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px' }}>Data Ayah</h4>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Nama Ayah</label><input type="text" className="form-control" value={formData.nama_ayah} onChange={e => setFormData({ ...formData, nama_ayah: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">NIK Ayah</label><input type="text" className="form-control" value={formData.nik_ayah} onChange={e => setFormData({ ...formData, nik_ayah: e.target.value })} /></div>
                             </div>
                             <div className="form-group"><label className="form-label">Tempat, Tanggal Lahir Ayah</label><input type="text" className="form-control" value={formData.tempat_tanggal_lahir_ayah} onChange={e => setFormData({ ...formData, tempat_tanggal_lahir_ayah: e.target.value })} placeholder="Kediri, 01 Januari 1980" /></div>
                             <div className="form-grid">
@@ -535,7 +519,6 @@ export default function SantriPage() {
                             <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px', marginTop: '2rem' }}>Data Ibu</h4>
                             <div className="form-grid">
                                 <div className="form-group"><label className="form-label">Nama Ibu</label><input type="text" className="form-control" value={formData.nama_ibu} onChange={e => setFormData({ ...formData, nama_ibu: e.target.value })} /></div>
-                                <div className="form-group"><label className="form-label">NIK Ibu</label><input type="text" className="form-control" value={formData.nik_ibu} onChange={e => setFormData({ ...formData, nik_ibu: e.target.value })} /></div>
                             </div>
                             <div className="form-group"><label className="form-label">Tempat, Tanggal Lahir Ibu</label><input type="text" className="form-control" value={formData.tempat_tanggal_lahir_ibu} onChange={e => setFormData({ ...formData, tempat_tanggal_lahir_ibu: e.target.value })} placeholder="Kediri, 01 Januari 1980" /></div>
                             <div className="form-grid">
@@ -581,7 +564,6 @@ export default function SantriPage() {
                             <div className="form-group"><label className="form-label">Negara</label><input type="text" className="form-control" value="Indonesia" readOnly /></div>
                         </div>
                     )}
-
                     {activeTab === 'status' && (
                         <div className="tab-content animate-in">
                             <div className="form-group"><label className="form-label">Status Santri</label><select className="form-control" value={formData.status_santri} onChange={e => setFormData({ ...formData, status_santri: e.target.value })}>
@@ -595,16 +577,6 @@ export default function SantriPage() {
                                     <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploading} />
                                 </label>
                             </div></div>
-                            <div className="form-group">
-                                <label className="form-label">Foto KK (Kartu Keluarga)</label>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    {formData.foto_kk && (
-                                        <img src={formData.foto_kk} alt="KK" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ddd' }} />
-                                    )}
-                                    <input type="file" accept="image/*" className="form-control" onChange={(e) => handleFileUpload(e, 'foto_kk')} disabled={uploading} />
-                                </div>
-                                <small style={{ color: '#64748b' }}>Upload foto scan Kartu Keluarga.</small>
-                            </div>
                         </div>
                     )}
                 </div>
@@ -627,7 +599,7 @@ export default function SantriPage() {
                             </div>
                             <div>
                                 <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '5px' }}>{detailData.nama_siswa}</h2>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '1.5rem' }}>Stambuk: <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{detailData.stambuk_pondok || '-'}</span> | NIK: {detailData.nik || '-'}</p>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '1.5rem' }}>Stambuk: <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{detailData.stambuk_pondok || '-'}</span></p>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '20px' }}>
                                     <div><label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Madrasah / Unit</label><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{detailData.madrasah || '-'}</div></div>
                                     <div><label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Kelas / Geding</label><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{detailData.kelas || '-'}</div></div>
@@ -691,3 +663,4 @@ export default function SantriPage() {
         </div>
     );
 }
+

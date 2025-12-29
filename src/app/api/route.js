@@ -4,8 +4,8 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 export const runtime = 'edge';
 
 const headersConfig = {
-    'santri': ["stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "status_mb", "madrasah", "kelas", "nik", "nisn", "nama_siswa", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "kewarganegaraan", "anak_ke", "alamat", "dusun_jalan", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos", "hobi", "cita_cita", "asal_sekolah", "no_kk", "nama_ayah", "nik_ayah", "tempat_tanggal_lahir_ayah", "pendidikan_ayah", "pekerjaan_ayah", "penghasilan_ayah", "no_telp_ayah", "nama_ibu", "nik_ibu", "tempat_tanggal_lahir_ibu", "pendidikan_ibu", "pekerjaan_ibu", "penghasilan_ibu", "no_telp_ibu", "status_santri", "tanggal_nonaktif", "alasan_nonaktif", "foto_santri", "created_at", "pindah_ke", "tahun_pindah", "tanggal_boyong", "jumlah_saudara", "pendidikan_terakhir", "no_ijazah", "tempat_lahir", "tanggal_lahir", "foto_kk"],
-    'ustadz': ["foto_ustadz", "nama", "nik_nip", "kelas", "alamat", "no_hp", "status", "tanggal_nonaktif"],
+    'santri': ["stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "status_mb", "madrasah", "kelas", "nisn", "nama_siswa", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "kewarganegaraan", "anak_ke", "alamat", "dusun_jalan", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos", "hobi", "cita_cita", "asal_sekolah", "nama_ayah", "tempat_tanggal_lahir_ayah", "pendidikan_ayah", "pekerjaan_ayah", "penghasilan_ayah", "no_telp_ayah", "nama_ibu", "tempat_tanggal_lahir_ibu", "pendidikan_ibu", "pekerjaan_ibu", "penghasilan_ibu", "no_telp_ibu", "status_santri", "tanggal_nonaktif", "alasan_nonaktif", "foto_santri", "created_at", "pindah_ke", "tahun_pindah", "tanggal_boyong", "jumlah_saudara", "pendidikan_terakhir", "no_ijazah", "tempat_lahir", "tanggal_lahir"],
+    'ustadz': ["foto_ustadz", "nama", "kelas", "alamat", "no_hp", "status", "tanggal_nonaktif"],
     'pengurus': ["foto_pengurus", "nama", "jabatan", "divisi", "no_hp", "tahun_mulai", "tahun_akhir", "status", "tanggal_nonaktif"],
     'keamanan': ["tanggal", "nama_santri", "jenis_pelanggaran", "poin", "takzir", "keterangan", "petugas"],
     'pendidikan': ["tanggal", "nama_santri", "kegiatan", "nilai", "kehadiran", "keterangan", "ustadz"],
@@ -35,11 +35,11 @@ const headersConfig = {
     'keuangan_tarif': ["kategori_status", "kelas", "nominal", "keterangan"],
     'keuangan_pembayaran': ["santri_id", "nama_santri", "tanggal", "jenis_pembayaran", "bulan_tagihan", "nominal", "keterangan", "petugas"],
     'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"],
-    'kalender_kerja': ["tanggal_kegiatan", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"]
+    'kalender_kerja': ["hari", "tanggal_masehi", "tanggal_hijriyah", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"]
 };
 
 const FILE_COLUMNS = {
-    'santri': ["foto_santri", "foto_kk"],
+    'santri': ["foto_santri"],
     'ustadz': ["foto_ustadz"],
     'pengurus': ["foto_pengurus"],
     'arsip_surat': ["file_surat"],

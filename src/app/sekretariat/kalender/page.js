@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiCall, formatDate } from '@/lib/utils';
+import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
@@ -19,7 +19,9 @@ export default function KalenderKerjaPage() {
     const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
-        tanggal_kegiatan: new Date().toISOString().split('T')[0],
+        hari: '',
+        tanggal_masehi: '',
+        tanggal_hijriyah: '',
         nama_kegiatan: '',
         kategori: 'Kegiatan Pondok',
         periode: '2025/2026',
@@ -47,7 +49,9 @@ export default function KalenderKerjaPage() {
         } else {
             setEditId(null);
             setFormData({
-                tanggal_kegiatan: new Date().toISOString().split('T')[0],
+                hari: '',
+                tanggal_masehi: '',
+                tanggal_hijriyah: '',
                 nama_kegiatan: '',
                 kategori: 'Kegiatan Pondok',
                 periode: '2025/2026',
@@ -65,8 +69,8 @@ export default function KalenderKerjaPage() {
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
-        if (!formData.nama_kegiatan || !formData.tanggal_kegiatan) {
-            showToast("Nama dan Tanggal kegiatan wajib diisi", "error");
+        if (!formData.nama_kegiatan || !formData.tanggal_masehi) {
+            showToast("Nama kegiatan dan Tanggal Masehi wajib diisi", "error");
             return;
         }
         setSubmitting(true);
@@ -96,16 +100,28 @@ export default function KalenderKerjaPage() {
     const displayData = data.filter(d =>
         (d.nama_kegiatan || '').toLowerCase().includes(search.toLowerCase()) ||
         (d.periode || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.kategori || '').toLowerCase().includes(search.toLowerCase())
+        (d.hari || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.tanggal_masehi || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.tanggal_hijriyah || '').toLowerCase().includes(search.toLowerCase())
     );
 
     const columns = [
-        { key: 'tanggal_kegiatan', label: 'Tanggal', render: (row) => formatDate(row.tanggal_kegiatan) },
-        { key: 'nama_kegiatan', label: 'Nama Kegiatan', render: (row) => <strong>{row.nama_kegiatan}</strong> },
-        { key: 'periode', label: 'Periode', render: (row) => <span className="th-badge" style={{ background: '#f1f5f9', color: '#475569' }}>{row.periode}</span> },
+        { key: 'hari', label: 'Hari', width: '100px' },
+        {
+            key: 'tanggal',
+            label: 'Tanggal',
+            render: (row) => (
+                <div style={{ fontSize: '0.85rem' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--primary)' }}>{row.tanggal_masehi}</div>
+                    <div style={{ color: 'var(--text-muted)' }}>{row.tanggal_hijriyah}</div>
+                </div>
+            )
+        },
+        { key: 'nama_kegiatan', label: 'Aktivitas / Kegiatan', render: (row) => <strong style={{ fontSize: '1rem' }}>{row.nama_kegiatan}</strong> },
         {
             key: 'kategori',
             label: 'Kategori',
+            width: '130px',
             render: (row) => (
                 <span className="th-badge" style={{
                     background: row.kategori === 'Liburan' ? '#fee2e2' : row.kategori === 'Ujian' ? '#fef3c7' : '#dcfce7',
@@ -119,6 +135,7 @@ export default function KalenderKerjaPage() {
             key: 'actions',
             label: 'Aksi',
             width: '160px',
+            sortable: false,
             render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail & Dokumen"><i className="fas fa-eye"></i></button>
@@ -131,23 +148,81 @@ export default function KalenderKerjaPage() {
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
+            {/* Professional Print Header */}
+            <div className="print-header-corporate">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '1.5rem' }}>
+                    <img src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png" style={{ width: '80px' }} alt="Logo" />
+                    <div>
+                        <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#1e3a8a', fontWeight: 900 }}>PONDOK PESANTREN DARUSSALAM LIRBOYO</h1>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Sistem Informasi Manajemen Terpadu (SIM-PPDS)</p>
+                    </div>
+                </div>
+                <div style={{ textAlign: 'center', borderTop: '2px solid #334155', paddingTop: '1rem' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase' }}>KALENDER KERJA & AGENDA KEGIATAN</h2>
+                    <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Periode: {data[0]?.periode || '2025/2026'}</p>
+                </div>
+            </div>
+
+            <div className="card no-print">
                 <div className="card-header">
                     <div>
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Kalender Kerja & Agenda</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Manajemen agenda kegiatan dan pengarsipan kalender resmi pondok.</p>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Manajemen agenda kegiatan sesuai format kalender resmi.</p>
                     </div>
-                    <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Agenda</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="btn btn-outline" onClick={() => window.print()}><i className="fas fa-print"></i> Cetak</button>
+                        <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Agenda</button>
+                    </div>
                 </div>
 
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari kegiatan atau periode..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                        <input type="text" className="search-input" placeholder="Cari kegiatan, hari, atau tanggal..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </div>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>Total: {displayData.length} Agenda</span>
                     </div>
                 </div>
 
                 <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada agenda kalender." />
+            </div>
+
+            {/* Custom Print Table (Matches Image) */}
+            <div className="only-print">
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid #000', marginTop: '1rem' }}>
+                    <thead>
+                        <tr>
+                            <th rowSpan="2" style={{ border: '1px solid #000', padding: '8px', width: '40px' }}>NO</th>
+                            <th rowSpan="2" style={{ border: '1px solid #000', padding: '8px', width: '120px' }}>HARI</th>
+                            <th colSpan="2" style={{ border: '1px solid #000', padding: '8px' }}>TANGGAL</th>
+                            <th rowSpan="2" style={{ border: '1px solid #000', padding: '8px' }}>AKTIVITAS</th>
+                        </tr>
+                        <tr>
+                            <th style={{ border: '1px solid #000', padding: '8px', width: '150px' }}>MASEHI</th>
+                            <th style={{ border: '1px solid #000', padding: '8px', width: '150px' }}>HIJRIYAH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {displayData.map((item, index) => (
+                            <tr key={item.id}>
+                                <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>{index + 1}.</td>
+                                <td style={{ border: '1px solid #000', padding: '8px' }}>{item.hari}</td>
+                                <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>{item.tanggal_masehi}</td>
+                                <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>{item.tanggal_hijriyah}</td>
+                                <td style={{ border: '1px solid #000', padding: '8px', fontWeight: 700 }}>{item.nama_kegiatan}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', paddingRight: '2rem' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <p>Kediri, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        <p style={{ fontWeight: 800, marginTop: '5px' }}>Sekretaris Pondok,</p>
+                        <div style={{ height: '80px' }}></div>
+                        <p style={{ borderBottom: '1.5px solid #000', fontWeight: 800, display: 'inline-block', minWidth: '150px' }}>H. M. ABDULLAH FAHIM</p>
+                    </div>
+                </div>
             </div>
 
             {/* Input/Edit Modal */}
@@ -157,16 +232,24 @@ export default function KalenderKerjaPage() {
             </>)}>
                 <form className="form-grid">
                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                        <label className="form-label">Nama Kegiatan / Agenda *</label>
-                        <input type="text" className="form-control" value={formData.nama_kegiatan} onChange={e => setFormData({ ...formData, nama_kegiatan: e.target.value })} placeholder="Contoh: Libur Akhir Semester" required />
+                        <label className="form-label">Aktivitas / Nama Kegiatan *</label>
+                        <input type="text" className="form-control" value={formData.nama_kegiatan} onChange={e => setFormData({ ...formData, nama_kegiatan: e.target.value })} placeholder="Contoh: Pembukaan Pendaftaran Santri" required />
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Tanggal Pelaksanaan *</label>
-                        <input type="date" className="form-control" value={formData.tanggal_kegiatan} onChange={e => setFormData({ ...formData, tanggal_kegiatan: e.target.value })} required />
+                        <label className="form-label">Hari (Opsional)</label>
+                        <input type="text" className="form-control" value={formData.hari} onChange={e => setFormData({ ...formData, hari: e.target.value })} placeholder="Contoh: Malam Sabtu / Rabu" />
                     </div>
                     <div className="form-group">
                         <label className="form-label">Periode</label>
                         <input type="text" className="form-control" value={formData.periode} onChange={e => setFormData({ ...formData, periode: e.target.value })} placeholder="2025/2026" />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Tanggal Masehi *</label>
+                        <input type="text" className="form-control" value={formData.tanggal_masehi} onChange={e => setFormData({ ...formData, tanggal_masehi: e.target.value })} placeholder="16 April 2025" required />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Tanggal Hijriyah</label>
+                        <input type="text" className="form-control" value={formData.tanggal_hijriyah} onChange={e => setFormData({ ...formData, tanggal_hijriyah: e.target.value })} placeholder="17 Syawal 1446" />
                     </div>
                     <div className="form-group">
                         <label className="form-label">Kategori</label>
@@ -204,14 +287,18 @@ export default function KalenderKerjaPage() {
                             </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
                             <div>
-                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tanggal Pelaksanaan</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary)' }}>{formatDate(viewData.tanggal_kegiatan)}</div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Hari</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.2rem' }}>{viewData.hari || '-'}</div>
                             </div>
                             <div>
-                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Kategori</small>
-                                <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{viewData.kategori}</div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tanggal Masehi</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary)' }}>{viewData.tanggal_masehi}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tanggal Hijriyah</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--success)' }}>{viewData.tanggal_hijriyah || '-'}</div>
                             </div>
                         </div>
 
@@ -272,3 +359,4 @@ export default function KalenderKerjaPage() {
         </div>
     );
 }
+
