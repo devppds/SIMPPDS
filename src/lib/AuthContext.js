@@ -120,12 +120,12 @@ export function usePagePermission() {
                 });
 
                 if (permission) {
-                    // If string (legacy), assume Full Access (Edit)
-                    if (typeof permission === 'string') return { canEdit: true, canDelete: false };
+                    // If string (legacy), assume Full Access (Edit + Delete)
+                    if (typeof permission === 'string') return { canEdit: true, canDelete: true };
                     // If object, check access level
                     return {
-                        canEdit: permission.access === 'edit',
-                        canDelete: false // Delete reserved for Super Admin
+                        canEdit: ['edit', 'full'].includes(permission.access),
+                        canDelete: permission.access === 'full'
                     };
                 }
                 // If label found in NAV but not in userMenus -> No Access (but we return false here)
