@@ -1,15 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate, exportToCSV, exportToExcel } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function SantriPage() {
-    const { isAdmin, user } = useAuth();
+    const { isAdmin } = useAuth(); // Keep isAdmin for strict delete check if needed
+    const { canEdit } = usePagePermission(); // ✨ Auto Logic
     const { showToast } = useToast();
-    const canEdit = isAdmin || user?.role === 'sekretariat'; // Permission Logic
     const [santri, setSantri] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
