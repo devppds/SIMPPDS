@@ -12,10 +12,10 @@ import FileUploader from '@/components/FileUploader';
 import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
+import DataViewContainer from '@/components/DataViewContainer';
 
 export default function PengajarPage() {
     const { canEdit } = usePagePermission();
-    const { showToast } = useToast();
 
     const {
         data, loading, search, setSearch, submitting,
@@ -27,16 +27,18 @@ export default function PengajarPage() {
         foto_ustadz: '', tanggal_nonaktif: ''
     });
 
-    const stats = [
+    const stats = useMemo(() => [
         { title: 'Total Pengajar', value: data.length, icon: 'fas fa-chalkboard-teacher', color: 'var(--primary)' },
         { title: 'Status Aktif', value: data.filter(d => d.status === 'Aktif').length, icon: 'fas fa-user-check', color: 'var(--success)' },
         { title: 'Cuti / Non-Aktif', value: data.filter(d => d.status !== 'Aktif').length, icon: 'fas fa-user-clock', color: 'var(--danger)' }
-    ];
+    ], [data]);
 
-    const displayData = data.filter(d =>
-        (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.kelas || '').toLowerCase().includes(search.toLowerCase())
-    );
+    const displayData = useMemo(() => {
+        return data.filter(d =>
+            (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
+            (d.kelas || '').toLowerCase().includes(search.toLowerCase())
+        );
+    }, [data, search]);
 
     const columns = [
         { key: 'nama', label: 'Nama Pengajar', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
@@ -50,9 +52,9 @@ export default function PengajarPage() {
         {
             key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
                 <div className="table-actions">
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)}><i className="fas fa-eye"></i></button>
-                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus pengajar ini?')}><i className="fas fa-trash"></i></button>}
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus pengajar ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -66,9 +68,9 @@ export default function PengajarPage() {
 
             <DataViewContainer
                 title="Database Pengajar"
-                subtitle="Daftar tenaga pendidik pondok pesantren."
+                subtitle={`Mencatat ${displayData.length} tenaga pendidik pondok pesantren.`}
                 headerActions={(<>
-                    <button className="btn btn-outline btn-sm" onClick={() => window.print()}><i className="fas fa-print"></i></button>
+                    <button className="btn btn-outline btn-sm" onClick={() => window.print()}><i className="fas fa-print"></i> Laporan</button>
                     {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Pengajar</button>}
                 </>)}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama atau tugas..." }}
@@ -76,40 +78,35 @@ export default function PengajarPage() {
             />
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Profil" : "Pengajar Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Profil'}</button>}>
-                <form onSubmit={handleSave}>
-                    <TextInput label="Nama Lengkap & Gelar" value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })} required />
-                    <TextInput label="Tugas Mengajar" value={formData.kelas} onChange={e => setFormData({ ...formData, kelas: e.target.value })} />
-                    <div className="form-grid">
-                        <TextInput label="WhatsApp" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} icon="fab fa-whatsapp" />
-                        <SelectInput label="Status" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Aktif', 'Non-Aktif', 'Cuti']} />
-                    </div>
-                    <TextAreaInput label="Alamat Domisili" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} />
-                    <FormLabel label="Foto Profil" />
-                    <FileUploader folder="simppds_pengajar" currentUrl={formData.foto_ustadz} onUploadSuccess={(url) => setFormData({ ...formData, foto_ustadz: url })} />
-                </form>
+                <TextInput label="Nama Lengkap & Gelar" value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })} required icon="fas fa-user-graduate" />
+                <TextInput label="Tugas Mengajar" value={formData.kelas} onChange={e => setFormData({ ...formData, kelas: e.target.value })} icon="fas fa-chalkboard" />
+                <div className="form-grid">
+                    <TextInput label="WhatsApp" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} icon="fab fa-whatsapp" />
+                    <SelectInput label="Status" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Aktif', 'Non-Aktif', 'Cuti']} />
+                </div>
+                <TextAreaInput label="Alamat Domisili" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} />
+                <FileUploader label="Foto Profil" folder="simppds_pengajar" currentUrl={formData.foto_ustadz} onUploadSuccess={(url) => setFormData({ ...formData, foto_ustadz: url })} />
             </Modal>
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Profil Pengajar" width="600px">
                 {viewData && (
                     <div className="detail-view">
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                            <img src={viewData.foto_ustadz || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '120px', height: '120px', borderRadius: '50%', border: '4px solid #fff', boxShadow: 'var(--shadow-lg)' }} alt="" />
-                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, marginTop: '1rem' }}>{viewData.nama}</h2>
+                            <img src={viewData.foto_ustadz || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama)}&size=256&background=1e3a8a&color=fff&bold=true`} style={{ width: '120px', height: '120px', borderRadius: '50%', border: '4px solid var(--primary-light)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} alt="" />
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, marginTop: '1rem', color: 'var(--primary-dark)' }}>{viewData.nama}</h2>
+                            <span className="th-badge" style={{ padding: '5px 15px' }}>{viewData.status.toUpperCase()}</span>
                         </div>
-                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div><small>WhatsApp</small><div style={{ fontWeight: 700 }}>{viewData.no_hp || '-'}</div></div>
-                            <div><small>Tugas</small><div style={{ fontWeight: 700 }}>{viewData.kelas || '-'}</div></div>
-                            <div><small>Status</small><div style={{ fontWeight: 700 }}>{viewData.status}</div></div>
-                            <div><small>Alamat</small><div style={{ fontWeight: 700 }}>{viewData.alamat || '-'}</div></div>
+                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', border: '1px solid #f1f5f9' }}>
+                            <div><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>WHATSAPP</small><div style={{ fontWeight: 700 }}>{viewData.no_hp || '-'}</div></div>
+                            <div><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>TUGAS MENGAJAR</small><div style={{ fontWeight: 700 }}>{viewData.kelas || '-'}</div></div>
+                            <div style={{ gridColumn: 'span 2' }}><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>ALAMAT DOMISILI</small><div style={{ fontWeight: 700 }}>{viewData.alamat || '-'}</div></div>
+                        </div>
+                        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                            <button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Tutup Profil</button>
                         </div>
                     </div>
                 )}
             </Modal>
         </div >
     );
-}
-
-// Helper for local labels
-function FormLabel({ label }) {
-    return <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary-dark)' }}>{label}</label>;
 }

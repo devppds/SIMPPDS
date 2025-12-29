@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -16,16 +16,24 @@ export function useDataManagement(dataType, defaultFormData = {}) {
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState(defaultFormData);
 
+    const isMounted = useRef(true);
+
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+
     const loadData = useCallback(async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const res = await apiCall('getData', 'GET', { type: dataType });
-            setData(res || []);
+            if (isMounted.current) setData(res || []);
         } catch (e) {
             console.error(e);
-            alert('Gagal memuat data: ' + e.message);
+            // alert only if still mounted
+            if (isMounted.current) alert('Gagal memuat data: ' + e.message);
         } finally {
-            setLoading(false);
+            if (isMounted.current) setLoading(false);
         }
     }, [dataType]);
 
@@ -34,20 +42,22 @@ export function useDataManagement(dataType, defaultFormData = {}) {
     }, [loadData]);
 
     const handleSave = async (e, payload = null) => {
-        if (e) e.preventDefault();
-        setSubmitting(true);
+        if (e && e.preventDefault) e.preventDefault();
+        if (isMounted.current) setSubmitting(true);
         try {
             const dataToSend = payload || formData;
             await apiCall('saveData', 'POST', {
                 type: dataType,
                 data: editId ? { ...dataToSend, id: editId } : dataToSend
             });
-            setIsModalOpen(false);
-            loadData();
+            if (isMounted.current) {
+                setIsModalOpen(false);
+                loadData();
+            }
         } catch (err) {
-            alert(err.message);
+            if (isMounted.current) alert(err.message);
         } finally {
-            setSubmitting(false);
+            if (isMounted.current) setSubmitting(false);
         }
     };
 
@@ -55,9 +65,9 @@ export function useDataManagement(dataType, defaultFormData = {}) {
         if (confirmMsg && !confirm(confirmMsg)) return;
         try {
             await apiCall('deleteData', 'POST', { type: dataType, id });
-            loadData();
+            if (isMounted.current) loadData();
         } catch (err) {
-            alert(err.message);
+            if (isMounted.current) alert(err.message);
         }
     };
 
