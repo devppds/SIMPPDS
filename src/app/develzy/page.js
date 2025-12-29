@@ -71,21 +71,160 @@ export default function DevelzyControlPage() {
     };
 
     const handleInitSystem = async () => {
-        if (!confirm("Inisialisasi Database System Tables? Ini aman dilakukan berulang kali.")) return;
-        try {
-            await apiCall('initSystem', 'GET'); // Using GET as defined in previous step logic or handled by generic handle()
-            // Actually API mostly uses handle() for both. Let's send POST just in case or follow route logic.
-            // Route logic: if action is initSystem, verifyAdmin.
-            // Let's use generic apiCall which uses GET by default unless specified. 
-            // Better to use POST for state changing operations.
-            // But apiCall wrapper handles it.
+        // Create custom modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.2s ease;
+        `;
 
-            // Wait, my apiCall defaults to matching the request.
-            showToast("System Tables Ready!", "success");
-            loadData();
-        } catch (e) {
-            showToast("Gagal inisialisasi: " + e.message, "error");
-        }
+        modal.innerHTML = `
+            <div style="
+                background: white;
+                border-radius: 24px;
+                padding: 3rem;
+                max-width: 520px;
+                width: 90%;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                animation: slideUp 0.3s ease;
+            ">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="
+                        width: 80px;
+                        height: 80px;
+                        margin: 0 auto 1.5rem;
+                        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+                        border-radius: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+                    ">
+                        <i class="fas fa-database" style="font-size: 2.5rem; color: white;"></i>
+                    </div>
+                    <h2 class="outfit" style="
+                        font-size: 1.75rem;
+                        font-weight: 800;
+                        color: #1e293b;
+                        margin-bottom: 0.75rem;
+                    ">Inisialisasi Database System</h2>
+                    <p style="
+                        font-size: 1.05rem;
+                        color: #64748b;
+                        line-height: 1.6;
+                        margin: 0;
+                    ">
+                        Sistem akan membuat tabel <strong style="color: #3b82f6;">audit_logs</strong> dan 
+                        <strong style="color: #3b82f6;">system_configs</strong> di database Anda.
+                        <br><br>
+                        <span style="
+                            display: inline-block;
+                            background: #ecfdf5;
+                            color: #047857;
+                            padding: 8px 16px;
+                            border-radius: 8px;
+                            font-size: 0.9rem;
+                            font-weight: 600;
+                            margin-top: 0.5rem;
+                        ">
+                            <i class="fas fa-check-circle" style="margin-right: 6px;"></i>
+                            Aman dilakukan berulang kali
+                        </span>
+                    </p>
+                </div>
+                <div style="
+                    display: flex;
+                    gap: 1rem;
+                    margin-top: 2rem;
+                ">
+                    <button id="cancelInit" style="
+                        flex: 1;
+                        padding: 14px 24px;
+                        border: 2px solid #e2e8f0;
+                        background: white;
+                        color: #64748b;
+                        border-radius: 12px;
+                        font-size: 1rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        Batal
+                    </button>
+                    <button id="confirmInit" style="
+                        flex: 1;
+                        padding: 14px 24px;
+                        border: none;
+                        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+                        color: white;
+                        border-radius: 12px;
+                        font-size: 1rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                        transition: all 0.2s;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)'">
+                        <i class="fas fa-rocket" style="margin-right: 8px;"></i>
+                        Mulai Inisialisasi
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Handle button clicks
+        const confirmBtn = modal.querySelector('#confirmInit');
+        const cancelBtn = modal.querySelector('#cancelInit');
+
+        confirmBtn.onclick = async () => {
+            modal.remove();
+            style.remove();
+            try {
+                await apiCall('initSystem', 'GET');
+                showToast("System Tables Ready!", "success");
+                loadData();
+            } catch (e) {
+                showToast("Gagal inisialisasi: " + e.message, "error");
+            }
+        };
+
+        cancelBtn.onclick = () => {
+            modal.remove();
+            style.remove();
+        };
+
+        // Close on backdrop click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                style.remove();
+            }
+        };
     };
 
     if (!isAdmin) {
