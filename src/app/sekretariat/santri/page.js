@@ -27,7 +27,11 @@ export default function SantriPage() {
     const [listKamar, setListKamar] = useState([]);
     const [isMutasiOpen, setIsMutasiOpen] = useState(false);
     const [mutasiData, setMutasiData] = useState(null);
-    const [mutasiForm, setMutasiForm] = useState({ status_santri: 'Boyong', pindah_ke: '', tahun_pindah: '', tanggal_boyong: new Date().toISOString().split('T')[0] });
+    const [mutasiForm, setMutasiForm] = useState({ status_santri: 'Boyong', pindah_ke: '', tahun_pindah: '', tanggal_boyong: '' });
+
+    useEffect(() => {
+        setMutasiForm(prev => ({ ...prev, tanggal_boyong: new Date().toISOString().split('T')[0] }));
+    }, []);
 
     // Confirm States
     const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null });
