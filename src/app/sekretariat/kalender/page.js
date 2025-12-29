@@ -180,7 +180,7 @@ export default function KalenderKerjaPage() {
                     </div>
                     <div className="form-group">
                         <label className="form-label">Dokumen Kalender (Opsional)</label>
-                        <ArsipFileUpload onUploadSuccess={(url) => setFormData({ ...formData, file_kalender: url })} currentFile={formData.file_kalender} label="File Kalender (PDF/Image)" />
+                        <ArsipFileUpload onUploadComplete={(url) => setFormData({ ...formData, file_kalender: url })} currentFile={formData.file_kalender} label="File Kalender (PDF/Image)" />
                     </div>
                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
                         <label className="form-label">Keterangan / Catatan</label>
