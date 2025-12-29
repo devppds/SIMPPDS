@@ -146,7 +146,32 @@ export default function Sidebar() {
                 <nav className="sidebar-nav">
                     <div className="menu-section">MENU UTAMA</div>
                     <ul>
-                        {isMounted ? NAV_ITEMS.map((item, index) => renderMenuItem(item, index)) : null}
+                        {isMounted ? (() => {
+                            // Deep clone or slice to avoid mutating original NAV_ITEMS
+                            const items = [...NAV_ITEMS];
+
+                            // 1. Keep Dashboard at top (index 0)
+                            const dashboard = items.find(i => i.label === 'Dashboard');
+                            const otherItems = items.filter(i => i.label !== 'Dashboard');
+
+                            // 2. Find the primary menu for this role
+                            // Mapping role (bendahara) to label (Bendahara)
+                            const userRoleLabel = user?.role?.toLowerCase().replace(/_/g, ' ');
+
+                            const primaryMenuIndex = otherItems.findIndex(i => {
+                                const label = i.label.toLowerCase();
+                                return label.includes(userRoleLabel) || userRoleLabel.includes(label);
+                            });
+
+                            if (primaryMenuIndex > -1) {
+                                const [primaryMenu] = otherItems.splice(primaryMenuIndex, 1);
+                                otherItems.unshift(primaryMenu);
+                            }
+
+                            const sortedItems = dashboard ? [dashboard, ...otherItems] : otherItems;
+
+                            return sortedItems.map((item, index) => renderMenuItem(item, index));
+                        })() : null}
                     </ul>
                 </nav>
 
