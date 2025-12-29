@@ -40,7 +40,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin'
+        isAdmin: user?.role === 'admin' || user?.role === 'develzy',
+        isDevelzy: user?.role === 'develzy'
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

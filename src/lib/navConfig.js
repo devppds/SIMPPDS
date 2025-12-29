@@ -120,6 +120,6 @@ export const NAV_ITEMS = [
         label: 'DEVELZY Control',
         icon: 'fas fa-rocket',
         path: '/develzy',
-        roles: ['admin']
+        roles: ['develzy']
     }
 ];

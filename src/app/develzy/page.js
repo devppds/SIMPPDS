@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { apiCall } from '@/lib/utils';
 import Modal from '@/components/Modal';
 
 export default function DevelzyControlPage() {
-    const { isAdmin } = useAuth();
+    const { isDevelzy, loading: authLoading } = useAuth(); // Pakai isDevelzy
+    const router = useRouter();
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState('general');
     const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -46,35 +48,35 @@ export default function DevelzyControlPage() {
     useEffect(() => {
         isMounted.current = true;
 
-        if (isAdmin) {
-            loadData();
-            loadSystemStats();
+        if (authLoading) return;
 
-            // Check service status when integration tab is active
-            if (activeTab === 'integration') {
-                checkServiceStatus();
-            }
-
-            // Refresh stats every 30 seconds
-            const interval = setInterval(() => {
-                if (isMounted.current) {
-                    loadSystemStats();
-                    if (activeTab === 'integration') {
-                        checkServiceStatus();
-                    }
-                }
-            }, 30000);
-
-            return () => {
-                isMounted.current = false;
-                clearInterval(interval);
-            };
+        if (!isDevelzy) {
+            showToast("Akses Terlarang: Area Khusus Develzy", "error");
+            router.push('/');
+            return;
         }
+
+        loadData();
+        loadSystemStats();
+
+        if (activeTab === 'integration') {
+            checkServiceStatus();
+        }
+
+        const interval = setInterval(() => {
+            if (isMounted.current) {
+                loadSystemStats();
+                if (activeTab === 'integration') {
+                    checkServiceStatus();
+                }
+            }
+        }, 30000);
 
         return () => {
             isMounted.current = false;
+            clearInterval(interval);
         };
-    }, [isAdmin, activeTab]);
+    }, [isDevelzy, authLoading, activeTab, router]);
 
     const loadSystemStats = async () => {
         try {
