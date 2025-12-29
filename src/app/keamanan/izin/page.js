@@ -27,13 +27,10 @@ export default function IzinPage() {
     } = useDataManagement('izin', {
         tanggal_mulai: '',
         tanggal_selesai: '', nama_santri: '', kelas: '', alasan: '',
-        keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: ''
+        keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: '', petugas: ''
     });
 
-    React.useEffect(() => {
-        setFormData(prev => ({ ...prev, tanggal_mulai: new Date().toISOString().split('T')[0] }));
-    }, [setFormData]);
-
+    // Date auto-filled by hook
     useEffect(() => {
         apiCall('getData', 'GET', { type: 'santri' }).then(res => setSantriOptions(res || []));
     }, []);
@@ -97,7 +94,16 @@ export default function IzinPage() {
                     <TextInput label="Penjemput" value={formData.penjemput} onChange={e => setFormData({ ...formData, penjemput: e.target.value })} placeholder="Nama wali..." />
                 </div>
                 <TextAreaInput label="Alasan Detail" value={formData.alasan} onChange={e => setFormData({ ...formData, alasan: e.target.value })} />
-                <SelectInput label="Status Izin" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Menunggu', 'Aktif', 'Kembali', 'Terlambat']} />
+                <div className="form-grid">
+                    <SelectInput label="Status Izin" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Menunggu', 'Aktif', 'Kembali', 'Terlambat']} />
+                    <TextInput
+                        label="Petugas Record"
+                        value={formData.petugas}
+                        onChange={e => setFormData({ ...formData, petugas: e.target.value })}
+                        readOnly={!isAdmin}
+                        style={!isAdmin ? { background: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                    />
+                </div>
             </Modal>
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Perizinan" width="600px">

@@ -3,7 +3,7 @@ import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
 export function useDataManagement(dataType, defaultFormData = {}) {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth(); // Destructure user to get fullname
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -30,7 +30,6 @@ export function useDataManagement(dataType, defaultFormData = {}) {
             if (isMounted.current) setData(res || []);
         } catch (e) {
             console.error(e);
-            // alert only if still mounted
             if (isMounted.current) alert('Gagal memuat data: ' + e.message);
         } finally {
             if (isMounted.current) setLoading(false);
@@ -77,7 +76,32 @@ export function useDataManagement(dataType, defaultFormData = {}) {
             setFormData({ ...item });
         } else {
             setEditId(null);
-            setFormData(defaultFormData);
+
+            // ✨ Smart Auto-Fill for Records
+            // Automatically fill dates and officer/reporter fields with current context
+            const initialData = { ...defaultFormData };
+            const userName = user?.fullname || user?.username || '';
+            const today = new Date().toISOString().split('T')[0];
+
+            // 1. Fill Date Fields
+            const dateFields = ['tanggal', 'tanggal_registrasi', 'tgl_kejadian', 'tgl_lapor'];
+            dateFields.forEach(field => {
+                if (Object.prototype.hasOwnProperty.call(initialData, field) && !initialData[field]) {
+                    initialData[field] = today;
+                }
+            });
+
+            // 2. Fill Officer Fields
+            const officerFields = ['petugas', 'pj', 'ustadz', 'bendahara', 'petugas_penerima', 'petugas_piket', 'petugas_registrasi'];
+            if (userName) {
+                officerFields.forEach(field => {
+                    if (Object.prototype.hasOwnProperty.call(initialData, field)) {
+                        initialData[field] = userName;
+                    }
+                });
+            }
+
+            setFormData(initialData);
         }
         setIsModalOpen(true);
     };
@@ -88,26 +112,9 @@ export function useDataManagement(dataType, defaultFormData = {}) {
     };
 
     return {
-        data,
-        setData,
-        loading,
-        setLoading,
-        search,
-        setSearch,
-        submitting,
-        isModalOpen,
-        setIsModalOpen,
-        isViewModalOpen,
-        setIsViewModalOpen,
-        viewData,
-        editId,
-        formData,
-        setFormData,
-        loadData,
-        handleSave,
-        handleDelete,
-        openModal,
-        openView,
-        isAdmin // Convenience pass-through
+        data, setData, loading, setLoading, search, setSearch, submitting,
+        isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
+        viewData, editId, formData, setFormData, loadData, handleSave,
+        handleDelete, openModal, openView, isAdmin, user // Added user pass-through
     };
 }

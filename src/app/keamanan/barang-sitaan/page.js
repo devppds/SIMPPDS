@@ -31,9 +31,8 @@ export default function BarangSitaanPage() {
     });
 
     useEffect(() => {
-        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
         apiCall('getData', 'GET', { type: 'santri' }).then(res => setSantriOptions(res || []));
-    }, [setFormData]);
+    }, []);
 
     const stats = useMemo(() => [
         { title: 'Barang Disita', value: data.filter(d => d.status === 'Disita').length, icon: 'fas fa-box-open', color: 'var(--danger)' },
@@ -93,7 +92,13 @@ export default function BarangSitaanPage() {
                 <TextAreaInput label="Alasan Penyitaan" value={formData.alasan_sita} onChange={e => setFormData({ ...formData, alasan_sita: e.target.value })} />
                 <div className="form-grid">
                     <SelectInput label="Status Barang" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Disita', 'Proses', 'Dikembalikan']} />
-                    <TextInput label="Petugas Keamanan" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} />
+                    <TextInput
+                        label="Petugas Keamanan"
+                        value={formData.petugas}
+                        onChange={e => setFormData({ ...formData, petugas: e.target.value })}
+                        readOnly={!isAdmin}
+                        style={!isAdmin ? { background: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                    />
                 </div>
                 {formData.status === 'Dikembalikan' && <TextInput label="Tgl Pengembalian" type="date" value={formData.tanggal_kembali} onChange={e => setFormData({ ...formData, tanggal_kembali: e.target.value })} />}
             </Modal>

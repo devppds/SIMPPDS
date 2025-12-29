@@ -53,17 +53,7 @@ export default function KeamananRegPage() {
         { title: 'Elektronik', value: data.filter(d => d.jenis_barang === 'Elektronik').length, icon: 'fas fa-laptop', color: 'var(--warning)' }
     ], [data]);
 
-    const openModal = (item = null) => {
-        if (!item) {
-            baseOpenModal();
-            setFormData(prev => ({
-                ...prev,
-                petugas_penerima: user?.fullname || user?.username || '',
-                tanggal_registrasi: new Date().toISOString().split('T')[0]
-            }));
-        } else { baseOpenModal(item); }
-    };
-
+    // Date and Petugas auto-filled by hook baseOpenModal correctly handles this now
     const handleSantriChange = (nama) => {
         const found = santriOptions.find(s => s.nama_siswa === nama);
         setFormData(prev => ({ ...prev, nama_santri: nama, kelas: found ? found.kelas : prev.kelas, kamar_penempatan: found ? found.kamar : prev.kamar_penempatan }));
@@ -122,7 +112,13 @@ export default function KeamananRegPage() {
                     <SelectInput label="Kondisi" value={formData.keadaan} onChange={e => setFormData({ ...formData, keadaan: e.target.value })} options={['Baik', 'Rusak Ringan', 'Rusak Berat']} />
                     <TextInput label="Kamar" value={formData.kamar_penempatan} onChange={e => setFormData({ ...formData, kamar_penempatan: e.target.value })} />
                 </div>
-                <TextInput label="Petugas Penerima" value={formData.petugas_penerima} onChange={e => setFormData({ ...formData, petugas_penerima: e.target.value })} />
+                <TextInput
+                    label="Petugas Penerima"
+                    value={formData.petugas_penerima}
+                    onChange={e => setFormData({ ...formData, petugas_penerima: e.target.value })}
+                    readOnly={!isAdmin}
+                    style={!isAdmin ? { background: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                />
             </Modal>
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Profil Barang" width="600px">

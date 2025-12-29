@@ -30,10 +30,7 @@ export default function ArusKasPage() {
         keterangan: '', pj: ''
     });
 
-    React.useEffect(() => {
-        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
-    }, [setFormData]);
-
+    // Date auto-filled by hook
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {

@@ -11,6 +11,7 @@ export default function AksesPage() {
     const { isAdmin } = useAuth();
     const { showToast } = useToast();
     const [users, setUsers] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isRoleConfigOpen, setIsRoleConfigOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function AksesPage() {
 
     useEffect(() => {
         loadUsers();
+        loadRoles();
     }, []);
 
     const loadUsers = async () => {
@@ -35,6 +37,20 @@ export default function AksesPage() {
             showToast("Gagal memuat data pengguna", "error");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadRoles = async () => {
+        try {
+            const data = await apiCall('getData', 'GET', { type: 'roles' });
+            if (data) {
+                setRoles(data.map(r => ({
+                    ...r,
+                    menus: r.menus ? JSON.parse(r.menus) : []
+                })));
+            }
+        } catch (e) {
+            console.error("Load roles failed", e);
         }
     };
 
@@ -57,18 +73,11 @@ export default function AksesPage() {
         }
     };
 
-    const getRoleLabel = (role) => {
-        switch (role) {
-            case 'admin': return 'Super Admin';
-            case 'bendahara': return 'Bendahara';
-            case 'sekretariat': return 'Sekretariat';
-            case 'keamanan': return 'Keamanan';
-            case 'pendidikan': return 'Pendidikan';
-            case 'wajar_murottil': return 'Wajar-Murottil';
-            case 'kesehatan': return 'Kesehatan (BK)';
-            case 'jamiyyah': return "Jam'iyyah";
-            default: return role?.toUpperCase() || 'User';
-        }
+    const getRoleLabel = (roleId) => {
+        if (roleId === 'admin') return 'Super Administrator';
+        if (roleId === 'develzy') return 'DEVELZY Control';
+        const role = roles.find(r => r.role === roleId);
+        return role ? role.label : (roleId?.toUpperCase() || 'User');
     };
 
     return (
@@ -295,13 +304,9 @@ export default function AksesPage() {
                                 onChange={e => setUserFormData({ ...userFormData, role: e.target.value })}
                             >
                                 <option value="admin">Super Administrator</option>
-                                <option value="sekretariat">Sekretariat</option>
-                                <option value="bendahara">Bendahara</option>
-                                <option value="keamanan">Keamanan</option>
-                                <option value="pendidikan">Pendidikan</option>
-                                <option value="wajar_murottil">Wajar-Murottil</option>
-                                <option value="kesehatan">Kesehatan (BK)</option>
-                                <option value="jamiyyah">Jam'iyyah</option>
+                                {roles.map((r, i) => (
+                                    <option key={i} value={r.role}>{r.label}</option>
+                                ))}
                             </select>
                         </div>
                         <div className="form-group">
@@ -332,13 +337,7 @@ export default function AksesPage() {
                     <div style={{ display: 'grid', gap: '1rem' }}>
                         {[
                             { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: ['Semua Menu', 'DEVELZY Control', 'Laporan Pimpinan', 'Manajemen Akses'] },
-                            { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', menus: ['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis'] },
-                            { role: 'bendahara', label: 'Bendahara', color: '#10b981', menus: ['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri'] },
-                            { role: 'keamanan', label: 'Keamanan', color: '#ef4444', menus: ['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang'] },
-                            { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', menus: ['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil'] },
-                            { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', menus: ['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'] },
-                            { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', menus: ['Data Kesehatan', 'Layanan Kesehatan'] },
-                            { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', menus: ["Layanan Jam'iyyah"] },
+                            ...roles
                         ].map((item, idx) => (
                             <div key={idx} style={{
                                 padding: '1.5rem',
@@ -368,18 +367,21 @@ export default function AksesPage() {
                                 </div>
                                 <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600, marginBottom: '8px' }}>Akses Menu:</div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                    {item.menus.map((menu, i) => (
-                                        <span key={i} style={{
-                                            background: `${item.color}10`,
-                                            color: item.color,
-                                            padding: '4px 12px',
-                                            borderRadius: '8px',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 700
-                                        }}>
-                                            {menu}
-                                        </span>
-                                    ))}
+                                    {item.menus.map((menu, i) => {
+                                        const menuName = typeof menu === 'string' ? menu : menu.name;
+                                        return (
+                                            <span key={i} style={{
+                                                background: `${item.color}10`,
+                                                color: item.color,
+                                                padding: '4px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 700
+                                            }}>
+                                                {menuName}
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ))}

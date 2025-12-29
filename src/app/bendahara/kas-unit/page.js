@@ -32,10 +32,7 @@ export default function SetoranUnitPage() {
         unit: 'Sekretariat', nominal: '', keterangan: '', petugas: user?.fullname || '', status_setor: 'Selesai'
     });
 
-    React.useEffect(() => {
-        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
-    }, [setFormData]);
-
+    // Date and Petugas auto-filled by hook
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {
@@ -136,6 +133,13 @@ export default function SetoranUnitPage() {
                     <TextInput label="Nominal Setoran" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required icon="fas fa-coins" />
                 </div>
                 <TextAreaInput label="Keterangan / Memo" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
+                <TextInput
+                    label="Petugas Penerima (Bendahara)"
+                    value={formData.petugas}
+                    onChange={e => setFormData({ ...formData, petugas: e.target.value })}
+                    readOnly={!isAdmin}
+                    style={!isAdmin ? { background: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                />
             </Modal>
 
             <Modal isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} title={selectedUnitDetails?.unit} width="600px">

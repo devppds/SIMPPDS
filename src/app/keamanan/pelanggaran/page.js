@@ -24,10 +24,7 @@ export default function PelanggaranPage() {
         takzir: '', keterangan: '', petugas: ''
     });
 
-    React.useEffect(() => {
-        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
-    }, [setFormData]);
-
+    // Date and Petugas auto-filled by hook
     const [santriOptions, setSantriOptions] = useState([]);
 
     useEffect(() => {
@@ -168,7 +165,15 @@ export default function PelanggaranPage() {
                         </div>
                         <div className="form-group">
                             <label className="form-label">Petugas (Penindak)</label>
-                            <input type="text" className="form-control" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} placeholder="Nama petugas keamanan" />
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.petugas}
+                                onChange={e => setFormData({ ...formData, petugas: e.target.value })}
+                                placeholder="Nama petugas keamanan"
+                                readOnly={!isAdmin}
+                                style={!isAdmin ? { background: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                            />
                         </div>
                     </div>
                     <div className="form-group">
