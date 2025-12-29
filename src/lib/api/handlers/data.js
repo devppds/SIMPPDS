@@ -24,17 +24,27 @@ export async function handleSaveData(request, db, type, idParam) {
     // FIX: Use ID from URL query param if body.id is missing (essential for updates)
     const recordId = body.id || idParam;
 
-    if (recordId) {
-        const setClause = fields.map(f => `${f} = ?`).join(', ');
-        values.push(recordId);
-        await db.prepare(`UPDATE "${type}" SET ${setClause} WHERE id = ?`).bind(...values).run();
-        await logAudit(db, request, 'UPDATE', type, recordId, `Fields: ${fields.join(', ')}`);
-        return Response.json({ success: true });
-    } else {
-        const placeholders = fields.map(() => '?').join(', ');
-        const res = await db.prepare(`INSERT INTO "${type}" (${fields.join(', ')}) VALUES (${placeholders})`).bind(...values).run();
-        await logAudit(db, request, 'CREATE', type, res.meta?.last_row_id || 'new');
-        return Response.json({ success: true });
+    try {
+        if (recordId) {
+            const setClause = fields.map(f => `${f} = ?`).join(', ');
+            values.push(recordId);
+            await db.prepare(`UPDATE "${type}" SET ${setClause} WHERE id = ?`).bind(...values).run();
+            await logAudit(db, request, 'UPDATE', type, recordId, `Fields: ${fields.join(', ')}`);
+            return Response.json({ success: true });
+        } else {
+            const placeholders = fields.map(() => '?').join(', ');
+            const res = await db.prepare(`INSERT INTO "${type}" (${fields.join(', ')}) VALUES (${placeholders})`).bind(...values).run();
+            await logAudit(db, request, 'CREATE', type, res.meta?.last_row_id || 'new');
+            return Response.json({ success: true });
+        }
+    } catch (error) {
+        console.error('DB Save Error:', error);
+        if (error.message && error.message.includes('no such column')) {
+            return Response.json({
+                error: "Kolom database belum tersedia. Silakan buka DEVELZY Control > System Health dan klik 'Initialize System Tables'."
+            }, { status: 500 });
+        }
+        return Response.json({ error: error.message || "Database error" }, { status: 500 });
     }
 }
 
