@@ -63,13 +63,13 @@ export function AuthProvider({ children }) {
 
     const updateUser = async (newData) => {
         try {
-            // Send update to database
+            // Send update to database - ONLY send changed fields + ID
             await apiCall('saveData', 'POST', {
                 type: 'users',
-                data: { ...user, ...newData }
+                data: { id: user.id, ...newData }
             });
 
-            // Update local state and localStorage
+            // Update local state and localStorage with merged data
             const updatedUser = { ...user, ...newData };
             setUser(updatedUser);
             localStorage.setItem('sim_session', JSON.stringify(updatedUser));
