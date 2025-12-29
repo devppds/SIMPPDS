@@ -63,10 +63,29 @@ export function AuthProvider({ children }) {
 
     const updateUser = async (newData) => {
         try {
-            // Send update to database - ONLY send changed fields + ID
+            if (!user || !user.username) {
+                throw new Error("User session tidak valid. Silakan login ulang.");
+            }
+
+            // Send update to database - include id (if exists), username, and changed fields
+            const dataToSend = {
+                ...newData
+            };
+
+            // Add identifier - prefer id, fallback to username
+            if (user.id) {
+                dataToSend.id = user.id;
+            } else {
+                // If no ID, we need to find by username first
+                const users = await apiCall('getData', 'GET', { type: 'users' });
+                const currentUser = users.find(u => u.username === user.username);
+                if (!currentUser) throw new Error("User tidak ditemukan di database");
+                dataToSend.id = currentUser.id;
+            }
+
             await apiCall('saveData', 'POST', {
                 type: 'users',
-                data: { id: user.id, ...newData }
+                data: dataToSend
             });
 
             // Update local state and localStorage with merged data
