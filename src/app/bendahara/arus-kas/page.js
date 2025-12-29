@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency, formatDate, exportToCSV, exportToExcel } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function ArusKasPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -42,7 +44,7 @@ export default function ArusKasPage() {
                 apiCall('getData', 'GET', { type: 'pengurus' })
             ]);
             const combined = [
-                ...(ustadz || []).map(u => ({ nama: u.nama, role: 'Ustadz' })),
+                ...(ustadz || []).map(u => ({ nama: u.nama, role: 'Pengajar' })),
                 ...(pengurus || []).map(p => ({ nama: p.nama, role: 'Pengurus' }))
             ];
             setPjOptions(combined);
@@ -96,7 +98,7 @@ export default function ArusKasPage() {
                 } catch (err) { console.error(err); }
             }
             setSubmitting(false);
-            alert(`Impor kas selesai! ${successCount} baris berhasil.`);
+            showToast(`Impor kas selesai! ${successCount} baris berhasil.`, "success");
             loadData();
         };
         reader.readAsText(file);
@@ -135,9 +137,9 @@ export default function ArusKasPage() {
             });
             setIsModalOpen(false);
             loadData();
-            alert(editId ? 'Transaksi berhasil diperbarui!' : 'Transaksi masuk ke pembukuan!');
+            showToast(editId ? 'Transaksi berhasil diperbarui!' : 'Transaksi masuk ke pembukuan!', "success");
         } catch (err) {
-            alert('Gagal: ' + err.message);
+            showToast('Gagal: ' + err.message, "error");
         } finally {
             setSubmitting(false);
         }
@@ -148,7 +150,8 @@ export default function ArusKasPage() {
         try {
             await apiCall('deleteData', 'POST', { type: 'arus_kas', id });
             loadData();
-        } catch (err) { alert(err.message); }
+            showToast("Transaksi dihapus.", "info");
+        } catch (err) { showToast(err.message, "error"); }
     };
 
     const filteredData = data.filter(d =>

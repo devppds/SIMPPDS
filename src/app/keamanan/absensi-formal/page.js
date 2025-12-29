@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 
 export default function AbsensiFormalPage() {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
 
     // Data Lists
@@ -95,8 +97,8 @@ export default function AbsensiFormalPage() {
     };
 
     const handleSave = async () => {
-        if (!selectedKelas) return alert("Pilih kelas terlebih dahulu!");
-        if (santriList.length === 0) return alert("Tidak ada data santri.");
+        if (!selectedKelas) return showToast("Pilih kelas terlebih dahulu!", "warning");
+        if (santriList.length === 0) return showToast("Tidak ada data santri.", "info");
 
         if (!confirm(`Simpan absensi untuk ${santriList.length} santri?\nTanggal: ${filterDate}`)) return;
 
@@ -124,11 +126,11 @@ export default function AbsensiFormalPage() {
             });
 
             await Promise.all(promises);
-            alert("Absensi berhasil disimpan!");
+            showToast("Absensi berhasil disimpan!", "success");
             loadAttendanceData(); // Refresh IDs
         } catch (e) {
             console.error(e);
-            alert("Gagal menyimpan: " + e.message);
+            showToast("Gagal menyimpan: " + e.message, "error");
         } finally {
             setLoading(false);
         }

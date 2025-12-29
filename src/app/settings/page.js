@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { apiCall } from '@/lib/utils';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function SettingsPage() {
     const { user, isAdmin, logout } = useAuth();
+    const { showToast } = useToast();
     const [users, setUsers] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
 
@@ -44,8 +46,8 @@ export default function SettingsPage() {
 
     const handleChangePassword = async (e) => {
         e.preventDefault();
-        if (newPass !== confirmPass) return alert("Konfirmasi password tidak cocok");
-        if (newPass.length < 6) return alert("Password baru minimal 6 karakter");
+        if (newPass !== confirmPass) return showToast("Konfirmasi password tidak cocok", "error");
+        if (newPass.length < 6) return showToast("Password baru minimal 6 karakter", "warning");
 
         setUpdatingPass(true);
         try {
@@ -56,10 +58,10 @@ export default function SettingsPage() {
                     newPassword: newPass
                 }
             });
-            alert("Password berhasil diubah! Silakan login ulang.");
+            showToast("Password berhasil diubah! Silakan login ulang.", "success");
             logout();
         } catch (err) {
-            alert(err.message);
+            showToast(err.message, "error");
         } finally {
             setUpdatingPass(false);
         }
@@ -76,9 +78,9 @@ export default function SettingsPage() {
             setIsUserModalOpen(false);
             setUserFormData({ username: '', fullname: '', password: '', role: 'sekretariat' });
             loadUsers();
-            alert("Akun pengguna berhasil dibuat!");
+            showToast("Akun pengguna berhasil dibuat!", "success");
         } catch (err) {
-            alert(err.message);
+            showToast(err.message, "error");
         } finally {
             setSubmittingUser(false);
         }
@@ -89,8 +91,9 @@ export default function SettingsPage() {
         try {
             await apiCall('deleteData', 'POST', { type: 'users', id });
             loadUsers();
+            showToast("User telah dihapus.", "info");
         } catch (e) {
-            alert("Gagal menghapus user");
+            showToast("Gagal menghapus user", "error");
         }
     };
 

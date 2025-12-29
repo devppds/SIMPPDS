@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function PengurusPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -52,11 +54,11 @@ export default function PengurusPage() {
             const result = await res.json();
             if (result.secure_url) {
                 setFormData(prev => ({ ...prev, foto_pengurus: result.secure_url }));
-                alert("Berhasil mengunggah foto!");
+                showToast("Berhasil mengunggah foto!", "success");
             } else { throw new Error(result.error?.message || "Gagal upload Cloudinary"); }
         } catch (err) {
             console.error(err);
-            alert("Gagal: " + err.message);
+            showToast("Gagal: " + err.message, "error");
         } finally { setUploading(false); }
     };
 
@@ -125,14 +127,14 @@ export default function PengurusPage() {
             await apiCall('saveData', 'POST', { type: 'pengurus', data: editId ? { ...formData, id: editId } : formData });
             setIsModalOpen(false);
             loadData();
-            alert(editId ? 'Struktur pengurus diperbarui!' : 'Pengurus baru telah dikukuhkan!');
-        } catch (err) { alert(err.message); }
+            showToast(editId ? 'Struktur pengurus diperbarui!' : 'Pengurus baru telah dikukuhkan!', "success");
+        } catch (err) { showToast(err.message, "error"); }
         finally { setSubmitting(false); }
     };
 
     const deleteItem = async (id) => {
         if (!confirm('Hapus data pengurus ini secara permanen?')) return;
-        try { await apiCall('deleteData', 'POST', { type: 'pengurus', id }); loadData(); } catch (err) { alert(err.message); }
+        try { await apiCall('deleteData', 'POST', { type: 'pengurus', id }); loadData(); showToast("Data pengurus dihapus.", "info"); } catch (err) { showToast(err.message, "error"); }
     };
 
 

@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function AturLayananPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -67,9 +69,9 @@ export default function AturLayananPage() {
             });
             setIsModalOpen(false);
             loadData();
-            alert('Konfigurasi layanan berhasil disimpan!');
+            showToast('Konfigurasi layanan berhasil disimpan!', "success");
         } catch (err) {
-            alert('Gagal menyimpan: ' + err.message);
+            showToast('Gagal menyimpan: ' + err.message, "error");
         } finally {
             setSubmitting(false);
         }
@@ -80,7 +82,8 @@ export default function AturLayananPage() {
         try {
             await apiCall('deleteData', 'POST', { type: 'layanan_master', id });
             loadData();
-        } catch (err) { alert(err.message); }
+            showToast("Layanan telah dihapus.", "info");
+        } catch (err) { showToast(err.message, "error"); }
     };
 
     const filteredData = data.filter(d =>

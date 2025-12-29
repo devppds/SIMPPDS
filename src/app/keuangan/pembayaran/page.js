@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function PembayaranSantriPage() {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [santriList, setSantriList] = useState([]);
     const [tarifList, setTarifList] = useState([]);
 
@@ -109,7 +111,7 @@ export default function PembayaranSantriPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!selectedSantri) return alert("Pilih santri terlebih dahulu");
+        if (!selectedSantri) return showToast("Pilih santri terlebih dahulu", "warning");
 
         setSubmitting(true);
         try {
@@ -145,12 +147,12 @@ export default function PembayaranSantriPage() {
                 }
             });
 
-            alert('Transaksi Berhasil!');
+            showToast('Transaksi Berhasil!', "success");
             handleReset();
             loadInitialData(); // Refresh history
         } catch (err) {
             console.error(err);
-            alert('Gagal menyimpan transaksi: ' + err.message);
+            showToast('Gagal menyimpan transaksi: ' + err.message, "error");
         } finally {
             setSubmitting(false);
         }

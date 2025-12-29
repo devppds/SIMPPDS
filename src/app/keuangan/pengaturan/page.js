@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function PengaturanKeuanganPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -75,8 +77,8 @@ export default function PengaturanKeuanganPage() {
             });
             setIsModalOpen(false);
             loadData();
-            alert('Pengaturan pembayaran berhasil disimpan!');
-        } catch (err) { alert(err.message); }
+            showToast('Pengaturan pembayaran berhasil disimpan!', "success");
+        } catch (err) { showToast(err.message, "error"); }
         finally { setSubmitting(false); }
     };
 
@@ -85,7 +87,8 @@ export default function PengaturanKeuanganPage() {
         try {
             await apiCall('deleteData', 'POST', { type: 'keuangan_tarif', id });
             loadData();
-        } catch (err) { alert(err.message); }
+            showToast("Pengaturan dihapus.", "info");
+        } catch (err) { showToast(err.message, "error"); }
     };
 
     const columns = [

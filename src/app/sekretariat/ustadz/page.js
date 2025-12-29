@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function PengajarPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -50,11 +52,11 @@ export default function PengajarPage() {
             const result = await res.json();
             if (result.secure_url) {
                 setFormData(prev => ({ ...prev, foto_ustadz: result.secure_url }));
-                alert("Berhasil mengunggah foto!");
+                showToast("Berhasil mengunggah foto!", "success");
             } else { throw new Error(result.error?.message || "Gagal upload Cloudinary"); }
         } catch (err) {
             console.error(err);
-            alert("Gagal: " + err.message);
+            showToast("Gagal: " + err.message, "error");
         } finally { setUploading(false); }
     };
 
@@ -91,14 +93,14 @@ export default function PengajarPage() {
             await apiCall('saveData', 'POST', { type: 'ustadz', data: editId ? { ...formData, id: editId } : formData });
             setIsModalOpen(false);
             loadData();
-            alert(editId ? 'Profil Pengajar diperbarui!' : 'Pengajar baru telah ditambahkan!');
-        } catch (err) { alert(err.message); }
+            showToast(editId ? 'Profil Pengajar diperbarui!' : 'Pengajar baru telah ditambahkan!', "success");
+        } catch (err) { showToast(err.message, "error"); }
         finally { setSubmitting(false); }
     };
 
     const deleteItem = async (id) => {
         if (!confirm('Hapus data pengajar ini secara permanen?')) return;
-        try { await apiCall('deleteData', 'POST', { type: 'ustadz', id }); loadData(); } catch (err) { alert(err.message); }
+        try { await apiCall('deleteData', 'POST', { type: 'ustadz', id }); loadData(); showToast("Data pengajar dihapus.", "info"); } catch (err) { showToast(err.message, "error"); }
     };
 
     const displayData = data.filter(d =>

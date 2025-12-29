@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function PendidikanPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -78,7 +80,8 @@ export default function PendidikanPage() {
             });
             setIsModalOpen(false);
             loadData();
-        } catch (err) { alert(err.message); }
+            showToast('Catatan pendidikan berhasil disimpan!', "success");
+        } catch (err) { showToast(err.message, "error"); }
         finally { setSubmitting(false); }
     };
 
@@ -87,7 +90,8 @@ export default function PendidikanPage() {
         try {
             await apiCall('deleteData', 'POST', { type: 'pendidikan', id });
             loadData();
-        } catch (err) { alert(err.message); }
+            showToast("Catatan telah dihapus.", "info");
+        } catch (err) { showToast(err.message, "error"); }
     };
 
     const displayData = data.filter(d =>

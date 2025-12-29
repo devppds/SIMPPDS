@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from './Autocomplete';
@@ -47,6 +48,7 @@ const SERVICE_PRICES = {
 
 export default function LayananUnitPage({ unit: forceUnit }) {
     const { user, isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -176,8 +178,8 @@ export default function LayananUnitPage({ unit: forceUnit }) {
             });
             setIsModalOpen(false);
             loadData();
-            alert(`Log layanan ${forceUnit} tersimpan!`);
-        } catch (err) { alert(err.message); }
+            showToast(`Log layanan ${forceUnit} tersimpan!`, "success");
+        } catch (err) { showToast(err.message, "error"); }
         finally { setSubmitting(false); }
     };
 
@@ -186,7 +188,8 @@ export default function LayananUnitPage({ unit: forceUnit }) {
         try {
             await apiCall('deleteData', 'POST', { type: 'layanan_admin', id });
             loadData();
-        } catch (err) { alert(err.message); }
+            showToast("Log layanan dihapus.", "info");
+        } catch (err) { showToast(err.message, "error"); }
     };
 
     const columns = [

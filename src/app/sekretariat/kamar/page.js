@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function KamarPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [allSantri, setAllSantri] = useState([]);
     const [stats, setStats] = useState({ total: 0, filled: 0 });
@@ -110,8 +112,8 @@ export default function KamarPage() {
             });
             setIsModalOpen(false);
             loadData();
-            alert(editId ? 'Data kamar diperbarui!' : 'Kamar baru telah ditambahkan!');
-        } catch (err) { alert(err.message); }
+            showToast(editId ? 'Data kamar diperbarui!' : 'Kamar baru telah ditambahkan!', "success");
+        } catch (err) { showToast(err.message, "error"); }
         finally { setSubmitting(false); }
     };
 
@@ -120,7 +122,8 @@ export default function KamarPage() {
         try {
             await apiCall('deleteData', 'POST', { type: 'kamar', id });
             loadData();
-        } catch (err) { alert(err.message); }
+            showToast("Kamar telah dihapus.", "info");
+        } catch (err) { showToast(err.message, "error"); }
     };
 
     const columns = [

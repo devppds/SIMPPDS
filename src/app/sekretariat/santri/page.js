@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate, exportToCSV, exportToExcel } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function SantriPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [santri, setSantri] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -145,13 +147,13 @@ export default function SantriPage() {
             const result = await res.json();
             if (result.secure_url) {
                 setFormData(prev => ({ ...prev, [fieldName]: result.secure_url }));
-                alert(`Berhasil mengunggah ${fieldName === 'foto_santri' ? 'foto santri' : 'foto KK'}!`);
+                showToast(`Berhasil mengunggah ${fieldName === 'foto_santri' ? 'foto santri' : 'foto KK'}!`, 'success');
             } else {
                 throw new Error(result.error?.message || 'Gagal upload Cloudinary');
             }
         } catch (err) {
             console.error(err);
-            alert('Gagal: ' + err.message);
+            showToast('Gagal: ' + err.message, 'error');
         } finally { setUploading(false); }
     };
 
@@ -198,7 +200,7 @@ export default function SantriPage() {
                 try { await apiCall('saveData', 'POST', { type: 'santri', data: obj }); successCount++; } catch (err) { console.error(err); }
             }
             setSubmitting(false);
-            alert(`Selesai! ${successCount} santri berhasil diimpor.`);
+            showToast(`Selesai! ${successCount} santri berhasil diimpor.`, 'success');
             loadData();
         };
         reader.readAsText(file);
@@ -247,14 +249,14 @@ export default function SantriPage() {
             await apiCall('saveData', 'POST', { type: 'santri', data: editId ? { ...formData, id: editId } : formData });
             setIsModalOpen(false);
             loadData();
-            alert(editId ? 'Perubahan berhasil disimpan!' : 'Data santri berhasil ditambahkan!');
-        } catch (err) { alert('Gagal: ' + err.message); }
+            showToast(editId ? 'Perubahan berhasil disimpan!' : 'Data santri berhasil ditambahkan!', 'success');
+        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
         finally { setSubmitting(false); }
     };
 
     const deleteSantri = async (id) => {
         if (!confirm('Hapus data santri ini secara permanen?')) return;
-        try { await apiCall('deleteData', 'POST', { type: 'santri', id }); loadData(); } catch (err) { alert(err.message); }
+        try { await apiCall('deleteData', 'POST', { type: 'santri', id }); loadData(); showToast('Data santri telah dihapus.', 'info'); } catch (err) { showToast(err.message, 'error'); }
     };
 
     const openMutasi = (santri) => {
@@ -277,8 +279,8 @@ export default function SantriPage() {
             await apiCall('saveData', 'POST', { type: 'santri', data: updatedData });
             setIsMutasiOpen(false);
             loadData();
-            alert(`Status ${mutasiData.nama_siswa} berhasil diubah menjadi ${mutasiForm.status_santri}!`);
-        } catch (err) { alert('Gagal: ' + err.message); }
+            showToast(`Status ${mutasiData.nama_siswa} berhasil diubah menjadi ${mutasiForm.status_santri}!`, 'success');
+        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
     };
 
     const displayData = santri.filter(s => {
