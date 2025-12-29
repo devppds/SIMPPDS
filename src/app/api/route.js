@@ -1,3 +1,4 @@
+// Build trigger: update Cloudinary configuration
 import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const runtime = 'edge';
