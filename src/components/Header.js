@@ -13,11 +13,16 @@ export default function Header({ title }) {
     const { showToast } = useToast();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const [profileForm, setProfileForm] = useState({
         fullname: '',
         password: '',
         avatar: ''
     });
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const openProfile = () => {
         setProfileForm({
@@ -68,12 +73,12 @@ export default function Header({ title }) {
                 <HijriDate />
                 <div className="user-profile" onClick={openProfile} style={{ cursor: 'pointer' }}>
                     <div className="user-info">
-                        <span className="user-name">{user?.fullname?.split(' ')[0] || 'User'}</span>
-                        <span className="user-role">{user?.role?.toUpperCase()}</span>
+                        <span className="user-name">{mounted ? (user?.fullname?.split(' ')[0] || 'User') : '...'}</span>
+                        <span className="user-role">{mounted ? (user?.role?.toUpperCase() || 'USER') : 'USER'}</span>
                     </div>
                     <div className="user-avatar">
                         <img
-                            src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.username || 'U'}&background=1e3a8a&color=fff`}
+                            src={mounted ? (user?.avatar || `https://ui-avatars.com/api/?name=${user?.username || 'U'}&background=1e3a8a&color=fff`) : `https://ui-avatars.com/api/?name=U&background=1e3a8a&color=fff`}
                             alt="User"
                             style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
                         />

@@ -19,7 +19,8 @@ export default function DashboardPage() {
     const [mounted, setMounted] = useState(false);
     const isMounted = React.useRef(true);
 
-    const role = user?.role || 'user';
+    const role = mounted ? (user?.role || 'User') : 'Sistem';
+    const displayRole = role.charAt(0).toUpperCase() + role.slice(1);
     const userMenus = user?.menus || user?.allowedMenus || [];
 
     // Mapping Menu Name -> Stats & Features
@@ -77,10 +78,10 @@ export default function DashboardPage() {
             <div className="dashboard-header animate-in">
                 <div className="welcome-section">
                     <h1 className="dashboard-title outfit">
-                        Dashboard Pintar {role.charAt(0).toUpperCase() + role.slice(1)}
+                        Dashboard Pintar {displayRole}
                     </h1>
                     <p className="dashboard-subtitle">
-                        Ahlan wa Sahlan, <strong>{user?.fullname || 'User'}</strong>. Mendeteksi {dynamicStats.length} metrik aktif dari Develzy.
+                        Ahlan wa Sahlan, <strong>{mounted ? (user?.fullname || 'User') : '...'}</strong>. Mendeteksi {dynamicStats.length} metrik aktif dari Develzy.
                     </p>
                 </div>
                 <div className="academic-badge card-glass">
@@ -211,10 +212,11 @@ export default function DashboardPage() {
 
                 @media (max-width: 640px) {
                     .dashboard-title {
-                        font-size: 1.8rem;
+                        font-size: 1.5rem;
+                        line-height: 1.2;
                     }
                     .dashboard-subtitle {
-                        font-size: 0.95rem;
+                        font-size: 0.85rem;
                     }
                     .academic-badge {
                         width: 100%;
@@ -222,6 +224,7 @@ export default function DashboardPage() {
                     }
                     .dashboard-header {
                         margin-bottom: 2rem;
+                        gap: 0.5rem;
                     }
                     .stats-grid {
                         margin-bottom: 2rem !important;

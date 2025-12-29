@@ -1,8 +1,19 @@
 export async function handleGetQuickStats(db) {
-    const s = await db.prepare("SELECT COUNT(*) as total FROM santri").first();
-    const u = await db.prepare("SELECT COUNT(*) as total FROM ustadz").first();
-    const p_total = await db.prepare("SELECT COUNT(*) as total FROM pengurus").first();
-    const k_total = await db.prepare("SELECT SUM(kapasitas) as total FROM kamar").first();
+    // Helper to safely execute query
+    const safeQuery = async (query, params = [], defaultValue = 0) => {
+        try {
+            const res = await db.prepare(query).bind(...params).first();
+            return res;
+        } catch (e) {
+            console.error(`Query failed: ${query}`, e);
+            return { total: defaultValue, count: defaultValue };
+        }
+    };
+
+    const s = await safeQuery("SELECT COUNT(*) as total FROM santri");
+    const u = await safeQuery("SELECT COUNT(*) as total FROM ustadz");
+    const p_total = await safeQuery("SELECT COUNT(*) as total FROM pengurus");
+    const k_total = await safeQuery("SELECT SUM(kapasitas) as total FROM kamar");
 
     // Calculate Current Month/Year Prefix
     const now = new Date();
@@ -13,22 +24,30 @@ export async function handleGetQuickStats(db) {
     const today = `${year}-${month}-${day}`;
 
     // Financial Metrics
-    const incomeMonth = await db.prepare("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Masuk' AND tanggal LIKE ?").bind(`${currentMonthPrefix}%`).first();
-    const expenseMonth = await db.prepare("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Keluar' AND tanggal LIKE ?").bind(`${currentMonthPrefix}%`).first();
+    const incomeMonth = await safeQuery("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Masuk' AND tanggal LIKE ?", [`${currentMonthPrefix}%`]);
+    const expenseMonth = await safeQuery("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Keluar' AND tanggal LIKE ?", [`${currentMonthPrefix}%`]);
 
-    const tm = await db.prepare("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Masuk'").first();
-    const tk = await db.prepare("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Keluar'").first();
+    const tm = await safeQuery("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Masuk'");
+    const tk = await safeQuery("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Keluar'");
     const kasTotal = (tm?.total || 0) - (tk?.total || 0);
 
     // Keamanan Metrics
-    const violationsMonth = await db.prepare("SELECT COUNT(*) as total FROM keamanan WHERE tanggal LIKE ?").bind(`${currentMonthPrefix}%`).first();
-    const activeIzin = await db.prepare("SELECT COUNT(*) as total FROM izin WHERE (tanggal_kembali >= ? OR tanggal_kembali IS NULL) AND keterangan != 'Selesai'").bind(today).first();
+    const violationsMonth = await safeQuery("SELECT COUNT(*) as total FROM keamanan WHERE tanggal LIKE ?", [`${currentMonthPrefix}%`]);
+
+    // Defensive query for activeIzin (check if keterangan exists if possible, but try-catch handles it)
+    const activeIzin = await safeQuery("SELECT COUNT(*) as total FROM izin WHERE (tanggal_kembali >= ? OR tanggal_kembali IS NULL) AND keterangan != 'Selesai'", [today]);
 
     // Kesehatan Metrics
-    const activeSakit = await db.prepare("SELECT COUNT(*) as total FROM kesehatan WHERE status_periksa != 'Sembuh'").first();
+    const activeSakit = await safeQuery("SELECT COUNT(*) as total FROM kesehatan WHERE status_periksa != 'Sembuh'");
 
     // Fetch Santri Distribution for Chart
-    const { results: santriChart } = await db.prepare("SELECT kelas, COUNT(*) as count FROM santri GROUP BY kelas ORDER BY count DESC").all();
+    let santriChart = [];
+    try {
+        const { results } = await db.prepare("SELECT kelas, COUNT(*) as count FROM santri GROUP BY kelas ORDER BY count DESC").all();
+        santriChart = results || [];
+    } catch (e) {
+        console.error("Santri chart query failed", e);
+    }
 
     return Response.json({
         // Generic / Admin
@@ -49,6 +68,6 @@ export async function handleGetQuickStats(db) {
         // Kesehatan
         activeSakit: activeSakit?.total || 0,
 
-        santriChart: santriChart || []
+        santriChart: santriChart
     });
 }
