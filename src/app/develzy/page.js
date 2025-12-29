@@ -50,18 +50,22 @@ export default function DevelzyControlPage() {
     const [rolesList, setRolesList] = useState([]);
     const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [] });
 
-    // Generate menu options dynamically
+    // Generate menu options dynamically with hierarchy info
     const allPossibleMenus = React.useMemo(() => {
         let menus = [];
-        const extract = (items) => {
+        const extract = (items, depth = 0) => {
             items.forEach(item => {
                 if (item.label === 'DEVELZY Control') return; // Skip System Menu
-                menus.push(item.label);
-                if (item.submenu) extract(item.submenu);
+                menus.push({
+                    label: item.label,
+                    isHeader: !!item.submenu && item.label !== 'Dashboard',
+                    depth: depth
+                });
+                if (item.submenu) extract(item.submenu, depth + 1);
             });
         };
         extract(NAV_ITEMS);
-        return [...new Set(menus)];
+        return menus;
     }, []);
 
     useEffect(() => {
@@ -1118,7 +1122,8 @@ export default function DevelzyControlPage() {
                         <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                             <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>Centang menu yang diizinkan:</p>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '5px' }}>
-                                {allPossibleMenus.map((menuName, i) => {
+                                {allPossibleMenus.map((menu, i) => {
+                                    const menuName = menu.label;
                                     const existingPerm = roleFormData.menus.find(m => m.name === menuName);
                                     const isChecked = !!existingPerm;
 
@@ -1126,34 +1131,43 @@ export default function DevelzyControlPage() {
                                         <div key={i} style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                             padding: '8px 12px', borderRadius: '8px',
-                                            background: isChecked ? '#f1f5f9' : 'transparent',
-                                            border: isChecked ? '1px solid #cbd5e1' : '1px solid transparent'
+                                            marginLeft: `${menu.depth * 20}px`,
+                                            background: menu.isHeader ? '#f8fafc' : (isChecked ? '#f1f5f9' : 'transparent'),
+                                            border: isChecked ? '1px solid #cbd5e1' : (menu.isHeader ? '1px solid #f1f5f9' : '1px solid transparent'),
+                                            marginBottom: menu.isHeader ? '4px' : '0'
                                         }}>
-                                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', cursor: 'pointer', flex: 1 }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isChecked}
-                                                    onChange={(e) => {
-                                                        const checked = e.target.checked;
-                                                        if (checked) {
-                                                            // Default add as View Only to be safe, or Edit
-                                                            setRoleFormData({
-                                                                ...roleFormData,
-                                                                menus: [...roleFormData.menus, { name: menuName, access: 'view' }]
-                                                            });
-                                                        } else {
-                                                            setRoleFormData({
-                                                                ...roleFormData,
-                                                                menus: roleFormData.menus.filter(m => m.name !== menuName)
-                                                            });
-                                                        }
-                                                    }}
-                                                    style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }}
-                                                />
-                                                {menuName}
-                                            </label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', flex: 1 }}>
+                                                {!menu.isHeader ? (
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', width: '100%', margin: 0 }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isChecked}
+                                                            onChange={(e) => {
+                                                                const checked = e.target.checked;
+                                                                if (checked) {
+                                                                    setRoleFormData({
+                                                                        ...roleFormData,
+                                                                        menus: [...roleFormData.menus, { name: menuName, access: 'view' }]
+                                                                    });
+                                                                } else {
+                                                                    setRoleFormData({
+                                                                        ...roleFormData,
+                                                                        menus: roleFormData.menus.filter(m => m.name !== menuName)
+                                                                    });
+                                                                }
+                                                            }}
+                                                            style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }}
+                                                        />
+                                                        {menuName}
+                                                    </label>
+                                                ) : (
+                                                    <span style={{ fontWeight: 800, color: '#1e293b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                        {menuName}
+                                                    </span>
+                                                )}
+                                            </div>
 
-                                            {isChecked && (
+                                            {isChecked && !menu.isHeader && (
                                                 <select
                                                     value={existingPerm?.access || 'view'}
                                                     onChange={(e) => {
