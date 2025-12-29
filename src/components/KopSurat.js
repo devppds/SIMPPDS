@@ -19,9 +19,9 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
             {/* Kop Surat Corporate */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '3px solid #1e3a8a', paddingBottom: '15px' }}>
                 <img
-                    src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"
-                    style={{ width: '85px', height: 'auto' }}
-                    alt="Logo Pondok"
+                    src="https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"
+                    style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+                    alt="Logo"
                 />
                 <div style={{ flex: 1 }}>
                     <h1 style={{

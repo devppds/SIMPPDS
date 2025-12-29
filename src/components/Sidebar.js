@@ -133,9 +133,9 @@ export default function Sidebar() {
             <div className="sidebar-header">
                 <div className="logo">
                     <img
-                        src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"
-                        alt="Logo PPTQ Darussalam"
-                        style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '8px' }}
+                        src="https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"
+                        style={{ width: '40px', height: '40px', borderRadius: '8px' }}
+                        alt="Logo"
                     />
                     <span>SIMPPDS</span>
                 </div>

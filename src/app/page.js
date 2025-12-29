@@ -218,13 +218,9 @@ export default function LoginPage() {
             animation: 'float 6s ease-in-out infinite'
           }}>
             <img
-              src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"
-              alt="Logo PPTQ"
-              style={{
-                width: '80px', // Adjusted
-                height: 'auto',
-                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
-              }}
+              src="https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=256&bold=true"
+              alt="Logo"
+              style={{ width: '100px', marginBottom: '1.5rem', borderRadius: '20px', boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)' }}
             />
           </div>
           <h1 className="outfit" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'white', marginBottom: '0.25rem', letterSpacing: '-0.5px' }}>
