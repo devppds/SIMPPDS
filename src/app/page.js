@@ -25,15 +25,32 @@ export default function LoginPage() {
       return;
     }
 
-    // Pre-fetch users data silently
+    // Pre-fetch users and roles data silently
     const fetchUsers = async () => {
       try {
-        const users = await apiCall('getData', 'GET', { type: 'users' });
+        const [usersData, rolesData] = await Promise.all([
+          apiCall('getData', 'GET', { type: 'users' }),
+          apiCall('getData', 'GET', { type: 'roles' })
+        ]);
+
         if (hasMounted.current) {
-          setCachedUsers(users || []);
+          // Attach allowedMenus from Role DB
+          const enrichedUsers = (usersData || []).map(u => {
+            const userRoleConfig = (rolesData || []).find(r => r.role === u.role);
+            let allowedMenus = [];
+            try {
+              if (userRoleConfig && userRoleConfig.menus) {
+                allowedMenus = JSON.parse(userRoleConfig.menus);
+              }
+            } catch (e) {
+              // Ignore parse error
+            }
+            return { ...u, allowedMenus };
+          });
+          setCachedUsers(enrichedUsers);
         }
       } catch (err) {
-        console.error("Failed to pre-fetch users:", err);
+        console.error("Failed to pre-fetch data:", err);
       }
     };
 
@@ -58,7 +75,8 @@ export default function LoginPage() {
         login({
           username: matchedUser.username,
           fullname: matchedUser.fullname,
-          role: matchedUser.role
+          role: matchedUser.role,
+          allowedMenus: matchedUser.allowedMenus || []
         });
         router.push('/dashboard');
       }, 300); // 0.3 detik

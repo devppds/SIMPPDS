@@ -34,29 +34,48 @@ export default function Sidebar() {
     }, [pathname]);
 
     const toggleSubmenu = (label) => {
-        if (user?.role !== 'admin' && user?.role !== 'develzy') return;
         setOpenSubmenus(prev => ({
             ...prev,
             [label]: !prev[label]
         }));
     };
 
-    const isVisible = (roles) => {
-        if (!roles) return true;
+    const isVisible = (item) => {
         if (!user) return false;
 
-        // Develzy sees everything!
+        // 1. Super Admin Bypass
         if (user.role === 'develzy') return true;
 
-        return roles.includes(user.role);
+        // 2. Menu-based Permission (Dynamic from DB)
+        if (user.allowedMenus && Array.isArray(user.allowedMenus) && user.allowedMenus.length > 0) {
+            // Dashboard is always visible
+            if (item.label === 'Dashboard') return true;
+
+            // Check direct permission
+            if (user.allowedMenus.includes(item.label)) return true;
+
+            // Also check if any child is visible (if it's a parent menu)
+            if (item.submenu) {
+                const hasVisibleChild = item.submenu.some(sub =>
+                    user.allowedMenus.includes(sub.label) ||
+                    (sub.submenu && sub.submenu.some(deep => user.allowedMenus.includes(deep.label)))
+                );
+                if (hasVisibleChild) return true;
+            }
+
+            return false;
+        }
+
+        // 3. Fallback to Role-based (Legacy navConfig)
+        if (!item.roles) return true;
+        return item.roles.includes(user.role);
     };
 
     const renderMenuItem = (item, index, level = 0) => {
-        if (!isVisible(item.roles)) return null;
+        if (!isVisible(item)) return null;
 
         if (item.submenu) {
-            const isAdminOrDev = user?.role === 'admin' || user?.role === 'develzy';
-            const isOpen = isAdminOrDev ? !!openSubmenus[item.label] : true;
+            const isOpen = !!openSubmenus[item.label];
 
             // Check recursive active
             const isChildActive = (subItems) => subItems.some(sub => sub.path === pathname || (sub.submenu && isChildActive(sub.submenu)));
