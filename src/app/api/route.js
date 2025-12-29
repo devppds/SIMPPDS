@@ -12,6 +12,8 @@ export const runtime = 'edge';
 
 export async function GET(request) { return dispatcher(request); }
 export async function POST(request) { return dispatcher(request); }
+export async function PUT(request) { return dispatcher(request); }
+export async function DELETE(request) { return dispatcher(request); }
 
 async function dispatcher(request) {
     const url = new URL(request.url);
