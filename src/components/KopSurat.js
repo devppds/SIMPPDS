@@ -7,8 +7,16 @@ import React from 'react';
  * @param {string} judul - Judul utama laporan (Contoh: 'DAFTAR SANTRI BARU')
  * @param {string} subJudul - Sub-judul laporan (Contoh: 'Periode 2024/2025')
  */
+import { useAuth } from '@/lib/AuthContext';
+
+/**
+ * KopSurat - Komponen standar untuk Kop Surat laporan (Satu Pintu)
+ * @param {string} judul - Judul utama laporan (Contoh: 'DAFTAR SANTRI BARU')
+ * @param {string} subJudul - Sub-judul laporan (Contoh: 'Periode 2024/2025')
+ */
 export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = false }) {
     const [mounted, setMounted] = React.useState(false);
+    const { config } = useAuth();
 
     React.useEffect(() => {
         setMounted(true);
@@ -19,7 +27,7 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
             {/* Kop Surat Corporate */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '3px solid #1e3a8a', paddingBottom: '15px' }}>
                 <img
-                    src="https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"
+                    src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"}
                     style={{ width: '80px', height: '80px', objectFit: 'contain' }}
                     alt="Logo"
                 />
@@ -32,7 +40,7 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
                         textTransform: 'uppercase',
                         letterSpacing: '1px'
                     }}>
-                        PONDOK PESANTREN DARUSSALAM LIRBOYO
+                        {config?.nama_instansi || 'PONDOK PESANTREN DARUSSALAM LIRBOYO'}
                     </h1>
                     <p style={{ margin: '2px 0 0 0', fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 700 }}>
                         Sistem Informasi Manajemen Terpadu (SIM-PPDS)

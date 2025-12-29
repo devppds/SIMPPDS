@@ -2,12 +2,37 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { apiCall } from '@/lib/utils';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [config, setConfig] = useState({
+        logo_url: 'https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true',
+        nama_instansi: 'Pondok Pesantren Darussalam Lirboyo',
+        primary_color: '#2563eb',
+        sidebar_theme: '#1e1b4b'
+    });
+
+    const refreshConfig = async () => {
+        try {
+            const res = await apiCall('getConfigs', 'GET');
+            if (res && Array.isArray(res)) {
+                const newConfig = { ...config };
+                res.forEach(item => { newConfig[item.key] = item.value; });
+                setConfig(newConfig);
+
+                // Apply Global Theme
+                if (newConfig.primary_color) {
+                    document.documentElement.style.setProperty('--primary', newConfig.primary_color);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load configs:", e);
+        }
+    };
 
     useEffect(() => {
         const session = localStorage.getItem('sim_session');
@@ -21,6 +46,7 @@ export function AuthProvider({ children }) {
         } else {
             setUser(null);
         }
+        refreshConfig();
         setLoading(false);
     }, []);
 
@@ -38,6 +64,8 @@ export function AuthProvider({ children }) {
     const value = {
         user,
         loading,
+        config,
+        refreshConfig,
         login,
         logout,
         isAuthenticated: !!user,

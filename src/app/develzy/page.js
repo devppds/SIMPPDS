@@ -10,7 +10,7 @@ import FileUploader from '@/components/FileUploader';
 import { NAV_ITEMS } from '@/lib/navConfig';
 
 export default function DevelzyControlPage() {
-    const { isDevelzy, loading: authLoading } = useAuth(); // Pakai isDevelzy
+    const { isDevelzy, loading: authLoading, refreshConfig } = useAuth(); // Pakai isDevelzy
     const router = useRouter();
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState('general');
@@ -214,6 +214,7 @@ export default function DevelzyControlPage() {
             await apiCall('updateConfig', 'POST', { data: { key: 'logo_url', value: configs.logo_url } });
             await apiCall('updateConfig', 'POST', { data: { key: 'primary_color', value: configs.primary_color } });
             await apiCall('updateConfig', 'POST', { data: { key: 'sidebar_theme', value: configs.sidebar_theme } });
+            await refreshConfig(); // Refresh global config
             showToast("Konfigurasi berhasil disimpan!", "success");
         } catch (e) {
             console.error("Save config error:", e);

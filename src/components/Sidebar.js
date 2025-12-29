@@ -8,7 +8,7 @@ import { NAV_ITEMS } from '@/lib/navConfig';
 
 export default function Sidebar() {
     const pathname = usePathname();
-    const { user, logout } = useAuth();
+    const { user, logout, config } = useAuth();
     const [openSubmenus, setOpenSubmenus] = useState({});
     const [isMounted, setIsMounted] = useState(false);
 
@@ -133,8 +133,8 @@ export default function Sidebar() {
             <div className="sidebar-header">
                 <div className="logo">
                     <img
-                        src="https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"
-                        style={{ width: '40px', height: '40px', borderRadius: '8px' }}
+                        src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"}
+                        style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'contain' }}
                         alt="Logo"
                     />
                     <span>SIMPPDS</span>

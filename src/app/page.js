@@ -7,7 +7,7 @@ import { apiCall } from '@/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user, loading: authLoading } = useAuth();
+  const { login, user, loading: authLoading, config } = useAuth();
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false); // UI Loader
   const [isVerifying, setIsVerifying] = useState(false); // Logic Loader
@@ -218,7 +218,7 @@ export default function LoginPage() {
             animation: 'float 6s ease-in-out infinite'
           }}>
             <img
-              src="https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=256&bold=true"
+              src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=256&bold=true"}
               alt="Logo"
               style={{ width: '100px', marginBottom: '1.5rem', borderRadius: '20px', boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)' }}
             />
