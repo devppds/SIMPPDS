@@ -1,11 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 /**
  * StatsCard - Komponen kartu statistik tunggal
  */
-export function StatsCard({ title, value, icon, color = 'var(--primary)', trend, background }) {
+export function StatsCard({ title, value, icon, color = 'var(--primary)', trend, background, renderValue }) {
+    const displayValue = useMemo(() => {
+        if (renderValue && typeof renderValue === 'function') {
+            return renderValue(value);
+        }
+        if (typeof value === 'object' && value !== null) {
+            return JSON.stringify(value);
+        }
+        return value;
+    }, [value, renderValue]);
+
     return (
         <div className="stat-card" style={{
             background: background || '#fff',
@@ -50,7 +60,7 @@ export function StatsCard({ title, value, icon, color = 'var(--primary)', trend,
                     fontWeight: 800,
                     color: 'var(--primary-dark)'
                 }}>
-                    {value}
+                    {displayValue}
                 </h3>
                 {trend && (
                     <div style={{

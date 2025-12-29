@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
-export function useDataManagement(dataType, initialData = []) {
+export function useDataManagement(dataType, defaultFormData = {}) {
     const { isAdmin } = useAuth();
-    const [data, setData] = useState(initialData);
+    const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -14,7 +14,7 @@ export function useDataManagement(dataType, initialData = []) {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({});
+    const [formData, setFormData] = useState(defaultFormData);
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -52,7 +52,7 @@ export function useDataManagement(dataType, initialData = []) {
     };
 
     const handleDelete = async (id, confirmMsg = 'Hapus data ini?') => {
-        if (!confirm(confirmMsg)) return;
+        if (confirmMsg && !confirm(confirmMsg)) return;
         try {
             await apiCall('deleteData', 'POST', { type: dataType, id });
             loadData();
@@ -61,13 +61,13 @@ export function useDataManagement(dataType, initialData = []) {
         }
     };
 
-    const openModal = (item = null, defaultForm = {}) => {
+    const openModal = (item = null) => {
         if (item) {
             setEditId(item.id);
             setFormData({ ...item });
         } else {
             setEditId(null);
-            setFormData(defaultForm);
+            setFormData(defaultFormData);
         }
         setIsModalOpen(true);
     };

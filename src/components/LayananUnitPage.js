@@ -143,7 +143,7 @@ export default function LayananUnitPage({ unit: forceUnit }) {
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                onConfirm={async () => { await handleDelete(confirmDelete.id, null); setConfirmDelete({ open: false, id: null }); }}
                 title="Hapus Log Layanan?"
                 message="Data pelayanan ini akan dihapus permanen dari buku unit."
             />
