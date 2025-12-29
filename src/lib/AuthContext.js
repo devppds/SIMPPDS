@@ -84,6 +84,17 @@ export function usePagePermission() {
     // Special Case: "Wajar Murottil"
     if (currentModule === 'wajar-murottil' && user.role === 'wajar_murottil') isOwner = true;
 
+    // --- DEBUG CONSOLE ---
+    if (process.env.NODE_ENV === 'development') {
+        console.groupCollapsed(`🛡️ Permission Check: ${currentModule || 'Home'}`);
+        console.log(`Path: ${pathname}`);
+        console.log(`User Role: ${user.role}`);
+        console.log(`Is Owner: ${isOwner}`);
+        console.log(`Result: ${isOwner ? '✅ CAN EDIT' : '👁️ READ ONLY'}`);
+        console.groupEnd();
+    }
+    // ---------------------
+
     return {
         canEdit: isOwner,
         // Delete biasanya dibatasi hanya untuk Super Admin untuk keamanan data,
