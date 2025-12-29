@@ -13,6 +13,7 @@ export default function AksesPage() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    const [isRoleConfigOpen, setIsRoleConfigOpen] = useState(false);
 
     // Create User state
     const [userFormData, setUserFormData] = useState({
@@ -146,7 +147,7 @@ export default function AksesPage() {
                     transition: 'all 0.3s'
                 }}>
                     <p style={{ color: '#64748b', marginBottom: '1.5rem', fontWeight: 600, fontSize: '1rem' }}>Ingin menambah peran kustom?</p>
-                    <button className="btn btn-outline" style={{ borderRadius: '14px', padding: '12px 28px', border: '1.5px solid #e2e8f0', fontWeight: 700 }}>
+                    <button className="btn btn-outline" style={{ borderRadius: '14px', padding: '12px 28px', border: '1.5px solid #e2e8f0', fontWeight: 700 }} onClick={() => setIsRoleConfigOpen(true)}>
                         <i className="fas fa-cog" style={{ marginRight: '8px' }}></i> Konfigurasi Role
                     </button>
                 </div>
@@ -316,6 +317,91 @@ export default function AksesPage() {
                         </div>
                     </div>
                 </form>
+            </Modal>
+            {/* Role Configuration Modal */}
+            <Modal
+                isOpen={isRoleConfigOpen}
+                onClose={() => setIsRoleConfigOpen(false)}
+                title="Konfigurasi Role & Permissions"
+            >
+                <div style={{ padding: '10px' }}>
+                    <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '0.95rem' }}>
+                        Berikut adalah daftar role yang tersedia di sistem. Setiap role memiliki akses ke menu tertentu.
+                    </p>
+
+                    <div style={{ display: 'grid', gap: '1rem' }}>
+                        {[
+                            { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: ['Semua Menu', 'DEVELZY Control', 'Laporan Pimpinan', 'Manajemen Akses'] },
+                            { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', menus: ['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis'] },
+                            { role: 'bendahara', label: 'Bendahara', color: '#10b981', menus: ['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri'] },
+                            { role: 'keamanan', label: 'Keamanan', color: '#ef4444', menus: ['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang'] },
+                            { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', menus: ['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil'] },
+                            { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', menus: ['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'] },
+                            { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', menus: ['Data Kesehatan', 'Layanan Kesehatan'] },
+                            { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', menus: ["Layanan Jam'iyyah"] },
+                        ].map((item, idx) => (
+                            <div key={idx} style={{
+                                padding: '1.5rem',
+                                border: '2px solid #f1f5f9',
+                                borderRadius: '16px',
+                                background: 'white',
+                                transition: 'all 0.2s'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                                    <div style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        borderRadius: '10px',
+                                        background: `${item.color}15`,
+                                        color: item.color,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: 800
+                                    }}>
+                                        <i className="fas fa-user-tag"></i>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>{item.label}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'monospace' }}>{item.role}</div>
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600, marginBottom: '8px' }}>Akses Menu:</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                    {item.menus.map((menu, i) => (
+                                        <span key={i} style={{
+                                            background: `${item.color}10`,
+                                            color: item.color,
+                                            padding: '4px 12px',
+                                            borderRadius: '8px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700
+                                        }}>
+                                            {menu}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{
+                        marginTop: '2rem',
+                        padding: '1.5rem',
+                        background: '#f8fafc',
+                        borderRadius: '12px',
+                        border: '1px dashed #cbd5e1'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                            <i className="fas fa-info-circle" style={{ color: '#3b82f6' }}></i>
+                            <strong style={{ color: '#1e293b' }}>Informasi</strong>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
+                            Role dan permissions saat ini sudah dikonfigurasi di <code style={{ background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>navConfig.js</code>.
+                            Untuk menambah role baru atau mengubah permissions, hubungi developer.
+                        </p>
+                    </div>
+                </div>
             </Modal>
         </div>
     );
