@@ -12,6 +12,12 @@ export const NAV_ITEMS = [
         roles: ['admin']
     },
     {
+        label: 'Manajemen Akses',
+        icon: 'fas fa-user-shield',
+        path: '/akses',
+        roles: ['admin']
+    },
+    {
         label: 'Sekretariat',
         icon: 'fas fa-file-signature',
         roles: ['admin', 'sekretariat'],
