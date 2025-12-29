@@ -35,7 +35,8 @@ const headersConfig = {
     'keuangan_tarif': ["kategori_status", "kelas", "nominal", "keterangan"],
     'keuangan_pembayaran': ["santri_id", "nama_santri", "tanggal", "jenis_pembayaran", "bulan_tagihan", "nominal", "keterangan", "petugas"],
     'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"],
-    'kalender_kerja': ["hari", "tanggal_masehi", "tanggal_hijriyah", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"]
+    'kalender_kerja': ["hari", "tanggal_masehi", "tanggal_hijriyah", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"],
+    'roles': ["role", "label", "color", "menus"]
 };
 
 const FILE_COLUMNS = {

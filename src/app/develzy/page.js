@@ -40,16 +40,7 @@ export default function DevelzyControlPage() {
     // Role Management State
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
-    const [rolesList, setRolesList] = useState([
-        { role: 'admin', label: 'Super Administrator', color: '#2563eb', users: 2, menus: ['Semua Menu', 'DEVELZY Control', 'Laporan Pimpinan', 'Manajemen Akses'] },
-        { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', users: 5, menus: ['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis'] },
-        { role: 'bendahara', label: 'Bendahara', color: '#10b981', users: 3, menus: ['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri'] },
-        { role: 'keamanan', label: 'Keamanan', color: '#ef4444', users: 4, menus: ['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang'] },
-        { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', users: 6, menus: ['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil'] },
-        { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', users: 2, menus: ['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'] },
-        { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', users: 2, menus: ['Data Kesehatan', 'Layanan Kesehatan'] },
-        { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', users: 1, menus: ["Layanan Jam'iyyah"] },
-    ]);
+    const [rolesList, setRolesList] = useState([]);
     const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [] });
 
     useEffect(() => {
@@ -128,6 +119,37 @@ export default function DevelzyControlPage() {
                         if (item.key === 'deskripsi') newConfigs.deskripsi = item.value;
                     });
                     setConfigs(newConfigs);
+                }
+            }
+            if (activeTab === 'roles') {
+                try {
+                    const res = await apiCall('getData', 'GET', { type: 'roles' });
+                    // Handle Seeding if empty
+                    if (!res || res.length === 0) {
+                        console.log("Seeding default roles...");
+                        const defaultRoles = [
+                            { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: JSON.stringify(['Semua Menu']) },
+                            { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', menus: JSON.stringify(['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis']) },
+                            { role: 'bendahara', label: 'Bendahara', color: '#10b981', menus: JSON.stringify(['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri']) },
+                            { role: 'keamanan', label: 'Keamanan', color: '#ef4444', menus: JSON.stringify(['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang']) },
+                            { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', menus: JSON.stringify(['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil']) },
+                            { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', menus: JSON.stringify(['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi']) },
+                            { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', menus: JSON.stringify(['Data Kesehatan', 'Layanan Kesehatan']) },
+                            { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', menus: JSON.stringify(["Layanan Jam'iyyah"]) },
+                        ];
+
+                        // Seed one by one
+                        for (const role of defaultRoles) {
+                            await apiCall('saveData', 'POST', { type: 'roles', data: role });
+                        }
+                        // Reload
+                        const seeded = await apiCall('getData', 'GET', { type: 'roles' });
+                        if (isMounted.current) setRolesList(seeded.map(r => ({ ...r, menus: JSON.parse(r.menus) })));
+                    } else {
+                        if (isMounted.current) setRolesList(res.map(r => ({ ...r, menus: JSON.parse(r.menus) })));
+                    }
+                } catch (err) {
+                    console.error("Failed to load/seed roles:", err);
                 }
             }
         } catch (e) {
@@ -349,35 +371,47 @@ export default function DevelzyControlPage() {
         setIsRoleModalOpen(true);
     };
 
-    const handleSaveRole = (e) => {
+    const handleSaveRole = async (e) => {
         if (e) e.preventDefault();
 
-        if (editingRole) {
-            // Update existing role
-            setRolesList(rolesList.map(r => r.role === editingRole.role ? { ...roleFormData, users: r.users } : r));
-            showToast("Role berhasil diperbarui (Simulasi)", "success");
-        } else {
-            // Add new role
-            const newRole = {
-                ...roleFormData,
+        try {
+            const dataToSave = {
                 role: roleFormData.role.toLowerCase().replace(/\s+/g, '_'),
-                users: 0
+                label: roleFormData.label,
+                color: roleFormData.color,
+                menus: JSON.stringify(roleFormData.menus)
             };
-            setRolesList([...rolesList, newRole]);
-            showToast("Role baru berhasil ditambahkan (Simulasi)", "success");
+
+            if (editingRole && editingRole.id) {
+                await apiCall('saveData', 'POST', { type: 'roles', id: editingRole.id, data: dataToSave });
+                showToast("Role berhasil diperbarui!", "success");
+            } else {
+                await apiCall('saveData', 'POST', { type: 'roles', data: dataToSave });
+                showToast("Role baru berhasil ditambahkan!", "success");
+            }
+            setIsRoleModalOpen(false);
+            loadData();
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal menyimpan role: " + err.message, "error");
         }
-        setIsRoleModalOpen(false);
     };
 
-    const handleDeleteRole = (roleToDelete) => {
+    const handleDeleteRole = async (roleToDelete) => {
         if (roleToDelete.role === 'admin') {
             showToast("Role Super Administrator tidak dapat dihapus!", "error");
             return;
         }
 
         if (confirm(`Apakah Anda yakin ingin menghapus role "${roleToDelete.label}"?`)) {
-            setRolesList(rolesList.filter(r => r.role !== roleToDelete.role));
-            showToast("Role berhasil dihapus (Simulasi)", "success");
+            try {
+                await apiCall('deleteData', 'DELETE', { type: 'roles', id: roleToDelete.id });
+                showToast("Role berhasil dihapus!", "success");
+                loadData();
+            } catch (err) {
+                console.error(err);
+                showToast("Gagal menghapus role: " + err.message, "error");
+            }
         }
     };
     const handleInitSystem = async () => {
@@ -953,7 +987,7 @@ export default function DevelzyControlPage() {
                 footer={(
                     <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button className="btn btn-secondary" onClick={() => setIsRoleModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSaveRole}>Simpan Role (Simulasi)</button>
+                        <button className="btn btn-primary" onClick={handleSaveRole}>Simpan Role</button>
                     </div>
                 )}
             >
@@ -993,7 +1027,7 @@ export default function DevelzyControlPage() {
                         />
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Akses Menu (Simulasi)</label>
+                        <label className="form-label">Akses Menu</label>
                         <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                             <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>Centang menu yang diizinkan:</p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
