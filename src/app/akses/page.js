@@ -66,7 +66,6 @@ export default function AksesPage() {
             case 'wajar_murottil': return 'Wajar-Murottil';
             case 'kesehatan': return 'Kesehatan (BK)';
             case 'jamiyyah': return "Jam'iyyah";
-            case 'madrasah_miu': return 'Madrasah MIU';
             default: return role?.toUpperCase() || 'User';
         }
     };
@@ -302,7 +301,6 @@ export default function AksesPage() {
                                 <option value="wajar_murottil">Wajar-Murottil</option>
                                 <option value="kesehatan">Kesehatan (BK)</option>
                                 <option value="jamiyyah">Jam'iyyah</option>
-                                <option value="madrasah_miu">Madrasah MIU</option>
                             </select>
                         </div>
                         <div className="form-group">
