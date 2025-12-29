@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function PelanggaranPage() {
     const { isAdmin } = useAuth();
+    const { canEdit } = usePagePermission();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -125,7 +126,7 @@ export default function PelanggaranPage() {
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
@@ -144,9 +145,9 @@ export default function PelanggaranPage() {
                         <button className="btn btn-secondary btn-sm" onClick={() => window.print()} title="Cetak Laporan">
                             <i className="fas fa-print"></i>
                         </button>
-                        <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
+                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
                             <i className="fas fa-plus"></i> Input Baru
-                        </button>
+                        </button>}
                     </div>
                 </div>
 

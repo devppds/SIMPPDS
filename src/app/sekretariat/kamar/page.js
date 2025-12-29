@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function KamarPage() {
     const { isAdmin } = useAuth();
+    const { canEdit } = usePagePermission();
     const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [allSantri, setAllSantri] = useState([]);
@@ -160,7 +161,7 @@ export default function KamarPage() {
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Penghuni"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
@@ -175,9 +176,9 @@ export default function KamarPage() {
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Manajemen Hunian (Kamar)</h2>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pantau kapasitas asrama dan distribusi santri di setiap gending.</p>
                     </div>
-                    <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
+                    {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
                         <i className="fas fa-plus"></i> Tambah Kamar
-                    </button>
+                    </button>}
                 </div>
 
                 <div className="stats-grid" style={{ marginBottom: '2.5rem', padding: '0 1.5rem' }}>

@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function PengajarPage() {
     const { isAdmin } = useAuth();
+    const { canEdit } = usePagePermission();
     const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -133,7 +134,7 @@ export default function PengajarPage() {
             render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
@@ -152,9 +153,9 @@ export default function PengajarPage() {
                         <button className="btn btn-secondary" onClick={() => window.print()}>
                             <i className="fas fa-print"></i>
                         </button>
-                        <button className="btn btn-primary" onClick={() => openModal()}>
+                        {canEdit && <button className="btn btn-primary" onClick={() => openModal()}>
                             <i className="fas fa-plus-circle"></i> Tambah Pengajar
-                        </button>
+                        </button>}
                     </div>
                 </div>
 
