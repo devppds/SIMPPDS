@@ -15,10 +15,10 @@ export function AuthProvider({ children }) {
                 setUser(JSON.parse(session));
             } catch (e) {
                 localStorage.removeItem('sim_session');
-                setUser({ username: 'admin', role: 'admin', fullname: 'Administrator' });
+                setUser(null);
             }
         } else {
-            setUser({ username: 'admin', role: 'admin', fullname: 'Administrator' });
+            setUser(null);
         }
         setLoading(false);
     }, []);
