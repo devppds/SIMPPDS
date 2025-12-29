@@ -1,6 +1,7 @@
 'use client';
 
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/lib/AuthContext';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/navConfig';
@@ -8,17 +9,22 @@ import { NAV_ITEMS } from '@/lib/navConfig';
 export default function ContentWrapper({ children }) {
     const { loading } = useAuth();
     const pathname = usePathname();
-    const isLoginPage = pathname === '/login';
+    const isLoginPage = pathname === '/'; // Login page is root
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100vw' }}>
-                <div className="fas fa-spinner fa-spin" style={{ fontSize: '2rem', color: 'var(--primary)' }}></div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100vw', background: '#f8fafc' }}>
+                <div style={{ padding: '20px', borderRadius: '12px', background: 'white', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+                    <i className="fas fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: '#2563eb' }}></i>
+                </div>
             </div>
         );
     }
 
-    if (isLoginPage) return <>{children}</>;
+    // Jika halaman login, tampilkan full screen tanpa sidebar/header
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
 
     // Find title from NAV_ITEMS
     let pageTitle = 'SIM PPDS';
@@ -31,11 +37,14 @@ export default function ContentWrapper({ children }) {
     });
 
     return (
-        <div className="content-wrapper">
-            <Header title={pageTitle} />
-            <main id="main-content">
-                {children}
-            </main>
+        <div className="app-container">
+            <Sidebar />
+            <div className="content-wrapper">
+                <Header title={pageTitle} />
+                <main id="main-content">
+                    {children}
+                </main>
+            </div>
         </div>
     );
 }

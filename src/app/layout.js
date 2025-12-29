@@ -1,6 +1,5 @@
 import { AuthProvider } from '@/lib/AuthContext';
 import { ToastProvider } from '@/lib/ToastContext';
-import Sidebar from '@/components/Sidebar';
 import ContentWrapper from '@/components/ContentWrapper';
 import './globals.css';
 
@@ -23,12 +22,9 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>
           <ToastProvider>
-            <div className="app-container">
-              <Sidebar />
-              <ContentWrapper>
-                {children}
-              </ContentWrapper>
-            </div>
+            <ContentWrapper>
+              {children}
+            </ContentWrapper>
           </ToastProvider>
         </AuthProvider>
         <div id="modal-root"></div>
