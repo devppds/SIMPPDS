@@ -16,6 +16,7 @@ export default function LaporanPimpinan() {
     const [aiSuggestion, setAiSuggestion] = useState("Menganalisis data...");
     const [occupancy, setOccupancy] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
     const generateAiSuggestion = (data, totalCapacity) => {
         const { santriTotal, kesehatanTotal, pelanggaranTotal, pemasukanBulanIni, pengeluaranBulanIni } = data;
@@ -30,7 +31,7 @@ export default function LaporanPimpinan() {
             } else if (surplus < 0) {
                 items.push("Laporan defisit terdeteksi, mohon periksa pos pengeluaran mendadak.");
             } else if (ratio < 0.6) {
-                items.push("Kondisi finansial bulan ini sangat sehat dan stabil.");
+                items.push("Kondisi finansial bulan ini sangat sehat and stabil.");
             }
         }
 
@@ -65,6 +66,9 @@ export default function LaporanPimpinan() {
     };
 
     useEffect(() => {
+        setMounted(true);
+        const isMounted = { current: true }; // Local ref for this effect cleanup
+
         const fetchStats = async () => {
             try {
                 const data = await apiCall('getQuickStats');
@@ -74,6 +78,8 @@ export default function LaporanPimpinan() {
                 const kesehatan = await apiCall('getData', 'GET', { type: 'kesehatan' });
                 const arusKas = await apiCall('getData', 'GET', { type: 'arus_kas' });
                 const kamarData = await apiCall('getData', 'GET', { type: 'kamar' });
+
+                if (!isMounted.current) return;
 
                 const now = new Date();
                 const currentMonth = now.getMonth();
@@ -107,11 +113,13 @@ export default function LaporanPimpinan() {
             } catch (error) {
                 console.error("Failed to fetch report data:", error);
             } finally {
-                setLoading(false);
+                if (isMounted.current) setLoading(false);
             }
         };
 
         fetchStats();
+
+        return () => { isMounted.current = false; };
     }, []);
 
     if (loading) return (
@@ -269,7 +277,7 @@ export default function LaporanPimpinan() {
 
             <div className="print-footer-corporate" style={{ display: 'none' }}>
                 <div style={{ marginTop: '50px', paddingTop: '10px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#94a3b8' }}>
-                    <span>Dicetak pada: {new Date().toLocaleString('id-ID')}</span>
+                    <span>Dicetak pada: {mounted && new Date().toLocaleString('id-ID')}</span>
                     <span style={{ fontWeight: 700 }}>SIM-PPDS | SYSTEM INFORMASI SATU PINTU PONDOK PESANTREN DARUSSALAM LIRBOYO By. DevElz</span>
                 </div>
             </div>

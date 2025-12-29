@@ -21,16 +21,19 @@ export default function AbsensiFormalPage() {
     // Form State: { [santriId]: { status: 'H', keterangan: '', id: null } }
     const [attendance, setAttendance] = useState({});
     const [stats, setStats] = useState({ H: 0, S: 0, I: 0, A: 0, T: 0 });
+    const isMounted = React.useRef(true);
 
     useEffect(() => {
+        isMounted.current = true;
         loadMasterKelas();
+        return () => { isMounted.current = false; };
     }, []);
 
     useEffect(() => {
         if (selectedKelas && filterDate) {
             loadAttendanceData();
         } else {
-            setSantriList([]);
+            if (isMounted.current) setSantriList([]);
         }
     }, [selectedKelas, filterDate]);
 
@@ -48,12 +51,12 @@ export default function AbsensiFormalPage() {
             const res = await apiCall('getData', 'GET', { type: 'master_kelas' });
             // Filter only MIU (Formal)
             const formal = (res || []).filter(k => k.lembaga === 'MIU');
-            setKelasOptions(formal.sort((a, b) => a.urutan - b.urutan));
+            if (isMounted.current) setKelasOptions(formal.sort((a, b) => a.urutan - b.urutan));
         } catch (e) { console.error(e); }
     };
 
     const loadAttendanceData = async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             // 1. Get Santri in Class
             const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
@@ -61,7 +64,7 @@ export default function AbsensiFormalPage() {
                 .filter(s => s.kelas === selectedKelas && s.status_santri === 'Aktif')
                 .sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
-            setSantriList(students);
+            if (isMounted.current) setSantriList(students);
 
             // 2. Get Existing Attendance for Date (Client-side filtered for now)
             const resAbsensi = await apiCall('getData', 'GET', { type: 'keamanan_absensi' });
@@ -77,9 +80,9 @@ export default function AbsensiFormalPage() {
                     id: log ? log.id : null // Record ID if exists
                 };
             });
-            setAttendance(initialState);
+            if (isMounted.current) setAttendance(initialState);
         } catch (e) { console.error(e); }
-        finally { setLoading(false); }
+        finally { if (isMounted.current) setLoading(false); }
     };
 
     const handleStatusChange = (santriId, newStatus) => {
@@ -126,13 +129,15 @@ export default function AbsensiFormalPage() {
             });
 
             await Promise.all(promises);
-            showToast("Absensi berhasil disimpan!", "success");
-            loadAttendanceData(); // Refresh IDs
+            if (isMounted.current) {
+                showToast("Absensi berhasil disimpan!", "success");
+                loadAttendanceData(); // Refresh IDs
+            }
         } catch (e) {
             console.error(e);
-            showToast("Gagal menyimpan: " + e.message, "error");
+            if (isMounted.current) showToast("Gagal menyimpan: " + e.message, "error");
         } finally {
-            setLoading(false);
+            if (isMounted.current) setLoading(false);
         }
     };
 

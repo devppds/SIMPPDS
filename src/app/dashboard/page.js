@@ -17,24 +17,31 @@ export default function DashboardPage() {
     });
     const [lastActivities, setLastActivities] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
+    const isMounted = React.useRef(true);
 
     useEffect(() => {
+        setMounted(true);
+        isMounted.current = true;
         const fetchDashboardData = async () => {
             try {
                 const [quickStats, activities] = await Promise.all([
                     apiCall('getQuickStats'),
                     apiCall('getData', 'GET', { type: 'arus_kas' })
                 ]);
-                setStats(quickStats);
-                setLastActivities(activities?.slice(0, 6) || []);
+                if (isMounted.current) {
+                    setStats(quickStats);
+                    setLastActivities(activities?.slice(0, 6) || []);
+                }
             } catch (err) {
                 console.error("Failed to fetch dashboard data", err);
             } finally {
-                setLoading(false);
+                if (isMounted.current) setLoading(false);
             }
         };
 
         fetchDashboardData();
+        return () => { isMounted.current = false; };
     }, []);
 
     return (
@@ -118,7 +125,7 @@ export default function DashboardPage() {
                                 {
                                     key: 'tanggal',
                                     label: 'Tanggal',
-                                    render: (row) => <span style={{ fontSize: '0.85rem' }}>{new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
+                                    render: (row) => <span style={{ fontSize: '0.85rem' }}>{mounted && new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
                                 },
                                 {
                                     key: 'status',
@@ -206,7 +213,7 @@ export default function DashboardPage() {
                             </div>
                             <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Update Terakhir</div>
-                                <div style={{ fontWeight: 700 }}>{new Date().toLocaleTimeString('id-ID')}</div>
+                                <div style={{ fontWeight: 700 }}>{mounted && new Date().toLocaleTimeString('id-ID')}</div>
                             </div>
                         </div>
                     </div>

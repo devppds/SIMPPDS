@@ -14,6 +14,8 @@ export default function KalenderKerjaPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [mounted, setMounted] = useState(false);
+    const isMounted = React.useRef(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
@@ -30,16 +32,21 @@ export default function KalenderKerjaPage() {
     });
     const [submitting, setSubmitting] = useState(false);
 
-    useEffect(() => { loadData(); }, []);
+    useEffect(() => {
+        setMounted(true);
+        isMounted.current = true;
+        loadData();
+        return () => { isMounted.current = false; };
+    }, []);
 
     const loadData = async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const res = await apiCall('getData', 'GET', { type: 'kalender_kerja' });
-            setData(res || []);
+            if (isMounted.current) setData(res || []);
         }
         catch (e) { console.error(e); }
-        finally { setLoading(false); }
+        finally { if (isMounted.current) setLoading(false); }
     };
 
     const openModal = (item = null) => {
@@ -217,7 +224,7 @@ export default function KalenderKerjaPage() {
                 </table>
                 <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', paddingRight: '2rem' }}>
                     <div style={{ textAlign: 'center' }}>
-                        <p>Kediri, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        <p>Kediri, {mounted && new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                         <p style={{ fontWeight: 800, marginTop: '5px' }}>Sekretaris Pondok,</p>
                         <div style={{ height: '80px' }}></div>
                         <p style={{ borderBottom: '1.5px solid #000', fontWeight: 800, display: 'inline-block', minWidth: '150px' }}>H. M. ABDULLAH FAHIM</p>

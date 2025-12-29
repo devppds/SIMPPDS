@@ -24,17 +24,26 @@ export default function KesehatanPage() {
         biaya_obat: '0'
     });
 
+    const isMounted = React.useRef(true);
+
+    React.useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+
     const loadEnrichedData = useCallback(async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const [res, resSantri] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'kesehatan' }),
                 apiCall('getData', 'GET', { type: 'santri' })
             ]);
-            setData(res || []);
-            setSantriOptions(resSantri || []);
+            if (isMounted.current) {
+                setData(res || []);
+                setSantriOptions(resSantri || []);
+            }
         } catch (e) { console.error(e); }
-        finally { setLoading(false); }
+        finally { if (isMounted.current) setLoading(false); }
     }, [setData, setLoading]);
 
     useEffect(() => {
