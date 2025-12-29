@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Next.js: Run Local Dev (Recommended)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev"
+        },
+        {
+            "name": "Chrome: Debug Deployed App",
+            "type": "chrome",
+            "request": "launch",
+            "url": "https://simppds-5dv.pages.dev/",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}
