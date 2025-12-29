@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { apiCall } from '@/lib/utils';
@@ -10,6 +10,7 @@ export default function DevelzyControlPage() {
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState('general');
     const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const isMounted = useRef(false);
 
     // Real Data State
     const [logs, setLogs] = useState([]);
@@ -28,17 +29,28 @@ export default function DevelzyControlPage() {
     });
 
     useEffect(() => {
+        isMounted.current = true;
+
         if (isAdmin) {
             loadData();
             loadSystemStats();
 
             // Refresh stats every 30 seconds
             const interval = setInterval(() => {
-                loadSystemStats();
+                if (isMounted.current) {
+                    loadSystemStats();
+                }
             }, 30000);
 
-            return () => clearInterval(interval);
+            return () => {
+                isMounted.current = false;
+                clearInterval(interval);
+            };
         }
+
+        return () => {
+            isMounted.current = false;
+        };
     }, [isAdmin, activeTab]);
 
     const loadSystemStats = async () => {
@@ -53,12 +65,14 @@ export default function DevelzyControlPage() {
             // Get database stats for activity indicator
             const dbStats = await apiCall('getQuickStats', 'GET');
 
-            setSystemStats({
-                uptime: uptimeDays > 0 ? `${uptimeDays} Hari, ${uptimeHours} Jam` : `${uptimeHours} Jam`,
-                requests: dbStats ? 'Active' : 'Idle',
-                cpu: 'Optimal', // Cloudflare Workers auto-scales, always optimal
-                memory: 'Edge Optimized' // Cloudflare manages memory automatically
-            });
+            if (isMounted.current) {
+                setSystemStats({
+                    uptime: uptimeDays > 0 ? `${uptimeDays} Hari, ${uptimeHours} Jam` : `${uptimeHours} Jam`,
+                    requests: dbStats ? 'Active' : 'Idle',
+                    cpu: 'Optimal', // Cloudflare Workers auto-scales, always optimal
+                    memory: 'Edge Optimized' // Cloudflare manages memory automatically
+                });
+            }
         } catch (e) {
             console.error("Load system stats error:", e);
         }
@@ -68,11 +82,13 @@ export default function DevelzyControlPage() {
         try {
             if (activeTab === 'audit') {
                 const res = await apiCall('getAuditLogs', 'GET');
-                setLogs(Array.isArray(res) ? res : []);
+                if (isMounted.current) {
+                    setLogs(Array.isArray(res) ? res : []);
+                }
             }
             if (activeTab === 'general') {
                 const res = await apiCall('getConfigs', 'GET');
-                if (res && Array.isArray(res)) {
+                if (res && Array.isArray(res) && isMounted.current) {
                     const newConfigs = { ...configs };
                     res.forEach(item => {
                         if (item.key === 'nama_instansi') newConfigs.nama_instansi = item.value;
