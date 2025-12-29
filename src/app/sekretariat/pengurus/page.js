@@ -38,7 +38,7 @@ export default function PengurusPage() {
         setUploading(true);
         try {
             const timestamp = Math.round(new Date().getTime() / 1000);
-            const paramsToSign = { timestamp };
+            const paramsToSign = { timestamp, folder: 'simppds_pengurus' };
             const { signature, apiKey, cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign } });
 
             if (!apiKey || !cloudName) {
@@ -50,6 +50,7 @@ export default function PengurusPage() {
             fd.append('api_key', apiKey);
             fd.append('timestamp', timestamp);
             fd.append('signature', signature);
+            fd.append('folder', 'simppds_pengurus');
             const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: fd });
             const result = await res.json();
             if (result.secure_url) {

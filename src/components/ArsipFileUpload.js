@@ -24,7 +24,7 @@ export default function ArsipFileUpload({ onUploadComplete, currentFile, label =
             const timestamp = Math.round(new Date().getTime() / 1000);
             const paramsToSign = {
                 timestamp,
-                folder: 'arsip_dokumen', // Organize in folder
+                folder: 'simppds_arsip', // Organize in folder
             };
 
             // Optimize based on file type
@@ -46,7 +46,7 @@ export default function ArsipFileUpload({ onUploadComplete, currentFile, label =
             fd.append('api_key', apiKey);
             fd.append('timestamp', timestamp);
             fd.append('signature', signature);
-            fd.append('folder', 'arsip_dokumen');
+            fd.append('folder', 'simppds_arsip');
 
             if (file.type === 'application/pdf') {
                 fd.append('quality', 'auto');
