@@ -157,7 +157,7 @@ export default function PengurusPage() {
         {
             key: 'nama',
             label: 'Nama Lengkap',
-            render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama}</div><div style={{ fontSize: '0.75rem' }}>WA: {row.no_hp || '-'}</div></div>
+            render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama}</div><div style={{ fontSize: '0.75rem' }}>WA: {row.no_hp ? <a href={`https://wa.me/${row.no_hp.replace(/^0/, '62').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 700 }}>{row.no_hp}</a> : '-'}</div></div>
         },
         {
             key: 'jabatan',
@@ -350,7 +350,11 @@ export default function PengurusPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
                                 <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>WhatsApp</span>
-                                <span style={{ fontWeight: 800, color: '#25D366' }}><i className="fab fa-whatsapp"></i> {viewData.no_hp || '-'}</span>
+                                {viewData.no_hp ? (
+                                    <a href={`https://wa.me/${viewData.no_hp.replace(/^0/, '62').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 800, color: '#25D366', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <i className="fab fa-whatsapp"></i> {viewData.no_hp}
+                                    </a>
+                                ) : <span style={{ fontWeight: 800, color: '#cbd5e1' }}>-</span>}
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
                                 <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Status Keanggotaan</span>

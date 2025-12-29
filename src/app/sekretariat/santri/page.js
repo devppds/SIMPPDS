@@ -609,7 +609,15 @@ export default function SantriPage() {
                                 <div style={{ marginTop: '2rem' }}>
                                     <h4 style={{ fontSize: '0.9rem', fontWeight: 800, borderBottom: '2px solid #f1f5f9', paddingBottom: '8px', marginBottom: '15px' }}>Orang Tua & Domisili</h4>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                        <div><small style={{ color: 'var(--text-muted)' }}>Nama Ayah (Wali)</small><div style={{ fontWeight: 600 }}>{detailData.nama_ayah || '-'}</div><div style={{ fontWeight: 800, color: '#25D366', fontSize: '0.8rem' }}><i className="fab fa-whatsapp"></i> {detailData.no_telp_ayah || '-'}</div></div>
+                                        <div>
+                                            <small style={{ color: 'var(--text-muted)' }}>Nama Ayah (Wali)</small>
+                                            <div style={{ fontWeight: 600 }}>{detailData.nama_ayah || '-'}</div>
+                                            {detailData.no_telp_ayah ? (
+                                                <a href={`https://wa.me/${detailData.no_telp_ayah.replace(/^0/, '62').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 800, color: '#25D366', fontSize: '0.8rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                                    <i className="fab fa-whatsapp"></i> {detailData.no_telp_ayah}
+                                                </a>
+                                            ) : <div style={{ fontWeight: 800, color: '#cbd5e1', fontSize: '0.8rem' }}>-</div>}
+                                        </div>
                                         <div><small style={{ color: 'var(--text-muted)' }}>Asal Daerah</small><div style={{ fontWeight: 600 }}>{detailData.kota_kabupaten || '-'}</div><div style={{ fontSize: '0.8rem' }}>{detailData.provinsi || '-'}</div></div>
                                     </div>
                                     <div style={{ marginTop: '1rem', padding: '1rem', background: '#f1f5f9', borderRadius: '12px', fontSize: '0.9rem' }}><i className="fas fa-map-marker-alt" style={{ marginRight: '8px', color: 'var(--danger)' }}></i>{detailData.dusun_jalan}, {detailData.desa_kelurahan}, {detailData.kecamatan}</div>

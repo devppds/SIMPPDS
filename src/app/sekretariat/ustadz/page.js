@@ -240,7 +240,11 @@ export default function PengajarPage() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
                             <div>
                                 <small style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>WhatsApp</small>
-                                <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{viewData.no_hp || '-'}</div>
+                                {viewData.no_hp ? (
+                                    <a href={`https://wa.me/${viewData.no_hp.replace(/^0/, '62').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, fontSize: '1.1rem', color: '#25D366', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <i className="fab fa-whatsapp"></i> {viewData.no_hp}
+                                    </a>
+                                ) : <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>-</div>}
                             </div>
                             <div>
                                 <small style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Tugas Mengajar</small>
