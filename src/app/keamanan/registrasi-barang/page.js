@@ -147,7 +147,7 @@ export default function KeamananRegPage() {
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                onConfirm={async () => { await handleDelete(confirmDelete.id, null); setConfirmDelete({ open: false, id: null }); }}
                 title="Hapus Registrasi?"
                 message="Data kepemilikan barang ini akan dihapus dari sistem keamanan."
             />

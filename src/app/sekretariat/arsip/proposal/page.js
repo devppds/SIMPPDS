@@ -64,7 +64,7 @@ export default function ProposalPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Manajemen Arsip Proposal" subJudul="Pencatatan usulan program kerja dan permohonan dana." />
+            <KopSurat judul="Manajemen Arsip Proposal" subJudul="Pencatatan usulan program kerja dan permohonan dana." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

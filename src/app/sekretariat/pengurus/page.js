@@ -87,7 +87,7 @@ export default function PengurusPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Struktur Organisasi & Kepengurusan" subJudul="Data amanah dan profil pelayan santri." />
+            <KopSurat judul="Struktur Organisasi & Kepengurusan" subJudul="Data amanah dan profil pelayan santri." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

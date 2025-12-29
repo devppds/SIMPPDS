@@ -7,9 +7,9 @@ import React from 'react';
  * @param {string} judul - Judul utama laporan (Contoh: 'DAFTAR SANTRI BARU')
  * @param {string} subJudul - Sub-judul laporan (Contoh: 'Periode 2024/2025')
  */
-export default function KopSurat({ judul = '', subJudul = '' }) {
+export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = false }) {
     return (
-        <div className="print-header-unified" style={{ marginBottom: '2rem' }}>
+        <div className={`print-header-unified ${hideOnScreen ? 'print-only' : ''}`} style={{ marginBottom: '2rem' }}>
             {/* Kop Surat Corporate */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '3px solid #1e3a8a', paddingBottom: '15px' }}>
                 <img

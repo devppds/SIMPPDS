@@ -94,7 +94,7 @@ export default function LayananUnitPage({ unit: forceUnit }) {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul={`Log Pelayanan Unit ${forceUnit}`} subJudul={`Pusat administrasi harian seksi ${forceUnit.toLowerCase()}.`} />
+            <KopSurat judul={`Log Pelayanan Unit ${forceUnit}`} subJudul={`Pusat administrasi harian seksi ${forceUnit.toLowerCase()}.`} hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

@@ -60,25 +60,20 @@ export default function PengajarPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Direktori Tenaga Pengajar" subJudul="Pondok Pesantren Darussalam Lirboyo" />
+            <KopSurat judul="Direktori Tenaga Pengajar" subJudul="Pondok Pesantren Darussalam Lirboyo" hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 
-            <div className="card">
-                <div className="card-header">
-                    <div><h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Database Pengajar</h2></div>
-                    <div className="card-actions">
-                        <button className="btn btn-outline btn-sm" onClick={() => window.print()}><i className="fas fa-print"></i></button>
-                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Pengajar</button>}
-                    </div>
-                </div>
-
-                <div className="table-controls">
-                    <TextInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari nama atau tugas..." icon="fas fa-search" style={{ marginBottom: 0 }} />
-                </div>
-
-                <SortableTable columns={columns} data={displayData} loading={loading} />
-            </div>
+            <DataViewContainer
+                title="Database Pengajar"
+                subtitle="Daftar tenaga pendidik pondok pesantren."
+                headerActions={(<>
+                    <button className="btn btn-outline btn-sm" onClick={() => window.print()}><i className="fas fa-print"></i></button>
+                    {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Pengajar</button>}
+                </>)}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama atau tugas..." }}
+                tableProps={{ columns, data: displayData, loading }}
+            />
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Profil" : "Pengajar Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Profil'}</button>}>
                 <form onSubmit={handleSave}>
@@ -110,7 +105,7 @@ export default function PengajarPage() {
                     </div>
                 )}
             </Modal>
-        </div>
+        </div >
     );
 }
 

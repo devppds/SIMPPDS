@@ -111,22 +111,40 @@ export default function SantriPage() {
     ];
 
     const confirmDeletion = async () => {
-        await handleDelete(deleteConfirm.id);
+        await handleDelete(deleteConfirm.id, null);
         setDeleteConfirm({ open: false, id: null });
         loadEnrichedData();
     };
 
+    const handleExport = () => {
+        const headers = ['stambuk_pondok', 'nama_siswa', 'madrasah', 'kelas', 'kamar', 'status_santri', 'tahun_masuk', 'tempat_tanggal_lahir', 'no_telp_ayah'];
+        exportToExcel(displayData, 'Data_Santri', headers);
+    };
+
     return (
         <div className="view-container animate-in">
-            <KopSurat judul={`Database Santri - ${filterStatus}`} subJudul={`Tiga Unit: MHM, MIU, Madin`} />
+            <KopSurat judul={`Database Santri - ${filterStatus}`} subJudul={`Tiga Unit: MHM, MIU, Madin`} hideOnScreen={true} />
             <StatsPanel items={stats} />
 
             <DataViewContainer
                 title="Management Data Santri"
                 subtitle={`Menampilkan ${displayData.length} data sesuai filter`}
                 headerActions={(<>
-                    <button className="btn btn-outline" onClick={() => window.print()}><i className="fas fa-print"></i></button>
-                    {canEdit && <button className="btn btn-primary" onClick={() => { setActiveTab('umum'); openModal(); }}><i className="fas fa-plus"></i> Tambah Santri</button>}
+                    <button className="btn btn-outline btn-sm" onClick={() => {
+                        const headers = ['stambuk_pondok', 'nama_siswa', 'tahun_masuk', 'kamar', 'madrasah', 'kelas', 'tempat_tanggal_lahir', 'no_telp_ayah', 'alamat_lengkap'];
+                        exportToExcel([{ stambuk_pondok: '12345', nama_siswa: 'CONTOH NAMA', tahun_masuk: '2024', kamar: 'A 01', madrasah: 'MHM', kelas: '1 IBTIDA', tempat_tanggal_lahir: 'KEDIRI, 01-01-2010', no_telp_ayah: '08123456789', alamat_lengkap: 'JL. LIRBOYO NO. 1' }], 'Template_Santri', headers);
+                    }} title="Download Template Excel">
+                        <i className="fas fa-download"></i> Template
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={handleExport} title="Export Excel">
+                        <i className="fas fa-file-excel" style={{ color: '#16a34a' }}></i> Export
+                    </button>
+                    <button className="btn btn-outline btn-sm" onClick={() => window.print()} title="Print Laporan">
+                        <i className="fas fa-print"></i>
+                    </button>
+                    {canEdit && <button className="btn btn-primary btn-sm" onClick={() => { setActiveTab('umum'); openModal(); }}>
+                        <i className="fas fa-plus"></i> Tambah Santri
+                    </button>}
                 </>)}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama/stambuk..." }}
                 filters={(<>

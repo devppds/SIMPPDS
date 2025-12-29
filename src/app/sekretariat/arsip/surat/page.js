@@ -60,7 +60,7 @@ export default function SuratPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Arsip Dokumentasi Surat" subJudul="Manajemen surat masuk dan keluar pondok pesantren." />
+            <KopSurat judul="Arsip Dokumentasi Surat" subJudul="Manajemen surat masuk dan keluar pondok pesantren." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

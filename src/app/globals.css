@@ -70,6 +70,56 @@ h4,
   position: relative;
 }
 
+/* Print Utilities */
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: white;
+  }
+
+  .app-container {
+    display: block;
+  }
+
+  .sidebar,
+  .header-actions,
+  header,
+  .table-controls,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  .view-container {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+}
+
 /* Sidebar */
 .sidebar {
   width: var(--sidebar-width);

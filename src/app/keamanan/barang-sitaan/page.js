@@ -68,7 +68,7 @@ export default function BarangSitaanPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Pencatatan Barang Sitaan" subJudul="Log penertiban barang terlarang/tidak berizin." />
+            <KopSurat judul="Pencatatan Barang Sitaan" subJudul="Log penertiban barang terlarang/tidak berizin." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 
@@ -120,7 +120,7 @@ export default function BarangSitaanPage() {
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                onConfirm={async () => { await handleDelete(confirmDelete.id, null); setConfirmDelete({ open: false, id: null }); }}
                 title="Hapus Data Sitaan?"
                 message="Data ini akan dihapus secara permanen dari log keamanan."
             />
