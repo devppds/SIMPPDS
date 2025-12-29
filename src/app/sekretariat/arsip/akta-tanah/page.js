@@ -23,10 +23,14 @@ export default function AktaTanahPage() {
         handleSave, handleDelete, openModal, openView,
         isAdmin
     } = useDataManagement('arsip_akta_tanah', {
-        nomor_akta: '', tanggal: new Date().toISOString().split('T')[0],
+        nomor_akta: '', tanggal: '',
         lokasi: '', luas_tanah: '', atas_nama: '', status_kepemilikan: 'Milik Pondok',
         file_akta: '', keterangan: ''
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const displayData = useMemo(() => {
         return data.filter(d =>

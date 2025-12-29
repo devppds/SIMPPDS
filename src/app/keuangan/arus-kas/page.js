@@ -17,9 +17,13 @@ export default function ArusKasKeuanganPage() {
         isModalOpen, setIsModalOpen, formData, setFormData,
         handleSave
     } = useDataManagement('keuangan_kas', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         tipe: 'Keluar', kategori: 'Setor Bendahara Pondok', nominal: '', keterangan: ''
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const stats = useMemo(() => {
         const mas = data.filter(d => d.tipe === 'Masuk').reduce((acc, d) => acc + parseInt(d.nominal || 0), 0);

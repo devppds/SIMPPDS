@@ -25,10 +25,14 @@ export default function IzinPage() {
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView, isAdmin
     } = useDataManagement('izin', {
-        tanggal_mulai: new Date().toISOString().split('T')[0],
+        tanggal_mulai: '',
         tanggal_selesai: '', nama_santri: '', kelas: '', alasan: '',
         keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: ''
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal_mulai: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     useEffect(() => {
         apiCall('getData', 'GET', { type: 'santri' }).then(res => setSantriOptions(res || []));

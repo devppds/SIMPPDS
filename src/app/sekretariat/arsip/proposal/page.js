@@ -22,9 +22,13 @@ export default function ProposalPage() {
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView, isAdmin
     } = useDataManagement('arsip_proposal', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         nomor_proposal: '', judul: '', pengaju: '', nominal: '', status: 'Diajukan', file_proposal: '', keterangan: ''
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const displayData = data.filter(d =>
         (d.nomor_proposal || '').toLowerCase().includes(search.toLowerCase()) ||

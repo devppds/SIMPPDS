@@ -23,10 +23,14 @@ export default function SuratPage() {
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView, isAdmin
     } = useDataManagement('arsip_surat', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         nomor_surat: '', tipe: 'Masuk', pengirim_penerima: '',
         perihal: '', keterangan: '', file_surat: ''
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const displayData = data.filter(d => {
         const matchSearch = (d.nomor_surat || '').toLowerCase().includes(search.toLowerCase()) ||

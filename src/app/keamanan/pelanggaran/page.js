@@ -19,10 +19,14 @@ export default function PelanggaranPage() {
         handleSave, handleDelete, openModal, openView,
         isAdmin
     } = useDataManagement('keamanan', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         nama_santri: '', jenis_pelanggaran: 'Ringan', poin: '5',
         takzir: '', keterangan: '', petugas: ''
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const [santriOptions, setSantriOptions] = useState([]);
 

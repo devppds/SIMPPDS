@@ -27,9 +27,13 @@ export default function SetoranUnitPage() {
         isModalOpen, setIsModalOpen, formData, setFormData,
         handleDelete, isAdmin
     } = useDataManagement('kas_unit', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         unit: 'Sekretariat', nominal: '', keterangan: '', petugas: user?.fullname || '', status_setor: 'Selesai'
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);

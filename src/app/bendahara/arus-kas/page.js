@@ -23,10 +23,14 @@ export default function ArusKasPage() {
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView, isAdmin
     } = useDataManagement('arus_kas', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         tipe: 'Masuk', nominal: '', kategori: 'Syahriah',
         keterangan: '', pj: ''
     });
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);
