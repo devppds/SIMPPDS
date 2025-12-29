@@ -126,9 +126,9 @@ async function handle(request) {
         if (action === 'getCloudinarySignature') {
             const body = await request.json();
             const paramsToSign = body.data?.paramsToSign || body.paramsToSign;
-            const apiSecret = env.CLOUDINARY_API_SECRET;
-            const apiKey = env.CLOUDINARY_API_KEY;
-            const cloudName = env.CLOUDINARY_CLOUD_NAME;
+            const apiSecret = env.CLOUDINARY_API_SECRET?.trim();
+            const apiKey = env.CLOUDINARY_API_KEY?.trim();
+            const cloudName = env.CLOUDINARY_CLOUD_NAME?.trim();
 
             if (!apiSecret || !apiKey || !cloudName) {
                 return Response.json({
