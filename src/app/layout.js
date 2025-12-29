@@ -3,6 +3,8 @@ import Sidebar from '@/components/Sidebar';
 import ContentWrapper from '@/components/ContentWrapper';
 import './globals.css';
 
+export const runtime = 'edge';
+
 export const metadata = {
   title: 'SIM-PPDS | SYSTEM INFORMASI SATU PINTU PONDOK PESANTREN DARUSSALAM LIRBOYO By. DevElz',
   description: 'Sistem Informasi Manajemen Terpadu Pondok Pesantren Darussalam Lirboyo',

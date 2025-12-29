@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "npx @cloudflare/next-on-pages",
+    "build:cf": "npx vercel build && npx @cloudflare/next-on-pages --skip-build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "npm run build && npx wrangler pages deploy out --project-name simppds"
+    "deploy": "npm run build:cf && npx wrangler pages deploy .vercel/output/static --project-name ujikelaykan-sim"
   },
   "dependencies": {
     "moment": "^2.30.1",
