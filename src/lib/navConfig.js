@@ -109,12 +109,7 @@ export const NAV_ITEMS = [
         ]
     },
 
-    {
-        label: 'Madrasah MIU',
-        icon: 'fas fa-school',
-        path: '/madrasah-miu',
-        roles: ['admin', 'madrasah_miu']
-    },
+
     {
         label: 'Pengaturan',
         icon: 'fas fa-cog',
