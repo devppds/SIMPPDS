@@ -8,6 +8,12 @@ import React from 'react';
  * @param {string} subJudul - Sub-judul laporan (Contoh: 'Periode 2024/2025')
  */
 export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = false }) {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
     return (
         <div className={`print-header-unified ${hideOnScreen ? 'print-only' : ''}`} style={{ marginBottom: '2rem' }}>
             {/* Kop Surat Corporate */}
@@ -56,7 +62,7 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
                         </p>
                     )}
                     <p style={{ margin: '5px 0 0 0', fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                        Dicetak pada: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        Dicetak pada: {mounted ? new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '...'}
                     </p>
                 </div>
             )}

@@ -1,16 +1,20 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { formatDate } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import { apiCall } from '@/lib/utils';
 import Modal from '@/components/Modal';
-import SortableTable from '@/components/SortableTable';
+
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
+import { SelectInput } from '@/components/FormInput';
 
 export default function MutasiSantriPage() {
     const [filterStatus, setFilterStatus] = useState('Semua');
 
-    // ✨ Use Universal Data Hook
     const {
         data, setData, loading, setLoading, search, setSearch,
         isViewModalOpen, setIsViewModalOpen,
@@ -27,17 +31,23 @@ export default function MutasiSantriPage() {
         finally { setLoading(false); }
     }, [setData, setLoading]);
 
-    useEffect(() => {
-        loadMutasi();
-    }, [loadMutasi]);
+    useEffect(() => { loadMutasi(); }, [loadMutasi]);
 
-    const displayData = data.filter(d => {
-        const matchSearch = (d.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
-            (d.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
-            (d.pindah_ke || '').toLowerCase().includes(search.toLowerCase());
-        const matchFilter = filterStatus === 'Semua' || d.status_santri === filterStatus;
-        return matchSearch && matchFilter;
-    });
+    const displayData = useMemo(() => {
+        return data.filter(d => {
+            const matchSearch = (d.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
+                (d.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
+                (d.pindah_ke || '').toLowerCase().includes(search.toLowerCase());
+            const matchFilter = filterStatus === 'Semua' || d.status_santri === filterStatus;
+            return matchSearch && matchFilter;
+        });
+    }, [data, search, filterStatus]);
+
+    const stats = useMemo(() => [
+        { title: 'Total Mutasi', value: data.length, icon: 'fas fa-exchange-alt', color: 'var(--primary)' },
+        { title: 'Santri Boyong', value: data.filter(d => d.status_santri === 'Boyong').length, icon: 'fas fa-walking', color: 'var(--warning)' },
+        { title: 'Santri Pindah', value: data.filter(d => d.status_santri === 'Pindah').length, icon: 'fas fa-shipping-fast', color: 'var(--danger)' }
+    ], [data]);
 
     const columns = [
         {
@@ -48,7 +58,7 @@ export default function MutasiSantriPage() {
         },
         {
             key: 'nama_siswa', label: 'Nama Santri', render: (row) => (
-                <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><div style={{ fontSize: '0.7rem' }}>{row.stambuk_pondok}</div></div>
+                <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small style={{ color: 'var(--text-muted)' }}>{row.stambuk_pondok}</small></div>
             )
         },
         {
@@ -59,56 +69,58 @@ export default function MutasiSantriPage() {
                 }}>{row.status_santri}</span>
             )
         },
-        { key: 'pindah_ke', label: 'Tujuan Pindah', render: (row) => row.pindah_ke || '-' },
-        { key: 'tahun_pindah', label: 'Tahun', render: (row) => row.tahun_pindah || '-' },
+        { key: 'pindah_ke', label: 'Keterangan Mutasi', render: (row) => row.pindah_ke || (row.status_santri === 'Boyong' ? 'Berhenti/Boyong' : '-') },
+        { key: 'tahun_pindah', label: 'Thn', width: '80px', render: (row) => row.tahun_pindah || '-' },
         {
-            key: 'actions', label: 'Opsi', sortable: false, width: '100px', render: (row) => (
-                <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
+            key: 'actions', label: 'Aksi', sortable: false, width: '100px', render: (row) => (
+                <div className="table-actions">
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                </div>
             )
         }
     ];
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Arsip Santri Keluar</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} santri boyong/pindah.</p>
-                    </div>
-                </div>
+            <KopSurat judul="Arsip Santri Keluar (Mutasi)" subJudul="Log perpindahan dan pemberhentian status santri." hideOnScreen={true} />
 
-                <div className="table-controls" style={{ padding: '1rem 1.5rem' }}>
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                    </div>
-                    <select className="form-control" style={{ width: '200px' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="Semua">Semua Status</option><option value="Boyong">Boyong</option><option value="Pindah">Pindah</option>
-                    </select>
-                </div>
+            <StatsPanel items={stats} />
 
-                <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada data mutasi santri." />
-            </div>
+            <DataViewContainer
+                title="Log Mutasi Santri"
+                subtitle={`Mencatat riwayat ${displayData.length} santri keluar.`}
+                searchProps={{ value: search, onChange: (e) => setSearch(e.target.value) }}
+                filters={<SelectInput value={filterStatus} onChange={e => setFilterStatus(e.target.value)} options={['Semua', 'Boyong', 'Pindah']} style={{ width: '180px', marginBottom: 0 }} />}
+                tableProps={{ columns, data: displayData, loading }}
+            />
 
-            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Mutasi" width="600px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}>
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Riwayat Mutasi" width="650px">
                 {viewData && (
                     <div className="detail-view">
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                                <img src={viewData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '100px', height: '100px', borderRadius: '50%', border: '4px solid var(--primary-light)' }} alt="" />
+                                <img src={viewData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '100px', height: '100px', borderRadius: '50%', border: '4px solid var(--primary-light)', objectFit: 'cover' }} alt="" />
                             </div>
-                            <h2 style={{ fontWeight: 900 }}>{viewData.nama_siswa}</h2>
-                            <p className="th-badge">{viewData.stambuk_pondok}</p>
-                            <div style={{ marginTop: '10px' }}><span className="th-badge">{viewData.status_santri}</span></div>
+                            <h2 style={{ fontWeight: 900, color: 'var(--primary-dark)' }}>{viewData.nama_siswa}</h2>
+                            <p className="th-badge" style={{ padding: '4px 12px' }}>{viewData.status_santri.toUpperCase()}</p>
                         </div>
-                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
-                            <div><small>Kamar Terakhir</small><div style={{ fontWeight: 700 }}>{viewData.kamar}</div></div>
-                            <div><small>Kelas Terakhir</small><div style={{ fontWeight: 700 }}>{viewData.kelas}</div></div>
-                            {viewData.status_santri === 'Pindah' && <div><small>Pindah Ke</small><div style={{ fontWeight: 700 }}>{viewData.pindah_ke || '-'}</div></div>}
-                            {viewData.status_santri === 'Boyong' && <div><small>Tanggal Boyong</small><div style={{ fontWeight: 700 }}>{viewData.tanggal_boyong ? formatDate(viewData.tanggal_boyong) : '-'}</div></div>}
-                            <div><small>Nama Ayah</small><div style={{ fontWeight: 700 }}>{viewData.nama_ayah}</div></div>
-                            <div><small>Alamat</small><div style={{ fontSize: '0.85rem' }}>{viewData.desa_kelurahan}, {viewData.kecamatan}</div></div>
+
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '20px', border: '1px solid #f1f5f9' }}>
+                            <div><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>Stambuk</small><div style={{ fontWeight: 700 }}>{viewData.stambuk_pondok}</div></div>
+                            <div><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>Tahun Mutasi</small><div style={{ fontWeight: 700 }}>{viewData.tahun_pindah || '-'}</div></div>
+                            <div style={{ gridColumn: 'span 2' }}><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>{viewData.status_santri === 'Pindah' ? 'Pindah Ke' : 'Tanggal Boyong'}</small>
+                                <div style={{ fontWeight: 800, color: 'var(--primary)' }}>
+                                    {viewData.status_santri === 'Pindah' ? (viewData.pindah_ke || '-') : (viewData.tanggal_boyong ? formatDate(viewData.tanggal_boyong) : '-')}
+                                </div>
+                            </div>
+                            <hr style={{ gridColumn: 'span 2', margin: '0.5rem 0', opacity: 0.1 }} />
+                            <div><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>Kamar Terakhir</small><div>{viewData.kamar}</div></div>
+                            <div><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>Kelas Terakhir</small><div>{viewData.kelas}</div></div>
+                            <div><small style={{ fontWeight: 800, color: 'var(--text-muted)' }}>Alasan Keluar</small><div>{viewData.alasan_nonaktif || '-'}</div></div>
+                        </div>
+
+                        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                            <button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Tutup Detail</button>
                         </div>
                     </div>
                 )}

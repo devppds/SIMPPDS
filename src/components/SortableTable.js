@@ -10,6 +10,7 @@ export default function SortableTable({
     onRowClick = null
 }) {
     const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const itemsPerPage = 15;
 
     const sortedData = useMemo(() => {

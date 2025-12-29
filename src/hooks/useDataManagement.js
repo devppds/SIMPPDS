@@ -79,7 +79,9 @@ export function useDataManagement(dataType, defaultFormData = {}) {
 
     return {
         data,
+        setData,
         loading,
+        setLoading,
         search,
         setSearch,
         submitting,

@@ -122,7 +122,7 @@ export default function SuratPage() {
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                onConfirm={async () => { await handleDelete(confirmDelete.id, null); setConfirmDelete({ open: false, id: null }); }}
                 title="Hapus Arsip Surat?"
                 message="Data arsip ini akan dihapus permanen. Pastikan file digital sudah diunduh jika masih diperlukan."
             />

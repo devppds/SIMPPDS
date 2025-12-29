@@ -1,18 +1,21 @@
 'use client';
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import { apiCall } from '@/lib/utils';
 import Modal from '@/components/Modal';
-import SortableTable from '@/components/SortableTable';
+
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
 
 export default function AlumniPage() {
-    // ✨ Use Universal Data Hook
     const {
         data, setData, loading, setLoading, search, setSearch,
         isViewModalOpen, setIsViewModalOpen,
         viewData, openView
-    } = useDataManagement('santri'); // Read from santri table
+    } = useDataManagement('santri');
 
     const loadAlumni = useCallback(async () => {
         setLoading(true);
@@ -24,15 +27,21 @@ export default function AlumniPage() {
         finally { setLoading(false); }
     }, [setData, setLoading]);
 
-    useEffect(() => {
-        loadAlumni();
-    }, [loadAlumni]);
+    useEffect(() => { loadAlumni(); }, [loadAlumni]);
 
-    const displayData = data.filter(d =>
-        (d.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.tahun_pindah || '').toLowerCase().includes(search.toLowerCase())
-    );
+    const displayData = useMemo(() => {
+        return data.filter(d =>
+            (d.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
+            (d.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase()) ||
+            (d.tahun_pindah || '').toLowerCase().includes(search.toLowerCase())
+        );
+    }, [data, search]);
+
+    const stats = useMemo(() => [
+        { title: 'Total Alumni', value: data.length, icon: 'fas fa-user-graduate', color: 'var(--primary)' },
+        { title: 'Angkatan Terakhir', value: [...new Set(data.map(d => d.tahun_pindah))].sort().reverse()[0] || '-', icon: 'fas fa-calendar-check', color: 'var(--success)' },
+        { title: 'Status Arsip', value: 'Terverifikasi', icon: 'fas fa-shield-alt', color: 'var(--warning)' }
+    ], [data]);
 
     const columns = [
         {
@@ -45,54 +54,56 @@ export default function AlumniPage() {
         },
         {
             key: 'nama_siswa', label: 'Nama Alumni', render: (row) => (
-                <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><div style={{ fontSize: '0.7rem' }}>{row.stambuk_pondok}</div></div>
+                <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small style={{ color: 'var(--text-muted)' }}>{row.stambuk_pondok}</small></div>
             )
         },
-        { key: 'kamar', label: 'Asrama' },
-        { key: 'kelas', label: 'Kelas' },
-        { key: 'tahun_pindah', label: 'Lulusan', render: (row) => row.tahun_pindah || '-' },
+        { key: 'kelas', label: 'Kelas Terakhir' },
+        { key: 'tahun_pindah', label: 'Thn Lulus', render: (row) => <span className="th-badge">{row.tahun_pindah || '-'}</span> },
         {
-            key: 'actions', label: 'Opsi', sortable: false, width: '100px', render: (row) => (
-                <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
+            key: 'actions', label: 'Aksi', sortable: false, width: '100px', render: (row) => (
+                <div className="table-actions">
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Lihat Profil"><i className="fas fa-eye"></i></button>
+                </div>
             )
         }
     ];
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Arsip Alumni</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} alumni.</p>
-                    </div>
-                </div>
+            <KopSurat judul="Arsip Alumni Pondok Pesantren" subJudul="Database lulusan dan tokoh alumni santri." hideOnScreen={true} />
 
-                <div className="table-controls" style={{ padding: '1rem 1.5rem' }}>
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                    </div>
-                </div>
+            <StatsPanel items={stats} />
 
-                <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada data alumni." />
-            </div>
+            <DataViewContainer
+                title="Database Alumni"
+                subtitle={`Menampilkan ${displayData.length} data alumni terdaftar.`}
+                searchProps={{ value: search, onChange: (e) => setSearch(e.target.value), placeholder: "Cari nama atau stambuk..." }}
+                tableProps={{ columns, data: displayData, loading }}
+            />
 
-            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Alumni" width="600px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}>
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Profil Alumni Santri" width="650px">
                 {viewData && (
                     <div className="detail-view">
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                                <img src={viewData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '100px', height: '100px', borderRadius: '50%', border: '4px solid var(--primary-light)' }} alt="" />
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                <img src={viewData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama_siswa)}&background=1e3a8a&color=fff&bold=true`}
+                                    style={{ width: '120px', height: '120px', borderRadius: '50%', border: '4px solid var(--primary-light)', objectFit: 'cover' }} alt="" />
+                                <div style={{ position: 'absolute', bottom: 5, right: 5, background: 'var(--success)', color: 'white', padding: '4px 8px', borderRadius: '20px', fontSize: '0.6rem', fontWeight: 800 }}>ALUMNI</div>
                             </div>
-                            <h2 style={{ fontWeight: 900 }}>{viewData.nama_siswa}</h2>
-                            <p className="th-badge">{viewData.stambuk_pondok}</p>
+                            <h2 style={{ fontWeight: 900, marginTop: '1rem', color: 'var(--primary-dark)' }}>{viewData.nama_siswa}</h2>
+                            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{viewData.stambuk_pondok}</p>
                         </div>
-                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
-                            <div><small>Lulus Tahun</small><div style={{ fontWeight: 700 }}>{viewData.tahun_pindah || '-'}</div></div>
-                            <div><small>Kelas Terakhir</small><div style={{ fontWeight: 700 }}>{viewData.kelas}</div></div>
-                            <div><small>Nama Ayah</small><div style={{ fontWeight: 700 }}>{viewData.nama_ayah}</div></div>
-                            <div><small>Kota Asal</small><div style={{ fontWeight: 700 }}>{viewData.kota_kabupaten}</div></div>
+
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '2rem', borderRadius: '20px', border: '1px solid #f1f5f9' }}>
+                            <div><small style={{ textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>Lulus Tahun</small><div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.tahun_pindah || '-'}</div></div>
+                            <div><small style={{ textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>Kelas Terakhir</small><div style={{ fontWeight: 700 }}>{viewData.kelas}</div></div>
+                            <div><small style={{ textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>Asal Sekolah</small><div style={{ fontWeight: 700 }}>{viewData.asal_sekolah || '-'}</div></div>
+                            <div><small style={{ textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>Kota Asal</small><div style={{ fontWeight: 700 }}>{viewData.kota_kabupaten}</div></div>
+                            <div style={{ gridColumn: 'span 2' }}><small style={{ textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>Nama Wali</small><div style={{ fontWeight: 700 }}>{viewData.nama_ayah}</div></div>
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                            <button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Kembali ke Daftar</button>
                         </div>
                     </div>
                 )}

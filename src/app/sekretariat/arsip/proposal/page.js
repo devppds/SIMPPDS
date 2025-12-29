@@ -124,7 +124,7 @@ export default function ProposalPage() {
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                onConfirm={async () => { await handleDelete(confirmDelete.id, null); setConfirmDelete({ open: false, id: null }); }}
                 title="Hapus Arsip Proposal?"
                 message="Data proposal ini akan dihapus permanen dari sistem pengarsipan."
             />
