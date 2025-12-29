@@ -133,7 +133,7 @@ export default function SantriPage() {
             const { signature, apiKey, cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign } });
 
             if (!apiKey || !cloudName) {
-                throw new Error('Konfigurasi Cloudinary tidak ditemukan. Harap Re-deploy aplikasi di Cloudflare.');
+                throw new Error('Konfigurasi Cloudinary tidak ditemukan. Harap atur Environment Variables di Dashboard Cloudflare.');
             }
 
             const fd = new FormData();
@@ -151,7 +151,7 @@ export default function SantriPage() {
             }
         } catch (err) {
             console.error(err);
-            alert('Gagal mengunggah ke Cloudinary. Pastikan konfigurasi sudah benar.');
+            alert('Gagal: ' + err.message);
         } finally { setUploading(false); }
     };
 

@@ -36,6 +36,11 @@ export default function UstadzPage() {
             const timestamp = Math.round(new Date().getTime() / 1000);
             const paramsToSign = { timestamp };
             const { signature, apiKey, cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign } });
+
+            if (!apiKey || !cloudName) {
+                throw new Error('Konfigurasi Cloudinary tidak ditemukan. Harap atur Environment Variables di Dashboard Cloudflare.');
+            }
+
             const fd = new FormData();
             fd.append('file', file);
             fd.append('api_key', apiKey);
@@ -47,8 +52,10 @@ export default function UstadzPage() {
                 setFormData(prev => ({ ...prev, foto_ustadz: result.secure_url }));
                 alert("Berhasil mengunggah foto!");
             } else { throw new Error(result.error?.message || "Gagal upload Cloudinary"); }
-        } catch (err) { alert("Gagal mengunggah foto. Pastikan konfigurasi Cloudinary benar."); }
-        finally { setUploading(false); }
+        } catch (err) {
+            console.error(err);
+            alert("Gagal: " + err.message);
+        } finally { setUploading(false); }
     };
 
     const loadData = async () => {
