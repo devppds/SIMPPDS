@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function BarangSitaanPage() {
     const { isAdmin } = useAuth();
+    const { canEdit } = usePagePermission();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -120,7 +121,7 @@ export default function BarangSitaanPage() {
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
@@ -136,9 +137,9 @@ export default function BarangSitaanPage() {
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} barang santri yang disita petugas.</p>
                     </div>
                     <div className="card-actions">
-                        <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
+                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
                             <i className="fas fa-plus"></i> Input Sitaan
-                        </button>
+                        </button>}
                     </div>
                 </div>
 
