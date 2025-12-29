@@ -58,7 +58,7 @@ async function dispatcher(request) {
             // Check Admin
             const isAdmin = await verifyAdmin(request, db);
             if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
-            return await SystemHandler.handleGetAuditLogs(db);
+            return await SystemHandler.handleGetAuditLogs(db, request);
         }
 
         // --- Stats ---

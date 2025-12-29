@@ -99,9 +99,33 @@ export async function handleGetConfigs(db) {
     return Response.json(results || []);
 }
 
-export async function handleGetAuditLogs(db) {
-    const { results } = await db.prepare(`SELECT * FROM audit_logs ORDER BY id DESC LIMIT 100`).all();
-    return Response.json(results || []);
+export async function handleGetAuditLogs(db, request) {
+    // Auto-delete logs older than 3 days
+    const threeDaysAgo = new Date(Date.now() - (3 * 24 * 60 * 60 * 1000)).toISOString();
+    await db.prepare(`DELETE FROM audit_logs WHERE timestamp < ?`).bind(threeDaysAgo).run();
+
+    // Get pagination params from URL
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const offset = (page - 1) * limit;
+
+    // Get total count
+    const { count } = await db.prepare(`SELECT COUNT(*) as count FROM audit_logs`).first();
+
+    // Get paginated results
+    const { results } = await db.prepare(`SELECT * FROM audit_logs ORDER BY id DESC LIMIT ? OFFSET ?`)
+        .bind(limit, offset).all();
+
+    return Response.json({
+        data: results || [],
+        pagination: {
+            page,
+            limit,
+            total: count,
+            totalPages: Math.ceil(count / limit)
+        }
+    });
 }
 
 export async function handleUpdateConfig(request, db) {

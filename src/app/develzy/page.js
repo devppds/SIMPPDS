@@ -19,6 +19,7 @@ export default function DevelzyControlPage() {
 
     // Real Data State
     const [logs, setLogs] = useState([]);
+    const [logsPagination, setLogsPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
     const [configs, setConfigs] = useState({
         nama_instansi: 'Pondok Pesantren Darussalam Lirboyo',
         tahun_ajaran: '2025/2026',
@@ -99,7 +100,7 @@ export default function DevelzyControlPage() {
             isMounted.current = false;
             clearInterval(interval);
         };
-    }, [isDevelzy, authLoading, activeTab, router]);
+    }, [isDevelzy, authLoading, activeTab, router, logsPagination.page]);
 
     const loadSystemStats = async () => {
         try {
@@ -129,9 +130,14 @@ export default function DevelzyControlPage() {
     const loadData = async () => {
         try {
             if (activeTab === 'audit') {
-                const res = await apiCall('getAuditLogs', 'GET');
+                const res = await apiCall('getAuditLogs', 'GET', { page: logsPagination.page, limit: logsPagination.limit });
                 if (isMounted.current) {
-                    setLogs(Array.isArray(res) ? res : []);
+                    if (res && res.data) {
+                        setLogs(res.data);
+                        setLogsPagination(res.pagination);
+                    } else {
+                        setLogs(Array.isArray(res) ? res : []);
+                    }
                 }
             }
             if (activeTab === 'general' || activeTab === 'branding') {
@@ -962,6 +968,61 @@ export default function DevelzyControlPage() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Pagination Controls */}
+                            {logsPagination.totalPages > 1 && (
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginTop: '1.5rem',
+                                    padding: '1rem 1.5rem',
+                                    background: '#f8fafc',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0'
+                                }}>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
+                                        Menampilkan {logs.length} dari {logsPagination.total} log
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <button
+                                            className="btn btn-secondary"
+                                            style={{ padding: '8px 16px', fontSize: '0.8rem' }}
+                                            disabled={logsPagination.page === 1}
+                                            onClick={() => {
+                                                setLogsPagination(prev => ({ ...prev, page: prev.page - 1 }));
+                                                setTimeout(loadData, 100);
+                                            }}
+                                        >
+                                            <i className="fas fa-chevron-left" style={{ marginRight: '6px' }}></i>
+                                            Sebelumnya
+                                        </button>
+                                        <div style={{
+                                            padding: '8px 16px',
+                                            background: 'white',
+                                            borderRadius: '8px',
+                                            border: '1px solid #e2e8f0',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 700,
+                                            color: '#1e293b'
+                                        }}>
+                                            Halaman {logsPagination.page} / {logsPagination.totalPages}
+                                        </div>
+                                        <button
+                                            className="btn btn-secondary"
+                                            style={{ padding: '8px 16px', fontSize: '0.8rem' }}
+                                            disabled={logsPagination.page >= logsPagination.totalPages}
+                                            onClick={() => {
+                                                setLogsPagination(prev => ({ ...prev, page: prev.page + 1 }));
+                                                setTimeout(loadData, 100);
+                                            }}
+                                        >
+                                            Selanjutnya
+                                            <i className="fas fa-chevron-right" style={{ marginLeft: '6px' }}></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
