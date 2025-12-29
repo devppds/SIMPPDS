@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { apiCall } from '@/lib/utils';
@@ -9,69 +9,108 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, user, loading: authLoading } = useAuth();
   const [pin, setPin] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // UI Loader
+  const [isVerifying, setIsVerifying] = useState(false); // Logic Loader
   const [error, setError] = useState('');
+  const [cachedUsers, setCachedUsers] = useState([]);
+  const hasMounted = useRef(false);
 
-  // Redirect if already logged in
+  // 1. Initial Load: Check Auth & Pre-fetch Users for Instant Login
   useEffect(() => {
+    hasMounted.current = true;
+
+    // Redirect if already logged in
     if (!authLoading && user) {
       router.push('/dashboard');
-    }
-  }, [user, authLoading, router]);
-
-  const handlePinInput = (value) => {
-    // Only allow numbers and max 6 digits
-    if (/^\d*$/.test(value) && value.length <= 6) {
-      setPin(value);
-      setError('');
-    }
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    if (pin.length < 4) {
-      setError('PIN minimal 4 digit');
       return;
     }
 
-    setLoading(true);
-    setError('');
+    // Pre-fetch users data silently
+    const fetchUsers = async () => {
+      try {
+        const users = await apiCall('getData', 'GET', { type: 'users' });
+        if (hasMounted.current) {
+          setCachedUsers(users || []);
+        }
+      } catch (err) {
+        console.error("Failed to pre-fetch users:", err);
+      }
+    };
 
-    try {
-      const users = await apiCall('getData', 'GET', { type: 'users' });
-      const matchedUser = users.find(u => u.password_plain === pin);
+    fetchUsers();
 
-      if (matchedUser) {
+    return () => { hasMounted.current = false; };
+  }, [user, authLoading, router]);
+
+  // 2. Logic Check PIN Real-time
+  const checkPinAndLogin = async (currentPin) => {
+    // Cari user yang password_plain-nya cocok dengan PIN saat ini
+    const matchedUser = cachedUsers.find(u => u.password_plain === currentPin);
+
+    if (matchedUser) {
+      // MATCH FOUND!
+      setIsVerifying(true);
+      setLoading(true);
+      setError('');
+
+      // Sedikit delay artifisial biar user sempat lihat PIN penuh (UX)
+      setTimeout(() => {
         login({
           username: matchedUser.username,
           fullname: matchedUser.fullname,
           role: matchedUser.role
         });
         router.push('/dashboard');
-      } else {
-        setError('PIN tidak valid');
-        setPin('');
+      }, 300); // 0.3 detik
+
+      return true;
+    }
+
+    // Jika panjang sudah 6 (max) tapi tidak cocok
+    if (currentPin.length === 6) {
+      setError('PIN Salah!');
+      // Auto clear setelah 0.5 detik
+      setTimeout(() => {
+        if (hasMounted.current) {
+          setPin('');
+          setError('');
+        }
+      }, 800);
+      return false;
+    }
+
+    return false;
+  };
+
+  const handleHandleInput = (value) => {
+    // Hanya angka
+    if (!/^\d*$/.test(value)) return;
+
+    // Update State
+    if (value.length <= 6) {
+      setPin(value);
+      // Check langsung
+      if (cachedUsers.length > 0 && value.length >= 4) {
+        checkPinAndLogin(value);
       }
-    } catch (err) {
-      setError('Gagal login. Coba lagi.');
-      console.error('Login error:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleNumberClick = (num) => {
+    if (loading || isVerifying) return;
     if (pin.length < 6) {
-      handlePinInput(pin + num);
+      handleHandleInput(pin + num);
     }
   };
 
   const handleBackspace = () => {
+    if (loading || isVerifying) return;
     setPin(pin.slice(0, -1));
+    setError('');
   };
 
   const handleClear = () => {
+    if (loading || isVerifying) return;
     setPin('');
     setError('');
   };
@@ -100,11 +139,6 @@ export default function LoginPage() {
           0% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
           100% { transform: translateY(0px); }
-        }
-        @keyframes pulse-glow {
-          0% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.2); }
-          50% { box-shadow: 0 0 40px rgba(37, 99, 235, 0.4); }
-          100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.2); }
         }
         .glass-card {
           background: rgba(255, 255, 255, 0.03);
@@ -136,7 +170,17 @@ export default function LoginPage() {
         }
         .pin-dot.filled {
           background: #38bdf8;
-          box-shadow: 0 0 10px #38bdf8;
+          box-shadow: 0 0 15px #38bdf8;
+          transform: scale(1.1);
+        }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
       `}</style>
 
@@ -149,7 +193,7 @@ export default function LoginPage() {
         position: 'relative',
         zIndex: 10
       }}>
-        {/* Logo & Title */}
+        {/* LOGO & TITLE */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <div style={{
             margin: '0 auto 1.5rem',
@@ -168,171 +212,150 @@ export default function LoginPage() {
           <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 800, color: 'white', marginBottom: '0.5rem', letterSpacing: '-0.5px' }}>
             SIM-PPDS
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '1rem', letterSpacing: '0.5px' }}>SISTEM INFORMASI MANAJEMEN TERPADU</p>
+          <p style={{ color: '#94a3b8', fontSize: '1rem', letterSpacing: '0.5px', textTransform: 'uppercase', opacity: 0.8 }}>Access Control System</p>
         </div>
 
-        <form onSubmit={handleLogin}>
-          {/* PIN Display */}
-          <div style={{
-            marginBottom: '2.5rem',
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '1.5rem',
-            height: '40px',
-            alignItems: 'center'
-          }}>
-            {[...Array(6)].map((_, i) => (
+        {/* PIN DOTS */}
+        <div style={{
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '1.5rem', // Lebih renggang
+          height: '40px',
+          alignItems: 'center'
+        }}>
+          {/* Tampilkan loader jika sedang memverifikasi */}
+          {isVerifying ? (
+            <div style={{ color: '#38bdf8', fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <i className="fas fa-circle-notch fa-spin"></i>
+              <span>MEMVERIFIKASI...</span>
+            </div>
+          ) : (
+            [...Array(6)].map((_, i) => (
               <div
                 key={i}
                 className={`pin-dot ${i < pin.length ? 'filled' : ''}`}
               ></div>
-            ))}
-          </div>
-
-          {error && (
-            <div style={{
-              textAlign: 'center',
-              marginBottom: '1.5rem',
-              color: '#ef4444',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              background: 'rgba(239, 68, 68, 0.1)',
-              padding: '10px',
-              borderRadius: '12px',
-              border: '1px solid rgba(239, 68, 68, 0.2)'
-            }}>
-              <i className="fas fa-exclamation-circle" style={{ marginRight: '8px' }}></i>
-              {error}
-            </div>
+            ))
           )}
+        </div>
 
-          {/* Number Pad */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '1rem',
-            marginBottom: '2rem'
-          }}>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-              <button
-                key={num}
-                type="button"
-                className="numpad-btn outfit"
-                onClick={() => handleNumberClick(num.toString())}
-                disabled={loading}
-                style={{
-                  padding: '1.25rem',
-                  fontSize: '1.75rem',
-                  fontWeight: 600,
-                  borderRadius: '18px',
-                  cursor: 'pointer',
-                  border: 'none'
-                }}
-              >
-                {num}
-              </button>
-            ))}
+        {/* Error Message */}
+        <div style={{
+          height: '30px',
+          marginBottom: '1rem',
+          textAlign: 'center',
+          opacity: error ? 1 : 0,
+          transition: 'opacity 0.3s'
+        }}>
+          {error && (
+            <span className="outfit" style={{
+              color: '#ef4444',
+              background: 'rgba(239, 68, 68, 0.1)',
+              padding: '5px 15px',
+              borderRadius: '20px',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              fontSize: '0.9rem'
+            }}>
+              {error}
+            </span>
+          )}
+        </div>
 
-            {/* Clear Button */}
+        {/* NUMPAD */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '1.2rem', // Spasi lebih lebar
+          marginBottom: '2rem'
+        }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
             <button
-              type="button"
-              className="numpad-btn"
-              onClick={handleClear}
-              disabled={loading}
-              style={{
-                padding: '1.25rem',
-                fontSize: '1.2rem',
-                borderRadius: '18px',
-                cursor: 'pointer',
-                color: '#ef4444',
-                borderColor: 'rgba(239, 68, 68, 0.3)',
-                background: 'rgba(239, 68, 68, 0.1)'
-              }}
-            >
-              <i className="fas fa-times"></i>
-            </button>
-
-            {/* Zero */}
-            <button
+              key={num}
               type="button"
               className="numpad-btn outfit"
-              onClick={() => handleNumberClick('0')}
-              disabled={loading}
+              onClick={() => handleNumberClick(num.toString())}
+              disabled={loading || isVerifying}
               style={{
                 padding: '1.25rem',
-                fontSize: '1.75rem',
-                fontWeight: 600,
-                borderRadius: '18px',
-                cursor: 'pointer'
-              }}
-            >
-              0
-            </button>
-
-            {/* Backspace */}
-            <button
-              type="button"
-              className="numpad-btn"
-              onClick={handleBackspace}
-              disabled={loading}
-              style={{
-                padding: '1.25rem',
-                fontSize: '1.2rem',
-                borderRadius: '18px',
+                fontSize: '1.8rem', // Angka lebih besar
+                fontWeight: 500,
+                borderRadius: '20px',
                 cursor: 'pointer',
-                color: '#facc15',
-                borderColor: 'rgba(250, 204, 21, 0.3)',
-                background: 'rgba(250, 204, 21, 0.1)'
-
+                border: 'none',
+                background: 'rgba(255, 255, 255, 0.08)' // Sedikit lebih terang
               }}
             >
-              <i className="fas fa-backspace"></i>
+              {num}
             </button>
-          </div>
+          ))}
 
-          {/* Login Button */}
+          {/* Clear Button */}
           <button
-            type="submit"
-            disabled={loading || pin.length < 4}
+            type="button"
+            className="numpad-btn"
+            onClick={handleClear}
+            disabled={loading || isVerifying}
             style={{
-              width: '100%',
               padding: '1.25rem',
-              fontSize: '1.1rem',
-              fontWeight: 700,
-              background: pin.length >= 4 ? 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)' : 'rgba(255,255,255,0.1)',
-              color: pin.length >= 4 ? 'white' : 'rgba(255,255,255,0.3)',
-              border: 'none',
-              borderRadius: '16px',
-              cursor: pin.length >= 4 ? 'pointer' : 'not-allowed',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: pin.length >= 4 ? '0 10px 25px -5px rgba(59, 130, 246, 0.5)' : 'none',
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase'
+              fontSize: '1.2rem',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              color: '#ef4444',
+              borderColor: 'rgba(239, 68, 68, 0.3)',
+              background: 'rgba(239, 68, 68, 0.05)'
             }}
           >
-            {loading ? (
-              <>
-                <i className="fas fa-spinner fa-spin" style={{ marginRight: '10px' }}></i>
-                VERIFYING...
-              </>
-            ) : (
-              <>
-                LOGIN SYSTEM
-                <i className="fas fa-arrow-right" style={{ marginLeft: '10px' }}></i>
-              </>
-            )}
+            <i className="fas fa-times"></i>
           </button>
-        </form>
+
+          {/* Zero */}
+          <button
+            type="button"
+            className="numpad-btn outfit"
+            onClick={() => handleNumberClick('0')}
+            disabled={loading || isVerifying}
+            style={{
+              padding: '1.25rem',
+              fontSize: '1.8rem',
+              fontWeight: 500,
+              borderRadius: '20px',
+              cursor: 'pointer',
+              background: 'rgba(255, 255, 255, 0.08)'
+            }}
+          >
+            0
+          </button>
+
+          {/* Backspace */}
+          <button
+            type="button"
+            className="numpad-btn"
+            onClick={handleBackspace}
+            disabled={loading || isVerifying}
+            style={{
+              padding: '1.25rem',
+              fontSize: '1.2rem',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              color: '#facc15',
+              borderColor: 'rgba(250, 204, 21, 0.3)',
+              background: 'rgba(250, 204, 21, 0.05)'
+            }}
+          >
+            <i className="fas fa-backspace"></i>
+          </button>
+        </div>
 
         {/* Footer */}
         <div style={{
-          marginTop: '2.5rem',
+          marginTop: '2rem',
           textAlign: 'center',
-          fontSize: '0.8rem',
-          color: 'rgba(255, 255, 255, 0.4)',
-          letterSpacing: '0.5px'
+          fontSize: '0.75rem',
+          color: 'rgba(255, 255, 255, 0.3)',
+          letterSpacing: '1px'
         }}>
-          <i className="fas fa-shield-alt" style={{ marginRight: '8px' }}></i>
+          <i className="fas fa-lock" style={{ marginRight: '6px' }}></i>
           SECURED BY DENYR A.K.A DEVELZY
         </div>
       </div>
