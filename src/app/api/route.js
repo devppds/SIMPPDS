@@ -34,7 +34,8 @@ const headersConfig = {
     'keamanan_absensi': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "keterangan", "petugas"],
     'keuangan_tarif': ["kategori_status", "kelas", "nominal", "keterangan"],
     'keuangan_pembayaran': ["santri_id", "nama_santri", "tanggal", "jenis_pembayaran", "bulan_tagihan", "nominal", "keterangan", "petugas"],
-    'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"]
+    'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"],
+    'kalender_kerja': ["tanggal_kegiatan", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"]
 };
 
 const FILE_COLUMNS = {
@@ -45,7 +46,8 @@ const FILE_COLUMNS = {
     'arsip_proposal': ["file_proposal"],
     'arsip_akta_tanah': ["file_akta"],
     'arsip_pengurus_periode': ["foto_pengurus"],
-    'arsip_pengajar_periode': ["foto_pengajar"]
+    'arsip_pengajar_periode': ["foto_pengajar"],
+    'kalender_kerja': ["file_kalender"]
 };
 
 async function deleteCloudinaryFile(url, env) {

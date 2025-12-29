@@ -329,3 +329,15 @@ CREATE INDEX IF NOT EXISTS idx_wajar_mhm_tgl ON wajar_mhm_absen(tanggal, tipe);
 CREATE INDEX IF NOT EXISTS idx_wajar_miu_tgl ON wajar_miu_absen(tanggal);
 CREATE INDEX IF NOT EXISTS idx_wajar_nilai_tgl ON wajar_nilai(tanggal, tipe);
 
+-- 10. SECRETARIAT MODULE EXTENSION
+CREATE TABLE IF NOT EXISTS kalender_kerja (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal_kegiatan TEXT,
+    nama_kegiatan TEXT,
+    kategori TEXT,
+    file_kalender TEXT,
+    keterangan TEXT,
+    periode TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
