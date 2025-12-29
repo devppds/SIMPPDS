@@ -146,9 +146,23 @@ export default function DevelzyControlPage() {
                         }
                         // Reload
                         const seeded = await apiCall('getData', 'GET', { type: 'roles' });
-                        if (isMounted.current) setRolesList(seeded.map(r => ({ ...r, menus: JSON.parse(r.menus) })));
+                        if (isMounted.current) {
+                            setRolesList(seeded.map(r => ({
+                                ...r,
+                                menus: r.menus ? JSON.parse(r.menus) : []
+                            })));
+                        }
                     } else {
-                        if (isMounted.current) setRolesList(res.map(r => ({ ...r, menus: JSON.parse(r.menus) })));
+                        if (isMounted.current) {
+                            setRolesList(res.map(r => {
+                                try {
+                                    return { ...r, menus: r.menus ? JSON.parse(r.menus) : [] };
+                                } catch (e) {
+                                    console.warn("Failed to parse menus for role:", r.role);
+                                    return { ...r, menus: [] };
+                                }
+                            }));
+                        }
                     }
                 } catch (err) {
                     console.error("Failed to load/seed roles:", err);
