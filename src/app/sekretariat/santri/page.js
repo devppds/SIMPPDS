@@ -232,30 +232,169 @@ export default function SantriPage() {
                     activeTab={activeTab}
                     onChange={setActiveTab}
                     tabs={[
-                        { key: 'umum', label: 'Identitas', icon: 'fas fa-id-card' },
-                        { key: 'pribadi', label: 'Personal', icon: 'fas fa-user' },
-                        { key: 'wali', label: 'Wali', icon: 'fas fa-users' },
-                        { key: 'alamat', label: 'Alamat', icon: 'fas fa-map-marked-alt' },
-                        { key: 'status', label: 'Berkas', icon: 'fas fa-file-alt' }
+                        { key: 'umum', label: 'Identitas Pondok', icon: 'fas fa-mosque' },
+                        { key: 'pribadi', label: 'Data Diri', icon: 'fas fa-user' },
+                        { key: 'wali', label: 'Orang Tua / Wali', icon: 'fas fa-users' },
+                        { key: 'alamat', label: 'Domisili', icon: 'fas fa-map-marker-alt' },
+                        { key: 'status', label: 'Berkas & Status', icon: 'fas fa-file-contract' }
                     ]}
                 />
-                <div style={{ marginTop: '1rem' }}>
-                    {activeTab === 'umum' && <>
-                        <TextInput label="Nama Lengkap" value={formData.nama_siswa} onChange={e => setFormData({ ...formData, nama_siswa: e.target.value })} required />
-                        <div className="form-grid">
-                            <TextInput label="Stambuk" value={formData.stambuk_pondok} onChange={e => setFormData({ ...formData, stambuk_pondok: e.target.value })} />
-                            <SelectInput label="Kelas" value={formData.kelas} onChange={e => { const s = listKelas.find(k => k.nama_kelas === e.target.value); setFormData({ ...formData, kelas: e.target.value, madrasah: s ? s.lembaga : '' }); }} options={listKelas.map(k => k.nama_kelas)} />
+
+                <div style={{ marginTop: '1.5rem', maxHeight: '60vh', overflowY: 'auto', paddingRight: '10px' }} className="custom-scrollbar">
+
+                    {/* --- TAB 1: IDENTITAS PONDOK --- */}
+                    {activeTab === 'umum' && (
+                        <div className="animate-in">
+                            <TextInput label="Nama Lengkap Santri" value={formData.nama_siswa} onChange={e => setFormData({ ...formData, nama_siswa: e.target.value })} required icon="fas fa-user-graduate" placeholder="Sesuai Ijazah / Akta" />
+
+                            <div className="form-grid">
+                                <TextInput label="Stambuk Pondok" value={formData.stambuk_pondok} onChange={e => setFormData({ ...formData, stambuk_pondok: e.target.value })} icon="fas fa-id-card" placeholder="Nomor Induk Pondok" />
+                                <TextInput label="Stambuk Madrasah" value={formData.stambuk_madrasah} onChange={e => setFormData({ ...formData, stambuk_madrasah: e.target.value })} icon="fas fa-id-card-alt" />
+                            </div>
+
+                            <div className="form-grid">
+                                <SelectInput label="Kelas / Madrasah" value={formData.kelas} onChange={e => { const s = listKelas.find(k => k.nama_kelas === e.target.value); setFormData({ ...formData, kelas: e.target.value, madrasah: s ? s.lembaga : '' }); }} options={listKelas.map(k => k.nama_kelas)} icon="fas fa-chalkboard-teacher" />
+                                <TextInput label="Unit Madrasah" value={formData.madrasah} readOnly style={{ background: '#f1f5f9' }} icon="fas fa-school" />
+                            </div>
+
+                            <div className="form-grid">
+                                <SelectInput label="Kamar / Asrama" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} options={listKamar.map(k => k.value)} icon="fas fa-bed" />
+                                <TextInput label="Tahun Masuk" type="number" value={formData.tahun_masuk} onChange={e => setFormData({ ...formData, tahun_masuk: e.target.value })} icon="fas fa-calendar-alt" />
+                            </div>
+
+                            <SelectInput label="Status Mukim" value={formData.status_mb} onChange={e => setFormData({ ...formData, status_mb: e.target.value })} options={['Mukim', 'Boyong / Laju', 'Baru']} icon="fas fa-luggage-cart" />
                         </div>
-                        <SelectInput label="Kamar" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} options={listKamar} />
-                    </>}
-                    {activeTab === 'pribadi' && <>
-                        <TextInput label="NISN" value={formData.nisn} onChange={e => setFormData({ ...formData, nisn: e.target.value })} />
-                        <TextInput label="Jenis Kelamin" value={formData.jenis_kelamin} onChange={e => setFormData({ ...formData, jenis_kelamin: e.target.value })} />
-                    </>}
-                    {activeTab === 'status' && <>
-                        <SelectInput label="Status" value={formData.status_santri} onChange={e => setFormData({ ...formData, status_santri: e.target.value })} options={['Aktif', 'Boyong', 'Pindah', 'Lulus']} />
-                        <FileUploader currentUrl={formData.foto_santri} onUploadSuccess={(url) => setFormData({ ...formData, foto_santri: url })} folder="santri_photos" />
-                    </>}
+                    )}
+
+                    {/* --- TAB 2: DATA DIRI (PERSONAL) --- */}
+                    {activeTab === 'pribadi' && (
+                        <div className="animate-in">
+                            <div className="form-grid">
+                                <TextInput label="NISN" value={formData.nisn} onChange={e => setFormData({ ...formData, nisn: e.target.value })} icon="fas fa-hashtag" />
+                                <SelectInput label="Jenis Kelamin" value={formData.jenis_kelamin} onChange={e => setFormData({ ...formData, jenis_kelamin: e.target.value })} options={['Laki-laki', 'Perempuan']} icon="fas fa-venus-mars" />
+                            </div>
+
+                            <div className="form-grid">
+                                <TextInput label="Tempat Lahir" value={formData.tempat_tanggal_lahir ? formData.tempat_tanggal_lahir.split(',')[0] : ''} onChange={e => {
+                                    const parts = (formData.tempat_tanggal_lahir || '').split(',');
+                                    const datePart = parts.length > 1 ? parts[1].trim() : '';
+                                    setFormData({ ...formData, tempat_tanggal_lahir: `${e.target.value}, ${datePart}` });
+                                }} icon="fas fa-map-pin" />
+                                <TextInput label="Tanggal Lahir" type="date" value={formData.tempat_tanggal_lahir ? formData.tempat_tanggal_lahir.split(',')[1]?.trim() : ''} onChange={e => {
+                                    const parts = (formData.tempat_tanggal_lahir || '').split(',');
+                                    const placePart = parts[0] || '';
+                                    setFormData({ ...formData, tempat_tanggal_lahir: `${placePart}, ${e.target.value}` });
+                                }} />
+                            </div>
+
+                            <div className="form-grid">
+                                <TextInput label="NIK / No. KTP" value={formData.nik} onChange={e => setFormData({ ...formData, nik: e.target.value })} icon="fas fa-id-badge" />
+                                <SelectInput label="Kewarganegaraan" value={formData.kewarganegaraan} onChange={e => setFormData({ ...formData, kewarganegaraan: e.target.value })} options={['WNI', 'WNA']} />
+                            </div>
+
+                            <div className="form-grid">
+                                <TextInput label="Anak Ke-" type="number" value={formData.anak_ke} onChange={e => setFormData({ ...formData, anak_ke: e.target.value })} />
+                                <TextInput label="Dari Bersaudara" type="number" value={formData.jumlah_saudara} onChange={e => setFormData({ ...formData, jumlah_saudara: e.target.value })} />
+                            </div>
+
+                            <div className="form-grid">
+                                <TextInput label="Hobi" value={formData.hobi} onChange={e => setFormData({ ...formData, hobi: e.target.value })} icon="fas fa-running" />
+                                <TextInput label="Cita-cita" value={formData.cita_cita} onChange={e => setFormData({ ...formData, cita_cita: e.target.value })} icon="fas fa-star" />
+                            </div>
+
+                            <h4 style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '1rem', marginBottom: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>Riwayat Pendidikan Sebelumnya</h4>
+                            <div className="form-grid">
+                                <SelectInput label="Jenjang Terakhir" value={formData.pendidikan_terakhir} onChange={e => setFormData({ ...formData, pendidikan_terakhir: e.target.value })} options={['SD/MI', 'SMP/MTs', 'SMA/MA', 'Lainnya']} />
+                                <TextInput label="Nama Sekolah Asal" value={formData.asal_sekolah} onChange={e => setFormData({ ...formData, asal_sekolah: e.target.value })} icon="fas fa-school" />
+                            </div>
+                            <TextInput label="Nomor Ijazah Terakhir" value={formData.no_ijazah} onChange={e => setFormData({ ...formData, no_ijazah: e.target.value })} icon="fas fa-certificate" />
+                        </div>
+                    )}
+
+                    {/* --- TAB 3: ORANG TUA / WALI --- */}
+                    {activeTab === 'wali' && (
+                        <div className="animate-in">
+                            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '1rem' }}><i className="fas fa-male"></i> Data Ayah</h3>
+                                <TextInput label="Nama Lengkap Ayah" value={formData.nama_ayah} onChange={e => setFormData({ ...formData, nama_ayah: e.target.value })} required icon="fas fa-user-tie" />
+                                <div className="form-grid">
+                                    <TextInput label="NIK Ayah" value={formData.nik_ayah} onChange={e => setFormData({ ...formData, nik_ayah: e.target.value })} icon="fas fa-id-card" />
+                                    <TextInput label="No. Handphone (WA)" value={formData.no_telp_ayah} onChange={e => setFormData({ ...formData, no_telp_ayah: e.target.value })} icon="fab fa-whatsapp" />
+                                </div>
+                                <div className="form-grid">
+                                    <SelectInput label="Pendidikan Ayah" value={formData.pendidikan_ayah} onChange={e => setFormData({ ...formData, pendidikan_ayah: e.target.value })} options={['SD', 'SMP', 'SMA', 'S1', 'S2', 'S3', 'Tidak Sekolah']} />
+                                    <TextInput label="Pekerjaan Ayah" value={formData.pekerjaan_ayah} onChange={e => setFormData({ ...formData, pekerjaan_ayah: e.target.value })} icon="fas fa-briefcase" />
+                                </div>
+                                <SelectInput label="Penghasilan Bulanan" value={formData.penghasilan_ayah} onChange={e => setFormData({ ...formData, penghasilan_ayah: e.target.value })} options={['< 1 Juta', '1 - 3 Juta', '3 - 5 Juta', '> 5 Juta']} icon="fas fa-wallet" />
+                            </div>
+
+                            <div style={{ background: '#fef2f2', padding: '1rem', borderRadius: '12px', border: '1px solid #fee2e2' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#be123c', marginBottom: '1rem' }}><i className="fas fa-female"></i> Data Ibu</h3>
+                                <TextInput label="Nama Lengkap Ibu" value={formData.nama_ibu} onChange={e => setFormData({ ...formData, nama_ibu: e.target.value })} required icon="fas fa-user" />
+                                <div className="form-grid">
+                                    <TextInput label="NIK Ibu" value={formData.nik_ibu} onChange={e => setFormData({ ...formData, nik_ibu: e.target.value })} icon="fas fa-id-card" />
+                                    <TextInput label="No. Handphone (WA)" value={formData.no_telp_ibu} onChange={e => setFormData({ ...formData, no_telp_ibu: e.target.value })} icon="fab fa-whatsapp" />
+                                </div>
+                                <div className="form-grid">
+                                    <SelectInput label="Pendidikan Ibu" value={formData.pendidikan_ibu} onChange={e => setFormData({ ...formData, pendidikan_ibu: e.target.value })} options={['SD', 'SMP', 'SMA', 'S1', 'S2', 'S3', 'Tidak Sekolah']} />
+                                    <TextInput label="Pekerjaan Ibu" value={formData.pekerjaan_ibu} onChange={e => setFormData({ ...formData, pekerjaan_ibu: e.target.value })} icon="fas fa-briefcase" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- TAB 4: ALAMAT (DOMISILI) --- */}
+                    {activeTab === 'alamat' && (
+                        <div className="animate-in">
+                            <TextInput label="Alamat Lengkap (Dusun/Jalan)" value={formData.alamat_lengkap} onChange={e => setFormData({ ...formData, alamat_lengkap: e.target.value })} icon="fas fa-map-signs" placeholder="Cth: Jl. KH. Hasyim Asy'ari No. 99" />
+                            <div className="form-grid">
+                                <TextInput label="Dusun / Lingkungan" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} />
+                                <TextInput label="RT / RW" value={formData.rt_rw} onChange={e => setFormData({ ...formData, rt_rw: e.target.value })} placeholder="001/002" />
+                            </div>
+                            <div className="form-grid">
+                                <TextInput label="Desa / Kelurahan" value={formData.desa_kelurahan} onChange={e => setFormData({ ...formData, desa_kelurahan: e.target.value })} icon="fas fa-building" />
+                                <TextInput label="Kecamatan" value={formData.kecamatan} onChange={e => setFormData({ ...formData, kecamatan: e.target.value })} icon="fas fa-landmark" />
+                            </div>
+                            <div className="form-grid">
+                                <TextInput label="Kota / Kabupaten" value={formData.kota_kabupaten} onChange={e => setFormData({ ...formData, kota_kabupaten: e.target.value })} icon="fas fa-city" />
+                                <SelectInput label="Provinsi" value={formData.provinsi} onChange={e => setFormData({ ...formData, provinsi: e.target.value })} options={provinces.map(p => p.nama)} icon="fas fa-map" />
+                            </div>
+                            <TextInput label="Kode Pos" type="number" value={formData.kode_pos} onChange={e => setFormData({ ...formData, kode_pos: e.target.value })} icon="fas fa-mail-bulk" />
+                        </div>
+                    )}
+
+                    {/* --- TAB 5: BERKAS & STATUS --- */}
+                    {activeTab === 'status' && (
+                        <div className="animate-in">
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '16px' }}>
+                                <FileUploader
+                                    label="Foto Santri (Formal)"
+                                    currentUrl={formData.foto_santri}
+                                    onUploadSuccess={(url) => setFormData({ ...formData, foto_santri: url })}
+                                    folder="santri_photos"
+                                    previewShape="circle"
+                                />
+                                <small style={{ color: '#94a3b8', display: 'block', marginTop: '10px' }}>Format: JPG/PNG, Max 2MB. Wajah terlihat jelas.</small>
+                            </div>
+
+                            <SelectInput label="Status Keaktifan" value={formData.status_santri} onChange={e => setFormData({ ...formData, status_santri: e.target.value })} options={['Aktif', 'Boyong', 'Pindah', 'Lulus', 'Non-Aktif']} icon="fas fa-toggle-on" />
+
+                            {formData.status_santri !== 'Aktif' && (
+                                <div style={{ background: '#fffbeb', padding: '1rem', borderRadius: '12px', border: '1px solid #fcd34d', marginTop: '10px' }}>
+                                    <TextInput label="Tanggal Non-Aktif" type="date" value={formData.tanggal_nonaktif} onChange={e => setFormData({ ...formData, tanggal_nonaktif: e.target.value })} />
+                                    <TextInput label="Alasan" value={formData.alasan_nonaktif} onChange={e => setFormData({ ...formData, alasan_nonaktif: e.target.value })} placeholder="Alasan berhenti..." />
+                                </div>
+                            )}
+
+                            <div style={{ marginTop: '2rem', padding: '1rem', borderTop: '1px dashed #cbd5e1' }}>
+                                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Dokumen Penunjang (Opsional)</h4>
+                                <FileUploader label="Scan Kartu Keluarga (KK)" folder="dokumen_santri" labelShort="Upload KK" onUploadSuccess={url => setFormData({ ...formData, file_kk: url })} />
+                                <div style={{ height: '10px' }}></div>
+                                <FileUploader label="Scan Akta Kelahiran" folder="dokumen_santri" labelShort="Upload Akta" onUploadSuccess={url => setFormData({ ...formData, file_akta: url })} />
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             </Modal>
 
