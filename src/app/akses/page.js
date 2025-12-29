@@ -15,6 +15,10 @@ export default function AksesPage() {
     const [loading, setLoading] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isRoleConfigOpen, setIsRoleConfigOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+    const [userToDelete, setUserToDelete] = useState(null);
 
     // Create User state
     const [userFormData, setUserFormData] = useState({
@@ -84,14 +88,88 @@ export default function AksesPage() {
         if (e) e.preventDefault();
         setSubmittingUser(true);
         try {
+            // Check if username already exists
+            const existing = users.find(u => u.username === userFormData.username);
+            if (existing) throw new Error("Username sudah digunakan!");
+
             await apiCall('saveData', 'POST', {
                 type: 'users',
-                data: userFormData
+                data: {
+                    ...userFormData,
+                    password_plain: userFormData.password // Ensure plain password is saved for PIN login
+                }
             });
             setIsUserModalOpen(false);
             setUserFormData({ username: '', fullname: '', password: '', role: 'sekretariat', email: '' });
             loadUsers();
             showToast("Akun pengguna berhasil dibuat!", "success");
+        } catch (err) {
+            showToast(err.message, "error");
+        } finally {
+            setSubmittingUser(false);
+        }
+    };
+
+    const handleEditUser = (user) => {
+        setEditingUser(user);
+        setUserFormData({
+            username: user.username,
+            fullname: user.fullname,
+            email: user.email || '',
+            role: user.role,
+            password: user.password_plain || '' // Use plain password for easy editing
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleSaveEditUser = async (e) => {
+        if (e) e.preventDefault();
+        setSubmittingUser(true);
+        try {
+            await apiCall('saveData', 'POST', {
+                type: 'users',
+                id: editingUser.id,
+                data: {
+                    ...userFormData,
+                    password_plain: userFormData.password
+                }
+            });
+            setIsEditModalOpen(false);
+            setEditingUser(null);
+            setUserFormData({ username: '', fullname: '', password: '', role: 'sekretariat', email: '' });
+            loadUsers();
+            showToast("Perubahan berhasil disimpan!", "success");
+        } catch (err) {
+            showToast(err.message, "error");
+        } finally {
+            setSubmittingUser(false);
+        }
+    };
+
+    const confirmDeleteUser = (user) => {
+        if (user.role === 'develzy' || user.username === 'develzy') {
+            showToast("Akun Develzy tidak dapat dihapus!", "error");
+            return;
+        }
+        if (user.username === currentUser.username) {
+            showToast("Anda tidak dapat menghapus akun Anda sendiri!", "error");
+            return;
+        }
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteUser = async () => {
+        setSubmittingUser(true);
+        try {
+            await apiCall('deleteData', 'DELETE', {
+                type: 'users',
+                id: userToDelete.id
+            });
+            setIsDeleteModalOpen(false);
+            setUserToDelete(null);
+            loadUsers();
+            showToast("Pengguna berhasil dihapus!", "success");
         } catch (err) {
             showToast(err.message, "error");
         } finally {
@@ -288,15 +366,36 @@ export default function AksesPage() {
                                 label: 'Opsi',
                                 sortable: false,
                                 align: 'center',
-                                width: '80px',
+                                width: '120px',
                                 render: (row) => (
-                                    <button className="btn-secondary" style={{
-                                        width: '36px', height: '36px', borderRadius: '10px',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        background: '#f8fafc', border: '1px solid #f1f5f9'
-                                    }}>
-                                        <i className="fas fa-ellipsis-h" style={{ color: '#94a3b8', fontSize: '0.9rem' }}></i>
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                        <button
+                                            onClick={() => handleEditUser(row)}
+                                            className="btn-secondary"
+                                            style={{
+                                                width: '32px', height: '32px', borderRadius: '8px',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: '#f0f9ff', border: '1px solid #e0f2fe',
+                                                cursor: 'pointer'
+                                            }}
+                                            title="Edit User"
+                                        >
+                                            <i className="fas fa-edit" style={{ color: '#0ea5e9', fontSize: '0.8rem' }}></i>
+                                        </button>
+                                        <button
+                                            onClick={() => confirmDeleteUser(row)}
+                                            className="btn-secondary"
+                                            style={{
+                                                width: '32px', height: '32px', borderRadius: '8px',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: '#fef2f2', border: '1px solid #fee2e2',
+                                                cursor: 'pointer'
+                                            }}
+                                            title="Hapus User"
+                                        >
+                                            <i className="fas fa-trash-alt" style={{ color: '#ef4444', fontSize: '0.8rem' }}></i>
+                                        </button>
+                                    </div>
                                 )
                             }
                         ]}
@@ -461,6 +560,115 @@ export default function AksesPage() {
                             Untuk menambah role baru atau mengubah permissions, hubungi developer.
                         </p>
                     </div>
+                </div>
+            </Modal>
+
+            {/* Edit User Modal */}
+            <Modal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setEditingUser(null);
+                }}
+                title={`Edit Akun: ${editingUser?.fullname}`}
+                footer={(
+                    <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" onClick={() => setIsEditModalOpen(false)}>Batal</button>
+                        <button className="btn btn-primary" onClick={handleSaveEditUser} disabled={submittingUser}>
+                            {submittingUser ? 'Menyimpan...' : 'Simpan Perubahan'}
+                        </button>
+                    </div>
+                )}
+            >
+                <form onSubmit={handleSaveEditUser} className="animate-in" style={{ padding: '10px' }}>
+                    <div className="form-group">
+                        <label className="form-label">Nama Lengkap</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={userFormData.fullname}
+                            onChange={e => setUserFormData({ ...userFormData, fullname: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Username</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={userFormData.username}
+                                disabled
+                                style={{ background: '#f1f5f9', cursor: 'not-allowed' }}
+                            />
+                            <small style={{ color: '#94a3b8' }}>Username tidak dapat diubah demi keamanan.</small>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Email</label>
+                            <input
+                                type="email"
+                                className="form-control"
+                                value={userFormData.email}
+                                onChange={e => setUserFormData({ ...userFormData, email: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Hak Akses (Role)</label>
+                            <select
+                                className="form-control"
+                                value={userFormData.role}
+                                onChange={e => setUserFormData({ ...userFormData, role: e.target.value })}
+                                disabled={editingUser?.username === 'develzy'}
+                            >
+                                {roles.map((r, i) => (
+                                    <option key={i} value={r.role}>{r.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">PIN / Password</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={userFormData.password}
+                                onChange={e => setUserFormData({ ...userFormData, password: e.target.value })}
+                                required
+                            />
+                        </div>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Konfirmasi Hapus"
+                width="400px"
+                footer={(
+                    <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" onClick={() => setIsDeleteModalOpen(false)}>Batal</button>
+                        <button className="btn btn-primary" style={{ background: '#ef4444' }} onClick={handleDeleteUser} disabled={submittingUser}>
+                            {submittingUser ? 'Menghapus...' : 'Hapus Permanen'}
+                        </button>
+                    </div>
+                )}
+            >
+                <div style={{ padding: '10px', textAlign: 'center' }}>
+                    <div style={{
+                        width: '60px', height: '60px', background: '#fee2e2',
+                        borderRadius: '50%', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', margin: '0 auto 1.5rem',
+                        color: '#ef4444'
+                    }}>
+                        <i className="fas fa-trash-alt" style={{ fontSize: '1.5rem' }}></i>
+                    </div>
+                    <h3 className="outfit" style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>Hapus Pengguna?</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                        Tindakan ini akan menghapus akun <strong>{userToDelete?.fullname}</strong> secara permanen. Akses masuk akan langsung terputus.
+                    </p>
                 </div>
             </Modal>
 

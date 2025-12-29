@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import StatCard from '@/components/StatCard';
 import { useAuth } from '@/lib/AuthContext';
-import { formatCurrency, apiCall } from '@/lib/utils';
+import { formatCurrency, formatDate, apiCall } from '@/lib/utils';
 import Link from 'next/link';
 import SortableTable from '@/components/SortableTable';
 
@@ -102,32 +102,41 @@ export default function DashboardPage() {
             </div>
 
             <div className="main-grid-layout">
-                <div className="primary-column">
-                    {hasAccess('Arus Kas Pondok') && <RecentActivityCard activities={lastActivities} loading={loading} mounted={mounted} />}
-                    {hasAccess('Data Santri') && <SantriDistributionCard stats={stats} loading={loading} />}
-                    {!hasAccess('Data Santri') && !hasAccess('Arus Kas Pondok') && (
-                        <div className="card access-limited-card">
-                            <i className="fas fa-shield-alt icon-limited"></i>
-                            <h3 style={{ fontWeight: 800 }}>Akses Terenkripsi</h3>
-                            <p style={{ color: 'var(--text-muted)' }}>Anda memiliki akses terbatas. Gunakan sidebar untuk navigasi menu yang diizinkan.</p>
+                {mounted ? (
+                    <>
+                        <div className="primary-column">
+                            {hasAccess('Arus Kas Pondok') && <RecentActivityCard activities={lastActivities} loading={loading} mounted={mounted} />}
+                            {hasAccess('Data Santri') && <SantriDistributionCard stats={stats} loading={loading} />}
+                            {!hasAccess('Data Santri') && !hasAccess('Arus Kas Pondok') && (
+                                <div className="card access-limited-card">
+                                    <i className="fas fa-shield-alt icon-limited"></i>
+                                    <h3 style={{ fontWeight: 800 }}>Akses Terenkripsi</h3>
+                                    <p style={{ color: 'var(--text-muted)' }}>Anda memiliki akses terbatas. Gunakan sidebar untuk navigasi menu yang diizinkan.</p>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
 
-                <div className="secondary-column">
-                    {/* Dynamic Banners Contextual to User Menus */}
-                    {hasAccess('Pelanggaran') ? (
-                        <WelcomeBanner title="Bagian Keamanan" desc="Pantau ketertiban dan perizinan santri secara real-time." link="/keamanan/pelanggaran" linkText="Menu Keamanan" />
-                    ) : (hasAccess('Arus Kas Pondok') || hasAccess('Pembayaran Santri')) ? (
-                        <WelcomeBanner title="Manajemen Keuangan" desc="Pantau sirkulasi kas dan tagihan santri dari satu panel." link="/bendahara/arus-kas" linkText="Buku Besar" />
-                    ) : hasAccess('Data Santri') ? (
-                        <WelcomeBanner title="Administrasi Santri" desc="Kelola database pusat santri dan asramaasrama." link="/sekretariat/santri" linkText="Buka Database" />
-                    ) : (
-                        <WelcomeBanner title="Selamat Datang" desc="SIM-PPDS siap membantu mempermudah manajemen unit Anda." />
-                    )}
+                        <div className="secondary-column">
+                            {/* Dynamic Banners Contextual to User Menus */}
+                            {hasAccess('Pelanggaran') ? (
+                                <WelcomeBanner title="Bagian Keamanan" desc="Pantau ketertiban dan perizinan santri secara real-time." link="/keamanan/pelanggaran" linkText="Menu Keamanan" />
+                            ) : (hasAccess('Arus Kas Pondok') || hasAccess('Pembayaran Santri')) ? (
+                                <WelcomeBanner title="Manajemen Keuangan" desc="Pantau sirkulasi kas dan tagihan santri dari satu panel." link="/bendahara/arus-kas" linkText="Buku Besar" />
+                            ) : hasAccess('Data Santri') ? (
+                                <WelcomeBanner title="Administrasi Santri" desc="Kelola database pusat santri dan asramaasrama." link="/sekretariat/santri" linkText="Buka Database" />
+                            ) : (
+                                <WelcomeBanner title="Selamat Datang" desc="SIM-PPDS siap membantu mempermudah manajemen unit Anda." />
+                            )}
 
-                    <ActiveSessionCard user={user} mounted={mounted} />
-                </div>
+                            <ActiveSessionCard user={user} mounted={mounted} />
+                        </div>
+                    </>
+                ) : (
+                    <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem', width: '100%' }}>
+                        <i className="fas fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: 'var(--primary)', marginBottom: '1rem' }}></i>
+                        <p style={{ color: 'var(--text-muted)' }}>Mempersiapkan Dashboard...</p>
+                    </div>
+                )}
             </div>
 
             <style jsx>{`
