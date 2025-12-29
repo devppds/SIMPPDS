@@ -45,7 +45,7 @@ export default function SantriPage() {
         viewData: detailData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView, isAdmin
     } = useDataManagement('santri', {
-        stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', status_mb: 'Baru', madrasah: '', kelas: '',
+        stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', madrasah: '', kelas: '',
         nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
         anak_ke: '', jumlah_saudara: '', alamat_lengkap: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '',
         kota_kabupaten: '', provinsi: '', kode_pos: '', hobi: '', cita_cita: '', pendidikan_terakhir: '', asal_sekolah: '', no_ijazah: '',
@@ -266,7 +266,7 @@ export default function SantriPage() {
                                 <TextInput label="Tahun Masuk" type="number" value={formData.tahun_masuk} onChange={e => setFormData({ ...formData, tahun_masuk: e.target.value })} icon="fas fa-calendar-alt" />
                             </div>
 
-                            <SelectInput label="Status Mukim" value={formData.status_mb} onChange={e => setFormData({ ...formData, status_mb: e.target.value })} options={['Mukim', 'Boyong / Laju', 'Baru']} icon="fas fa-luggage-cart" />
+
                         </div>
                     )}
 
