@@ -10,8 +10,10 @@ export default function Sidebar() {
     const pathname = usePathname();
     const { user, logout } = useAuth();
     const [openSubmenus, setOpenSubmenus] = useState({});
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        setIsMounted(true);
         // Auto-open submenu if a child is active (Recursive)
         const newOpens = {};
         const scan = (items) => {
@@ -142,7 +144,7 @@ export default function Sidebar() {
             <nav className="sidebar-nav">
                 <div className="menu-section">MENU UTAMA</div>
                 <ul>
-                    {NAV_ITEMS.map((item, index) => renderMenuItem(item, index))}
+                    {isMounted ? NAV_ITEMS.map((item, index) => renderMenuItem(item, index)) : null}
                 </ul>
             </nav>
 
