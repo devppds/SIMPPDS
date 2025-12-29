@@ -11,7 +11,7 @@ const headersConfig = {
     'pendidikan': ["tanggal", "nama_santri", "kegiatan", "nilai", "kehadiran", "keterangan", "ustadz"],
     'keuangan': ["tanggal", "nama_santri", "jenis_pembayaran", "nominal", "metode", "status", "bendahara", "tipe"],
     'arus_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pj"],
-    'users': ["fullname", "username", "password", "password_plain", "role"],
+    'users': ["fullname", "username", "email", "password", "password_plain", "role"],
     'kamar': ["nama_kamar", "asrama", "kapasitas", "penasihat"],
     'kesehatan': ["nama_santri", "mulai_sakit", "gejala", "obat_tindakan", "status_periksa", "keterangan", "biaya_obat"],
     'izin': ["nama_santri", "alasan", "tanggal_pulang", "tanggal_kembali", "jam_mulai", "jam_selesai", "tipe_izin", "petugas", "keterangan"],
