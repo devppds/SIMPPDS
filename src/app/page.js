@@ -39,12 +39,10 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Get all users and find matching PIN
       const users = await apiCall('getData', 'GET', { type: 'users' });
       const matchedUser = users.find(u => u.password_plain === pin);
 
       if (matchedUser) {
-        // Login successful
         login({
           username: matchedUser.username,
           fullname: matchedUser.fullname,
@@ -81,105 +79,154 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      width: '100%',
+      // Background Premium Dark Elegant
+      background: `
+        radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+        linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)
+      `,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '2rem'
+      padding: '2rem',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
-      <div style={{
-        background: 'white',
+
+      {/* Background Orbs Animation */}
+      <style jsx global>{`
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+          100% { transform: translateY(0px); }
+        }
+        @keyframes pulse-glow {
+          0% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.2); }
+          50% { box-shadow: 0 0 40px rgba(37, 99, 235, 0.4); }
+          100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.2); }
+        }
+        .glass-card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .numpad-btn {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: white;
+          transition: all 0.2s ease;
+        }
+        .numpad-btn:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .numpad-btn:active {
+          transform: translateY(0);
+        }
+        .pin-dot {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          transition: all 0.3s ease;
+        }
+        .pin-dot.filled {
+          background: #38bdf8;
+          box-shadow: 0 0 10px #38bdf8;
+        }
+      `}</style>
+
+      {/* Main Card */}
+      <div className="glass-card" style={{
         borderRadius: '32px',
-        padding: '3rem',
-        maxWidth: '450px',
+        padding: '3.5rem',
+        maxWidth: '480px',
         width: '100%',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        position: 'relative',
+        zIndex: 10
       }}>
         {/* Logo & Title */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <div style={{
-            width: '80px',
-            height: '80px',
             margin: '0 auto 1.5rem',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            animation: 'float 6s ease-in-out infinite'
           }}>
-            <i className="fas fa-lock" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+            <img
+              src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"
+              alt="Logo PPTQ"
+              style={{
+                width: '120px',
+                height: 'auto',
+                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
+              }}
+            />
           </div>
-          <h1 className="outfit" style={{ fontSize: '2rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.5rem' }}>
+          <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 800, color: 'white', marginBottom: '0.5rem', letterSpacing: '-0.5px' }}>
             SIM-PPDS
           </h1>
-          <p style={{ color: '#64748b', fontSize: '0.95rem' }}>Masukkan PIN Anda</p>
+          <p style={{ color: '#94a3b8', fontSize: '1rem', letterSpacing: '0.5px' }}>SISTEM INFORMASI MANAJEMEN TERPADU</p>
         </div>
 
         <form onSubmit={handleLogin}>
           {/* PIN Display */}
           <div style={{
-            background: '#f8fafc',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            marginBottom: '2rem',
-            textAlign: 'center'
+            marginBottom: '2.5rem',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '1.5rem',
+            height: '40px',
+            alignItems: 'center'
           }}>
-            <div style={{
-              fontSize: '2.5rem',
-              fontWeight: 800,
-              letterSpacing: '1rem',
-              color: '#1e293b',
-              minHeight: '60px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {pin ? pin.split('').map((_, i) => '●').join(' ') : '- - - -'}
-            </div>
-            {error && (
-              <div style={{
-                marginTop: '1rem',
-                color: '#ef4444',
-                fontSize: '0.9rem',
-                fontWeight: 600
-              }}>
-                <i className="fas fa-exclamation-circle" style={{ marginRight: '6px' }}></i>
-                {error}
-              </div>
-            )}
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className={`pin-dot ${i < pin.length ? 'filled' : ''}`}
+              ></div>
+            ))}
           </div>
+
+          {error && (
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '1.5rem',
+              color: '#ef4444',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              background: 'rgba(239, 68, 68, 0.1)',
+              padding: '10px',
+              borderRadius: '12px',
+              border: '1px solid rgba(239, 68, 68, 0.2)'
+            }}>
+              <i className="fas fa-exclamation-circle" style={{ marginRight: '8px' }}></i>
+              {error}
+            </div>
+          )}
 
           {/* Number Pad */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '1rem',
-            marginBottom: '1.5rem'
+            marginBottom: '2rem'
           }}>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
               <button
                 key={num}
                 type="button"
+                className="numpad-btn outfit"
                 onClick={() => handleNumberClick(num.toString())}
                 disabled={loading}
                 style={{
                   padding: '1.25rem',
-                  fontSize: '1.5rem',
-                  fontWeight: 700,
-                  background: 'white',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '12px',
+                  fontSize: '1.75rem',
+                  fontWeight: 600,
+                  borderRadius: '18px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  color: '#1e293b'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = '#f8fafc';
-                  e.target.style.borderColor = '#cbd5e1';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'white';
-                  e.target.style.borderColor = '#e2e8f0';
+                  border: 'none'
                 }}
               >
                 {num}
@@ -189,17 +236,17 @@ export default function LoginPage() {
             {/* Clear Button */}
             <button
               type="button"
+              className="numpad-btn"
               onClick={handleClear}
               disabled={loading}
               style={{
                 padding: '1.25rem',
-                fontSize: '1rem',
-                fontWeight: 700,
-                background: 'white',
-                border: '2px solid #e2e8f0',
-                borderRadius: '12px',
+                fontSize: '1.2rem',
+                borderRadius: '18px',
                 cursor: 'pointer',
-                color: '#ef4444'
+                color: '#ef4444',
+                borderColor: 'rgba(239, 68, 68, 0.3)',
+                background: 'rgba(239, 68, 68, 0.1)'
               }}
             >
               <i className="fas fa-times"></i>
@@ -208,17 +255,15 @@ export default function LoginPage() {
             {/* Zero */}
             <button
               type="button"
+              className="numpad-btn outfit"
               onClick={() => handleNumberClick('0')}
               disabled={loading}
               style={{
                 padding: '1.25rem',
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                background: 'white',
-                border: '2px solid #e2e8f0',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                color: '#1e293b'
+                fontSize: '1.75rem',
+                fontWeight: 600,
+                borderRadius: '18px',
+                cursor: 'pointer'
               }}
             >
               0
@@ -227,17 +272,18 @@ export default function LoginPage() {
             {/* Backspace */}
             <button
               type="button"
+              className="numpad-btn"
               onClick={handleBackspace}
               disabled={loading}
               style={{
                 padding: '1.25rem',
-                fontSize: '1rem',
-                fontWeight: 700,
-                background: 'white',
-                border: '2px solid #e2e8f0',
-                borderRadius: '12px',
+                fontSize: '1.2rem',
+                borderRadius: '18px',
                 cursor: 'pointer',
-                color: '#64748b'
+                color: '#facc15',
+                borderColor: 'rgba(250, 204, 21, 0.3)',
+                background: 'rgba(250, 204, 21, 0.1)'
+
               }}
             >
               <i className="fas fa-backspace"></i>
@@ -250,27 +296,29 @@ export default function LoginPage() {
             disabled={loading || pin.length < 4}
             style={{
               width: '100%',
-              padding: '1rem',
+              padding: '1.25rem',
               fontSize: '1.1rem',
               fontWeight: 700,
-              background: pin.length >= 4 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#e2e8f0',
-              color: pin.length >= 4 ? 'white' : '#94a3b8',
+              background: pin.length >= 4 ? 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)' : 'rgba(255,255,255,0.1)',
+              color: pin.length >= 4 ? 'white' : 'rgba(255,255,255,0.3)',
               border: 'none',
-              borderRadius: '12px',
+              borderRadius: '16px',
               cursor: pin.length >= 4 ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s',
-              boxShadow: pin.length >= 4 ? '0 4px 12px rgba(102, 126, 234, 0.3)' : 'none'
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: pin.length >= 4 ? '0 10px 25px -5px rgba(59, 130, 246, 0.5)' : 'none',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase'
             }}
           >
             {loading ? (
               <>
-                <i className="fas fa-spinner fa-spin" style={{ marginRight: '8px' }}></i>
-                Memverifikasi...
+                <i className="fas fa-spinner fa-spin" style={{ marginRight: '10px' }}></i>
+                VERIFYING...
               </>
             ) : (
               <>
-                <i className="fas fa-sign-in-alt" style={{ marginRight: '8px' }}></i>
-                Masuk
+                LOGIN SYSTEM
+                <i className="fas fa-arrow-right" style={{ marginLeft: '10px' }}></i>
               </>
             )}
           </button>
@@ -278,13 +326,14 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div style={{
-          marginTop: '2rem',
+          marginTop: '2.5rem',
           textAlign: 'center',
-          fontSize: '0.85rem',
-          color: '#94a3b8'
+          fontSize: '0.8rem',
+          color: 'rgba(255, 255, 255, 0.4)',
+          letterSpacing: '0.5px'
         }}>
-          <i className="fas fa-shield-alt" style={{ marginRight: '6px' }}></i>
-          Sistem Informasi Pondok Pesantren
+          <i className="fas fa-shield-alt" style={{ marginRight: '8px' }}></i>
+          SECURED BY DENYR A.K.A DEVELZY
         </div>
       </div>
     </div>
