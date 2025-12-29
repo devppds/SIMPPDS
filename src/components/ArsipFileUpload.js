@@ -27,16 +27,6 @@ export default function ArsipFileUpload({ onUploadComplete, currentFile, label =
                 folder: 'simppds_arsip', // Organize in folder
             };
 
-            // Optimize based on file type
-            if (file.type === 'application/pdf') {
-                // PDF Optimization: Use Cloudinary's quality auto
-                paramsToSign.quality = 'auto';
-            } else if (file.type.startsWith('image/')) {
-                // Image Optimization: Convert to WebP, quality auto
-                paramsToSign.format = 'webp';
-                paramsToSign.quality = 'auto';
-            }
-
             // 3. Get Signature
             const { signature, apiKey, cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign } });
 
@@ -47,13 +37,6 @@ export default function ArsipFileUpload({ onUploadComplete, currentFile, label =
             fd.append('timestamp', timestamp);
             fd.append('signature', signature);
             fd.append('folder', 'simppds_arsip');
-
-            if (file.type === 'application/pdf') {
-                fd.append('quality', 'auto');
-            } else if (file.type.startsWith('image/')) {
-                fd.append('format', 'webp');
-                fd.append('quality', 'auto');
-            }
 
             const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
                 method: 'POST',
@@ -69,7 +52,7 @@ export default function ArsipFileUpload({ onUploadComplete, currentFile, label =
 
         } catch (err) {
             console.error(err);
-            setError('Gagal mengupload file. Silakan coba lagi.');
+            setError('Error: ' + err.message);
         } finally {
             setUploading(false);
         }
