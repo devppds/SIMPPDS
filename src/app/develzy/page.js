@@ -37,36 +37,38 @@ export default function DevelzyControlPage() {
     const loadData = async () => {
         try {
             if (activeTab === 'audit') {
-                const res = await apiCall('getAuditLogs');
+                const res = await apiCall('getAuditLogs', 'GET');
                 setLogs(Array.isArray(res) ? res : []);
             }
             if (activeTab === 'general') {
-                const res = await apiCall('getConfigs');
+                const res = await apiCall('getConfigs', 'GET');
                 if (res && Array.isArray(res)) {
                     const newConfigs = { ...configs };
                     res.forEach(item => {
-                        if (newConfigs[item.key] !== undefined) {
-                            newConfigs[item.key] = item.value;
-                        }
+                        if (item.key === 'nama_instansi') newConfigs.nama_instansi = item.value;
+                        if (item.key === 'tahun_ajaran') newConfigs.tahun_ajaran = item.value;
+                        if (item.key === 'deskripsi') newConfigs.deskripsi = item.value;
                     });
                     setConfigs(newConfigs);
                 }
             }
         } catch (e) {
             console.error("Load data error:", e);
+            if (e.message.includes('Unauthorized') || e.message.includes('Forbidden')) {
+                showToast("Akses ditolak. Pastikan Anda login sebagai Admin.", "error");
+            }
         }
     };
 
     const handleSaveConfig = async () => {
         try {
-            await Promise.all([
-                apiCall('updateConfig', 'POST', { data: { key: 'nama_instansi', value: configs.nama_instansi } }),
-                apiCall('updateConfig', 'POST', { data: { key: 'tahun_ajaran', value: configs.tahun_ajaran } }),
-                apiCall('updateConfig', 'POST', { data: { key: 'deskripsi', value: configs.deskripsi } })
-            ]);
+            await apiCall('updateConfig', 'POST', { data: { key: 'nama_instansi', value: configs.nama_instansi } });
+            await apiCall('updateConfig', 'POST', { data: { key: 'tahun_ajaran', value: configs.tahun_ajaran } });
+            await apiCall('updateConfig', 'POST', { data: { key: 'deskripsi', value: configs.deskripsi } });
             showToast("Konfigurasi global berhasil disimpan!", "success");
         } catch (e) {
-            showToast("Gagal menyimpan konfigurasi", "error");
+            console.error("Save config error:", e);
+            showToast("Gagal menyimpan konfigurasi: " + e.message, "error");
         }
     };
 
@@ -444,6 +446,21 @@ export default function DevelzyControlPage() {
                                 <h1 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Audit Trail & Security Logs</h1>
                                 <button className="btn btn-secondary" onClick={loadData}><i className="fas fa-sync"></i> Refresh</button>
                             </div>
+
+                            {logs.length === 0 && (
+                                <div style={{ marginBottom: '1.5rem', padding: '20px', background: '#fef3c7', borderRadius: '16px', border: '1px solid #fbbf24' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <i className="fas fa-info-circle" style={{ fontSize: '1.5rem', color: '#d97706' }}></i>
+                                        <div>
+                                            <h4 style={{ color: '#92400e', marginBottom: '6px', fontWeight: 700 }}>Belum Ada Data Audit Log</h4>
+                                            <p style={{ fontSize: '0.9rem', color: '#78350f', margin: 0 }}>
+                                                Jika ini pertama kali Anda mengakses panel ini, silakan ke tab <strong>System Health</strong> dan klik tombol <strong>"Initialize System Tables"</strong> terlebih dahulu.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div style={{ border: '1.5px solid #f1f5f9', borderRadius: '16px', overflow: 'hidden' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead style={{ background: '#f8fafc' }}>
