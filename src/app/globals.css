@@ -1320,3 +1320,37 @@ tr:hover td {
     box-shadow: none !important;
   }
 }
+
+/* Pagination & Table Performance */
+.table-wrapper {
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #fcfcfc;
+  border-top: 1px solid #f1f5f9;
+}
+
+.page-info {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.page-info strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+/* Optimize heavy renders */
+.stat-card,
+.card {
+  contain: content;
+}

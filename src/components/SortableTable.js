@@ -9,7 +9,8 @@ export default function SortableTable({
     emptyMessage = "Tidak ada data.",
     onRowClick = null
 }) {
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     const sortedData = useMemo(() => {
         if (!sortConfig.key) return data;
@@ -17,27 +18,26 @@ export default function SortableTable({
         const sorted = [...data].sort((a, b) => {
             const aVal = a[sortConfig.key];
             const bVal = b[sortConfig.key];
-
-            // Handle null/undefined
             if (aVal == null) return 1;
             if (bVal == null) return -1;
-
-            // Numeric comparison
             if (typeof aVal === 'number' && typeof bVal === 'number') {
                 return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
             }
-
-            // String comparison
             const aStr = String(aVal).toLowerCase();
             const bStr = String(bVal).toLowerCase();
-
             if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
             if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
-
         return sorted;
     }, [data, sortConfig]);
+
+    const paginatedData = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return sortedData.slice(start, start + itemsPerPage);
+    }, [sortedData, currentPage, itemsPerPage]);
+
+    const totalPages = Math.ceil(sortedData.length / itemsPerPage);
 
     const requestSort = (key) => {
         let direction = 'asc';
@@ -45,6 +45,7 @@ export default function SortableTable({
             direction = 'desc';
         }
         setSortConfig({ key, direction });
+        setCurrentPage(1); // Reset to first page on sort
     };
 
     const getSortIcon = (columnKey) => {
@@ -57,58 +58,72 @@ export default function SortableTable({
     };
 
     return (
-        <div className="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        {columns.map((col) => (
-                            <th
-                                key={col.key}
-                                style={{
-                                    cursor: col.sortable !== false ? 'pointer' : 'default',
-                                    userSelect: 'none',
-                                    width: col.width || 'auto'
-                                }}
-                                onClick={() => col.sortable !== false && requestSort(col.key)}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: col.align || 'left' }}>
-                                    {col.label}
-                                    {col.sortable !== false && getSortIcon(col.key)}
-                                </div>
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {loading ? (
+        <div className="table-wrapper">
+            <div className="table-container">
+                <table>
+                    <thead>
                         <tr>
-                            <td colSpan={columns.length} style={{ textAlign: 'center', padding: '4rem' }}>
-                                Sinkronisasi Data...
-                            </td>
+                            {columns.map((col) => (
+                                <th
+                                    key={col.key}
+                                    style={{
+                                        cursor: col.sortable !== false ? 'pointer' : 'default',
+                                        userSelect: 'none',
+                                        width: col.width || 'auto'
+                                    }}
+                                    onClick={() => col.sortable !== false && requestSort(col.key)}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: col.align || 'left' }}>
+                                        {col.label}
+                                        {col.sortable !== false && getSortIcon(col.key)}
+                                    </div>
+                                </th>
+                            ))}
                         </tr>
-                    ) : sortedData.length === 0 ? (
-                        <tr>
-                            <td colSpan={columns.length} style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-                                {emptyMessage}
-                            </td>
-                        </tr>
-                    ) : (
-                        sortedData.map((row, idx) => (
-                            <tr
-                                key={row.id || idx}
-                                onClick={() => onRowClick && onRowClick(row)}
-                                style={{ cursor: onRowClick ? 'pointer' : 'default' }}
-                            >
-                                {columns.map((col) => (
-                                    <td key={col.key} style={{ textAlign: col.align || 'left', width: col.width || 'auto' }}>
-                                        {col.render ? col.render(row) : row[col.key]}
-                                    </td>
-                                ))}
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan={columns.length} style={{ textAlign: 'center', padding: '4rem' }}>
+                                    Sinkronisasi Data...
+                                </td>
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+                        ) : paginatedData.length === 0 ? (
+                            <tr>
+                                <td colSpan={columns.length} style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+                                    {emptyMessage}
+                                </td>
+                            </tr>
+                        ) : (
+                            paginatedData.map((row, idx) => (
+                                <tr
+                                    key={row.id || idx}
+                                    onClick={() => onRowClick && onRowClick(row)}
+                                    style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                                >
+                                    {columns.map((col) => (
+                                        <td key={col.key} style={{ textAlign: col.align || 'left', width: col.width || 'auto' }}>
+                                            {col.render ? col.render(row) : row[col.key]}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {totalPages > 1 && (
+                <div className="pagination">
+                    <button className="btn-vibrant" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                        <i className="fas fa-chevron-left"></i>
+                    </button>
+                    <span className="page-info">Halaman <strong>{currentPage}</strong> dari {totalPages}</span>
+                    <button className="btn-vibrant" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                        <i className="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

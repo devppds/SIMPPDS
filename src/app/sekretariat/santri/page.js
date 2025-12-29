@@ -50,20 +50,19 @@ export default function SantriPage() {
         status_santri: 'Aktif', tanggal_nonaktif: '', alasan_nonaktif: '', foto_santri: '', pindah_ke: '', tahun_pindah: '', tanggal_boyong: ''
     });
 
+    // Optimized Data Loading
     const loadEnrichedData = useCallback(async () => {
-        setLoading(true);
+        // useDataManagement already fetches 'santri' data. 
+        // We only need to fetch auxiliary master data once.
         try {
-            const [res, resKelas, resKamar] = await Promise.all([
-                apiCall('getData', 'GET', { type: 'santri' }),
+            const [resKelas, resKamar] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'master_kelas' }),
                 apiCall('getData', 'GET', { type: 'kamar' })
             ]);
-            let filtered = (res || []).filter(s => filterStatus === 'Aktif' ? (!s.status_santri || s.status_santri === 'Aktif') : s.status_santri === filterStatus);
-            setData(filtered);
             setListKelas((resKelas || []).sort((a, b) => a.urutan - b.urutan));
             setListKamar((resKamar || []).map(r => ({ value: `${r.asrama} ${r.nama_kamar.toString().padStart(2, '0')}`, label: `${r.asrama} ${r.nama_kamar.toString().padStart(2, '0')}` })));
-        } catch (e) { console.error(e); } finally { setLoading(false); }
-    }, [filterStatus, setData, setLoading]);
+        } catch (e) { console.error(e); }
+    }, []);
 
     useEffect(() => { loadEnrichedData(); }, [loadEnrichedData]);
 
@@ -83,15 +82,29 @@ export default function SantriPage() {
         { title: 'Lulus & Boyong', value: santri.filter(s => s.status_santri !== 'Aktif').length, icon: 'fas fa-graduation-cap', color: '#ca8a04' }
     ]), [santri]);
 
-    const displayData = santri.filter(s => {
-        const matchSearch = (s.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) || (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase());
-        const mdr = (s.madrasah || '').toUpperCase();
-        const kls = (s.kelas || '').toUpperCase();
-        let matchMdr = filterMadrasah === 'Semua';
-        if (filterMadrasah === 'MHM') matchMdr = mdr === 'MHM' || kls.includes('IBTIDA') || kls.includes('ALIYYAH');
-        else if (filterMadrasah === 'MIU') matchMdr = mdr === 'MIU' || kls.includes('ULA') || kls.includes('WUSTHO');
-        return matchSearch && matchMdr;
-    });
+    const displayData = useMemo(() => {
+        return santri.filter(s => {
+            // 1. Filter by Status
+            const matchStatus = filterStatus === 'Aktif'
+                ? (!s.status_santri || s.status_santri === 'Aktif')
+                : s.status_santri === filterStatus;
+            if (!matchStatus) return false;
+
+            // 2. Filter by Search
+            const matchSearch = (s.nama_siswa || '').toLowerCase().includes(search.toLowerCase()) ||
+                (s.stambuk_pondok || '').toLowerCase().includes(search.toLowerCase());
+            if (!matchSearch) return false;
+
+            // 3. Filter by Unit/Madrasah
+            const mdr = (s.madrasah || '').toUpperCase();
+            const kls = (s.kelas || '').toUpperCase();
+            let matchMdr = filterMadrasah === 'Semua';
+            if (filterMadrasah === 'MHM') matchMdr = mdr === 'MHM' || kls.includes('IBTIDA') || kls.includes('ALIYYAH');
+            else if (filterMadrasah === 'MIU') matchMdr = mdr === 'MIU' || kls.includes('ULA') || kls.includes('WUSTHO');
+
+            return matchMdr;
+        });
+    }, [santri, search, filterStatus, filterMadrasah]);
 
     const columns = [
         { key: 'foto', label: 'Foto', render: (row) => <img src={row.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} /> },
