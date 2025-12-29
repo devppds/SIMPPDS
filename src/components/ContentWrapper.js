@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/navConfig';
 
 export default function ContentWrapper({ children }) {
-    const { loading, config, isAdmin, isDevelzy } = useAuth();
+    const { loading, config, isAdmin, isDevelzy, user } = useAuth();
     const pathname = usePathname();
     const isLoginPage = pathname === '/'; // Login page is root
 
@@ -41,6 +41,10 @@ export default function ContentWrapper({ children }) {
     const isMaintenance = config?.maintenance_mode === 'true';
     const [timeLeft, setTimeLeft] = useState('');
 
+    // Bypass usernames - these users can access even during maintenance
+    const bypassUsernames = ['develzy', 'muhammad khulal', 'admin'];
+    const canBypassMaintenance = user && bypassUsernames.includes(user.username?.toLowerCase());
+
     useEffect(() => {
         if (!isMaintenance || isAdmin || isDevelzy) return;
 
@@ -63,8 +67,8 @@ export default function ContentWrapper({ children }) {
         return () => clearInterval(timer);
     }, [isMaintenance, config?.maintenance_end_time, isAdmin, isDevelzy]);
 
-    // If maintenance is ON and user is NOT admin/develzy
-    if (isMaintenance && !isAdmin && !isDevelzy && !isLoginPage) {
+    // If maintenance is ON and user is NOT admin/develzy/bypass
+    if (isMaintenance && !isAdmin && !isDevelzy && !canBypassMaintenance && !isLoginPage) {
         return (
             <div style={{
                 minHeight: '100vh',
