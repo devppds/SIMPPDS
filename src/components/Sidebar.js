@@ -34,7 +34,7 @@ export default function Sidebar() {
     }, [pathname]);
 
     const toggleSubmenu = (label) => {
-        if (user?.role !== 'admin') return;
+        if (user?.role !== 'admin' && user?.role !== 'develzy') return;
         setOpenSubmenus(prev => ({
             ...prev,
             [label]: !prev[label]
@@ -44,6 +44,10 @@ export default function Sidebar() {
     const isVisible = (roles) => {
         if (!roles) return true;
         if (!user) return false;
+
+        // Develzy sees everything!
+        if (user.role === 'develzy') return true;
+
         return roles.includes(user.role);
     };
 
@@ -51,7 +55,8 @@ export default function Sidebar() {
         if (!isVisible(item.roles)) return null;
 
         if (item.submenu) {
-            const isOpen = user?.role === 'admin' ? !!openSubmenus[item.label] : true;
+            const isAdminOrDev = user?.role === 'admin' || user?.role === 'develzy';
+            const isOpen = isAdminOrDev ? !!openSubmenus[item.label] : true;
 
             // Check recursive active
             const isChildActive = (subItems) => subItems.some(sub => sub.path === pathname || (sub.submenu && isChildActive(sub.submenu)));
@@ -68,7 +73,7 @@ export default function Sidebar() {
                             <i className={item.icon} style={{ width: '24px', textAlign: 'center' }}></i>
                             <span style={{ marginLeft: '10px' }}>{item.label}</span>
                         </div>
-                        {user?.role === 'admin' && <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} submenu-arrow`} style={{ fontSize: '0.8rem' }}></i>}
+                        {isAdminOrDev && <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} submenu-arrow`} style={{ fontSize: '0.8rem' }}></i>}
                     </div>
                     {isOpen && (
                         <ul className="submenu" style={{ display: 'block', paddingLeft: 0 }}>
