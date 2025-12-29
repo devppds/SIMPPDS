@@ -14,7 +14,7 @@ import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function KamarPage() {
-    const { canEdit } = usePagePermission();
+    const { canEdit, canDelete } = usePagePermission();
     const [allSantri, setAllSantri] = useState([]);
     const [penasihatList, setPenasihatList] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
@@ -98,7 +98,7 @@ export default function KamarPage() {
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)}><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }

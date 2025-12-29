@@ -15,7 +15,7 @@ import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function BarangSitaanPage() {
-    const { canEdit } = usePagePermission();
+    const { canEdit, canDelete } = usePagePermission();
     const [santriOptions, setSantriOptions] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
@@ -61,7 +61,7 @@ export default function BarangSitaanPage() {
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
                     }
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }

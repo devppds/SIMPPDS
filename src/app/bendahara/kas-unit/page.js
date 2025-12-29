@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall, formatCurrency, formatDate } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
 // ✨ Unified Components
@@ -17,6 +17,7 @@ const UNITS = ['Sekretariat', 'Keamanan', 'Pendidikan', 'Kesehatan', "Jam'iyyah"
 
 export default function SetoranUnitPage() {
     const { user } = useAuth();
+    const { canEdit, canDelete } = usePagePermission();
     const [layananLogs, setLayananLogs] = useState([]);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedUnitDetails, setSelectedUnitDetails] = useState(null);
@@ -89,7 +90,7 @@ export default function SetoranUnitPage() {
         { key: 'petugas', label: 'Penerima' },
         {
             key: 'actions', label: 'Aksi', width: '80px', render: (row) => (
-                isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>
+                canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>
             )
         }
     ];
@@ -122,7 +123,7 @@ export default function SetoranUnitPage() {
                 <DataViewContainer
                     title="Riwayat Setoran"
                     subtitle="Log penerimaan dana dari unit seksi."
-                    headerActions={<button className="btn btn-primary btn-sm" onClick={() => setIsModalOpen(true)}><i className="fas fa-plus"></i> Catat Setoran</button>}
+                    headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => setIsModalOpen(true)}><i className="fas fa-plus"></i> Catat Setoran</button>}
                     searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
                     tableProps={{ columns, data: data.filter(d => d.unit.toLowerCase().includes(search.toLowerCase())), loading }}
                 />

@@ -15,7 +15,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import FileUploader from '@/components/FileUploader';
 
 export default function PengurusPage() {
-    const { canEdit } = usePagePermission();
+    const { canEdit, canDelete } = usePagePermission();
     const [listJabatan, setListJabatan] = useState([]);
     const [listDivisi, setListDivisi] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
@@ -79,7 +79,7 @@ export default function PengurusPage() {
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)}><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }

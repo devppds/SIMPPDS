@@ -15,7 +15,7 @@ import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import DataViewContainer from '@/components/DataViewContainer';
 
 export default function PengajarPage() {
-    const { canEdit } = usePagePermission();
+    const { canEdit, canDelete } = usePagePermission();
 
     const {
         data, loading, search, setSearch, submitting,
@@ -54,7 +54,7 @@ export default function PengajarPage() {
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus pengajar ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus pengajar ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }

@@ -9,7 +9,7 @@ import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function PelanggaranPage() {
-    const { canEdit } = usePagePermission();
+    const { canEdit, canDelete } = usePagePermission();
 
     // ✨ Use Universal Data Hook
     const {
@@ -76,7 +76,7 @@ export default function PelanggaranPage() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus catatan pelanggaran ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus catatan pelanggaran ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }

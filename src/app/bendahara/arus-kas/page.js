@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall, formatCurrency, formatDate, exportToExcel } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
+import { usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import Autocomplete from '@/components/Autocomplete';
 
@@ -14,6 +15,7 @@ import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function ArusKasPage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [pjOptions, setPjOptions] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
@@ -76,8 +78,8 @@ export default function ArusKasPage() {
             key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)}><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
