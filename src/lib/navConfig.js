@@ -121,11 +121,5 @@ export const NAV_ITEMS = [
         icon: 'fas fa-rocket',
         path: '/develzy',
         roles: ['admin']
-    },
-    {
-        label: 'Pengaturan',
-        icon: 'fas fa-cog',
-        path: '/settings',
-        roles: ['admin', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu', 'wajar_murottil']
     }
 ];
