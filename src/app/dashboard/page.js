@@ -86,56 +86,93 @@ export default function DashboardPage() {
             {/* Main Grid: Transactions & Alerts */}
             <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1.4fr', gap: '2.5rem' }}>
 
-                {/* Left: Recent Activity */}
-                <div className="card" style={{ padding: '0' }}>
-                    <div className="card-header" style={{ padding: '2rem', borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Aktivitas Transaksi Terbaru</h2>
-                        <Link href="/bendahara/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Lihat Laporan</Link>
+                {/* Left Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                    {/* Recent Activity */}
+                    <div className="card" style={{ padding: '0' }}>
+                        <div className="card-header" style={{ padding: '2rem', borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Aktivitas Transaksi Terbaru</h2>
+                            <Link href="/bendahara/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Lihat Laporan</Link>
+                        </div>
+                        <SortableTable
+                            columns={[
+                                {
+                                    key: 'kategori',
+                                    label: 'Kategori',
+                                    render: (row) => (
+                                        <div style={{ paddingLeft: '1rem' }}>
+                                            <div style={{ fontWeight: 700 }}>{row.kategori}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.keterangan || 'Selesai'}</div>
+                                        </div>
+                                    )
+                                },
+                                {
+                                    key: 'nominal',
+                                    label: 'Nominal',
+                                    render: (row) => (
+                                        <div style={{ fontWeight: 800, color: row.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)' }}>
+                                            {row.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(row.nominal)}
+                                        </div>
+                                    )
+                                },
+                                {
+                                    key: 'tanggal',
+                                    label: 'Tanggal',
+                                    render: (row) => <span style={{ fontSize: '0.85rem' }}>{new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
+                                },
+                                {
+                                    key: 'status',
+                                    label: 'Status',
+                                    render: (row) => (
+                                        <span className="th-badge" style={{ background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700 }}>
+                                            Selesai
+                                        </span>
+                                    )
+                                }
+                            ]}
+                            data={lastActivities}
+                            loading={loading}
+                            emptyMessage="Belum ada riwayat hari ini."
+                        />
                     </div>
-                    <SortableTable
-                        columns={[
-                            {
-                                key: 'kategori',
-                                label: 'Kategori',
-                                render: (row) => (
-                                    <div style={{ paddingLeft: '1rem' }}>
-                                        <div style={{ fontWeight: 700 }}>{row.kategori}</div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.keterangan || 'Gending'}</div>
-                                    </div>
-                                )
-                            },
-                            {
-                                key: 'nominal',
-                                label: 'Nominal',
-                                render: (row) => (
-                                    <div style={{ fontWeight: 800, color: row.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)' }}>
-                                        {row.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(row.nominal)}
-                                    </div>
-                                )
-                            },
-                            {
-                                key: 'tanggal',
-                                label: 'Tanggal',
-                                render: (row) => <span style={{ fontSize: '0.85rem' }}>{new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
-                            },
-                            {
-                                key: 'status',
-                                label: 'Status',
-                                render: (row) => (
-                                    <span className="th-badge" style={{ background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700 }}>
-                                        Selesai
-                                    </span>
-                                )
-                            }
-                        ]}
-                        data={lastActivities}
-                        loading={loading}
-                        emptyMessage="Belum ada riwayat hari ini."
-                    />
+
+                    {/* Santri Distribution Chart */}
+                    <div className="card">
+                        <div className="card-header" style={{ marginBottom: '1.5rem' }}>
+                            <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Statistik Santri per Kelas</h2>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {loading ? (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Memuat data statistik...</div>
+                            ) : (stats.santriChart || []).length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Belum ada data santri.</div>
+                            ) : (
+                                stats.santriChart.map((c, i) => {
+                                    const percentage = (c.count / stats.santriTotal) * 100;
+                                    return (
+                                        <div key={i} style={{ marginBottom: '0.5rem' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
+                                                <span style={{ fontWeight: 700 }}>{c.kelas || 'N/A'}</span>
+                                                <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{c.count} Santri</span>
+                                            </div>
+                                            <div style={{ height: '10px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+                                                <div style={{
+                                                    width: `${percentage}%`,
+                                                    height: '100%',
+                                                    background: `linear-gradient(to right, var(--primary), ${['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'][i % 4]})`,
+                                                    transition: 'width 1s ease-out'
+                                                }}></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
                 </div>
 
-                {/* Right: Informational Widgets */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* Right Column: Informational Widgets */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
 
                     {/* Welcome Banner */}
                     <div style={{
