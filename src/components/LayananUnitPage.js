@@ -27,10 +27,25 @@ export default function LayananUnitPage({ unit: forceUnit }) {
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal: baseOpenModal, openView, isAdmin
     } = useDataManagement('layanan_admin', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         unit: forceUnit, nama_santri: '', stambuk: '', jenis_layanan: '',
         nominal: '0', jumlah: '1', keterangan: '', pj: '', pemohon_tipe: 'Santri'
     });
+
+    // Theme Configuration based on Unit
+    const theme = useMemo(() => {
+        switch (forceUnit) {
+            case 'Keamanan': return { color: 'var(--danger)', icon: 'fas fa-shield-alt', bg: '#fef2f2', border: '#fee2e2' };
+            case 'Kesehatan': return { color: '#ec4899', icon: 'fas fa-heartbeat', bg: '#fdf2f8', border: '#fce7f3' };
+            case 'Pendidikan': return { color: '#f59e0b', icon: 'fas fa-graduation-cap', bg: '#fffbeb', border: '#fef3c7' };
+            case "Jam'iyyah": return { color: '#6366f1', icon: 'fas fa-users', bg: '#eef2ff', border: '#e0e7ff' };
+            case 'Sekretariat': default: return { color: 'var(--primary)', icon: 'fas fa-file-signature', bg: '#f8fafc', border: '#e2e8f0' };
+        }
+    }, [forceUnit]);
+
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
+    }, [setFormData]);
 
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);
@@ -61,10 +76,10 @@ export default function LayananUnitPage({ unit: forceUnit }) {
     useEffect(() => { loadEnrichedData(); }, [loadEnrichedData]);
 
     const stats = useMemo(() => [
-        { title: 'Total Layanan', value: data.length, icon: 'fas fa-concierge-bell', color: 'var(--primary)' },
-        { title: 'Pendapatan Unit', value: formatCurrency(data.reduce((acc, d) => acc + parseInt(d.nominal || 0), 0)), icon: 'fas fa-hand-holding-usd', color: 'var(--success)' },
-        { title: 'Layanan Terpopuler', value: data.length > 0 ? (data.reduce((acc, d) => { acc[d.jenis_layanan] = (acc[d.jenis_layanan] || 0) + 1; return acc; }, {})) : '-', icon: 'fas fa-crown', color: 'var(--warning)', renderValue: (v) => v === '-' ? '-' : Object.entries(v).sort((a, b) => b[1] - a[1])[0][0] }
-    ], [data]);
+        { title: 'Total Layanan', value: data.length, icon: theme.icon, color: theme.color },
+        { title: 'Pendapatan Unit', value: formatCurrency(data.reduce((acc, d) => acc + parseInt(d.nominal || 0), 0)), icon: 'fas fa-hand-holding-usd', color: '#10b981' },
+        { title: 'Layanan Terpopuler', value: data.length > 0 ? (data.reduce((acc, d) => { acc[d.jenis_layanan] = (acc[d.jenis_layanan] || 0) + 1; return acc; }, {})) : '-', icon: 'fas fa-chart-line', color: '#f59e0b', renderValue: (v) => v === '-' ? '-' : Object.entries(v).sort((a, b) => b[1] - a[1])[0][0] }
+    ], [data, theme]);
 
     const openModal = (item = null) => {
         if (!item) {
@@ -94,9 +109,19 @@ export default function LayananUnitPage({ unit: forceUnit }) {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul={`Log Pelayanan Unit ${forceUnit}`} subJudul={`Pusat administrasi harian seksi ${forceUnit.toLowerCase()}.`} hideOnScreen={true} />
+            <KopSurat judul={`Administrasi ${forceUnit}`} subJudul={`Pusat layanan dan log aktivitas seksi ${forceUnit.toLowerCase()}.`} hideOnScreen={true} />
 
             <StatsPanel items={stats} />
+
+            <div style={{ marginBottom: '2rem', padding: '1.5rem', background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: theme.color, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                    <i className={theme.icon}></i>
+                </div>
+                <div>
+                    <h2 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Layanan {forceUnit}</h2>
+                    <p style={{ color: '#64748b', margin: 0 }}>Kelola transaksi dan pencatatan layanan khusus unit {forceUnit}.</p>
+                </div>
+            </div>
 
             <DataViewContainer
                 title={`Administrasi Layanan ${forceUnit}`}
