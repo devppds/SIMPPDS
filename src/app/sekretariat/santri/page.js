@@ -47,7 +47,7 @@ export default function SantriPage() {
     } = useDataManagement('santri', {
         stambuk_pondok: '', stambuk_madrasah: '', nama_siswa: '', tahun_masuk: '', kamar: '', madrasah: '', kelas: '',
         nisn: '', tempat_tanggal_lahir: '', jenis_kelamin: 'Laki-laki', agama: 'Islam', kewarganegaraan: 'WNI',
-        anak_ke: '', jumlah_saudara: '', alamat_lengkap: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '',
+        anak_ke: '', jumlah_saudara: '', alamat: '', dusun_jalan: '', rt_rw: '', desa_kelurahan: '', kecamatan: '',
         kota_kabupaten: '', provinsi: '', kode_pos: '', hobi: '', cita_cita: '', pendidikan_terakhir: '', asal_sekolah: '', no_ijazah: '',
         nama_ayah: '', tempat_tanggal_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', no_telp_ayah: '',
         nama_ibu: '', tempat_tanggal_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', no_telp_ibu: '',
@@ -350,7 +350,7 @@ export default function SantriPage() {
                     {/* --- TAB 4: ALAMAT (DOMISILI) --- */}
                     {activeTab === 'alamat' && (
                         <div className="animate-in">
-                            <TextInput label="Alamat Lengkap (Dusun/Jalan)" value={formData.alamat_lengkap} onChange={e => setFormData({ ...formData, alamat_lengkap: e.target.value })} icon="fas fa-map-signs" placeholder="Cth: Jl. KH. Hasyim Asy'ari No. 99" />
+                            <TextInput label="Alamat Lengkap (Dusun/Jalan)" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} icon="fas fa-map-signs" placeholder="Cth: Jl. KH. Hasyim Asy'ari No. 99" />
                             <div className="form-grid">
                                 <TextInput label="Dusun / Lingkungan" value={formData.dusun_jalan} onChange={e => setFormData({ ...formData, dusun_jalan: e.target.value })} />
                                 <TextInput label="RT / RW" value={formData.rt_rw} onChange={e => setFormData({ ...formData, rt_rw: e.target.value })} placeholder="001/002" />
