@@ -67,40 +67,45 @@ export function usePagePermission() {
     }
 
     // 2. Check Granular Permissions from Menus
-    const userMenus = user.menus || user.allowedMenus; // Support both keys
-    if (userMenus && Array.isArray(userMenus) && userMenus.length > 0) {
-        // Find label for current path
-        const findLabel = (items, path) => {
-            for (const item of items) {
-                if (item.path === path) return item.label;
-                if (item.submenu) {
-                    const found = findLabel(item.submenu, path);
-                    if (found) return found;
+    try {
+        const userMenus = user.menus || user.allowedMenus; // Support both keys
+        if (userMenus && Array.isArray(userMenus) && userMenus.length > 0) {
+            // Find label for current path
+            const findLabel = (items, path) => {
+                if (!items || !Array.isArray(items)) return null;
+                for (const item of items) {
+                    if (item.path === path) return item.label;
+                    if (item.submenu) {
+                        const found = findLabel(item.submenu, path);
+                        if (found) return found;
+                    }
                 }
+                return null;
+            };
+
+            const currentLabel = findLabel(NAV_ITEMS, pathname);
+
+            if (currentLabel) {
+                const permission = userMenus.find(m => {
+                    if (typeof m === 'string') return m === currentLabel;
+                    return m?.name === currentLabel;
+                });
+
+                if (permission) {
+                    // If string (legacy), assume Full Access (Edit)
+                    if (typeof permission === 'string') return { canEdit: true, canDelete: false };
+                    // If object, check access level
+                    return {
+                        canEdit: permission.access === 'edit',
+                        canDelete: false // Delete reserved for Super Admin
+                    };
+                }
+                // If label found in NAV but not in userMenus -> No Access (but we return false here)
+                return { canEdit: false, canDelete: false };
             }
-            return null;
-        };
-
-        const currentLabel = findLabel(NAV_ITEMS, pathname);
-
-        if (currentLabel) {
-            const permission = userMenus.find(m => {
-                if (typeof m === 'string') return m === currentLabel;
-                return m.name === currentLabel;
-            });
-
-            if (permission) {
-                // If string (legacy), assume Full Access (Edit)
-                if (typeof permission === 'string') return { canEdit: true, canDelete: false };
-                // If object, check access level
-                return {
-                    canEdit: permission.access === 'edit',
-                    canDelete: false // Delete reserved for Super Admin
-                };
-            }
-            // If label found in NAV but not in userMenus -> No Access (but we return false here)
-            return { canEdit: false, canDelete: false };
         }
+    } catch (e) {
+        console.error("Permission Check Failed:", e);
     }
 
     // 3. Fallback: Module Context from URL (Legacy Role Logic)

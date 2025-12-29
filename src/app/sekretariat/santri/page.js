@@ -259,6 +259,71 @@ export default function SantriPage() {
                 </div>
             </Modal>
 
+
+            {/* Modal View Detail */}
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Data Santri" width="800px">
+                {detailData && (
+                    <div className="view-profile-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) 2fr', gap: '2rem' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <img
+                                src={detailData.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(detailData.nama_siswa)}&background=1e3a8a&color=fff&size=256&bold=true`}
+                                alt={detailData.nama_siswa}
+                                style={{ width: '100%', maxWidth: '200px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginBottom: '1rem' }}
+                            />
+                            <div className={`status-badge ${detailData.status_santri?.toLowerCase()}`} style={{ display: 'inline-block', padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold', background: detailData.status_santri === 'Aktif' ? '#dcfce7' : '#fee2e2', color: detailData.status_santri === 'Aktif' ? '#166534' : '#991b1b' }}>
+                                {detailData.status_santri}
+                            </div>
+                        </div>
+                        <div className="info-grid">
+                            <h2 style={{ marginBottom: '5px' }}>{detailData.nama_siswa}</h2>
+                            <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>{detailData.stambuk_pondok} • {detailData.kelas} ({detailData.madrasah})</p>
+
+                            <h4 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', marginBottom: '15px' }}>Informasi Pribadi</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                                <div><small style={{ color: '#94a3b8' }}>TTL</small><div>{detailData.tempat_tanggal_lahir}</div></div>
+                                <div><small style={{ color: '#94a3b8' }}>NISN</small><div>{detailData.nisn || '-'}</div></div>
+                                <div><small style={{ color: '#94a3b8' }}>Asrama</small><div>{detailData.kamar}</div></div>
+                                <div><small style={{ color: '#94a3b8' }}>Tahun Masuk</small><div>{detailData.tahun_masuk || '-'}</div></div>
+                            </div>
+
+                            <h4 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', marginBottom: '15px' }}>Alamat & Wali</h4>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <small style={{ color: '#94a3b8' }}>Alamat Lengkap</small>
+                                <div>{detailData.alamat_lengkap || '-'} {detailData.dusun_jalan}, {detailData.desa_kelurahan}, {detailData.kecamatan}, {detailData.kota_kabupaten}, {detailData.provinsi}</div>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div><small style={{ color: '#94a3b8' }}>Ayah</small><div>{detailData.nama_ayah} ({detailData.no_telp_ayah || '-'})</div></div>
+                                <div><small style={{ color: '#94a3b8' }}>Ibu</small><div>{detailData.nama_ibu} ({detailData.no_telp_ibu || '-'})</div></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Modal Mutasi (Boyong/Pindah) */}
+            <Modal isOpen={isMutasiOpen} onClose={() => setIsMutasiOpen(false)} title="Proses Mutasi Santri">
+                <div style={{ padding: '10px' }}>
+                    <div style={{ background: '#fffbeb', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontSize: '0.9rem', color: '#92400e', border: '1px solid #fcd34d' }}>
+                        <i className="fas fa-exclamation-triangle"></i> Santri yang dimutasi (Boyong/Pindah) statusnya akan menjadi non-aktif dan tidak muncul di absensi.
+                    </div>
+                    <SelectInput label="Jenis Mutasi" value={mutasiForm.status_santri} onChange={e => setMutasiForm({ ...mutasiForm, status_santri: e.target.value })} options={['Boyong', 'Pindah']} />
+                    <TextInput label="Tanggal Efektif" type="date" value={mutasiForm.tanggal_boyong} onChange={e => setMutasiForm({ ...mutasiForm, tanggal_boyong: e.target.value })} />
+                    {mutasiForm.status_santri === 'Pindah' && (
+                        <TextInput label="Pindah Ke (Sekolah/Pondok)" value={mutasiForm.pindah_ke} onChange={e => setMutasiForm({ ...mutasiForm, pindah_ke: e.target.value })} />
+                    )}
+                    <TextInput label="Alasan / Keterangan" value={mutasiForm.alasan_nonaktif} onChange={e => setMutasiForm({ ...mutasiForm, alasan_nonaktif: e.target.value })} />
+
+                    <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-primary" onClick={async () => {
+                            if (!mutasiData) return;
+                            await handleSave(null, { ...mutasiData, ...mutasiForm });
+                            setIsMutasiOpen(false);
+                            setMutasiData(null);
+                        }}>Simpan Perubahan</button>
+                    </div>
+                </div>
+            </Modal>
+
             {/* ConfirmModal (Satu Pintu) */}
             <ConfirmModal
                 isOpen={deleteConfirm.open}
