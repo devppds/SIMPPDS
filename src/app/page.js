@@ -73,9 +73,11 @@ export default function LoginPage() {
       // Sedikit delay artifisial biar user sempat lihat PIN penuh (UX)
       setTimeout(() => {
         login({
+          id: matchedUser.id,
           username: matchedUser.username,
           fullname: matchedUser.fullname,
           role: matchedUser.role,
+          avatar: matchedUser.avatar || '',
           allowedMenus: matchedUser.allowedMenus || []
         });
         router.push('/dashboard');

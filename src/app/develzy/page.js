@@ -48,7 +48,7 @@ export default function DevelzyControlPage() {
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
     const [rolesList, setRolesList] = useState([]);
-    const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [] });
+    const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [], is_public: 1 });
 
     // Generate menu options dynamically with hierarchy info
     const allPossibleMenus = React.useMemo(() => {
@@ -157,14 +157,14 @@ export default function DevelzyControlPage() {
                         if (!res || res.length === 0) {
                             console.log("Seeding default roles...");
                             const defaultRoles = [
-                                { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: JSON.stringify(['Semua Menu']) },
-                                { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', menus: JSON.stringify(['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis']) },
-                                { role: 'bendahara', label: 'Bendahara', color: '#10b981', menus: JSON.stringify(['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri']) },
-                                { role: 'keamanan', label: 'Keamanan', color: '#ef4444', menus: JSON.stringify(['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang']) },
-                                { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', menus: JSON.stringify(['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil']) },
-                                { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', menus: JSON.stringify(['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi']) },
-                                { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', menus: JSON.stringify(['Data Kesehatan', 'Layanan Kesehatan']) },
-                                { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', menus: JSON.stringify(["Layanan Jam'iyyah"]) },
+                                { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: JSON.stringify(['Semua Menu']), is_public: 1 },
+                                { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', menus: JSON.stringify(['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis']), is_public: 1 },
+                                { role: 'bendahara', label: 'Bendahara', color: '#10b981', menus: JSON.stringify(['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri']), is_public: 1 },
+                                { role: 'keamanan', label: 'Keamanan', color: '#ef4444', menus: JSON.stringify(['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang']), is_public: 1 },
+                                { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', menus: JSON.stringify(['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil']), is_public: 1 },
+                                { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', menus: JSON.stringify(['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi']), is_public: 1 },
+                                { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', menus: JSON.stringify(['Data Kesehatan', 'Layanan Kesehatan']), is_public: 1 },
+                                { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', menus: JSON.stringify(["Layanan Jam'iyyah"]), is_public: 1 },
                             ];
 
                             // Seed one by one
@@ -415,7 +415,7 @@ export default function DevelzyControlPage() {
 
     const handleAddRole = () => {
         setEditingRole(null);
-        setRoleFormData({ label: '', role: '', color: '#64748b', menus: [] });
+        setRoleFormData({ label: '', role: '', color: '#64748b', menus: [], is_public: 1 });
         setIsRoleModalOpen(true);
     };
 
@@ -433,7 +433,8 @@ export default function DevelzyControlPage() {
                 role: roleFormData.role.toLowerCase().replace(/\s+/g, '_'),
                 label: roleFormData.label,
                 color: roleFormData.color,
-                menus: JSON.stringify(roleFormData.menus)
+                menus: JSON.stringify(roleFormData.menus),
+                is_public: roleFormData.is_public ? 1 : 0
             };
 
             if (editingRole && editingRole.id) {
@@ -452,11 +453,6 @@ export default function DevelzyControlPage() {
     };
 
     const handleDeleteRole = async (roleToDelete) => {
-        if (roleToDelete.role === 'admin') {
-            showToast("Role Super Administrator tidak dapat dihapus!", "error");
-            return;
-        }
-
         if (confirm(`Apakah Anda yakin ingin menghapus role "${roleToDelete.label}"?`)) {
             try {
                 await apiCall('deleteData', 'DELETE', { type: 'roles', id: roleToDelete.id });
@@ -981,6 +977,18 @@ export default function DevelzyControlPage() {
                                                     <i className="fas fa-users" style={{ marginRight: '6px' }}></i>
                                                     {item.users} User
                                                 </div>
+                                                <div style={{
+                                                    background: item.is_public ? '#ecfdf5' : '#fef2f2',
+                                                    color: item.is_public ? '#10b981' : '#ef4444',
+                                                    padding: '8px 16px',
+                                                    borderRadius: '10px',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: 700,
+                                                    border: `1px solid ${item.is_public ? '#d1fae5' : '#fee2e2'}`
+                                                }}>
+                                                    <i className={`fas fa-${item.is_public ? 'globe' : 'lock'}`} style={{ marginRight: '6px' }}></i>
+                                                    {item.is_public ? 'Public' : 'Private'}
+                                                </div>
                                             </div>
                                             <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600, marginBottom: '10px' }}>Akses Menu:</div>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -1014,15 +1022,13 @@ export default function DevelzyControlPage() {
                                             >
                                                 <i className="fas fa-edit" style={{ marginRight: '8px' }}></i> Edit Permissions
                                             </button>
-                                            {item.role !== 'admin' && (
-                                                <button
-                                                    className="btn btn-outline"
-                                                    style={{ padding: '10px 20px', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fee2e2' }}
-                                                    onClick={() => handleDeleteRole(item)}
-                                                >
-                                                    <i className="fas fa-trash" style={{ marginRight: '8px' }}></i> Hapus Role
-                                                </button>
-                                            )}
+                                            <button
+                                                className="btn btn-outline"
+                                                style={{ padding: '10px 20px', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fee2e2' }}
+                                                onClick={() => handleDeleteRole(item)}
+                                            >
+                                                <i className="fas fa-trash" style={{ marginRight: '8px' }}></i> Hapus Role
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -1040,8 +1046,8 @@ export default function DevelzyControlPage() {
                                     <strong style={{ color: '#92400e' }}>Tips</strong>
                                 </div>
                                 <p style={{ fontSize: '0.85rem', color: '#78350f', margin: 0 }}>
-                                    Role "Super Administrator" tidak dapat dihapus atau diubah permissions-nya karena memiliki akses penuh ke seluruh sistem.
-                                    Pastikan hanya memberikan role ini kepada pengguna yang dipercaya.
+                                    Role "Super Administrator" kini dapat dihapus atau diubah jika diperlukan.
+                                    Harap berhati-hati saat menghapus role kritis ini karena akan mempengaruhi akses seluruh personil dengan role tersebut.
                                 </p>
                             </div>
                         </div>
@@ -1116,6 +1122,27 @@ export default function DevelzyControlPage() {
                             value={roleFormData.color}
                             onChange={(e) => setRoleFormData({ ...roleFormData, color: e.target.value })}
                         />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                            Visibility Status
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '0.8rem', color: roleFormData.is_public ? '#10b981' : '#94a3b8', fontWeight: 700 }}>
+                                    {roleFormData.is_public ? 'PUBLIC' : 'PRIVATE'}
+                                </span>
+                                <input
+                                    type="checkbox"
+                                    checked={roleFormData.is_public}
+                                    onChange={(e) => setRoleFormData({ ...roleFormData, is_public: e.target.checked })}
+                                    style={{ width: '40px', height: '20px', cursor: 'pointer' }}
+                                />
+                            </div>
+                        </label>
+                        <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                            {roleFormData.is_public
+                                ? 'Role ini dapat dipilih oleh Manajemen Akses.'
+                                : 'Role ini disembunyikan dari daftar pilihan di Manajemen Akses.'}
+                        </small>
                     </div>
                     <div className="form-group">
                         <label className="form-label">Akses Menu</label>

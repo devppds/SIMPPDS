@@ -22,6 +22,14 @@ export default function AksesPage() {
     });
     const [submittingUser, setSubmittingUser] = useState(false);
 
+    // Security Reveal States
+    const [revealedPasswords, setRevealedPasswords] = useState({});
+    const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+    const [verifyPin, setVerifyPin] = useState('');
+    const [targetUser, setTargetUser] = useState(null);
+
+    const { user: currentUser } = useAuth();
+
     useEffect(() => {
         loadUsers();
         loadRoles();
@@ -51,6 +59,24 @@ export default function AksesPage() {
             }
         } catch (e) {
             console.error("Load roles failed", e);
+        }
+    };
+
+    const handleRequestReveal = (user) => {
+        setTargetUser(user);
+        setVerifyPin('');
+        setIsVerifyModalOpen(true);
+    };
+
+    const handleVerify = () => {
+        // Find current user's PIN from users list
+        const adminAccount = users.find(u => u.username === currentUser.username);
+        if (adminAccount && adminAccount.password_plain === verifyPin) {
+            setRevealedPasswords(prev => ({ ...prev, [targetUser.id]: true }));
+            setIsVerifyModalOpen(false);
+            showToast("Verifikasi berhasil!", "success");
+        } else {
+            showToast("PIN yang Anda masukkan salah!", "error");
         }
     };
 
@@ -203,6 +229,39 @@ export default function AksesPage() {
                                 )
                             },
                             {
+                                key: 'password_plain',
+                                label: 'PIN Login',
+                                render: (row) => {
+                                    const isRevealed = revealedPasswords[row.id];
+                                    return (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <span style={{
+                                                fontFamily: isRevealed ? 'monospace' : 'inherit',
+                                                fontWeight: isRevealed ? 800 : 400,
+                                                letterSpacing: isRevealed ? '2px' : '0',
+                                                fontSize: isRevealed ? '1.1rem' : '1rem',
+                                                color: isRevealed ? '#1e293b' : '#94a3b8'
+                                            }}>
+                                                {isRevealed ? row.password_plain : '••••••'}
+                                            </span>
+                                            <button
+                                                onClick={() => isRevealed ? setRevealedPasswords(prev => ({ ...prev, [row.id]: false })) : handleRequestReveal(row)}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: isRevealed ? '#ef4444' : '#3b82f6',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.85rem'
+                                                }}
+                                                title={isRevealed ? "Sembunyikan" : "Tampilkan PIN"}
+                                            >
+                                                <i className={`fas fa-eye${isRevealed ? '-slash' : ''}`}></i>
+                                            </button>
+                                        </div>
+                                    );
+                                }
+                            },
+                            {
                                 key: 'status',
                                 label: 'Status Akun',
                                 render: (row) => {
@@ -303,8 +362,9 @@ export default function AksesPage() {
                                 value={userFormData.role}
                                 onChange={e => setUserFormData({ ...userFormData, role: e.target.value })}
                             >
+                                <option value="">-- Pilih Role --</option>
                                 <option value="admin">Super Administrator</option>
-                                {roles.map((r, i) => (
+                                {roles.filter(r => r.is_public == 1).map((r, i) => (
                                     <option key={i} value={r.role}>{r.label}</option>
                                 ))}
                             </select>
@@ -402,6 +462,47 @@ export default function AksesPage() {
                             Role dan permissions saat ini sudah dikonfigurasi di <code style={{ background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>navConfig.js</code>.
                             Untuk menambah role baru atau mengubah permissions, hubungi developer.
                         </p>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Security Verification Modal */}
+            <Modal
+                isOpen={isVerifyModalOpen}
+                onClose={() => setIsVerifyModalOpen(false)}
+                title="Verifikasi Keamanan"
+                width="400px"
+                footer={(
+                    <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" onClick={() => setIsVerifyModalOpen(false)}>Batal</button>
+                        <button className="btn btn-primary" onClick={handleVerify}>Verifikasi</button>
+                    </div>
+                )}
+            >
+                <div style={{ padding: '10px', textAlign: 'center' }}>
+                    <div style={{
+                        width: '60px', height: '60px', background: '#fef2f2',
+                        borderRadius: '50%', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', margin: '0 auto 1.5rem',
+                        color: '#ef4444'
+                    }}>
+                        <i className="fas fa-lock" style={{ fontSize: '1.5rem' }}></i>
+                    </div>
+                    <h3 className="outfit" style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>Konfirmasi Identitas</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                        Masukkan PIN Anda untuk melihat password <strong>{targetUser?.fullname}</strong>.
+                    </p>
+                    <div className="form-group" style={{ textAlign: 'left' }}>
+                        <label className="form-label">PIN Administrator</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            value={verifyPin}
+                            onChange={e => setVerifyPin(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleVerify()}
+                            placeholder="••••••"
+                            autoFocus
+                        />
                     </div>
                 </div>
             </Modal>

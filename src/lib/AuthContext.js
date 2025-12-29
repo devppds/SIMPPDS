@@ -61,6 +61,25 @@ export function AuthProvider({ children }) {
         window.location.href = '/';
     };
 
+    const updateUser = async (newData) => {
+        try {
+            // Send update to database
+            await apiCall('saveData', 'POST', {
+                type: 'users',
+                data: { ...user, ...newData }
+            });
+
+            // Update local state and localStorage
+            const updatedUser = { ...user, ...newData };
+            setUser(updatedUser);
+            localStorage.setItem('sim_session', JSON.stringify(updatedUser));
+            return true;
+        } catch (e) {
+            console.error("Update profile failed:", e);
+            throw e;
+        }
+    };
+
     const value = {
         user,
         loading,
@@ -68,6 +87,7 @@ export function AuthProvider({ children }) {
         refreshConfig,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin' || user?.role === 'develzy',
         isDevelzy: user?.role === 'develzy'

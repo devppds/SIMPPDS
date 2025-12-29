@@ -6,7 +6,7 @@ export const HEADERS_CONFIG = {
     'pendidikan': ["tanggal", "nama_santri", "kegiatan", "nilai", "kehadiran", "keterangan", "ustadz"],
     'keuangan': ["tanggal", "nama_santri", "jenis_pembayaran", "nominal", "metode", "status", "bendahara", "tipe"],
     'arus_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pj"],
-    'users': ["fullname", "username", "email", "password", "password_plain", "role"],
+    'users': ["fullname", "username", "email", "password", "password_plain", "role", "avatar"],
     'kamar': ["nama_kamar", "asrama", "kapasitas", "penasihat"],
     'kesehatan': ["nama_santri", "mulai_sakit", "gejala", "obat_tindakan", "status_periksa", "keterangan", "biaya_obat"],
     'izin': ["nama_santri", "alasan", "tanggal_pulang", "tanggal_kembali", "jam_mulai", "jam_selesai", "tipe_izin", "petugas", "keterangan"],
@@ -31,7 +31,7 @@ export const HEADERS_CONFIG = {
     'keuangan_pembayaran': ["santri_id", "nama_santri", "tanggal", "jenis_pembayaran", "bulan_tagihan", "nominal", "keterangan", "petugas"],
     'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"],
     'kalender_kerja': ["hari", "tanggal_masehi", "tanggal_hijriyah", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"],
-    'roles': ["role", "label", "color", "menus"],
+    'roles': ["role", "label", "color", "menus", "is_public"],
     'wajar_pengurus': ["nama_pengurus", "kelompok", "jabatan", "keterangan"],
     'wajar_mhm_absen': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "tipe", "petugas"],
     'wajar_miu_absen': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "tipe", "petugas"],
@@ -47,5 +47,6 @@ export const FILE_COLUMNS = {
     'arsip_akta_tanah': ["file_akta"],
     'arsip_pengurus_periode': ["foto_pengurus"],
     'arsip_pengajar_periode': ["foto_pengajar"],
-    'kalender_kerja': ["file_kalender"]
+    'kalender_kerja': ["file_kalender"],
+    'users': ["avatar"]
 };
