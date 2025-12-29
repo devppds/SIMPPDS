@@ -499,6 +499,7 @@ export default function DevelzyControlPage() {
         { id: 'branding', label: 'Branding & UI', icon: 'fas fa-paint-brush' },
         { id: 'integration', label: 'API Integrations', icon: 'fas fa-plug' },
         { id: 'audit', label: 'Audit Logs', icon: 'fas fa-history' },
+        { id: 'roles', label: 'Role Management', icon: 'fas fa-user-shield' },
         { id: 'system', label: 'System Health', icon: 'fas fa-heartbeat' },
     ];
 
@@ -748,6 +749,121 @@ export default function DevelzyControlPage() {
                             </div>
                         </div>
                     )}
+
+                    {activeTab === 'roles' && (
+                        <div className="animate-in">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                                <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Role & Permissions Management</h3>
+                                <button className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+                                    <i className="fas fa-plus" style={{ marginRight: '8px' }}></i> Tambah Role Baru
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'grid', gap: '1.5rem' }}>
+                                {[
+                                    { role: 'admin', label: 'Super Administrator', color: '#2563eb', users: 2, menus: ['Semua Menu', 'DEVELZY Control', 'Laporan Pimpinan', 'Manajemen Akses'] },
+                                    { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', users: 5, menus: ['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis'] },
+                                    { role: 'bendahara', label: 'Bendahara', color: '#10b981', users: 3, menus: ['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri'] },
+                                    { role: 'keamanan', label: 'Keamanan', color: '#ef4444', users: 4, menus: ['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang'] },
+                                    { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', users: 6, menus: ['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil'] },
+                                    { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', users: 2, menus: ['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'] },
+                                    { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', users: 2, menus: ['Data Kesehatan', 'Layanan Kesehatan'] },
+                                    { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', users: 1, menus: ["Layanan Jam'iyyah"] },
+                                ].map((item, idx) => (
+                                    <div key={idx} style={{
+                                        padding: '1.5rem',
+                                        border: '2px solid #f1f5f9',
+                                        borderRadius: '20px',
+                                        background: 'white',
+                                        transition: 'all 0.2s',
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr auto',
+                                        gap: '2rem',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                                                <div style={{
+                                                    width: '48px',
+                                                    height: '48px',
+                                                    borderRadius: '12px',
+                                                    background: `${item.color}15`,
+                                                    color: item.color,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontWeight: 800,
+                                                    fontSize: '1.2rem'
+                                                }}>
+                                                    <i className="fas fa-user-shield"></i>
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1.1rem' }}>{item.label}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'monospace' }}>{item.role}</div>
+                                                </div>
+                                                <div style={{
+                                                    background: `${item.color}10`,
+                                                    color: item.color,
+                                                    padding: '8px 16px',
+                                                    borderRadius: '10px',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: 700
+                                                }}>
+                                                    <i className="fas fa-users" style={{ marginRight: '6px' }}></i>
+                                                    {item.users} User
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600, marginBottom: '10px' }}>Akses Menu:</div>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                {item.menus.map((menu, i) => (
+                                                    <span key={i} style={{
+                                                        background: '#f8fafc',
+                                                        border: '1px solid #e2e8f0',
+                                                        color: '#64748b',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '8px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 600
+                                                    }}>
+                                                        <i className="fas fa-check" style={{ color: item.color, marginRight: '6px', fontSize: '0.7rem' }}></i>
+                                                        {menu}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                                                <i className="fas fa-edit" style={{ marginRight: '8px' }}></i> Edit Permissions
+                                            </button>
+                                            {item.role !== 'admin' && (
+                                                <button className="btn btn-outline" style={{ padding: '10px 20px', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fee2e2' }}>
+                                                    <i className="fas fa-trash" style={{ marginRight: '8px' }}></i> Hapus Role
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div style={{
+                                marginTop: '2rem',
+                                padding: '1.5rem',
+                                background: '#fffbeb',
+                                borderRadius: '16px',
+                                border: '1px solid #fef3c7'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                    <i className="fas fa-lightbulb" style={{ color: '#f59e0b', fontSize: '1.2rem' }}></i>
+                                    <strong style={{ color: '#92400e' }}>Tips</strong>
+                                </div>
+                                <p style={{ fontSize: '0.85rem', color: '#78350f', margin: 0 }}>
+                                    Role "Super Administrator" tidak dapat dihapus atau diubah permissions-nya karena memiliki akses penuh ke seluruh sistem.
+                                    Pastikan hanya memberikan role ini kepada pengguna yang dipercaya.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
 
                     {activeTab === 'system' && (
                         <div className="animate-in">
