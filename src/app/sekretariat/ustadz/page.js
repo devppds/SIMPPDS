@@ -133,7 +133,7 @@ export default function PengajarPage() {
             sortable: false,
             width: '150px',
             render: (row) => (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}

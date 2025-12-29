@@ -118,6 +118,7 @@ export default function KalenderKerjaPage() {
         {
             key: 'actions',
             label: 'Aksi',
+            width: '160px',
             render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail & Dokumen"><i className="fas fa-eye"></i></button>

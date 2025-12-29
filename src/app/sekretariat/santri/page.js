@@ -347,7 +347,7 @@ export default function SantriPage() {
             sortable: false,
             width: '150px',
             render: (row) => (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openDetail(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
                     {row.status_santri === 'Aktif' && <button className="btn-vibrant btn-vibrant-orange" onClick={() => openMutasi(row)} title="Mutasi Status" style={{ background: '#f59e0b', color: 'white' }}><i className="fas fa-exchange-alt"></i></button>}

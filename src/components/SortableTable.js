@@ -100,7 +100,7 @@ export default function SortableTable({
                                 style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                             >
                                 {columns.map((col) => (
-                                    <td key={col.key} style={{ textAlign: col.align || 'left' }}>
+                                    <td key={col.key} style={{ textAlign: col.align || 'left', width: col.width || 'auto' }}>
                                         {col.render ? col.render(row) : row[col.key]}
                                     </td>
                                 ))}
