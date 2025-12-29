@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useDataManagement } from '@/hooks/useDataManagement';
+import { usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
 // ✨ Unified Components
@@ -13,6 +14,7 @@ import FileUploader from '@/components/FileUploader';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function PengurusPeriodePage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
@@ -57,8 +59,8 @@ export default function PengurusPeriodePage() {
             key: 'actions', label: 'Aksi', sortable: false, width: '150px', render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -73,7 +75,7 @@ export default function PengurusPeriodePage() {
             <DataViewContainer
                 title="Manajemen Arsip Pengurus"
                 subtitle={`Menampilkan ${displayData.length} data pengurus lintas periode.`}
-                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Arsip</button>}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Arsip</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama, jabatan atau divisi..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />

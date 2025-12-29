@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall, formatCurrency } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
+import { usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
 // ✨ Unified Components
@@ -17,6 +18,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function PengaturanKeuanganPage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [listKelas, setListKelas] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
@@ -50,8 +52,8 @@ export default function PengaturanKeuanganPage() {
         {
             key: 'actions', label: 'Aksi', width: '120px', render: (row) => (
                 <div className="table-actions">
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => { setFormData(row); setIsModalOpen(true); }}><i className="fas fa-edit"></i></button>
-                    <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => { setFormData(row); setIsModalOpen(true); }}><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -64,7 +66,7 @@ export default function PengaturanKeuanganPage() {
             <DataViewContainer
                 title="Management Tarif"
                 subtitle="Daftar besaran iuran berdasarkan status dan tingkat kelas."
-                headerActions={<button className="btn btn-primary btn-sm" onClick={() => { setFormData({ kategori_status: 'Biasa Baru', kelas: 'Semua', nominal: '' }); setIsModalOpen(true); }}><i className="fas fa-plus"></i> Tambah Tarif</button>}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => { setFormData({ kategori_status: 'Biasa Baru', kelas: 'Semua', nominal: '' }); setIsModalOpen(true); }}><i className="fas fa-plus"></i> Tambah Tarif</button>}
                 tableProps={{ columns, data: data, loading }}
             />
 

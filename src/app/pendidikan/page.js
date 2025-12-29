@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function PendidikanPage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [santriOptions, setSantriOptions] = useState([]);
 
     // ✨ Use Universal Data Hook
@@ -62,8 +63,8 @@ export default function PendidikanPage() {
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus data pendidikan ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus data pendidikan ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -78,9 +79,9 @@ export default function PendidikanPage() {
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} agenda kegiatan pendidikan.</p>
                     </div>
                     <div className="card-actions">
-                        <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
+                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
                             <i className="fas fa-plus"></i> Input Nilai / Agenda
-                        </button>
+                        </button>}
                     </div>
                 </div>
 

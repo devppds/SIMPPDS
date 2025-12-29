@@ -99,7 +99,7 @@ export default function KeamananRegPage() {
             <DataViewContainer
                 title="Log Registrasi Barang"
                 subtitle={`Mencatat ${displayData.length} inventaris milik santri.`}
-                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Registrasi Baru</button>}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Registrasi Baru</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
                 tableProps={{ columns, data: displayData, loading }}
             />

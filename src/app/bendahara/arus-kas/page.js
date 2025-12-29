@@ -94,7 +94,7 @@ export default function ArusKasPage() {
             <DataViewContainer
                 title="Daftar Transaksi Keuangan"
                 subtitle="Data pemasukan dan pengeluaran berkala."
-                headerActions={(<>
+                headerActions={canEdit && (<>
                     <button className="btn btn-outline btn-sm" onClick={() => exportToExcel(data, 'Arus_Kas_Full', ['Tanggal', 'Tipe', 'Kategori', 'Nominal', 'Keterangan', 'PJ'])}>Export Excel</button>
                     <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Transaksi Baru</button>
                 </>)}

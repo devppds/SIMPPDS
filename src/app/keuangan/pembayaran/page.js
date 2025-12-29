@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall, formatCurrency, formatDate } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import Autocomplete from '@/components/Autocomplete';
 
@@ -15,6 +15,7 @@ import { TextInput, SelectInput } from '@/components/FormInput';
 
 export default function PembayaranSantriPage() {
     const { user } = useAuth();
+    const { canEdit } = usePagePermission();
     const { showToast } = useToast();
     const [santriList, setSantriList] = useState([]);
     const [tarifList, setTarifList] = useState([]);
@@ -154,9 +155,9 @@ export default function PembayaranSantriPage() {
                         </div>
                         <TextInput label="Nominal Rupiah (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required icon="fas fa-wallet" style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--primary)' }} />
                         <TextInput label="Memo / Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
-                        <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem', fontSize: '1rem' }} disabled={submitting}>
+                        {canEdit && <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem', fontSize: '1rem' }} disabled={submitting}>
                             {submitting ? <><i className="fas fa-spinner fa-spin"></i> Memproses...</> : 'Proses Simpan Pembayaran'}
-                        </button>
+                        </button>}
                     </form>
                 </div>
 

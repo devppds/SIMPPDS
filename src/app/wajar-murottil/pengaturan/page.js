@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
+import { usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
 // ✨ Unified Components
@@ -12,6 +13,7 @@ import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function PengaturanWajarPage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [jabatanList, setJabatanList] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
     const isMounted = useRef(true);
@@ -56,8 +58,8 @@ export default function PengaturanWajarPage() {
         {
             key: 'actions', label: 'Aksi', width: '120px', render: (row) => (
                 <div className="table-actions">
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>
-                    <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -70,7 +72,7 @@ export default function PengaturanWajarPage() {
             <DataViewContainer
                 title="Daftar Pengurus / Pengajar"
                 subtitle="Daftar asatidz penanggung jawab kelompok wajar."
-                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Pengurus</button>}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Pengurus</button>}
                 tableProps={{ columns, data: data, loading }}
             />
 

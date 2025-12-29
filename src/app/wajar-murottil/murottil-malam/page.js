@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 
 // ✨ Unified Components
@@ -14,6 +14,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 
 export default function MurottilMalamPage() {
     const { user } = useAuth();
+    const { canEdit } = usePagePermission();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
@@ -124,7 +125,8 @@ export default function MurottilMalamPage() {
                     {['H', 'S', 'I', 'A'].map(st => (
                         <button
                             key={st}
-                            onClick={() => setState({ ...state, [row.id]: { ...state[row.id], status: st } })}
+                            onClick={() => canEdit && setState({ ...state, [row.id]: { ...state[row.id], status: st } })}
+                            disabled={!canEdit}
                             className={`btn-vibrant ${state[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
                             style={{ width: '30px', height: '30px', padding: 0, fontSize: '0.7rem' }}
                         >{st}</button>
@@ -132,8 +134,8 @@ export default function MurottilMalamPage() {
                 </div>
             )
         },
-        { key: 'materi', label: 'Materi / Surah', render: (row) => <input type="text" className="form-control form-control-sm" style={{ border: '1px solid #e2e8f0' }} value={state[row.id]?.materi || ''} onChange={e => setState({ ...state, [row.id]: { ...state[row.id], materi: e.target.value } })} placeholder="Halaman/Ayat..." /> },
-        { key: 'nilai', label: 'Nilai', width: '80px', render: (row) => <input type="text" className="form-control form-control-sm" style={{ textAlign: 'center', fontWeight: 800 }} value={state[row.id]?.nilai || ''} onChange={e => setState({ ...state, [row.id]: { ...state[row.id], nilai: e.target.value } })} placeholder="0-100" /> }
+        { key: 'materi', label: 'Materi / Surah', render: (row) => <input type="text" className="form-control form-control-sm" style={{ border: '1px solid #e2e8f0' }} value={state[row.id]?.materi || ''} onChange={e => canEdit && setState({ ...state, [row.id]: { ...state[row.id], materi: e.target.value } })} disabled={!canEdit} placeholder="Halaman/Ayat..." /> },
+        { key: 'nilai', label: 'Nilai', width: '80px', render: (row) => <input type="text" className="form-control form-control-sm" style={{ textAlign: 'center', fontWeight: 800 }} value={state[row.id]?.nilai || ''} onChange={e => canEdit && setState({ ...state, [row.id]: { ...state[row.id], nilai: e.target.value } })} disabled={!canEdit} placeholder="0-100" /> }
     ];
 
     return (
@@ -145,7 +147,7 @@ export default function MurottilMalamPage() {
             <DataViewContainer
                 title="Input Kehadiran & Nilai"
                 subtitle={filterDate ? `Periode: ${formatDate(filterDate)}` : 'Memuat data...'}
-                headerActions={<button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
                 filters={<TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />}
                 tableProps={{ columns, data: santriList, loading }}
             />

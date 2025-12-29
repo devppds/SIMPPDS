@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 
 export default function AbsensiFormalPage() {
     const { user } = useAuth();
+    const { canEdit } = usePagePermission();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
 
@@ -190,9 +191,9 @@ export default function AbsensiFormalPage() {
                             <StatusBadge label="ALPHA" count={stats.A} color="var(--danger)" />
                             <StatusBadge label="TELAT" count={stats.T} color="#a855f7" />
                             <div style={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                <button className="btn btn-primary" onClick={handleSave} disabled={loading} style={{ height: '50px', padding: '0 30px', fontSize: '1rem' }}>
+                                {canEdit && <button className="btn btn-primary" onClick={handleSave} disabled={loading} style={{ height: '50px', padding: '0 30px', fontSize: '1rem' }}>
                                     {loading ? 'Menyimpan...' : <><i className="fas fa-save" style={{ marginRight: '8px' }}></i> Simpan Absensi</>}
-                                </button>
+                                </button>}
                             </div>
                         </div>
                     )}
@@ -226,12 +227,12 @@ export default function AbsensiFormalPage() {
                                                 <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.stambuk_pondok}</div>
                                             </td>
                                             <td style={{ textAlign: 'center' }}>
-                                                <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', gap: '4px' }}>
+                                                <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', gap: '4px', opacity: canEdit ? 1 : 0.7 }}>
                                                     {['H', 'S', 'I', 'A', 'T'].map(status => (
                                                         <label
                                                             key={status}
                                                             style={{
-                                                                cursor: 'pointer',
+                                                                cursor: canEdit ? 'pointer' : 'default',
                                                                 padding: '6px 12px',
                                                                 borderRadius: '6px',
                                                                 fontWeight: 700,
@@ -247,7 +248,8 @@ export default function AbsensiFormalPage() {
                                                                 name={`status-${s.id}`}
                                                                 value={status}
                                                                 checked={attendance[s.id]?.status === status}
-                                                                onChange={() => handleStatusChange(s.id, status)}
+                                                                onChange={() => canEdit && handleStatusChange(s.id, status)}
+                                                                disabled={!canEdit}
                                                                 style={{ display: 'none' }}
                                                             />
                                                             {status}
@@ -261,7 +263,8 @@ export default function AbsensiFormalPage() {
                                                     className="form-control"
                                                     placeholder="Contoh: Pulang ke rumah..."
                                                     value={attendance[s.id]?.keterangan || ''}
-                                                    onChange={e => handleNoteChange(s.id, e.target.value)}
+                                                    onChange={e => canEdit && handleNoteChange(s.id, e.target.value)}
+                                                    disabled={!canEdit}
                                                     style={{ fontSize: '0.9rem' }}
                                                 />
                                             </td>

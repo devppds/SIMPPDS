@@ -121,7 +121,7 @@ export default function SantriPage() {
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)}><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
                     {canEdit && row.status_santri === 'Aktif' && <button className="btn-vibrant btn-vibrant-orange" onClick={() => { setMutasiData(row); setIsMutasiOpen(true); }}><i className="fas fa-exchange-alt"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setDeleteConfirm({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setDeleteConfirm({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }

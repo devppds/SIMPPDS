@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 
@@ -14,6 +15,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import FileUploader from '@/components/FileUploader';
 
 export default function ProposalPage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
@@ -59,8 +61,8 @@ export default function ProposalPage() {
             key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -75,7 +77,7 @@ export default function ProposalPage() {
             <DataViewContainer
                 title="Daftar Proposal Kegiatan"
                 subtitle={`Menyeleksi ${displayData.length} dokumen proposal.`}
-                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Proposal</button>}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Proposal</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
                 tableProps={{ columns, data: displayData, loading }}
             />

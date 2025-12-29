@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 
 // ✨ Unified Components
@@ -14,6 +14,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 
 export default function WajibBelajarPage() {
     const { user } = useAuth();
+    const { canEdit } = usePagePermission();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
@@ -101,7 +102,8 @@ export default function WajibBelajarPage() {
             key: 'status', label: 'Presensi', render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
                     {['H', 'S', 'I', 'A'].map(st => (
-                        <button key={st} onClick={() => setAttendance({ ...attendance, [row.id]: { ...attendance[row.id], status: st } })}
+                        <button key={st} onClick={() => canEdit && setAttendance({ ...attendance, [row.id]: { ...attendance[row.id], status: st } })}
+                            disabled={!canEdit}
                             className={`btn-vibrant ${attendance[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
                             style={{ width: '40px', height: '35px', padding: 0, fontWeight: 800 }}>
                             {st}
@@ -121,7 +123,7 @@ export default function WajibBelajarPage() {
             <DataViewContainer
                 title="Input Kehadiran Wajib Belajar"
                 subtitle={filterDate ? `Tanggal: ${formatDate(filterDate)}` : 'Memuat data...'}
-                headerActions={<button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
                 filters={<TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />}
                 tableProps={{ columns, data: santriList, loading }}
             />

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
+import { usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 
@@ -14,6 +15,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import FileUploader from '@/components/FileUploader';
 
 export default function SuratPage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [filterTipe, setFilterTipe] = useState('Semua');
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
@@ -55,8 +57,8 @@ export default function SuratPage() {
             key: 'actions', label: 'Ops', width: '150px', render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)}><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -71,7 +73,7 @@ export default function SuratPage() {
             <DataViewContainer
                 title="Log Arsip Surat"
                 subtitle={`Daftar permohonan dan korespondensi pesantren.`}
-                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Surat</button>}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Surat</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
                 filters={<SelectInput value={filterTipe} onChange={e => setFilterTipe(e.target.value)} options={['Semua', 'Masuk', 'Keluar']} style={{ width: '150px', marginBottom: 0 }} />}
                 tableProps={{ columns, data: displayData, loading }}

@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
+import { usePagePermission } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 
 // ✨ Unified Components
@@ -12,6 +13,7 @@ import StatsPanel from '@/components/StatsPanel';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 
 export default function ArusKasKeuanganPage() {
+    const { canEdit } = usePagePermission();
     const {
         data, loading, submitting,
         isModalOpen, setIsModalOpen, formData, setFormData,
@@ -61,7 +63,7 @@ export default function ArusKasKeuanganPage() {
             <DataViewContainer
                 title="Buku Kas Keuangan"
                 subtitle="Daftar mutasi dana unit keuangan."
-                headerActions={(<>
+                headerActions={canEdit && (<>
                     <button className="btn btn-outline btn-sm" onClick={() => openModal('Setor Bendahara Pondok')}>Setor Pondok</button>
                     <button className="btn btn-primary btn-sm" onClick={() => openModal('Belanja Operasional')}>Belanja</button>
                 </>)}

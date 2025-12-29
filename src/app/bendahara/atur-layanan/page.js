@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { formatCurrency } from '@/lib/utils';
+import { usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 
@@ -15,6 +16,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 const UNITS = ['Sekretariat', 'Keamanan', 'Pendidikan', 'Kesehatan', "Jam'iyyah"];
 
 export default function AturLayananPage() {
+    const { canEdit, canDelete } = usePagePermission();
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
@@ -48,8 +50,8 @@ export default function AturLayananPage() {
         {
             key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
                 <div className="table-actions">
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -64,7 +66,7 @@ export default function AturLayananPage() {
             <DataViewContainer
                 title="Daftar Layanan Resmi"
                 subtitle="Daftar harga layanan untuk tiap unit."
-                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Layanan</button>}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Layanan</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
                 tableProps={{ columns, data: displayData, loading }}
             />
