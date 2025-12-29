@@ -119,8 +119,11 @@ export default function SantriPage() {
     };
 
     const handleExport = () => {
-        const headers = ['stambuk_pondok', 'nama_siswa', 'madrasah', 'kelas', 'kamar', 'status_santri', 'tahun_masuk', 'tempat_tanggal_lahir', 'no_telp_ayah'];
-        exportToExcel(displayData, 'Data_Santri', headers);
+        const headers = [
+            "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "madrasah", "kelas", "nama_siswa",
+            "tempat_tanggal_lahir", "jenis_kelamin", "nisn", "asal_sekolah", "alamat", "no_telp_ayah", "nama_ayah", "nama_ibu", "status_santri"
+        ];
+        exportToExcel(displayData, 'Data_Santri_Lengkap', headers);
     };
 
     const handleImport = async (e) => {
@@ -148,6 +151,7 @@ export default function SantriPage() {
             let successCount = 0;
             for (const item of dataToImport) {
                 try {
+                    // Filter focus on essential fields for import to avoid empty strings on complex fields
                     await apiCall('saveData', 'POST', { type: 'santri', data: item });
                     successCount++;
                 } catch (err) {
@@ -174,8 +178,17 @@ export default function SantriPage() {
                 subtitle={`Menampilkan ${displayData.length} data sesuai filter`}
                 headerActions={(<>
                     <button className="btn btn-outline btn-sm" onClick={() => {
-                        const headers = ['stambuk_pondok', 'nama_siswa', 'tahun_masuk', 'kamar', 'madrasah', 'kelas', 'tempat_tanggal_lahir', 'no_telp_ayah', 'alamat_lengkap'];
-                        exportToExcel([{ stambuk_pondok: '12345', nama_siswa: 'CONTOH NAMA', tahun_masuk: '2024', kamar: 'A 01', madrasah: 'MHM', kelas: '1 IBTIDA', tempat_tanggal_lahir: 'KEDIRI, 01-01-2010', no_telp_ayah: '08123456789', alamat_lengkap: 'JL. LIRBOYO NO. 1' }], 'Template_Santri', headers);
+                        const templateHeaders = [
+                            "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "madrasah", "kelas", "nama_siswa",
+                            "tempat_tanggal_lahir", "jenis_kelamin", "nisn", "asal_sekolah", "alamat", "no_telp_ayah", "nama_ayah", "nama_ibu", "status_santri"
+                        ];
+                        const exampleData = [{
+                            stambuk_pondok: '12345', stambuk_madrasah: 'M678', tahun_masuk: '2024', kamar: 'A 01', madrasah: 'MHM',
+                            kelas: '1 IBTIDA', nama_siswa: 'Zaid bin Tsabit', tempat_tanggal_lahir: 'KEDIRI, 01-01-2010',
+                            jenis_kelamin: 'L', nisn: '0012345678', asal_sekolah: 'SDN 1 Lirboyo', alamat: 'Dusun Lirboyo',
+                            no_telp_ayah: '08123456789', nama_ayah: 'Abdullah', nama_ibu: 'Aminah', status_santri: 'Aktif'
+                        }];
+                        exportToExcel(exampleData, 'Template_Import_Santri', templateHeaders);
                     }} title="Download Template Excel">
                         <i className="fas fa-download"></i> Template
                     </button>
