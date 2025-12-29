@@ -17,7 +17,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import ModalTabs from '@/components/ModalTabs';
 
 export default function SantriPage() {
-    const { canEdit } = usePagePermission();
+    const { canEdit, canDelete } = usePagePermission();
     const { showToast } = useToast();
 
     const [filterStatus, setFilterStatus] = useState('Aktif');

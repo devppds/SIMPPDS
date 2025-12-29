@@ -158,6 +158,6 @@ export function usePagePermission() {
 
     return {
         canEdit: isOwner,
-        canDelete: false
+        canDelete: isOwner // Allow owners to delete their own data
     };
 }
