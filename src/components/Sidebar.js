@@ -48,17 +48,25 @@ export default function Sidebar() {
 
         // 2. Menu-based Permission (Dynamic from DB)
         if (user.allowedMenus && Array.isArray(user.allowedMenus) && user.allowedMenus.length > 0) {
+            // Helper to check permission
+            const hasAccess = (label) => {
+                return user.allowedMenus.some(m => {
+                    if (typeof m === 'string') return m === label;
+                    return m.name === label; // New Object Structure
+                });
+            };
+
             // Dashboard is always visible
             if (item.label === 'Dashboard') return true;
 
             // Check direct permission
-            if (user.allowedMenus.includes(item.label)) return true;
+            if (hasAccess(item.label)) return true;
 
             // Also check if any child is visible (if it's a parent menu)
             if (item.submenu) {
                 const hasVisibleChild = item.submenu.some(sub =>
-                    user.allowedMenus.includes(sub.label) ||
-                    (sub.submenu && sub.submenu.some(deep => user.allowedMenus.includes(deep.label)))
+                    hasAccess(sub.label) ||
+                    (sub.submenu && sub.submenu.some(deep => hasAccess(deep.label)))
                 );
                 if (hasVisibleChild) return true;
             }

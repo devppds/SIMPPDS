@@ -53,6 +53,8 @@ export function useAuth() {
 }
 
 // ✨ Universal Permission Hook
+import { NAV_ITEMS } from '@/lib/navConfig';
+
 export function usePagePermission() {
     const { user, isAdmin } = useAuth();
     const pathname = usePathname();
@@ -64,16 +66,53 @@ export function usePagePermission() {
         return { canEdit: true, canDelete: true };
     }
 
-    // 2. Determine Module Context from URL
+    // 2. Check Granular Permissions from Menus
+    const userMenus = user.menus || user.allowedMenus; // Support both keys
+    if (userMenus && Array.isArray(userMenus) && userMenus.length > 0) {
+        // Find label for current path
+        const findLabel = (items, path) => {
+            for (const item of items) {
+                if (item.path === path) return item.label;
+                if (item.submenu) {
+                    const found = findLabel(item.submenu, path);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        const currentLabel = findLabel(NAV_ITEMS, pathname);
+
+        if (currentLabel) {
+            const permission = userMenus.find(m => {
+                if (typeof m === 'string') return m === currentLabel;
+                return m.name === currentLabel;
+            });
+
+            if (permission) {
+                // If string (legacy), assume Full Access (Edit)
+                if (typeof permission === 'string') return { canEdit: true, canDelete: false };
+                // If object, check access level
+                return {
+                    canEdit: permission.access === 'edit',
+                    canDelete: false // Delete reserved for Super Admin
+                };
+            }
+            // If label found in NAV but not in userMenus -> No Access (but we return false here)
+            return { canEdit: false, canDelete: false };
+        }
+    }
+
+    // 3. Fallback: Module Context from URL (Legacy Role Logic)
     // e.g. /sekretariat/santri -> "sekretariat"
     const segments = pathname ? pathname.split('/').filter(Boolean) : [];
     const currentModule = segments[0] ? segments[0].toLowerCase() : '';
 
-    // 3. Normalize Role to match URL style
+    // Normalize Role to match URL style
     // e.g. Role "wajar_murottil" -> URL "wajar-murottil"
     const normalizedRole = user.role.replace(/_/g, '-');
 
-    // 4. Check Ownership (Is this user the owner of this module?)
+    // Check Ownership (Is this user the owner of this module?)
     let isOwner = normalizedRole === currentModule;
 
     // Special Case: "Keuangan" module is owned by "Bendahara" and "Sekretariat"
@@ -84,22 +123,8 @@ export function usePagePermission() {
     // Special Case: "Wajar Murottil"
     if (currentModule === 'wajar-murottil' && user.role === 'wajar_murottil') isOwner = true;
 
-    // --- DEBUG CONSOLE ---
-    if (process.env.NODE_ENV === 'development') {
-        console.groupCollapsed(`🛡️ Permission Check: ${currentModule || 'Home'}`);
-        console.log(`Path: ${pathname}`);
-        console.log(`User Role: ${user.role}`);
-        console.log(`Is Owner: ${isOwner}`);
-        console.log(`Result: ${isOwner ? '✅ CAN EDIT' : '👁️ READ ONLY'}`);
-        console.groupEnd();
-    }
-    // ---------------------
-
     return {
         canEdit: isOwner,
-        // Delete biasanya dibatasi hanya untuk Super Admin untuk keamanan data,
-        // Tapi jika Owner dipercaya, bisa diganti "isOwner".
-        // Saat ini kita biarkan Delete hanya untuk Admin.
         canDelete: false
     };
 }

@@ -171,13 +171,19 @@ export default function DevelzyControlPage() {
                         if (isMounted.current) {
                             setRolesList(res.map(r => {
                                 try {
-                                    return { ...r, menus: r.menus ? JSON.parse(r.menus) : [] };
+                                    const rawMenus = r.menus ? JSON.parse(r.menus) : [];
+                                    // Normalize to Object Array: [{ name: 'Menu', access: 'edit' }]
+                                    const normalizedMenus = rawMenus.map(m => {
+                                        if (typeof m === 'string') return { name: m, access: 'edit' }; // Legacy fallbacks
+                                        return m;
+                                    });
+                                    return { ...r, menus: normalizedMenus };
                                 } catch (e) {
                                     console.warn("Failed to parse menus for role:", r.role);
                                     return { ...r, menus: [] };
                                 }
                             }));
-                        }
+                        } // End isMounted
                     }
                 } catch (err) {
                     console.error("Failed to load/seed roles:", err);
@@ -935,13 +941,19 @@ export default function DevelzyControlPage() {
                                                         background: '#f8fafc',
                                                         border: '1px solid #e2e8f0',
                                                         color: '#64748b',
-                                                        padding: '6px 12px',
+                                                        padding: '4px 10px',
                                                         borderRadius: '8px',
                                                         fontSize: '0.75rem',
-                                                        fontWeight: 600
+                                                        fontWeight: 600,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '6px'
                                                     }}>
-                                                        <i className="fas fa-check" style={{ color: item.color, marginRight: '6px', fontSize: '0.7rem' }}></i>
-                                                        {menu}
+                                                        <i className={`fas fa-${menu.access === 'view' ? 'eye' : 'edit'}`} style={{ color: item.color, fontSize: '0.7rem' }}></i>
+                                                        {menu.name}
+                                                        <span style={{ fontSize: '0.65rem', opacity: 0.7, background: '#e2e8f0', padding: '1px 4px', borderRadius: '4px' }}>
+                                                            {menu.access === 'view' ? 'View' : 'Full'}
+                                                        </span>
                                                     </span>
                                                 ))}
                                             </div>
@@ -1061,28 +1073,72 @@ export default function DevelzyControlPage() {
                         <label className="form-label">Akses Menu</label>
                         <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                             <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>Centang menu yang diizinkan:</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '5px' }}>
-                                {allPossibleMenus.map((menu, i) => (
-                                    <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={roleFormData.menus.includes(menu)}
-                                            onChange={(e) => {
-                                                const newMenus = e.target.checked
-                                                    ? [...roleFormData.menus, menu]
-                                                    : roleFormData.menus.filter(m => m !== menu);
-                                                setRoleFormData({ ...roleFormData, menus: newMenus });
-                                            }}
-                                            style={{
-                                                width: '16px',
-                                                height: '16px',
-                                                accentColor: '#3b82f6',
-                                                cursor: 'pointer'
-                                            }}
-                                        />
-                                        {menu}
-                                    </label>
-                                ))}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '5px' }}>
+                                {allPossibleMenus.map((menuName, i) => {
+                                    const existingPerm = roleFormData.menus.find(m => m.name === menuName);
+                                    const isChecked = !!existingPerm;
+
+                                    return (
+                                        <div key={i} style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            padding: '8px 12px', borderRadius: '8px',
+                                            background: isChecked ? '#f1f5f9' : 'transparent',
+                                            border: isChecked ? '1px solid #cbd5e1' : '1px solid transparent'
+                                        }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', cursor: 'pointer', flex: 1 }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={(e) => {
+                                                        const checked = e.target.checked;
+                                                        if (checked) {
+                                                            // Default add as View Only to be safe, or Edit
+                                                            setRoleFormData({
+                                                                ...roleFormData,
+                                                                menus: [...roleFormData.menus, { name: menuName, access: 'view' }]
+                                                            });
+                                                        } else {
+                                                            setRoleFormData({
+                                                                ...roleFormData,
+                                                                menus: roleFormData.menus.filter(m => m.name !== menuName)
+                                                            });
+                                                        }
+                                                    }}
+                                                    style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }}
+                                                />
+                                                {menuName}
+                                            </label>
+
+                                            {isChecked && (
+                                                <select
+                                                    value={existingPerm?.access || 'view'}
+                                                    onChange={(e) => {
+                                                        const newAccess = e.target.value;
+                                                        setRoleFormData({
+                                                            ...roleFormData,
+                                                            menus: roleFormData.menus.map(m =>
+                                                                m.name === menuName ? { ...m, access: newAccess } : m
+                                                            )
+                                                        });
+                                                    }}
+                                                    style={{
+                                                        padding: '4px 8px',
+                                                        borderRadius: '6px',
+                                                        border: '1px solid #cbd5e1',
+                                                        fontSize: '0.8rem',
+                                                        background: 'white',
+                                                        cursor: 'pointer',
+                                                        outline: 'none'
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <option value="view">👁️ View Only</option>
+                                                    <option value="edit">✏️ Full Access</option>
+                                                </select>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
