@@ -20,9 +20,15 @@ export default function MurottilMalamPage() {
     const [state, setState] = useState({});
     const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const isMounted = React.useRef(true);
+
+    React.useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
 
     const loadData = async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
             const students = (resSantri || []).filter(s =>
@@ -30,7 +36,7 @@ export default function MurottilMalamPage() {
                 !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO'))
             ).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
-            setSantriList(students);
+            if (isMounted.current) setSantriList(students);
 
             const [resAbsen, resNilai] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'wajar_mhm_absen' }),
@@ -52,14 +58,18 @@ export default function MurottilMalamPage() {
                     id_nilai: logN ? logN.id : null
                 };
             });
-            setState(newState);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+            if (isMounted.current) setState(newState);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (isMounted.current) setLoading(false);
+        }
     };
 
     useEffect(() => { loadData(); }, [filterDate]);
 
     const handleSave = async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const promises = santriList.map(s => {
                 const data = state[s.id];
@@ -82,9 +92,18 @@ export default function MurottilMalamPage() {
                 return Promise.all([p1, p2]);
             });
             await Promise.all(promises);
-            showToast("Data Murottil Malam & Nilai berhasil disimpan!", "success");
-            loadData();
-        } catch (e) { showToast(e.message, "error"); } finally { setLoading(false); setIsConfirmOpen(false); }
+            if (isMounted.current) {
+                showToast("Data Murottil Malam & Nilai berhasil disimpan!", "success");
+                loadData();
+            }
+        } catch (e) {
+            if (isMounted.current) showToast(e.message, "error");
+        } finally {
+            if (isMounted.current) {
+                setLoading(false);
+                setIsConfirmOpen(false);
+            }
+        }
     };
 
     const stats = useMemo(() => {

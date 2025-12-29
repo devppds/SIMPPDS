@@ -31,7 +31,11 @@ export const HEADERS_CONFIG = {
     'keuangan_pembayaran': ["santri_id", "nama_santri", "tanggal", "jenis_pembayaran", "bulan_tagihan", "nominal", "keterangan", "petugas"],
     'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"],
     'kalender_kerja': ["hari", "tanggal_masehi", "tanggal_hijriyah", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"],
-    'roles': ["role", "label", "color", "menus"]
+    'roles': ["role", "label", "color", "menus"],
+    'wajar_pengurus': ["nama_pengurus", "kelompok", "jabatan", "keterangan"],
+    'wajar_mhm_absen': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "tipe", "petugas"],
+    'wajar_miu_absen': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "tipe", "petugas"],
+    'wajar_nilai': ["santri_id", "nama_santri", "tanggal", "tipe", "nilai", "materi", "petugas"]
 };
 
 export const FILE_COLUMNS = {

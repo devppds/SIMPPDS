@@ -22,16 +22,22 @@ export default function MurottilPagiPage() {
     const [filterKelas, setFilterKelas] = useState('Semua');
     const [kelasOptions, setKelasOptions] = useState([]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const isMounted = React.useRef(true);
+
+    React.useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
 
     const loadData = async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const [resSantri, resKelas] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'santri' }),
                 apiCall('getData', 'GET', { type: 'master_kelas' })
             ]);
 
-            setKelasOptions(resKelas.filter(k => k.lembaga === 'MIU'));
+            if (isMounted.current) setKelasOptions(resKelas.filter(k => k.lembaga === 'MIU'));
 
             let students = (resSantri || []).filter(s =>
                 s.madrasah === 'MIU' ||
@@ -41,7 +47,7 @@ export default function MurottilPagiPage() {
 
             if (filterKelas !== 'Semua') students = students.filter(s => s.kelas === filterKelas);
             students.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
-            setSantriList(students);
+            if (isMounted.current) setSantriList(students);
 
             const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_miu_absen' });
             const logs = (resAbsen || []).filter(l => l.tanggal === filterDate);
@@ -51,14 +57,18 @@ export default function MurottilPagiPage() {
                 const log = logs.find(l => l.santri_id === s.id);
                 state[s.id] = { status: log ? log.status : 'H', id: log ? log.id : null };
             });
-            setAttendance(state);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+            if (isMounted.current) setAttendance(state);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (isMounted.current) setLoading(false);
+        }
     };
 
     useEffect(() => { loadData(); }, [filterDate, filterKelas]);
 
     const handleSave = async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const promises = santriList.map(s => {
                 const data = attendance[s.id];
@@ -72,9 +82,18 @@ export default function MurottilPagiPage() {
                 });
             });
             await Promise.all(promises);
-            showToast("Absensi berhasil disimpan!", "success");
-            loadData();
-        } catch (e) { showToast(e.message, "error"); } finally { setLoading(false); setIsConfirmOpen(false); }
+            if (isMounted.current) {
+                showToast("Absensi berhasil disimpan!", "success");
+                loadData();
+            }
+        } catch (e) {
+            if (isMounted.current) showToast(e.message, "error");
+        } finally {
+            if (isMounted.current) {
+                setLoading(false);
+                setIsConfirmOpen(false);
+            }
+        }
     };
 
     const stats = useMemo(() => {

@@ -20,9 +20,15 @@ export default function WajibBelajarPage() {
     const [attendance, setAttendance] = useState({});
     const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const isMounted = React.useRef(true);
+
+    React.useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
 
     const loadData = useCallback(async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
             const mhmIbtida = (resSantri || []).filter(s =>
@@ -30,7 +36,7 @@ export default function WajibBelajarPage() {
                 !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO'))
             ).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
-            setSantriList(mhmIbtida);
+            if (isMounted.current) setSantriList(mhmIbtida);
 
             const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_mhm_absen' });
             const logs = (resAbsen || []).filter(l => l.tanggal === filterDate && l.tipe === 'Wajib Belajar');
@@ -40,14 +46,18 @@ export default function WajibBelajarPage() {
                 const log = logs.find(l => l.santri_id === s.id);
                 state[s.id] = { status: log ? log.status : 'H', id: log ? log.id : null };
             });
-            setAttendance(state);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+            if (isMounted.current) setAttendance(state);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (isMounted.current) setLoading(false);
+        }
     }, [filterDate]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
     const handleSave = async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const promises = santriList.map(s => {
                 const data = attendance[s.id];
@@ -61,9 +71,18 @@ export default function WajibBelajarPage() {
                 });
             });
             await Promise.all(promises);
-            showToast("Presensi Wajib Belajar berhasil disimpan!", "success");
-            loadData();
-        } catch (e) { showToast(e.message, "error"); } finally { setLoading(false); setIsConfirmOpen(false); }
+            if (isMounted.current) {
+                showToast("Presensi Wajib Belajar berhasil disimpan!", "success");
+                loadData();
+            }
+        } catch (e) {
+            if (isMounted.current) showToast(e.message, "error");
+        } finally {
+            if (isMounted.current) {
+                setLoading(false);
+                setIsConfirmOpen(false);
+            }
+        }
     };
 
     const stats = useMemo(() => {

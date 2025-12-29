@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
@@ -14,6 +14,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 export default function PengaturanWajarPage() {
     const [jabatanList, setJabatanList] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const isMounted = useRef(true);
 
     const {
         data, setData, loading, setLoading, submitting,
@@ -23,16 +24,27 @@ export default function PengaturanWajarPage() {
         nama_pengurus: '', kelompok: '', jabatan: 'Wajar & Murottil', keterangan: ''
     });
 
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+
     const loadEnrichedData = useCallback(async () => {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
         try {
             const [resPengurus, resJabatan] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'wajar_pengurus' }),
                 apiCall('getData', 'GET', { type: 'master_jabatan' })
             ]);
-            setData(resPengurus || []);
-            setJabatanList(resJabatan || []);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+            if (isMounted.current) {
+                setData(resPengurus || []);
+                setJabatanList(resJabatan || []);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (isMounted.current) setLoading(false);
+        }
     }, [setData, setLoading]);
 
     useEffect(() => { loadEnrichedData(); }, [loadEnrichedData]);
