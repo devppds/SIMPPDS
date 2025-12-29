@@ -1481,3 +1481,62 @@ tr:hover td {
 .card {
   contain: content;
 }
+
+/* Minimalist Mobile Utilities */
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .stat-card {
+    padding: 1rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    border-radius: 16px !important;
+  }
+
+  .stat-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1rem !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-label {
+    font-size: 0.65rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .stat-value {
+    font-size: 1.1rem !important;
+  }
+
+  .card {
+    border-radius: 20px !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03) !important;
+    padding: 1rem !important;
+  }
+
+  .card-header h2 {
+    font-size: 1.2rem !important;
+  }
+
+  .btn {
+    padding: 8px 16px !important;
+    font-size: 0.8rem !important;
+    border-radius: 10px !important;
+  }
+
+  th,
+  td {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+}

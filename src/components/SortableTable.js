@@ -67,6 +67,7 @@ export default function SortableTable({
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
+                                    className={col.className || ''}
                                     style={{
                                         cursor: col.sortable !== false ? 'pointer' : 'default',
                                         userSelect: 'none',
@@ -103,7 +104,7 @@ export default function SortableTable({
                                     style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                                 >
                                     {columns.map((col) => (
-                                        <td key={col.key} style={{ textAlign: col.align || 'left', width: col.width || 'auto' }}>
+                                        <td key={col.key} className={col.className || ''} style={{ textAlign: col.align || 'left', width: col.width || 'auto' }}>
                                             {col.render ? col.render(row) : row[col.key]}
                                         </td>
                                     ))}
@@ -114,17 +115,19 @@ export default function SortableTable({
                 </table>
             </div>
 
-            {totalPages > 1 && (
-                <div className="pagination">
-                    <button className="btn-vibrant" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
-                        <i className="fas fa-chevron-left"></i>
-                    </button>
-                    <span className="page-info">Halaman <strong>{currentPage}</strong> dari {totalPages}</span>
-                    <button className="btn-vibrant" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-                        <i className="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            )}
-        </div>
+            {
+                totalPages > 1 && (
+                    <div className="pagination">
+                        <button className="btn-vibrant" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                            <i className="fas fa-chevron-left"></i>
+                        </button>
+                        <span className="page-info">Halaman <strong>{currentPage}</strong> dari {totalPages}</span>
+                        <button className="btn-vibrant" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                            <i className="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                )
+            }
+        </div >
     );
 }

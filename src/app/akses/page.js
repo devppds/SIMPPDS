@@ -221,6 +221,7 @@ export default function AksesPage() {
                             {
                                 key: 'role',
                                 label: 'Role',
+                                className: 'hide-mobile',
                                 render: (row) => (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', fontWeight: 700, fontSize: '0.85rem' }}>
                                         <i className="fas fa-book-reader" style={{ fontSize: '0.8rem', opacity: 0.8 }}></i>
@@ -264,6 +265,7 @@ export default function AksesPage() {
                             {
                                 key: 'status',
                                 label: 'Status Akun',
+                                className: 'hide-mobile',
                                 render: (row) => {
                                     const isActive = row.is_active !== 0;
                                     return (

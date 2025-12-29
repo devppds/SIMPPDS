@@ -22,7 +22,14 @@ export async function handleInitSystem(request, db) {
         updated_at TEXT
     )`).run();
 
-    return Response.json({ success: true, message: "System tables initialized" });
+    // Migration: Add is_public to roles if missing
+    try {
+        await db.prepare(`ALTER TABLE roles ADD COLUMN is_public INTEGER DEFAULT 1`).run();
+    } catch (e) {
+        // Ignore if column already exists
+    }
+
+    return Response.json({ success: true, message: "System tables initialized and migrations applied" });
 }
 
 export async function handlePing(db) {
