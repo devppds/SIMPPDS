@@ -91,90 +91,94 @@ export default function DevelzyControlPage() {
         modal.innerHTML = `
             <div style="
                 background: white;
-                border-radius: 24px;
-                padding: 3rem;
-                max-width: 520px;
+                border-radius: 32px;
+                padding: 4rem 3.5rem;
+                max-width: 680px;
                 width: 90%;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
                 animation: slideUp 0.3s ease;
             ">
-                <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="text-align: center; margin-bottom: 2.5rem;">
                     <div style="
-                        width: 80px;
-                        height: 80px;
-                        margin: 0 auto 1.5rem;
+                        width: 120px;
+                        height: 120px;
+                        margin: 0 auto 2rem;
                         background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-                        border-radius: 20px;
+                        border-radius: 28px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+                        box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
                     ">
-                        <i class="fas fa-database" style="font-size: 2.5rem; color: white;"></i>
+                        <i class="fas fa-database" style="font-size: 3.5rem; color: white;"></i>
                     </div>
                     <h2 class="outfit" style="
-                        font-size: 1.75rem;
-                        font-weight: 800;
+                        font-size: 2.25rem;
+                        font-weight: 900;
                         color: #1e293b;
-                        margin-bottom: 0.75rem;
+                        margin-bottom: 1.25rem;
+                        letter-spacing: -0.5px;
                     ">Inisialisasi Database System</h2>
                     <p style="
-                        font-size: 1.05rem;
+                        font-size: 1.2rem;
                         color: #64748b;
-                        line-height: 1.6;
+                        line-height: 1.7;
                         margin: 0;
+                        max-width: 500px;
+                        margin: 0 auto;
                     ">
-                        Sistem akan membuat tabel <strong style="color: #3b82f6;">audit_logs</strong> dan 
-                        <strong style="color: #3b82f6;">system_configs</strong> di database Anda.
+                        Sistem akan membuat tabel <strong style="color: #3b82f6; font-weight: 800;">audit_logs</strong> dan 
+                        <strong style="color: #3b82f6; font-weight: 800;">system_configs</strong> di database Anda.
                         <br><br>
                         <span style="
                             display: inline-block;
                             background: #ecfdf5;
                             color: #047857;
-                            padding: 8px 16px;
-                            border-radius: 8px;
-                            font-size: 0.9rem;
-                            font-weight: 600;
-                            margin-top: 0.5rem;
+                            padding: 12px 24px;
+                            border-radius: 12px;
+                            font-size: 1.05rem;
+                            font-weight: 700;
+                            margin-top: 1rem;
+                            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
                         ">
-                            <i class="fas fa-check-circle" style="margin-right: 6px;"></i>
+                            <i class="fas fa-check-circle" style="margin-right: 8px; font-size: 1.1rem;"></i>
                             Aman dilakukan berulang kali
                         </span>
                     </p>
                 </div>
                 <div style="
                     display: flex;
-                    gap: 1rem;
-                    margin-top: 2rem;
+                    gap: 1.25rem;
+                    margin-top: 2.5rem;
                 ">
                     <button id="cancelInit" style="
                         flex: 1;
-                        padding: 14px 24px;
+                        padding: 18px 32px;
                         border: 2px solid #e2e8f0;
                         background: white;
                         color: #64748b;
-                        border-radius: 12px;
-                        font-size: 1rem;
+                        border-radius: 14px;
+                        font-size: 1.1rem;
                         font-weight: 700;
                         cursor: pointer;
                         transition: all 0.2s;
-                    " onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    " onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'">
                         Batal
                     </button>
                     <button id="confirmInit" style="
                         flex: 1;
-                        padding: 14px 24px;
+                        padding: 18px 32px;
                         border: none;
                         background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
                         color: white;
-                        border-radius: 12px;
-                        font-size: 1rem;
+                        border-radius: 14px;
+                        font-size: 1.1rem;
                         font-weight: 700;
                         cursor: pointer;
-                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
                         transition: all 0.2s;
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)'">
-                        <i class="fas fa-rocket" style="margin-right: 8px;"></i>
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(59, 130, 246, 0.45)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.35)'">
+                        <i class="fas fa-rocket" style="margin-right: 10px; font-size: 1.15rem;"></i>
                         Mulai Inisialisasi
                     </button>
                 </div>
