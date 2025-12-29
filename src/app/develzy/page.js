@@ -315,24 +315,42 @@ export default function DevelzyControlPage() {
                         line-height: 1.7;
                         margin: 0 auto;
                         max-width: 500px;
+                        margin-bottom: 2rem;
                     ">
                         ${warningText}
-                        <br><br>
-                        <span style="
-                            display: inline-block;
-                            background: ${maintenanceMode ? '#ecfdf5' : '#fef2f2'};
-                            color: ${maintenanceMode ? '#047857' : '#dc2626'};
-                            padding: 12px 24px;
-                            border-radius: 12px;
-                            font-size: 1.05rem;
-                            font-weight: 700;
-                            margin-top: 1rem;
-                            box-shadow: 0 2px 8px ${maintenanceMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};
-                        ">
-                            <i class="fas fa-${maintenanceMode ? 'power-off' : 'shield-alt'}" style="margin-right: 8px; font-size: 1.1rem;"></i>
-                            ${maintenanceMode ? 'Sistem akan kembali online' : 'Hanya admin yang bisa akses'}
-                        </span>
                     </p>
+                    
+                    ${!maintenanceMode ? `
+                        <div style="text-align: left; background: #f8fafc; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                            <label style="display: block; font-weight: 800; color: #1e293b; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase;">Durasi Pemeliharaan (Menit)</label>
+                            <input type="number" id="maintMinutes" value="60" min="1" max="1440" style="
+                                width: 100%;
+                                padding: 12px 16px;
+                                border-radius: 12px;
+                                border: 2px solid #cbd5e1;
+                                font-size: 1.2rem;
+                                font-weight: 800;
+                                color: var(--primary);
+                                outline: none;
+                                transition: all 0.2s;
+                            " onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#cbd5e1'">
+                            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">Tentukan berapa lama sistem akan terkunci untuk pemeliharaan.</p>
+                        </div>
+                    ` : ''}
+
+                    <span style="
+                        display: inline-block;
+                        background: ${maintenanceMode ? '#ecfdf5' : '#fef2f2'};
+                        color: ${maintenanceMode ? '#047857' : '#dc2626'};
+                        padding: 12px 24px;
+                        border-radius: 12px;
+                        font-size: 1.05rem;
+                        font-weight: 700;
+                        box-shadow: 0 2px 8px ${maintenanceMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};
+                    ">
+                        <i class="fas fa-${maintenanceMode ? 'power-off' : 'shield-alt'}" style="margin-right: 8px; font-size: 1.1rem;"></i>
+                        ${maintenanceMode ? 'Sistem akan kembali online' : 'Hanya admin yang bisa akses'}
+                    </span>
                 </div>
                 <div style="
                     display: flex;
@@ -393,17 +411,28 @@ export default function DevelzyControlPage() {
 
         confirmBtn.onclick = async () => {
             const nextMode = !maintenanceMode;
+            const minutesInput = modal.querySelector('#maintMinutes');
+            const minutes = minutesInput ? parseInt(minutesInput.value) || 60 : 0;
+            const endTime = nextMode ? (Date.now() + (minutes * 60000)).toString() : '';
+
             modal.remove();
             style.remove();
 
             try {
+                // Update maintenance status
                 await apiCall('updateConfig', 'POST', {
                     data: { key: 'maintenance_mode', value: nextMode.toString() }
                 });
+
+                // Save end time
+                await apiCall('updateConfig', 'POST', {
+                    data: { key: 'maintenance_end_time', value: endTime }
+                });
+
                 setMaintenanceMode(nextMode);
                 await refreshConfig();
                 showToast(
-                    nextMode ? "Mode Pemeliharaan diaktifkan!" : "Mode Pemeliharaan dinonaktifkan!",
+                    nextMode ? `Mode Pemeliharaan aktif (${minutes} menit)!` : "Mode Pemeliharaan dinonaktifkan!",
                     nextMode ? "warning" : "success"
                 );
             } catch (err) {
