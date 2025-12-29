@@ -7,8 +7,9 @@ import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
 export default function SantriPage() {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
     const { showToast } = useToast();
+    const canEdit = isAdmin || user?.role === 'sekretariat'; // Permission Logic
     const [santri, setSantri] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -338,8 +339,8 @@ export default function SantriPage() {
             render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openDetail(row)} title="Detail"><i className="fas fa-eye"></i></button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
-                    {row.status_santri === 'Aktif' && <button className="btn-vibrant btn-vibrant-orange" onClick={() => openMutasi(row)} title="Mutasi Status" style={{ background: '#f59e0b', color: 'white' }}><i className="fas fa-exchange-alt"></i></button>}
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {canEdit && row.status_santri === 'Aktif' && <button className="btn-vibrant btn-vibrant-orange" onClick={() => openMutasi(row)} title="Mutasi Status" style={{ background: '#f59e0b', color: 'white' }}><i className="fas fa-exchange-alt"></i></button>}
                     {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteSantri(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
@@ -373,11 +374,11 @@ export default function SantriPage() {
                     <div className="card-actions" style={{ display: 'flex', gap: '8px' }}>
                         <button className="btn btn-outline btn-sm" onClick={() => window.print()} title="Cetak Daftar"><i className="fas fa-print"></i></button>
                         <button className="btn btn-outline btn-sm" onClick={handleDownloadTemplate}>Template</button>
-                        <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
+                        {canEdit && <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
                             Import <input type="file" accept=".csv" onChange={handleImport} style={{ display: 'none' }} />
-                        </label>
+                        </label>}
                         <button className="btn btn-outline btn-sm" onClick={handleExport}>Export</button>
-                        <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Baru</button>
+                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Baru</button>}
                     </div>
                 </div>
 
