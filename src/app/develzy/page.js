@@ -145,6 +145,7 @@ export default function DevelzyControlPage() {
                         if (item.key === 'logo_url') newConfigs.logo_url = item.value;
                         if (item.key === 'primary_color') newConfigs.primary_color = item.value;
                         if (item.key === 'sidebar_theme') newConfigs.sidebar_theme = item.value;
+                        if (item.key === 'maintenance_mode') setMaintenanceMode(item.value === 'true');
                     });
                     setConfigs(newConfigs);
                 }
@@ -390,14 +391,24 @@ export default function DevelzyControlPage() {
         const confirmBtn = modal.querySelector('#confirmMaintenance');
         const cancelBtn = modal.querySelector('#cancelMaintenance');
 
-        confirmBtn.onclick = () => {
+        confirmBtn.onclick = async () => {
+            const nextMode = !maintenanceMode;
             modal.remove();
             style.remove();
-            setMaintenanceMode(!maintenanceMode);
-            showToast(
-                maintenanceMode ? "Mode Pemeliharaan dinonaktifkan!" : "Mode Pemeliharaan diaktifkan!",
-                maintenanceMode ? "success" : "warning"
-            );
+
+            try {
+                await apiCall('updateConfig', 'POST', {
+                    data: { key: 'maintenance_mode', value: nextMode.toString() }
+                });
+                setMaintenanceMode(nextMode);
+                await refreshConfig();
+                showToast(
+                    nextMode ? "Mode Pemeliharaan diaktifkan!" : "Mode Pemeliharaan dinonaktifkan!",
+                    nextMode ? "warning" : "success"
+                );
+            } catch (err) {
+                showToast("Gagal memperbarui status: " + err.message, "error");
+            }
         };
 
         cancelBtn.onclick = () => {
