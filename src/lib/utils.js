@@ -96,33 +96,30 @@ export const exportToCSV = (data, filename, headers) => {
 export const exportToExcel = (data, filename, headers) => {
     if (!data || !data.length) return;
 
-    // Create an HTML table string for Excel compatibility
-    let html = '<html><head><meta charset="utf-8"></head><body><table><thead><tr>';
+    // Use CSV format with BOM for UTF-8 compatibility and semicolon as separator (preferred by Excel in many regions)
+    const BOM = '\uFEFF';
+    let csvContent = BOM;
 
-    // Header row
-    headers.forEach(h => {
-        html += `<th style="background-color: #1e40af; color: #ffffff; font-weight: bold; border: 1px solid #000000;">${h}</th>`;
-    });
-    html += '</tr></thead><tbody>';
+    // Add Header row
+    csvContent += headers.join(';') + '\n';
 
-    // Data rows
+    // Add Data rows
     data.forEach(row => {
-        html += '<tr>';
-        headers.forEach(h => {
+        const values = headers.map(h => {
             const key = h.toLowerCase().replace(/ /g, '_');
-            const val = row[key] || '';
-            html += `<td style="border: 1px solid #000000;">${val}</td>`;
+            let val = row[key] || '';
+            // Escape double quotes and wrap in quotes if contains semicolon or newline
+            val = typeof val === 'string' ? val.replace(/"/g, '""') : val;
+            return `"${val}"`;
         });
-        html += '</tr>';
+        csvContent += values.join(';') + '\n';
     });
 
-    html += '</tbody></table></body></html>';
-
-    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.xls`);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

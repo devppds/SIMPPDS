@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiCall, exportToExcel } from '@/lib/utils';
 import { usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
@@ -110,6 +110,8 @@ export default function SantriPage() {
         }
     ];
 
+    const fileInputRef = useRef(null);
+
     const confirmDeletion = async () => {
         await handleDelete(deleteConfirm.id, null);
         setDeleteConfirm({ open: false, id: null });
@@ -121,10 +123,51 @@ export default function SantriPage() {
         exportToExcel(displayData, 'Data_Santri', headers);
     };
 
+    const handleImport = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const text = event.target.result;
+            const rows = text.split('\n').filter(r => r.trim());
+            if (rows.length < 2) return;
+
+            const headers = rows[0].split(';').map(h => h.replace(/^"|"$/g, '').trim());
+            const dataToImport = rows.slice(1).map(row => {
+                const values = row.split(';').map(v => v.replace(/^"|"$/g, '').trim());
+                const obj = {};
+                headers.forEach((h, i) => {
+                    const key = h.toLowerCase().replace(/ /g, '_');
+                    obj[key] = values[i] || '';
+                });
+                return obj;
+            });
+
+            setLoading(true);
+            let successCount = 0;
+            for (const item of dataToImport) {
+                try {
+                    await apiCall('saveData', 'POST', { type: 'santri', data: item });
+                    successCount++;
+                } catch (err) {
+                    console.error("Gagal import baris:", item, err);
+                }
+            }
+            setLoading(false);
+            showToast(`Berhasil mengimport ${successCount} data santri.`, 'success');
+            loadEnrichedData();
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        };
+        reader.readAsText(file);
+    };
+
     return (
         <div className="view-container animate-in">
             <KopSurat judul={`Database Santri - ${filterStatus}`} subJudul={`Tiga Unit: MHM, MIU, Madin`} hideOnScreen={true} />
             <StatsPanel items={stats} />
+
+            <input type="file" ref={fileInputRef} onChange={handleImport} accept=".csv" style={{ display: 'none' }} />
 
             <DataViewContainer
                 title="Management Data Santri"
@@ -135,6 +178,9 @@ export default function SantriPage() {
                         exportToExcel([{ stambuk_pondok: '12345', nama_siswa: 'CONTOH NAMA', tahun_masuk: '2024', kamar: 'A 01', madrasah: 'MHM', kelas: '1 IBTIDA', tempat_tanggal_lahir: 'KEDIRI, 01-01-2010', no_telp_ayah: '08123456789', alamat_lengkap: 'JL. LIRBOYO NO. 1' }], 'Template_Santri', headers);
                     }} title="Download Template Excel">
                         <i className="fas fa-download"></i> Template
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()} title="Import Data CSV">
+                        <i className="fas fa-upload"></i> Import
                     </button>
                     <button className="btn btn-secondary btn-sm" onClick={handleExport} title="Export Excel">
                         <i className="fas fa-file-excel" style={{ color: '#16a34a' }}></i> Export
