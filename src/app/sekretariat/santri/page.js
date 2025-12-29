@@ -137,8 +137,12 @@ export default function SantriPage() {
 
     const handleExport = () => {
         const headers = [
-            "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "madrasah", "kelas", "nama_siswa",
-            "tempat_tanggal_lahir", "jenis_kelamin", "nisn", "asal_sekolah", "alamat", "no_telp_ayah", "nama_ayah", "nama_ibu", "status_santri"
+            "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "madrasah", "kelas",
+            "nama_siswa", "nisn", "nik", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "kewarganegaraan",
+            "anak_ke", "jumlah_saudara", "alamat", "dusun_jalan", "rt_rw", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos",
+            "hobi", "cita_cita", "asal_sekolah", "pendidikan_terakhir", "no_ijazah",
+            "nama_ayah", "nik_ayah", "pekerjaan_ayah", "penghasilan_ayah", "no_telp_ayah",
+            "nama_ibu", "nik_ibu", "pekerjaan_ibu", "no_telp_ibu", "status_santri", "created_at"
         ];
         exportToExcel(displayData, 'Data_Santri_Lengkap', headers);
     };
@@ -196,16 +200,22 @@ export default function SantriPage() {
                 headerActions={(<>
                     <button className="btn btn-outline btn-sm" onClick={() => {
                         const templateHeaders = [
-                            "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "madrasah", "kelas", "nama_siswa",
-                            "tempat_tanggal_lahir", "jenis_kelamin", "nisn", "asal_sekolah", "alamat", "no_telp_ayah", "nama_ayah", "nama_ibu", "status_santri"
+                            "stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "madrasah", "kelas",
+                            "nama_siswa", "nisn", "nik", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "kewarganegaraan",
+                            "anak_ke", "jumlah_saudara", "alamat", "dusun_jalan", "rt_rw", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos",
+                            "hobi", "cita_cita", "asal_sekolah", "pendidikan_terakhir", "no_ijazah",
+                            "nama_ayah", "nik_ayah", "pekerjaan_ayah", "penghasilan_ayah", "no_telp_ayah",
+                            "nama_ibu", "nik_ibu", "pekerjaan_ibu", "no_telp_ibu", "status_santri"
                         ];
                         const exampleData = [{
-                            stambuk_pondok: '12345', stambuk_madrasah: 'M678', tahun_masuk: '2024', kamar: 'A 01', madrasah: 'MHM',
-                            kelas: '1 IBTIDA', nama_siswa: 'Zaid bin Tsabit', tempat_tanggal_lahir: 'KEDIRI, 01-01-2010',
-                            jenis_kelamin: 'L', nisn: '0012345678', asal_sekolah: 'SDN 1 Lirboyo', alamat: 'Dusun Lirboyo',
-                            no_telp_ayah: '08123456789', nama_ayah: 'Abdullah', nama_ibu: 'Aminah', status_santri: 'Aktif'
+                            stambuk_pondok: '12345', stambuk_madrasah: 'M678', tahun_masuk: '2024', kamar: 'A 01', madrasah: 'MHM', kelas: '1 IBTIDA',
+                            nama_siswa: 'Zaid bin Tsabit', nisn: '0012345678', nik: '3506123456789001', tempat_tanggal_lahir: 'KEDIRI, 01-01-2010', jenis_kelamin: 'L', agama: 'Islam', kewarganegaraan: 'WNI',
+                            anak_ke: '1', jumlah_saudara: '2', alamat: 'Jl. KH Hasyim', dusun_jalan: 'Dusun Lirboyo', rt_rw: '01/02', desa_kelurahan: 'Lirboyo', kecamatan: 'Mojoroto', kota_kabupaten: 'Kediri', provinsi: 'Jawa Timur', kode_pos: '64117',
+                            hobi: 'Membaca', cita_cita: 'Ulama', asal_sekolah: 'SDN 1 Lirboyo', pendidikan_terakhir: 'SD/MI', no_ijazah: 'DN-0123456',
+                            nama_ayah: 'Abdullah', nik_ayah: '3506123456789002', pekerjaan_ayah: 'Wiraswasta', penghasilan_ayah: '3 - 5 Juta', no_telp_ayah: '08123456789',
+                            nama_ibu: 'Aminah', nik_ibu: '3506123456789003', pekerjaan_ibu: 'Ibu Rumah Tangga', no_telp_ibu: '08123456788', status_santri: 'Aktif'
                         }];
-                        exportToExcel(exampleData, 'Template_Import_Santri', templateHeaders);
+                        exportToExcel(exampleData, 'Template_Import_Santri_Lengkap', templateHeaders);
                     }} title="Download Template Excel">
                         <i className="fas fa-download"></i> Template
                     </button>
