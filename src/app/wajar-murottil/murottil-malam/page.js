@@ -1,18 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
-import SortableTable from '@/components/SortableTable';
+import { useToast } from '@/lib/ToastContext';
+
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
+import { TextInput } from '@/components/FormInput';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function MurottilMalamPage() {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
-    const [state, setState] = useState({}); // { [id]: { status: 'H', nilai: '', materi: '', id_absen: null, id_nilai: null } }
+    const [state, setState] = useState({});
     const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
-
-    useEffect(() => { loadData(); }, [filterDate]);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     const loadData = async () => {
         setLoading(true);
@@ -20,7 +27,7 @@ export default function MurottilMalamPage() {
             const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
             const students = (resSantri || []).filter(s =>
                 (s.madrasah === 'MHM' || (s.kelas || '').toUpperCase().includes('IBTIDA')) &&
-                !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO') || (s.kelas || '').toUpperCase().includes('ULYA'))
+                !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO'))
             ).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
             setSantriList(students);
@@ -49,6 +56,8 @@ export default function MurottilMalamPage() {
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
+    useEffect(() => { loadData(); }, [filterDate]);
+
     const handleSave = async () => {
         setLoading(true);
         try {
@@ -57,75 +66,78 @@ export default function MurottilMalamPage() {
                 const p1 = apiCall('saveData', 'POST', {
                     type: 'wajar_mhm_absen',
                     data: {
-                        id: data.id_absen,
-                        santri_id: s.id,
-                        nama_santri: s.nama_siswa,
-                        kelas: s.kelas,
-                        tanggal: filterDate,
-                        status: data.status,
-                        tipe: 'Murottil Malam',
-                        petugas: user?.fullname || 'Admin'
+                        id: data.id_absen, santri_id: s.id, nama_santri: s.nama_siswa,
+                        kelas: s.kelas, tanggal: filterDate, status: data.status,
+                        tipe: 'Murottil Malam', petugas: user?.fullname || 'Admin'
                     }
                 });
                 const p2 = apiCall('saveData', 'POST', {
                     type: 'wajar_nilai',
                     data: {
-                        id: data.id_nilai,
-                        santri_id: s.id,
-                        nama_santri: s.nama_siswa,
-                        tanggal: filterDate,
-                        tipe: 'Murottil Malam',
-                        nilai: data.nilai,
-                        materi: data.materi,
-                        petugas: user?.fullname || 'Admin'
+                        id: data.id_nilai, santri_id: s.id, nama_santri: s.nama_siswa,
+                        tanggal: filterDate, tipe: 'Murottil Malam', nilai: data.nilai,
+                        materi: data.materi, petugas: user?.fullname || 'Admin'
                     }
                 });
                 return Promise.all([p1, p2]);
             });
             await Promise.all(promises);
-            alert("Data Murottil Malam berhasil disimpan!");
+            showToast("Data Murottil Malam & Nilai berhasil disimpan!", "success");
             loadData();
-        } catch (e) { alert(e.message); } finally { setLoading(false); }
+        } catch (e) { showToast(e.message, "error"); } finally { setLoading(false); setIsConfirmOpen(false); }
     };
 
+    const stats = useMemo(() => {
+        const values = Object.values(state);
+        return [
+            { title: 'Total Santri', value: santriList.length, icon: 'fas fa-users', color: 'var(--primary)' },
+            { title: 'Hadir', value: values.filter(v => v.status === 'H').length, icon: 'fas fa-user-check', color: 'var(--success)' },
+            { title: 'Nilai Terisi', value: values.filter(v => v.nilai !== '').length, icon: 'fas fa-star', color: 'var(--warning)' }
+        ];
+    }, [state, santriList]);
+
     const columns = [
-        { key: 'nama_siswa', label: 'Santri', render: (row) => <div><div style={{ fontWeight: 700 }}>{row.nama_siswa}</div><small>{row.kelas}</small></div> },
+        { key: 'nama_siswa', label: 'Santri', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small>{row.kelas}</small></div> },
         {
-            key: 'status',
-            label: 'Absen',
-            width: '180px',
-            render: (row) => (
-                <div style={{ display: 'flex', gap: '3px' }}>
+            key: 'status', label: 'Absen', width: '150px', render: (row) => (
+                <div style={{ display: 'flex', gap: '5px' }}>
                     {['H', 'S', 'I', 'A'].map(st => (
                         <button
                             key={st}
                             onClick={() => setState({ ...state, [row.id]: { ...state[row.id], status: st } })}
-                            className={`btn btn-sm ${state[row.id]?.status === st ? 'btn-primary' : 'btn-outline'}`}
-                            style={{ width: '30px', padding: '3px 0', fontSize: '10px' }}
+                            className={`btn-vibrant ${state[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
+                            style={{ width: '30px', height: '30px', padding: 0, fontSize: '0.7rem' }}
                         >{st}</button>
                     ))}
                 </div>
             )
         },
-        { key: 'materi', label: 'Materi/Surah', render: (row) => <input type="text" className="form-control form-control-sm" value={state[row.id]?.materi || ''} onChange={e => setState({ ...state, [row.id]: { ...state[row.id], materi: e.target.value } })} /> },
-        { key: 'nilai', label: 'Nilai', width: '80px', render: (row) => <input type="text" className="form-control form-control-sm" value={state[row.id]?.nilai || ''} onChange={e => setState({ ...state, [row.id]: { ...state[row.id], nilai: e.target.value } })} /> }
+        { key: 'materi', label: 'Materi / Surah', render: (row) => <input type="text" className="form-control form-control-sm" style={{ border: '1px solid #e2e8f0' }} value={state[row.id]?.materi || ''} onChange={e => setState({ ...state, [row.id]: { ...state[row.id], materi: e.target.value } })} placeholder="Halaman/Ayat..." /> },
+        { key: 'nilai', label: 'Nilai', width: '80px', render: (row) => <input type="text" className="form-control form-control-sm" style={{ textAlign: 'center', fontWeight: 800 }} value={state[row.id]?.nilai || ''} onChange={e => setState({ ...state, [row.id]: { ...state[row.id], nilai: e.target.value } })} placeholder="0-100" /> }
     ];
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Murottil Malam & Nilai</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>MHM Ibtida'iyyah (Wajib Belajar).</p>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <input type="date" className="form-control" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
-                        <button className="btn btn-primary" onClick={handleSave} disabled={loading}><i className="fas fa-save"></i> Simpan</button>
-                    </div>
-                </div>
-                <SortableTable columns={columns} data={santriList} loading={loading} emptyMessage="Tidak ada data santri MHM Ibtida'iyyah." />
-            </div>
+            <KopSurat judul="Murottil Malam & Penilaian" subJudul="Evaluasi bacaan Al-Qur'an santri MHM Ibtida'iyyah." />
+
+            <StatsPanel items={stats} />
+
+            <DataViewContainer
+                title="Input Kehadiran & Nilai"
+                subtitle={`Periode: ${formatDate(filterDate)}`}
+                headerActions={<button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
+                filters={<TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />}
+                tableProps={{ columns, data: santriList, loading }}
+            />
+
+            <ConfirmModal
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+                onConfirm={handleSave}
+                title="Konfirmasi Berkas"
+                message="Anda akan menyimpan log kehadiran beserta nilai murottil untuk seluruh santri yang tampil."
+                type="info"
+            />
         </div>
     );
 }

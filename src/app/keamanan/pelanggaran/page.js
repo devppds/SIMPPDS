@@ -2,94 +2,39 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth, usePagePermission } from '@/lib/AuthContext';
+import { usePagePermission } from '@/lib/AuthContext'; // useAuth removed, handled by hook
+import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function PelanggaranPage() {
-    const { isAdmin } = useAuth();
     const { canEdit } = usePagePermission();
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [viewData, setViewData] = useState(null);
-    const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({
+    // ✨ Use Universal Data Hook
+    const {
+        data, loading, search, setSearch, submitting,
+        isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
+        viewData, formData, setFormData, editId,
+        handleSave, handleDelete, openModal, openView,
+        isAdmin
+    } = useDataManagement('keamanan', {
         tanggal: new Date().toISOString().split('T')[0],
         nama_santri: '', jenis_pelanggaran: 'Ringan', poin: '5',
         takzir: '', keterangan: '', petugas: ''
     });
-    const [submitting, setSubmitting] = useState(false);
 
     const [santriOptions, setSantriOptions] = useState([]);
 
     useEffect(() => {
-        loadData();
+        const fetchSantri = async () => {
+            try {
+                const res = await apiCall('getData', 'GET', { type: 'santri' });
+                setSantriOptions(res || []);
+            } catch (e) { console.error(e); }
+        };
         fetchSantri();
     }, []);
-
-    const fetchSantri = async () => {
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'santri' });
-            setSantriOptions(res || []);
-        } catch (e) { console.error(e); }
-    };
-
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'keamanan' });
-            setData(res || []);
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-    };
-
-    const openModal = (item = null) => {
-        if (item) {
-            setEditId(item.id);
-            setFormData({ ...item });
-        } else {
-            setEditId(null);
-            setFormData({
-                tanggal: new Date().toISOString().split('T')[0],
-                nama_santri: '', jenis_pelanggaran: 'Ringan', poin: '5',
-                takzir: '', keterangan: '', petugas: ''
-            });
-        }
-        setIsModalOpen(true);
-    };
-
-    const openViewModal = (item) => {
-        setViewData(item);
-        setIsViewModalOpen(true);
-    };
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        setSubmitting(true);
-        try {
-            await apiCall('saveData', 'POST', {
-                type: 'keamanan',
-                data: editId ? { ...formData, id: editId } : formData
-            });
-            setIsModalOpen(false);
-            loadData();
-        } catch (err) { alert(err.message); }
-        finally { setSubmitting(false); }
-    };
-
-    const deleteItem = async (id) => {
-        if (!confirm('Hapus catatan ini?')) return;
-        try {
-            await apiCall('deleteData', 'POST', { type: 'keamanan', id });
-            loadData();
-        } catch (err) { alert(err.message); }
-    };
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase())
@@ -125,16 +70,16 @@ export default function PelanggaranPage() {
             width: '150px',
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus catatan pelanggaran ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
     ];
 
     return (
-        <div className="view-container">
+        <div className="view-container animate-in">
             <div className="card">
                 <div className="card-header">
                     <div>
@@ -180,13 +125,13 @@ export default function PelanggaranPage() {
                 footer={(
                     <>
                         <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                        <button className="btn btn-primary" onClick={handleSave} disabled={submitting}>
                             {submitting ? 'Proses...' : 'Simpan'}
                         </button>
                     </>
                 )}
             >
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSave}>
                     <div className="form-group">
                         <label className="form-label">Nama Santri</label>
                         <Autocomplete

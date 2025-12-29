@@ -1,98 +1,45 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/lib/ToastContext';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function PendidikanPage() {
-    const { isAdmin } = useAuth();
-    const { showToast } = useToast();
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+    const [santriOptions, setSantriOptions] = useState([]);
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [viewData, setViewData] = useState(null);
-    const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({
+    // ✨ Use Universal Data Hook
+    const {
+        data, setData, loading, setLoading, search, setSearch, submitting,
+        isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
+        viewData, formData, setFormData, editId,
+        handleSave, handleDelete, openModal, openView,
+        isAdmin
+    } = useDataManagement('pendidikan', {
         tanggal: new Date().toISOString().split('T')[0],
         nama_santri: '', kelas: '', kegiatan: '', nilai: '',
         kehadiran: 'Hadir', keterangan: '', ustadz: ''
     });
-    const [submitting, setSubmitting] = useState(false);
 
-    const [santriOptions, setSantriOptions] = useState([]);
-
-    useEffect(() => {
-        loadData();
-        fetchSantri();
-    }, []);
-
-    const fetchSantri = async () => {
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'santri' });
-            setSantriOptions(res || []);
-        } catch (e) { console.error(e); }
-    };
-
-    const loadData = async () => {
+    const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'pendidikan' });
+            const [res, resSantri] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'pendidikan' }),
+                apiCall('getData', 'GET', { type: 'santri' })
+            ]);
             setData(res || []);
+            setSantriOptions(resSantri || []);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
-    };
+    }, [setData, setLoading]);
 
-    const openModal = (item = null) => {
-        if (item) {
-            setEditId(item.id);
-            setFormData({ ...item });
-        } else {
-            setEditId(null);
-            setFormData({
-                tanggal: new Date().toISOString().split('T')[0],
-                nama_santri: '', kegiatan: '', nilai: '',
-                kehadiran: 'Hadir', keterangan: '', ustadz: ''
-            });
-        }
-        setIsModalOpen(true);
-    };
-
-    const openViewModal = (item) => {
-        setViewData(item);
-        setIsViewModalOpen(true);
-    };
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        setSubmitting(true);
-        try {
-            await apiCall('saveData', 'POST', {
-                type: 'pendidikan',
-                data: editId ? { ...formData, id: editId } : formData
-            });
-            setIsModalOpen(false);
-            loadData();
-            showToast('Catatan pendidikan berhasil disimpan!', "success");
-        } catch (err) { showToast(err.message, "error"); }
-        finally { setSubmitting(false); }
-    };
-
-    const deleteItem = async (id) => {
-        if (!confirm('Hapus data pendidikan ini?')) return;
-        try {
-            await apiCall('deleteData', 'POST', { type: 'pendidikan', id });
-            loadData();
-            showToast("Catatan telah dihapus.", "info");
-        } catch (err) { showToast(err.message, "error"); }
-    };
+    useEffect(() => {
+        loadEnrichedData();
+    }, [loadEnrichedData]);
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -114,9 +61,9 @@ export default function PendidikanPage() {
             width: '150px',
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus data pendidikan ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -140,22 +87,11 @@ export default function PendidikanPage() {
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Cari nama santri atau kegiatan..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                        <input type="text" className="search-input" placeholder="Cari nama santri atau kegiatan..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
                 </div>
 
-                <SortableTable
-                    columns={columns}
-                    data={displayData}
-                    loading={loading}
-                    emptyMessage="Belum ada data pendidikan."
-                />
+                <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada data pendidikan." />
             </div>
 
             {/* Modal Input/Edit */}
@@ -166,13 +102,13 @@ export default function PendidikanPage() {
                 footer={(
                     <>
                         <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                        <button className="btn btn-primary" onClick={handleSave} disabled={submitting}>
                             {submitting ? 'Memproses...' : 'Simpan'}
                         </button>
                     </>
                 )}
             >
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSave}>
                     <div className="form-group">
                         <label className="form-label">Nama Santri</label>
                         <Autocomplete
@@ -185,107 +121,43 @@ export default function PendidikanPage() {
                         />
                     </div>
                     <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Nama Kegiatan</label>
-                            <input type="text" className="form-control" value={formData.kegiatan} onChange={e => setFormData({ ...formData, kegiatan: e.target.value })} required />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Tanggal</label>
-                            <input type="date" className="form-control" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
-                        </div>
+                        <div className="form-group"><label className="form-label">Nama Kegiatan</label><input type="text" className="form-control" value={formData.kegiatan} onChange={e => setFormData({ ...formData, kegiatan: e.target.value })} required /></div>
+                        <div className="form-group"><label className="form-label">Tanggal</label><input type="date" className="form-control" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} /></div>
                     </div>
                     <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Nilai / Hasil</label>
-                            <input type="text" className="form-control" value={formData.nilai} onChange={e => setFormData({ ...formData, nilai: e.target.value })} />
-                        </div>
+                        <div className="form-group"><label className="form-label">Nilai / Hasil</label><input type="text" className="form-control" value={formData.nilai} onChange={e => setFormData({ ...formData, nilai: e.target.value })} /></div>
                         <div className="form-group">
                             <label className="form-label">Kehadiran</label>
                             <select className="form-control" value={formData.kehadiran} onChange={e => setFormData({ ...formData, kehadiran: e.target.value })}>
-                                <option value="Hadir">Hadir</option>
-                                <option value="Izin">Izin</option>
-                                <option value="Sakit">Sakit</option>
-                                <option value="Alpha">Alpha</option>
+                                <option value="Hadir">Hadir</option><option value="Izin">Izin</option><option value="Sakit">Sakit</option><option value="Alpha">Alpha</option>
                             </select>
                         </div>
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Tenaga Pengajar</label>
-                        <input type="text" className="form-control" value={formData.ustadz} onChange={e => setFormData({ ...formData, ustadz: e.target.value })} />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Keterangan</label>
-                        <textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows="2"></textarea>
-                    </div>
+                    <div className="form-group"><label className="form-label">Tenaga Pengajar</label><input type="text" className="form-control" value={formData.ustadz} onChange={e => setFormData({ ...formData, ustadz: e.target.value })} /></div>
+                    <div className="form-group"><label className="form-label">Keterangan</label><textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows="2"></textarea></div>
                 </form>
             </Modal>
 
             {/* Modal View Detail */}
-            <Modal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                title="Detail Catatan Pendidikan"
-                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
-            >
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Catatan Pendidikan" width="600px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}>
                 {viewData && (() => {
                     const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
                     return (
                         <div className="detail-view">
                             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-                                    <div style={{
-                                        width: '100px',
-                                        height: '100px',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        border: '4px solid var(--primary-light)',
-                                        background: '#f1f5f9'
-                                    }}>
-                                        {student?.foto_santri ? (
-                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
-                                                <i className="fas fa-user fa-3x"></i>
-                                            </div>
-                                        )}
+                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                                    <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', border: '4px solid var(--primary-light)' }}>
+                                        {student?.foto_santri ? <img src={student.foto_santri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ background: '#f1f5f9', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="fas fa-user fa-3x" style={{ color: '#cbd5e1' }}></i></div>}
                                     </div>
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nama Santri</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
-                                <span className="th-badge" style={{
-                                    background: viewData.kehadiran === 'Hadir' ? '#dcfce7' : '#fee2e2',
-                                    color: viewData.kehadiran === 'Hadir' ? '#166534' : '#991b1b',
-                                    marginTop: '10px'
-                                }}>
-                                    Status {viewData.kehadiran}
-                                </span>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</h2>
+                                <p style={{ color: 'var(--text-muted)' }}>{viewData.kelas} • <span className="th-badge">{viewData.kehadiran}</span></p>
                             </div>
                             <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Jenis Kegiatan</small>
-                                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.kegiatan}</div>
-                                </div>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Tanggal</small>
-                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
-                                </div>
-                            </div>
-                            <div className="form-grid" style={{ marginTop: '1.5rem' }}>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Nilai / Capaian</small>
-                                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)' }}>{viewData.nilai || '-'}</div>
-                                </div>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Tenaga Pengajar</small>
-                                    <div style={{ fontWeight: 600 }}>{viewData.ustadz || '-'}</div>
-                                </div>
-                            </div>
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Keterangan / Evaluasi</small>
-                                <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '8px', marginTop: '5px' }}>
-                                    {viewData.keterangan || 'Tidak ada catatan tambahan.'}
-                                </div>
+                                <div><small>Kegiatan</small><div style={{ fontWeight: 800 }}>{viewData.kegiatan}</div></div>
+                                <div><small>Tanggal</small><div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div></div>
+                                <div><small>Nilai</small><div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }}>{viewData.nilai || '-'}</div></div>
+                                <div><small>Pengajar</small><div style={{ fontWeight: 600 }}>{viewData.ustadz || '-'}</div></div>
                             </div>
                         </div>
                     );

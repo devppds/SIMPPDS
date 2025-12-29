@@ -1,28 +1,50 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { apiCall } from '@/lib/utils';
+
+import React from 'react';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import SortableTable from '@/components/SortableTable';
 
 export default function PengajarPeriodePage() {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+    // ✨ Use Universal Data Hook
+    const {
+        data, loading, search, setSearch
+    } = useDataManagement('arsip_pengajar_periode');
 
-    useEffect(() => { loadData(); }, []);
-    const loadData = async () => { setLoading(true); try { const res = await apiCall('getData', 'GET', { type: 'arsip_pengajar_periode' }); setData(res || []); } catch (e) { console.error(e); } finally { setLoading(false); } };
-    const displayData = data.filter(d => (d.nama || '').toLowerCase().includes(search.toLowerCase()) || (d.kelas_ampu || '').toLowerCase().includes(search.toLowerCase()));
+    const displayData = data.filter(d =>
+        (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.kelas_ampu || '').toLowerCase().includes(search.toLowerCase())
+    );
 
     const columns = [
-        { key: 'foto_pengajar', label: 'Foto', sortable: false, width: '80px', render: (row) => <img src={row.foto_pengajar || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama)}&background=1e3a8a&color=fff&bold=true`} alt={row.nama} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} /> },
-        { key: 'nama', label: 'Nama', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.periode_mulai} - {row.periode_selesai}</div></div> },
-        { key: 'kelas_ampu', label: 'Kelas Ampu', render: (row) => <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{row.kelas_ampu}</span> }
+        {
+            key: 'foto_pengajar', label: 'Foto', sortable: false, width: '80px', render: (row) => (
+                <img src={row.foto_pengajar || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama)}&background=1e3a8a&color=fff&bold=true`}
+                    style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover' }} alt="" />
+            )
+        },
+        {
+            key: 'nama', label: 'Nama', render: (row) => (
+                <div><div style={{ fontWeight: 800 }}>{row.nama}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Periode: {row.periode_mulai} - {row.periode_selesai}</div></div>
+            )
+        },
+        { key: 'kelas_ampu', label: 'Kelas Ampu', render: (row) => <span className="th-badge">{row.kelas_ampu}</span> }
     ];
 
     return (
         <div className="view-container animate-in">
             <div className="card">
-                <div className="card-header"><div><h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}><i className="fas fa-chalkboard-teacher" style={{ marginRight: '10px' }}></i>Arsip Pengajar Per-Periode</h2><p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total {displayData.length} pengajar tercatat.</p></div></div>
-                <div className="table-controls" style={{ padding: '1rem 1.5rem' }}><div className="search-wrapper"><i className="fas fa-search"></i><input type="text" className="search-input" placeholder="Cari nama atau kelas..." value={search} onChange={(e) => setSearch(e.target.value)} /></div></div>
+                <div className="card-header">
+                    <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Arsip Pengajar</h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} pengajar per periode.</p>
+                    </div>
+                </div>
+                <div className="table-controls" style={{ padding: '1rem 1.5rem' }}>
+                    <div className="search-wrapper">
+                        <i className="fas fa-search"></i>
+                        <input type="text" className="search-input" placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </div>
+                </div>
                 <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada arsip pengajar." />
             </div>
         </div>

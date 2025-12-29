@@ -1,95 +1,44 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth, usePagePermission } from '@/lib/AuthContext';
+import { usePagePermission } from '@/lib/AuthContext';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
-import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
-export default function IzinPage() {
-    const { isAdmin } = useAuth();
-    const { canEdit } = usePagePermission();
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
+import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
+import ConfirmModal from '@/components/ConfirmModal';
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [viewData, setViewData] = useState(null);
-    const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({
+export default function IzinPage() {
+    const { canEdit } = usePagePermission();
+    const [santriOptions, setSantriOptions] = useState([]);
+    const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+
+    const {
+        data, loading, search, setSearch, submitting,
+        isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
+        viewData, formData, setFormData, editId,
+        handleSave, handleDelete, openModal, openView, isAdmin
+    } = useDataManagement('izin', {
         tanggal_mulai: new Date().toISOString().split('T')[0],
         tanggal_selesai: '', nama_santri: '', kelas: '', alasan: '',
         keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: ''
     });
-    const [submitting, setSubmitting] = useState(false);
-
-    const [santriOptions, setSantriOptions] = useState([]);
 
     useEffect(() => {
-        loadData();
-        fetchSantri();
+        apiCall('getData', 'GET', { type: 'santri' }).then(res => setSantriOptions(res || []));
     }, []);
 
-    const fetchSantri = async () => {
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'santri' });
-            setSantriOptions(res || []);
-        } catch (e) { console.error(e); }
-    };
-
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'izin' });
-            setData(res || []);
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-    };
-
-    const openModal = (item = null) => {
-        if (item) {
-            setEditId(item.id);
-            setFormData({ ...item });
-        } else {
-            setEditId(null);
-            setFormData({
-                tanggal_mulai: new Date().toISOString().split('T')[0],
-                tanggal_selesai: '', nama_santri: '', alasan: '',
-                keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: ''
-            });
-        }
-        setIsModalOpen(true);
-    };
-
-    const openViewModal = (item) => {
-        setViewData(item);
-        setIsViewModalOpen(true);
-    };
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        setSubmitting(true);
-        try {
-            await apiCall('saveData', 'POST', {
-                type: 'izin',
-                data: editId ? { ...formData, id: editId } : formData
-            });
-            setIsModalOpen(false);
-            loadData();
-        } catch (err) { alert(err.message); }
-        finally { setSubmitting(false); }
-    };
-
-    const deleteItem = async (id) => {
-        if (!confirm('Hapus data perizinan ini?')) return;
-        try {
-            await apiCall('deleteData', 'POST', { type: 'izin', id });
-            loadData();
-        } catch (err) { alert(err.message); }
-    };
+    const stats = useMemo(() => [
+        { title: 'Total Izin', value: data.length, icon: 'fas fa-id-badge', color: 'var(--primary)' },
+        { title: 'Izin Aktif', value: data.filter(d => d.status === 'Aktif').length, icon: 'fas fa-plane-departure', color: 'var(--warning)' },
+        { title: 'Selesai/Kembali', value: data.filter(d => d.status === 'Kembali').length, icon: 'fas fa-home', color: 'var(--success)' }
+    ], [data]);
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -100,20 +49,17 @@ export default function IzinPage() {
         { key: 'nama_santri', label: 'Nama Santri', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span> },
         { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
         { key: 'alasan', label: 'Alasan' },
-        { key: 'tanggal_pulang', label: 'Tgl Pulang', render: (row) => formatDate(row.tanggal_pulang) },
-        { key: 'tanggal_kembali', label: 'Tgl Kembali', render: (row) => formatDate(row.tanggal_kembali) },
-        { key: 'tipe_izin', label: 'Tipe' },
-        { key: 'petugas', label: 'Petugas' },
         {
-            key: 'actions',
-            label: 'Aksi',
-            sortable: false,
-            width: '150px',
-            render: (row) => (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+            key: 'status', label: 'Status', render: (row) => (
+                <span className="th-badge" style={{ background: row.status === 'Aktif' ? '#dcfce7' : row.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9', color: row.status === 'Aktif' ? '#166534' : row.status === 'Menunggu' ? '#9a3412' : '#475569' }}>{row.status}</span>
+            )
+        },
+        {
+            key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
+                <div className="table-actions">
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -121,176 +67,63 @@ export default function IzinPage() {
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Perizinan & Keluar Pondok</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mengelola {displayData.length} data izin santri.</p>
-                    </div>
-                    <div className="card-actions">
-                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                            <i className="fas fa-plus"></i> Buat Surat Izin
-                        </button>}
-                    </div>
+            <KopSurat judul="Sistem Perizinan Santri" subJudul="Pusat Keamanan & Ketertiban Pondok." />
+
+            <StatsPanel items={stats} />
+
+            <DataViewContainer
+                title="Management Perizinan"
+                subtitle={`Menampilkan ${displayData.length} riwayat izin keluar pondok.`}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Buat Surat Izin</button>}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
+                tableProps={{ columns, data: displayData, loading }}
+            />
+
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Izin" : "Izin Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
+                <div className="form-group">
+                    <label className="form-label">Nama Santri</label>
+                    <Autocomplete options={santriOptions} value={formData.nama_santri} onChange={v => setFormData({ ...formData, nama_santri: v })} onSelect={s => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })} placeholder="Cari santri..." labelKey="nama_siswa" subLabelKey="kelas" />
                 </div>
-
-                <div className="table-controls">
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Cari nama santri atau alasan..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
+                <div className="form-grid">
+                    <TextInput label="Tanggal Mulai" type="date" value={formData.tanggal_mulai} onChange={e => setFormData({ ...formData, tanggal_mulai: e.target.value })} />
+                    <TextInput label="Estimasi Kembali" type="date" value={formData.tanggal_selesai} onChange={e => setFormData({ ...formData, tanggal_selesai: e.target.value })} />
                 </div>
+                <div className="form-grid">
+                    <SelectInput label="Keperluan" value={formData.keperluan} onChange={e => setFormData({ ...formData, keperluan: e.target.value })} options={['Pulang Rumah', 'Izin Keluar Sebentar', 'Sakit / Berobat', 'Lainnya']} />
+                    <TextInput label="Penjemput" value={formData.penjemput} onChange={e => setFormData({ ...formData, penjemput: e.target.value })} placeholder="Nama wali..." />
+                </div>
+                <TextAreaInput label="Alasan Detail" value={formData.alasan} onChange={e => setFormData({ ...formData, alasan: e.target.value })} />
+                <SelectInput label="Status Izin" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Menunggu', 'Aktif', 'Kembali', 'Terlambat']} />
+            </Modal>
 
-                <SortableTable
-                    columns={columns}
-                    data={displayData}
-                    loading={loading}
-                    emptyMessage="Belum ada data perizinan."
-                />
-            </div>
-
-            {/* Modal Input/Edit */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editId ? "Update Surat Izin" : "Buat Izin Baru"}
-                footer={(
-                    <>
-                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                            {submitting ? 'Memproses...' : 'Simpan'}
-                        </button>
-                    </>
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Perizinan" width="600px">
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama_santri)}&background=1e3a8a&color=fff&size=128`} style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '1rem' }} alt="" />
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{viewData.nama_santri}</h2>
+                            <p style={{ color: 'var(--text-muted)' }}>Unit/Kelas: {viewData.kelas || '-'}</p>
+                            <span className="th-badge" style={{ background: 'var(--primary-light)', padding: '5px 15px' }}>{viewData.status}</span>
+                        </div>
+                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
+                            <div className="form-grid">
+                                <div><small>Pulang</small><div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal_mulai)}</div></div>
+                                <div><small>Rencana Kembali</small><div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal_selesai)}</div></div>
+                            </div>
+                            <div style={{ marginTop: '1rem' }}><small>Keperluan</small><div style={{ fontWeight: 700, color: 'var(--primary)' }}>{viewData.keperluan}</div></div>
+                            <div style={{ marginTop: '1rem' }}><small>Alasan</small><p>{viewData.alasan || '-'}</p></div>
+                        </div>
+                    </div>
                 )}
-            >
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Nama Santri</label>
-                        <Autocomplete
-                            options={santriOptions}
-                            value={formData.nama_santri}
-                            onChange={(val) => setFormData({ ...formData, nama_santri: val })}
-                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })}
-                            placeholder="Ketik nama santri untuk mencari..."
-                            required
-                        />
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Tanggal Mulai</label>
-                            <input type="date" className="form-control" value={formData.tanggal_mulai} onChange={e => setFormData({ ...formData, tanggal_mulai: e.target.value })} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Estimasi Kembali</label>
-                            <input type="date" className="form-control" value={formData.tanggal_selesai} onChange={e => setFormData({ ...formData, tanggal_selesai: e.target.value })} />
-                        </div>
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Keperluan</label>
-                            <select className="form-control" value={formData.keperluan} onChange={e => setFormData({ ...formData, keperluan: e.target.value })}>
-                                <option value="Pulang Rumah">Pulang Rumah</option>
-                                <option value="Izin Keluar Sebentar">Izin Keluar Sebentar</option>
-                                <option value="Sakit / Berobat">Sakit / Berobat</option>
-                                <option value="Lainnya">Lainnya</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Penjemput (Wali)</label>
-                            <input type="text" className="form-control" value={formData.penjemput} onChange={e => setFormData({ ...formData, penjemput: e.target.value })} placeholder="Nama penjemput" />
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Alasan Detail</label>
-                        <textarea className="form-control" value={formData.alasan} onChange={e => setFormData({ ...formData, alasan: e.target.value })} rows="3"></textarea>
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Status Izin</label>
-                        <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                            <option value="Menunggu">Menunggu Persetujuan</option>
-                            <option value="Aktif">Disetujui (Aktif)</option>
-                            <option value="Kembali">Sudah Kembali</option>
-                            <option value="Terlambat">Terlambat Kembali</option>
-                        </select>
-                    </div>
-                </form>
             </Modal>
 
-            {/* Modal View Detail */}
-            <Modal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                title="Detail Perizinan"
-                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
-            >
-                {viewData && (() => {
-                    const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
-                    return (
-                        <div className="detail-view">
-                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-                                    <div style={{
-                                        width: '100px',
-                                        height: '100px',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        border: '4px solid var(--primary-light)',
-                                        background: '#f1f5f9'
-                                    }}>
-                                        {student?.foto_santri ? (
-                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
-                                                <i className="fas fa-user fa-3x"></i>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nama Santri</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
-                                <span className="th-badge" style={{
-                                    background: viewData.status === 'Aktif' ? '#dcfce7' : viewData.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9',
-                                    color: viewData.status === 'Aktif' ? '#166534' : viewData.status === 'Menunggu' ? '#9a3412' : '#475569',
-                                    marginTop: '10px'
-                                }}>
-                                    Izin {viewData.status}
-                                </span>
-                            </div>
-                            <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Mulai Izin</small>
-                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_mulai)}</div>
-                                </div>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Rencana Kembali</small>
-                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal_selesai)}</div>
-                                </div>
-                            </div>
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Tujuan / Keperluan</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)' }}>{viewData.keperluan}</div>
-                            </div>
-                            <div style={{ marginTop: '1rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Penjemput</small>
-                                <div style={{ fontWeight: 600 }}>{viewData.penjemput || 'Diijinkan Sendiri'}</div>
-                            </div>
-                            <div style={{ marginTop: '1rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Alasan Detail</small>
-                                <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '8px', marginTop: '5px' }}>
-                                    {viewData.alasan || 'Tidak ada alasan detail.'}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })()}
-            </Modal>
+            <ConfirmModal
+                isOpen={confirmDelete.open}
+                onClose={() => setConfirmDelete({ open: false, id: null })}
+                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                title="Batalkan Izin?"
+                message="Data perizinan ini akan dihapus secara permanen dari sistem."
+            />
         </div>
     );
 }

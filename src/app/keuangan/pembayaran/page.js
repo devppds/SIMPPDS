@@ -1,315 +1,157 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall, formatCurrency, formatDate } from '@/lib/utils';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
-import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
+
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
+import { TextInput, SelectInput } from '@/components/FormInput';
 
 export default function PembayaranSantriPage() {
     const { user } = useAuth();
     const { showToast } = useToast();
     const [santriList, setSantriList] = useState([]);
     const [tarifList, setTarifList] = useState([]);
-
-    // Search State
-    const [search, setSearch] = useState('');
     const [selectedSantri, setSelectedSantri] = useState(null);
+    const [searchSantri, setSearchSantri] = useState('');
 
-
-    // Form State
-    const [formData, setFormData] = useState({
+    const {
+        data: history, setData: setHistory, loading, setLoading, submitting, setSubmitting,
+        formData, setFormData
+    } = useDataManagement('keuangan_pembayaran', {
         tanggal: new Date().toISOString().split('T')[0],
         jenis_pembayaran: 'Syahriah',
-        bulan_tagihan: new Date().toISOString().slice(0, 7), // YYYY-MM
-        nominal: 0,
-        keterangan: ''
+        bulan_tagihan: new Date().toISOString().slice(0, 7),
+        nominal: 0, keterangan: ''
     });
 
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-
-    // History Data
-    const [history, setHistory] = useState([]);
-
-    useEffect(() => {
-        loadInitialData();
-    }, []);
-
-    const loadInitialData = async () => {
+    const loadInitialData = useCallback(async () => {
         setLoading(true);
         try {
             const [dataSantri, dataTarif, dataHistory] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'santri' }),
                 apiCall('getData', 'GET', { type: 'keuangan_tarif' }),
-                apiCall('getData', 'GET', { type: 'keuangan_pembayaran' }) // Fetches all history
+                apiCall('getData', 'GET', { type: 'keuangan_pembayaran' })
             ]);
             setSantriList(dataSantri || []);
             setTarifList(dataTarif || []);
-            // Sort history by date desc
             setHistory((dataHistory || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-    };
+        } catch (e) { console.error(e); } finally { setLoading(false); }
+    }, [setHistory, setLoading]);
 
+    useEffect(() => { loadInitialData(); }, [loadInitialData]);
 
-
-    // Calculate Fee when Santri or Type changes
     useEffect(() => {
-        if (!selectedSantri) return;
-
-        if (formData.jenis_pembayaran === 'Tabungan') {
-            // Tabungan is manual input, default 0 or keep existing if editing
-            // setFormData(prev => ({ ...prev, nominal: 0 })); 
-            return;
-        }
-
-        // Logic for Syahriah
-        const status = selectedSantri.status_santri || 'Biasa Baru'; // Fallback
-        const kelas = selectedSantri.kelas || selectedSantri.kelas_diniyah || selectedSantri.kelas_formal || 'All'; // Include new 'kelas' field
-
-        // Find tariff
-        // Priority 1: Status Match AND Class Match
-        let rule = tarifList.find(t =>
-            t.kategori_status === status && t.kelas === kelas
-        );
-
-        // Priority 2: Status Match AND Class 'Semua'
-        if (!rule) {
-            rule = tarifList.find(t =>
-                t.kategori_status === status && t.kelas === 'Semua'
-            );
-        }
-
-        if (rule) {
-            setFormData(prev => ({ ...prev, nominal: rule.nominal }));
-        } else {
-            // Fallback default
-            setFormData(prev => ({ ...prev, nominal: 0 }));
-        }
-
-    }, [selectedSantri, formData.jenis_pembayaran, tarifList]);
-
-    const handleSelectSantri = (s) => {
-        setSelectedSantri(s);
-        setSearch(`${s.nama_siswa} (${s.kelas_diniyah || '-'})`);
-
-    };
+        if (!selectedSantri || formData.jenis_pembayaran === 'Tabungan') return;
+        const status = selectedSantri.status_santri || 'Biasa Baru';
+        const kelas = selectedSantri.kelas || 'Semua';
+        let rule = tarifList.find(t => t.kategori_status === status && t.kelas === kelas);
+        if (!rule) rule = tarifList.find(t => t.kategori_status === status && t.kelas === 'Semua');
+        if (rule) setFormData(prev => ({ ...prev, nominal: rule.nominal }));
+    }, [selectedSantri, formData.jenis_pembayaran, tarifList, setFormData]);
 
     const handleReset = () => {
         setSelectedSantri(null);
-        setSearch('');
+        setSearchSantri('');
         setFormData({
             tanggal: new Date().toISOString().split('T')[0],
             jenis_pembayaran: 'Syahriah',
             bulan_tagihan: new Date().toISOString().slice(0, 7),
-            nominal: 0,
-            keterangan: ''
+            nominal: 0, keterangan: ''
         });
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!selectedSantri) return showToast("Pilih santri terlebih dahulu", "warning");
-
+        if (e) e.preventDefault();
+        if (!selectedSantri) return showToast("Pilih santri terlebih dahulu!", "warning");
         setSubmitting(true);
         try {
-            // 1. Save Payment Data
-            const paymentPayload = {
-                santri_id: selectedSantri.id,
-                nama_santri: selectedSantri.nama_siswa,
-                tanggal: formData.tanggal,
-                jenis_pembayaran: formData.jenis_pembayaran,
-                bulan_tagihan: formData.jenis_pembayaran === 'Syahriah' ? formData.bulan_tagihan : null,
-                nominal: parseInt(formData.nominal),
-                keterangan: formData.keterangan || '-',
-                petugas: user?.fullname || 'Admin'
+            const payload = {
+                santri_id: selectedSantri.id, nama_santri: selectedSantri.nama_siswa, tanggal: formData.tanggal,
+                jenis_pembayaran: formData.jenis_pembayaran, bulan_tagihan: formData.jenis_pembayaran === 'Syahriah' ? formData.bulan_tagihan : null,
+                nominal: parseInt(formData.nominal), keterangan: formData.keterangan || '-', petugas: user?.fullname || 'Admin'
             };
-
-            const savedPayment = await apiCall('saveData', 'POST', {
-                type: 'keuangan_pembayaran',
-                data: paymentPayload
-            });
-
-            // 2. Auto-Entry to Arus Kas (Masuk)
-            // Note: We use savedPayment ID if available, otherwise just link logic
+            const res = await apiCall('saveData', 'POST', { type: 'keuangan_pembayaran', data: payload });
             await apiCall('saveData', 'POST', {
                 type: 'keuangan_kas',
                 data: {
-                    tanggal: formData.tanggal,
-                    tipe: 'Masuk',
-                    kategori: 'Pembayaran Santri',
-                    nominal: parseInt(formData.nominal),
-                    keterangan: `Pembayaran ${formData.jenis_pembayaran} oleh ${selectedSantri.nama_siswa}`,
-                    pembayaran_id: savedPayment?.id || null, // Assuming backend returns ID
-                    petugas: user?.fullname || 'Admin'
+                    tanggal: formData.tanggal, tipe: 'Masuk', kategori: 'Pembayaran Santri',
+                    nominal: parseInt(formData.nominal), keterangan: `${formData.jenis_pembayaran} - ${selectedSantri.nama_siswa}`,
+                    pembayaran_id: res?.id || null, petugas: user?.fullname || 'Admin'
                 }
             });
-
-            showToast('Transaksi Berhasil!', "success");
+            showToast('Pembayaran berhasil dicatat!', "success");
             handleReset();
-            loadInitialData(); // Refresh history
-        } catch (err) {
-            console.error(err);
-            showToast('Gagal menyimpan transaksi: ' + err.message, "error");
-        } finally {
-            setSubmitting(false);
-        }
+            loadInitialData();
+        } catch (err) { showToast(err.message, "error"); } finally { setSubmitting(false); }
     };
 
-    // Table Columns for History
+    const stats = useMemo(() => [
+        { title: 'Total Transaksi', value: history.length, icon: 'fas fa-file-invoice-dollar', color: 'var(--primary)' },
+        { title: 'Pendapatan Hari Ini', value: formatCurrency(history.filter(h => h.tanggal === new Date().toISOString().split('T')[0]).reduce((acc, h) => acc + parseInt(h.nominal || 0), 0)), icon: 'fas fa-calendar-day', color: 'var(--success)' },
+        { title: 'Rata-rata Bayar', value: formatCurrency(history.reduce((acc, h) => acc + parseInt(h.nominal || 0), 0) / (history.length || 1)), icon: 'fas fa-chart-line', color: 'var(--warning)' }
+    ], [history]);
+
     const columns = [
-        { key: 'tanggal', label: 'Tanggal', render: (row) => formatDate(row.tanggal) },
-        { key: 'nama_santri', label: 'Nama Santri', render: (row) => <div style={{ fontWeight: 700 }}>{row.nama_santri}</div> },
-        {
-            key: 'jenis_pembayaran', label: 'Jenis', render: (row) => (
-                <span className="th-badge" style={{
-                    background: row.jenis_pembayaran === 'Syahriah' ? 'var(--primary-light)' : '#fef3c7',
-                    color: row.jenis_pembayaran === 'Syahriah' ? 'var(--primary)' : '#d97706'
-                }}>
-                    {row.jenis_pembayaran}
-                </span>
-            )
-        },
-        { key: 'detail', label: 'Detail', render: (row) => row.jenis_pembayaran === 'Syahriah' ? row.bulan_tagihan : '-' },
-        { key: 'nominal', label: 'Nominal', render: (row) => <div style={{ fontWeight: 800 }}>{formatCurrency(row.nominal)}</div> },
-        { key: 'petugas', label: 'Petugas' }
+        { key: 'tanggal', label: 'Tgl Bayar', render: (row) => formatDate(row.tanggal) },
+        { key: 'nama_santri', label: 'Santri', render: (row) => <div style={{ fontWeight: 800 }}>{row.nama_santri}</div> },
+        { key: 'jenis_pembayaran', label: 'Jenis', render: (row) => <span className="th-badge" style={{ background: row.jenis_pembayaran === 'Syahriah' ? '#e0e7ff' : '#fef3c7', color: row.jenis_pembayaran === 'Syahriah' ? '#4338ca' : '#d97706' }}>{row.jenis_pembayaran}</span> },
+        { key: 'bulan_tagihan', label: 'Bulan', render: (row) => row.bulan_tagihan || '-' },
+        { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800 }}>{formatCurrency(row.nominal)}</span> }
     ];
 
     return (
         <div className="view-container animate-in">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
+            <KopSurat judul="Loket Pembayaran Syahriah & Tabungan" subJudul="Pusat administrasi keuangan santri." />
 
-                {/* FORM SECTION */}
-                <div className="card" style={{ height: 'fit-content' }}>
-                    <div className="card-header">
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Input Transaksi</h2>
+            <StatsPanel items={stats} />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '2rem' }}>
+                <div className="card" style={{ padding: '2rem' }}>
+                    <div className="card-header" style={{ padding: '0 0 1.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1.5rem' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Lakukan Pembayaran</h2>
                     </div>
 
-                    <div className="form-group" style={{ position: 'relative' }}>
-                        <label className="form-label">Cari Santri</label>
+                    <div className="form-group">
+                        <label className="form-label">Cari Data Santri</label>
                         {selectedSantri ? (
-                            <div style={{ position: 'relative' }}>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={selectedSantri.nama_siswa}
-                                    disabled
-                                    style={{ background: '#f8fafc', fontWeight: 800, color: 'var(--primary-dark)' }}
-                                />
-                                <button
-                                    onClick={handleReset}
-                                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.1rem' }}
-                                >
-                                    <i className="fas fa-times-circle"></i>
-                                </button>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'var(--primary-light)', padding: '12px', borderRadius: '12px', border: '1px solid var(--primary)' }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 800, color: 'var(--primary)' }}>{selectedSantri.nama_siswa}</div>
+                                    <small style={{ color: 'var(--primary-dark)', opacity: 0.8 }}>{selectedSantri.kelas} | {selectedSantri.status_santri}</small>
+                                </div>
+                                <button onClick={handleReset} className="btn-vibrant btn-vibrant-red" style={{ padding: '8px 12px' }}><i className="fas fa-times"></i></button>
                             </div>
                         ) : (
-                            <Autocomplete
-                                options={santriList}
-                                value={search}
-                                onChange={(val) => {
-                                    setSearch(val);
-                                    if (!val && selectedSantri) setSelectedSantri(null);
-                                }}
-                                onSelect={(s) => handleSelectSantri(s)}
-                                placeholder="Ketik Nama / Stambuk..."
-                                required
-                            />
+                            <Autocomplete options={santriList} value={searchSantri} onChange={setSearchSantri} onSelect={setSelectedSantri} placeholder="Masukkan nama santri..." labelKey="nama_siswa" subLabelKey="kelas" />
                         )}
                     </div>
 
-                    {selectedSantri && (
-                        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px' }}>
-                            <div style={{ fontSize: '0.9rem', color: '#666' }}>Status: <strong style={{ color: 'var(--primary)' }}>{selectedSantri.status_santri || 'Umum'}</strong></div>
-                            <div style={{ fontSize: '0.9rem', color: '#666' }}>Kelas: <strong>{selectedSantri.kelas || selectedSantri.kelas_diniyah || selectedSantri.kelas_formal || '-'}</strong></div>
-                        </div>
-                    )}
-
                     <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label className="form-label">Tanggal Transaksi</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={formData.tanggal}
-                                onChange={e => setFormData({ ...formData, tanggal: e.target.value })}
-                                required
-                            />
-                        </div>
-
+                        <TextInput label="Tanggal Transaksi" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
                         <div className="form-grid">
-                            <div className="form-group">
-                                <label className="form-label">Jenis Pembayaran</label>
-                                <select
-                                    className="form-control"
-                                    value={formData.jenis_pembayaran}
-                                    onChange={e => setFormData({ ...formData, jenis_pembayaran: e.target.value })}
-                                >
-                                    <option value="Syahriah">Syahriah (Bulanan)</option>
-                                    <option value="Tabungan">Tabungan</option>
-                                </select>
-                            </div>
-
-                            {formData.jenis_pembayaran === 'Syahriah' && (
-                                <div className="form-group">
-                                    <label className="form-label">Bulan Tagihan</label>
-                                    <input
-                                        type="month"
-                                        className="form-control"
-                                        value={formData.bulan_tagihan}
-                                        onChange={e => setFormData({ ...formData, bulan_tagihan: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                            )}
+                            <SelectInput label="Tipe Pembayaran" value={formData.jenis_pembayaran} onChange={e => setFormData({ ...formData, jenis_pembayaran: e.target.value })} options={['Syahriah', 'Tabungan']} />
+                            {formData.jenis_pembayaran === 'Syahriah' && <TextInput label="Bulan Tagihan" type="month" value={formData.bulan_tagihan} onChange={e => setFormData({ ...formData, bulan_tagihan: e.target.value })} />}
                         </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Nominal (Rp)</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                style={{ fontSize: '1.2rem', fontWeight: 800 }}
-                                value={formData.nominal}
-                                onChange={e => setFormData({ ...formData, nominal: e.target.value })}
-                                required
-                                min="0"
-                            />
-                            {formData.jenis_pembayaran === 'Syahriah' && selectedSantri && (
-                                <small style={{ color: 'var(--text-muted)' }}>*Otomatis disesuaikan dengan tarif Status & Kelas</small>
-                            )}
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Keterangan (Opsional)</label>
-                            <textarea
-                                className="form-control"
-                                rows="2"
-                                value={formData.keterangan}
-                                onChange={e => setFormData({ ...formData, keterangan: e.target.value })}
-                            ></textarea>
-                        </div>
-
-                        <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={submitting}>
-                            {submitting ? 'Memproses...' : 'Simpan Pembayaran'}
+                        <TextInput label="Nominal Rupiah (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required icon="fas fa-wallet" style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--primary)' }} />
+                        <TextInput label="Memo / Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
+                        <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem', fontSize: '1rem' }} disabled={submitting}>
+                            {submitting ? <><i className="fas fa-spinner fa-spin"></i> Memproses...</> : 'Proses Simpan Pembayaran'}
                         </button>
                     </form>
                 </div>
 
-                {/* HISTORY SECTION */}
-                <div className="card">
-                    <div className="card-header">
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Riwayat Transaksi</h2>
-                    </div>
-                    <SortableTable
-                        columns={columns}
-                        data={history}
-                        loading={loading}
-                        emptyMessage="Belum ada transaksi hari ini."
-                    />
-                </div>
+                <DataViewContainer
+                    title="Riwayat Terbaru"
+                    subtitle="Daftar 50 transaksi pembayaran terakhir."
+                    tableProps={{ columns, data: history, loading }}
+                />
             </div>
         </div>
     );

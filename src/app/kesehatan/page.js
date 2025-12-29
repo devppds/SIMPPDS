@@ -1,94 +1,45 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
 export default function KesehatanPage() {
-    const { isAdmin } = useAuth();
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+    const [santriOptions, setSantriOptions] = useState([]);
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [viewData, setViewData] = useState(null);
-    const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({
+    // ✨ Use Universal Data Hook
+    const {
+        data, setData, loading, setLoading, search, setSearch, submitting,
+        isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
+        viewData, formData, setFormData, editId,
+        handleSave, handleDelete, openModal, openView,
+        isAdmin
+    } = useDataManagement('kesehatan', {
         nama_santri: '', kelas: '', mulai_sakit: new Date().toISOString().split('T')[0],
         gejala: '', obat_tindakan: '', status_periksa: 'Rawat Jalan', keterangan: '',
         biaya_obat: '0'
     });
-    const [submitting, setSubmitting] = useState(false);
 
-    const [santriOptions, setSantriOptions] = useState([]);
-
-    useEffect(() => {
-        loadData();
-        fetchSantri();
-    }, []);
-
-    const fetchSantri = async () => {
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'santri' });
-            setSantriOptions(res || []);
-        } catch (e) { console.error(e); }
-    };
-
-    const loadData = async () => {
+    const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'kesehatan' });
+            const [res, resSantri] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'kesehatan' }),
+                apiCall('getData', 'GET', { type: 'santri' })
+            ]);
             setData(res || []);
+            setSantriOptions(resSantri || []);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
-    };
+    }, [setData, setLoading]);
 
-    const openModal = (item = null) => {
-        if (item) {
-            setEditId(item.id);
-            setFormData({ ...item });
-        } else {
-            setEditId(null);
-            setFormData({
-                nama_santri: '', kelas: '', mulai_sakit: new Date().toISOString().split('T')[0],
-                gejala: '', obat_tindakan: '', status_periksa: 'Rawat Jalan', keterangan: '',
-                biaya_obat: '0'
-            });
-        }
-        setIsModalOpen(true);
-    };
-
-    const openViewModal = (item) => {
-        setViewData(item);
-        setIsViewModalOpen(true);
-    };
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        setSubmitting(true);
-        try {
-            await apiCall('saveData', 'POST', {
-                type: 'kesehatan',
-                data: editId ? { ...formData, id: editId } : formData
-            });
-            setIsModalOpen(false);
-            loadData();
-        } catch (err) { alert(err.message); }
-        finally { setSubmitting(false); }
-    };
-
-    const deleteItem = async (id) => {
-        if (!confirm('Hapus data rekam medis ini?')) return;
-        try {
-            await apiCall('deleteData', 'POST', { type: 'kesehatan', id });
-            loadData();
-        } catch (err) { alert(err.message); }
-    };
+    useEffect(() => {
+        loadEnrichedData();
+    }, [loadEnrichedData]);
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -106,7 +57,11 @@ export default function KesehatanPage() {
             render: (row) => (
                 <span className="th-badge" style={{
                     background: row.status_periksa === 'Rawat Inap' ? '#fee2e2' : row.status_periksa === 'Sembuh' ? '#dcfce7' : '#f1f5f9',
-                    color: row.status_periksa === 'Rawat Inap' ? '#dc2626' : row.status_periksa === 'Sembuh' ? '#166534' : '#475569'
+                    color: row.status_periksa === 'Rawat Inap' ? '#dc2626' : row.status_periksa === 'Sembuh' ? '#166534' : '#475569',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.7rem',
+                    fontWeight: 700
                 }}>
                     {row.status_periksa}
                 </span>
@@ -120,9 +75,9 @@ export default function KesehatanPage() {
             width: '150px',
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus data rekam medis ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -146,22 +101,11 @@ export default function KesehatanPage() {
                 <div className="table-controls">
                     <div className="search-wrapper">
                         <i className="fas fa-search"></i>
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Cari nama santri, kelas atau gejala..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                        <input type="text" className="search-input" placeholder="Cari nama santri, kelas atau gejala..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
                 </div>
 
-                <SortableTable
-                    columns={columns}
-                    data={displayData}
-                    loading={loading}
-                    emptyMessage="Belum ada data kesehatan."
-                />
+                <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada data kesehatan." />
             </div>
 
             {/* Modal Input/Edit */}
@@ -172,13 +116,13 @@ export default function KesehatanPage() {
                 footer={(
                     <>
                         <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                        <button className="btn btn-primary" onClick={handleSave} disabled={submitting}>
                             {submitting ? 'Menyimpan...' : 'Simpan'}
                         </button>
                     </>
                 )}
             >
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSave}>
                     <div className="form-group">
                         <label className="form-label">Nama Santri</label>
                         <Autocomplete
@@ -191,104 +135,45 @@ export default function KesehatanPage() {
                         />
                     </div>
                     <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Mulai Sakit</label>
-                            <input type="date" className="form-control" value={formData.mulai_sakit} onChange={e => setFormData({ ...formData, mulai_sakit: e.target.value })} />
-                        </div>
+                        <div className="form-group"><label className="form-label">Mulai Sakit</label><input type="date" className="form-control" value={formData.mulai_sakit} onChange={e => setFormData({ ...formData, mulai_sakit: e.target.value })} /></div>
                         <div className="form-group">
                             <label className="form-label">Status Periksa</label>
                             <select className="form-control" value={formData.status_periksa} onChange={e => setFormData({ ...formData, status_periksa: e.target.value })}>
-                                <option value="Rawat Jalan">Rawat Jalan</option>
-                                <option value="Rawat Inap">Rawat Inap</option>
-                                <option value="Sembuh">Sudah Sembuh</option>
+                                <option value="Rawat Jalan">Rawat Jalan</option><option value="Rawat Inap">Rawat Inap</option><option value="Sembuh">Sudah Sembuh</option>
                             </select>
                         </div>
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Gejala & Keluhan</label>
-                        <textarea className="form-control" value={formData.gejala} onChange={e => setFormData({ ...formData, gejala: e.target.value })} rows="2"></textarea>
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Obat & Tindakan</label>
-                        <input type="text" className="form-control" value={formData.obat_tindakan} onChange={e => setFormData({ ...formData, obat_tindakan: e.target.value })} placeholder="Diberikan obat apa?" />
-                    </div>
+                    <div className="form-group"><label className="form-label">Gejala & Keluhan</label><textarea className="form-control" value={formData.gejala} onChange={e => setFormData({ ...formData, gejala: e.target.value })} rows="2"></textarea></div>
+                    <div className="form-group"><label className="form-label">Obat & Tindakan</label><input type="text" className="form-control" value={formData.obat_tindakan} onChange={e => setFormData({ ...formData, obat_tindakan: e.target.value })} placeholder="Diberikan obat apa?" /></div>
                     <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Biaya Obat (Rp)</label>
-                            <input type="number" className="form-control" value={formData.biaya_obat} onChange={e => setFormData({ ...formData, biaya_obat: e.target.value })} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Keterangan</label>
-                            <input type="text" className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} placeholder="Catatan tambahan" />
-                        </div>
+                        <div className="form-group"><label className="form-label">Biaya Obat (Rp)</label><input type="number" className="form-control" value={formData.biaya_obat} onChange={e => setFormData({ ...formData, biaya_obat: e.target.value })} /></div>
+                        <div className="form-group"><label className="form-label">Keterangan</label><input type="text" className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} placeholder="Catatan tambahan" /></div>
                     </div>
                 </form>
             </Modal>
 
             {/* Modal View Detail */}
-            <Modal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                title="Detail Kesehatan"
-                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
-            >
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Kesehatan" width="600px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}>
                 {viewData && (() => {
                     const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
                     return (
                         <div className="detail-view">
                             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-                                    <div style={{
-                                        width: '100px',
-                                        height: '100px',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        border: '4px solid var(--primary-light)',
-                                        background: '#f1f5f9'
-                                    }}>
-                                        {student?.foto_santri ? (
-                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
-                                                <i className="fas fa-user fa-3x"></i>
-                                            </div>
-                                        )}
+                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                                    <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', border: '4px solid var(--primary-light)' }}>
+                                        {student?.foto_santri ? <img src={student.foto_santri} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ background: '#f1f5f9', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="fas fa-user fa-3x" style={{ color: '#cbd5e1' }}></i></div>}
                                     </div>
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nama Santri</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
-                                <span className="th-badge" style={{
-                                    background: viewData.status_periksa === 'Rawat Inap' ? '#fee2e2' : viewData.status_periksa === 'Sembuh' ? '#dcfce7' : '#f1f5f9',
-                                    color: viewData.status_periksa === 'Rawat Inap' ? '#dc2626' : viewData.status_periksa === 'Sembuh' ? '#166534' : '#475569',
-                                    marginTop: '10px'
-                                }}>
-                                    {viewData.status_periksa}
-                                </span>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</h2>
+                                <p style={{ color: 'var(--text-muted)' }}>{viewData.kelas} • <span className="th-badge">{viewData.status_periksa}</span></p>
                             </div>
                             <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Mulai Sakit</small>
-                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.mulai_sakit)}</div>
-                                </div>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Biaya Obat</small>
-                                    <div style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(viewData.biaya_obat)}</div>
-                                </div>
+                                <div><small>Mulai Sakit</small><div style={{ fontWeight: 600 }}>{formatDate(viewData.mulai_sakit)}</div></div>
+                                <div><small>Biaya Obat</small><div style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(viewData.biaya_obat)}</div></div>
                             </div>
                             <div style={{ marginTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Gejala & Keluhan</small>
-                                <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginTop: '5px' }}>
-                                    {viewData.gejala}
-                                </div>
-                            </div>
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Obat & Tindakan Diberikan</small>
-                                <div style={{ fontWeight: 600, marginTop: '5px' }}>{viewData.obat_tindakan || 'Belum diberikan tindakan'}</div>
-                            </div>
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Catatan Tambahan</small>
-                                <p style={{ marginTop: '5px' }}>{viewData.keterangan || '-'}</p>
+                                <small>Gejala & Keluhan</small>
+                                <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginTop: '5px' }}>{viewData.gejala}</div>
                             </div>
                         </div>
                     );

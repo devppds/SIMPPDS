@@ -1,95 +1,44 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { useAuth, usePagePermission } from '@/lib/AuthContext';
+import { usePagePermission } from '@/lib/AuthContext';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
-import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 
-export default function BarangSitaanPage() {
-    const { isAdmin } = useAuth();
-    const { canEdit } = usePagePermission();
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
+import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
+import ConfirmModal from '@/components/ConfirmModal';
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [viewData, setViewData] = useState(null);
-    const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({
+export default function BarangSitaanPage() {
+    const { canEdit } = usePagePermission();
+    const [santriOptions, setSantriOptions] = useState([]);
+    const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+
+    const {
+        data, loading, search, setSearch, submitting,
+        isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
+        viewData, formData, setFormData, editId,
+        handleSave, handleDelete, openModal, openView, isAdmin
+    } = useDataManagement('barang_sitaan', {
         tanggal: new Date().toISOString().split('T')[0],
         nama_santri: '', kelas: '', nama_barang: '', alasan_sita: '',
         status: 'Disita', petugas: '', tanggal_kembali: ''
     });
-    const [submitting, setSubmitting] = useState(false);
-
-    const [santriOptions, setSantriOptions] = useState([]);
 
     useEffect(() => {
-        loadData();
-        fetchSantri();
+        apiCall('getData', 'GET', { type: 'santri' }).then(res => setSantriOptions(res || []));
     }, []);
 
-    const fetchSantri = async () => {
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'santri' });
-            setSantriOptions(res || []);
-        } catch (e) { console.error(e); }
-    };
-
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'barang_sitaan' });
-            setData(res || []);
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-    };
-
-    const openModal = (item = null) => {
-        if (item) {
-            setEditId(item.id);
-            setFormData({ ...item });
-        } else {
-            setEditId(null);
-            setFormData({
-                tanggal: new Date().toISOString().split('T')[0],
-                nama_santri: '', nama_barang: '', alasan_sita: '',
-                status: 'Disita', petugas: '', tanggal_kembali: ''
-            });
-        }
-        setIsModalOpen(true);
-    };
-
-    const openViewModal = (item) => {
-        setViewData(item);
-        setIsViewModalOpen(true);
-    };
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        setSubmitting(true);
-        try {
-            await apiCall('saveData', 'POST', {
-                type: 'barang_sitaan',
-                data: editId ? { ...formData, id: editId } : formData
-            });
-            setIsModalOpen(false);
-            loadData();
-        } catch (err) { alert(err.message); }
-        finally { setSubmitting(false); }
-    };
-
-    const deleteItem = async (id) => {
-        if (!confirm('Hapus data penyitaan ini?')) return;
-        try {
-            await apiCall('deleteData', 'POST', { type: 'barang_sitaan', id });
-            loadData();
-        } catch (err) { alert(err.message); }
-    };
+    const stats = useMemo(() => [
+        { title: 'Barang Disita', value: data.filter(d => d.status === 'Disita').length, icon: 'fas fa-box-open', color: 'var(--danger)' },
+        { title: 'Status Mediasi', value: data.filter(d => d.status === 'Proses').length, icon: 'fas fa-sync-alt', color: 'var(--warning)' },
+        { title: 'Dikembalikan', value: data.filter(d => d.status === 'Dikembalikan').length, icon: 'fas fa-undo-alt', color: 'var(--success)' }
+    ], [data]);
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -97,32 +46,21 @@ export default function BarangSitaanPage() {
     );
 
     const columns = [
-        { key: 'tanggal', label: 'Tanggal Sita', render: (row) => formatDate(row.tanggal) },
-        { key: 'nama_santri', label: 'Nama Santri', render: (row) => <div style={{ fontWeight: 700 }}>{row.nama_santri}</div> },
-        { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
-        { key: 'nama_barang', label: 'Nama Barang' },
+        { key: 'tanggal', label: 'Tgl Sita', render: (row) => formatDate(row.tanggal) },
+        { key: 'nama_santri', label: 'Santri', render: (row) => <div style={{ fontWeight: 700 }}>{row.nama_santri}</div> },
+        { key: 'nama_barang', label: 'Barang', render: (row) => <strong>{row.nama_barang}</strong> },
         {
-            key: 'status',
-            label: 'Status',
-            render: (row) => (
-                <span className="th-badge" style={{
-                    background: row.status === 'Dikembalikan' ? '#dcfce7' : '#fee2e2',
-                    color: row.status === 'Dikembalikan' ? '#166534' : '#991b1b'
-                }}>
-                    {row.status}
-                </span>
+            key: 'status', label: 'Status', render: (row) => (
+                <span className="th-badge" style={{ background: row.status === 'Dikembalikan' ? '#dcfce7' : '#fee2e2', color: row.status === 'Dikembalikan' ? '#166534' : '#991b1b' }}>{row.status}</span>
             )
         },
         {
-            key: 'actions',
-            label: 'Aksi',
-            sortable: false,
-            width: '150px',
-            render: (row) => (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Detail"><i className="fas fa-eye"></i></button>
-                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
-                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+            key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
+                <div className="table-actions">
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>
+                    }
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -130,174 +68,62 @@ export default function BarangSitaanPage() {
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Barang Sitaan / Keamanan</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} barang santri yang disita petugas.</p>
-                    </div>
-                    <div className="card-actions">
-                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                            <i className="fas fa-plus"></i> Input Sitaan
-                        </button>}
-                    </div>
+            <KopSurat judul="Pencatatan Barang Sitaan" subJudul="Log penertiban barang terlarang/tidak berizin." />
+
+            <StatsPanel items={stats} />
+
+            <DataViewContainer
+                title="Management Barang Sitaan"
+                subtitle={`Mencatat ${displayData.length} data penyitaan keamanan.`}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Input Sitaan</button>}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
+                tableProps={{ columns, data: displayData, loading }}
+            />
+
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data" : "Input Penyitaan"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
+                <div className="form-group">
+                    <label className="form-label">Nama Santri</label>
+                    <Autocomplete options={santriOptions} value={formData.nama_santri} onChange={v => setFormData({ ...formData, nama_santri: v })} onSelect={s => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })} placeholder="Cari santri..." labelKey="nama_siswa" subLabelKey="kelas" />
                 </div>
-
-                <div className="table-controls">
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Cari nama santri atau barang..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
+                <div className="form-grid">
+                    <TextInput label="Nama Barang" value={formData.nama_barang} onChange={e => setFormData({ ...formData, nama_barang: e.target.value })} required icon="fas fa-mobile-alt" />
+                    <TextInput label="Tanggal Sita" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
                 </div>
+                <TextAreaInput label="Alasan Penyitaan" value={formData.alasan_sita} onChange={e => setFormData({ ...formData, alasan_sita: e.target.value })} />
+                <div className="form-grid">
+                    <SelectInput label="Status Barang" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Disita', 'Proses', 'Dikembalikan']} />
+                    <TextInput label="Petugas Keamanan" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} />
+                </div>
+                {formData.status === 'Dikembalikan' && <TextInput label="Tgl Pengembalian" type="date" value={formData.tanggal_kembali} onChange={e => setFormData({ ...formData, tanggal_kembali: e.target.value })} />}
+            </Modal>
 
-                <SortableTable
-                    columns={columns}
-                    data={displayData}
-                    loading={loading}
-                    emptyMessage="Belum ada data barang sitaan."
-                />
-            </div>
-
-            {/* Modal Input/Edit */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editId ? "Update Data Sitaan" : "Input Penyitaan Baru"}
-                footer={(
-                    <>
-                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                            {submitting ? 'Memproses...' : 'Simpan'}
-                        </button>
-                    </>
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Penyitaan" width="600px">
+                {viewData && (
+                    <div className="detail-view">
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama_santri)}&background=1e3a8a&color=fff&size=128`} style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '1rem' }} alt="" />
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{viewData.nama_santri}</h2>
+                            <span className="th-badge" style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>{viewData.status}</span>
+                        </div>
+                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
+                            <div className="form-grid">
+                                <div><small>Barang</small><div style={{ fontWeight: 800 }}>{viewData.nama_barang}</div></div>
+                                <div><small>Tgl Sita</small><div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal)}</div></div>
+                            </div>
+                            <div style={{ marginTop: '1rem' }}><small>Alasan</small><p>{viewData.alasan_sita || '-'}</p></div>
+                            <div style={{ marginTop: '1rem' }}><small>Petugas</small><div style={{ fontWeight: 700 }}>{viewData.petugas || '-'}</div></div>
+                        </div>
+                    </div>
                 )}
-            >
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Nama Santri</label>
-                        <Autocomplete
-                            options={santriOptions}
-                            value={formData.nama_santri}
-                            onChange={(val) => setFormData({ ...formData, nama_santri: val })}
-                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })}
-                            placeholder="Ketik nama santri untuk mencari..."
-                            required
-                        />
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Nama Barang</label>
-                            <input type="text" className="form-control" value={formData.nama_barang} onChange={e => setFormData({ ...formData, nama_barang: e.target.value })} required />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Tanggal Sita</label>
-                            <input type="date" className="form-control" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Alasan Penyitaan</label>
-                        <textarea className="form-control" value={formData.alasan_sita} onChange={e => setFormData({ ...formData, alasan_sita: e.target.value })} rows="2"></textarea>
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Status Barang</label>
-                            <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                                <option value="Disita">Disita</option>
-                                <option value="Proses">Proses Mediasi</option>
-                                <option value="Dikembalikan">Dikembalikan</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Petugas (Keamanan)</label>
-                            <input type="text" className="form-control" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} />
-                        </div>
-                    </div>
-                    {formData.status === 'Dikembalikan' && (
-                        <div className="form-group">
-                            <label className="form-label">Tanggal Dikembalikan</label>
-                            <input type="date" className="form-control" value={formData.tanggal_kembali} onChange={e => setFormData({ ...formData, tanggal_kembali: e.target.value })} />
-                        </div>
-                    )}
-                </form>
             </Modal>
 
-            {/* Modal View Detail */}
-            <Modal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                title="Detail Penyitaan Barang"
-                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
-            >
-                {viewData && (() => {
-                    const student = santriOptions.find(s => s.nama_siswa === viewData.nama_santri);
-                    return (
-                        <div className="detail-view">
-                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                                <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-                                    <div style={{
-                                        width: '100px',
-                                        height: '100px',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        border: '4px solid var(--primary-light)',
-                                        background: '#f1f5f9'
-                                    }}>
-                                        {student?.foto_santri ? (
-                                            <img src={student.foto_santri} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
-                                                <i className="fas fa-user fa-3x"></i>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pelanggar / Santri</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nama_santri}</div>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kelas: <strong>{viewData.kelas || '-'}</strong></div>
-                                <span className="th-badge" style={{
-                                    background: viewData.status === 'Dikembalikan' ? '#dcfce7' : '#fee2e2',
-                                    color: viewData.status === 'Dikembalikan' ? '#166534' : '#991b1b',
-                                    marginTop: '10px'
-                                }}>
-                                    Barang {viewData.status}
-                                </span>
-                            </div>
-                            <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px' }}>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Nama Barang</small>
-                                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.nama_barang}</div>
-                                </div>
-                                <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Tanggal Sita</small>
-                                    <div style={{ fontWeight: 600 }}>{formatDate(viewData.tanggal)}</div>
-                                </div>
-                            </div>
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Alasan Penyitaan</small>
-                                <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginTop: '5px' }}>
-                                    {viewData.alasan_sita || 'Tidak ada alasan detail.'}
-                                </div>
-                            </div>
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)' }}>Petugas Penanggung Jawab</small>
-                                <div style={{ fontWeight: 600, marginTop: '5px' }}>{viewData.petugas || '-'}</div>
-                            </div>
-                            {viewData.status === 'Dikembalikan' && (
-                                <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#dcfce7', borderRadius: '8px' }}>
-                                    <small style={{ color: '#166534' }}>Tanggal Pengembalian</small>
-                                    <div style={{ fontWeight: 800, color: '#14532d' }}>{formatDate(viewData.tanggal_kembali)}</div>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })()}
-            </Modal>
+            <ConfirmModal
+                isOpen={confirmDelete.open}
+                onClose={() => setConfirmDelete({ open: false, id: null })}
+                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                title="Hapus Data Sitaan?"
+                message="Data ini akan dihapus secara permanen dari log keamanan."
+            />
         </div>
     );
 }

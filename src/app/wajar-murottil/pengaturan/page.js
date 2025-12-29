@@ -1,23 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/lib/utils';
-import { useAuth } from '@/lib/AuthContext';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
-import SortableTable from '@/components/SortableTable';
+
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function PengaturanWajarPage() {
-    const { isAdmin } = useAuth();
-    const [data, setData] = useState([]);
     const [jabatanList, setJabatanList] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ nama_pengurus: '', kelompok: '', jabatan: 'Wajar & Murottil', keterangan: '' });
-    const [editId, setEditId] = useState(null);
+    const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
-    useEffect(() => { loadData(); }, []);
+    const {
+        data, setData, loading, setLoading, submitting,
+        isModalOpen, setIsModalOpen, formData, setFormData, editId,
+        handleSave, handleDelete, openModal
+    } = useDataManagement('wajar_pengurus', {
+        nama_pengurus: '', kelompok: '', jabatan: 'Wajar & Murottil', keterangan: ''
+    });
 
-    const loadData = async () => {
+    const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {
             const [resPengurus, resJabatan] = await Promise.all([
@@ -27,52 +33,19 @@ export default function PengaturanWajarPage() {
             setData(resPengurus || []);
             setJabatanList(resJabatan || []);
         } catch (e) { console.error(e); } finally { setLoading(false); }
-    };
+    }, [setData, setLoading]);
 
-    const openModal = (item = null) => {
-        if (item) {
-            setEditId(item.id);
-            setFormData({ ...item });
-        } else {
-            setEditId(null);
-            setFormData({ nama_pengurus: '', kelompok: '', jabatan: '', keterangan: '' });
-        }
-        setIsModalOpen(true);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await apiCall('saveData', 'POST', {
-                type: 'wajar_pengurus',
-                data: editId ? { ...formData, id: editId } : formData
-            });
-            setIsModalOpen(false);
-            loadData();
-            alert('Data Pengurus Wajar-Murottil berhasil disimpan!');
-        } catch (e) { alert(e.message); }
-    };
-
-    const handleDelete = async (id) => {
-        if (!confirm('Hapus pengurus ini dari daftar Wajar-Murottil?')) return;
-        try {
-            await apiCall('deleteData', 'POST', { type: 'wajar_pengurus', id });
-            loadData();
-        } catch (e) { alert(e.message); }
-    };
+    useEffect(() => { loadEnrichedData(); }, [loadEnrichedData]);
 
     const columns = [
         { key: 'kelompok', label: 'Kelompok', render: (row) => <span className="th-badge">{row.kelompok || '-'}</span> },
         { key: 'nama_pengurus', label: 'Nama Pengurus', render: (row) => <strong>{row.nama_pengurus}</strong> },
         { key: 'jabatan', label: 'Jabatan' },
-        { key: 'keterangan', label: 'Keterangan' },
         {
-            key: 'actions',
-            label: 'Aksi',
-            render: (row) => (
-                <div style={{ display: 'flex', gap: '5px' }}>
+            key: 'actions', label: 'Aksi', width: '120px', render: (row) => (
+                <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>
-                    <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id)}><i className="fas fa-trash"></i></button>
+                    <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>
                 </div>
             )
         }
@@ -80,52 +53,31 @@ export default function PengaturanWajarPage() {
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Pengaturan Kelompok</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Manajemen staf pengajar & penempatan kelompok.</p>
-                    </div>
-                    <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Pengurus</button>
-                </div>
-                <SortableTable columns={columns} data={data} loading={loading} emptyMessage="Belum ada data pengurus Wajar-Murottil." />
-            </div>
+            <KopSurat judul="Pengaturan Struktur Wajar & Murottil" subJudul="Manajemen pengajar dan pembagian kelompok." />
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Edit Pengurus" : "Tambah Pengurus Baru"}>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Nama Pengurus</label>
-                        <input type="text" className="form-control" value={formData.nama_pengurus} onChange={e => setFormData({ ...formData, nama_pengurus: e.target.value })} required />
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Kelompok</label>
-                            <input type="text" className="form-control" value={formData.kelompok} onChange={e => setFormData({ ...formData, kelompok: e.target.value })} placeholder="Contoh: Kelompok 1" />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Jabatan (Dari Master)</label>
-                            <select
-                                className="form-control"
-                                value={formData.jabatan}
-                                onChange={e => setFormData({ ...formData, jabatan: e.target.value })}
-                            >
-                                <option value="">- Pilih Jabatan -</option>
-                                {jabatanList.map((j, i) => (
-                                    <option key={i} value={j.nama_jabatan}>{j.nama_jabatan}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Keterangan</label>
-                        <textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })}></textarea>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '1rem' }}>
-                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button type="submit" className="btn btn-primary">Simpan</button>
-                    </div>
-                </form>
+            <DataViewContainer
+                title="Daftar Pengurus / Pengajar"
+                subtitle="Daftar asatidz penanggung jawab kelompok wajar."
+                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Pengurus</button>}
+                tableProps={{ columns, data: data, loading }}
+            />
+
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data" : "Tambah Pengurus"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
+                <TextInput label="Nama Lengkap Pengurus" value={formData.nama_pengurus} onChange={e => setFormData({ ...formData, nama_pengurus: e.target.value })} required />
+                <div className="form-grid">
+                    <TextInput label="Nama Kelompok" value={formData.kelompok} onChange={e => setFormData({ ...formData, kelompok: e.target.value })} placeholder="Contoh: Kelompok 1" />
+                    <SelectInput label="Jabatan" value={formData.jabatan} onChange={e => setFormData({ ...formData, jabatan: e.target.value })} options={jabatanList.map(j => j.nama_jabatan)} />
+                </div>
+                <TextAreaInput label="Keterangan Tambahan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
             </Modal>
+
+            <ConfirmModal
+                isOpen={confirmDelete.open}
+                onClose={() => setConfirmDelete({ open: false, id: null })}
+                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                title="Hapus Data Pengurus?"
+                message="Data asatidz ini akan dihapus dari sistem manajemen kelompok."
+            />
         </div>
     );
 }

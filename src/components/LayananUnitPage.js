@@ -1,249 +1,92 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/lib/ToastContext';
+import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
-import SortableTable from '@/components/SortableTable';
 import Autocomplete from './Autocomplete';
 
-// Service types by unit
-const SERVICE_TYPES = {
-    'Sekretariat': ['KTK', 'SIM', 'KTS', 'Surat Domisili', 'Surat Pindah', 'Surat Boyong'],
-    'Keamanan': ['Izin KELUAR/PULANG', 'Motor Baru', 'Motor Lama', 'Ontel Baru', 'Ontel Lama', 'Hp', 'Laptop', 'Flashdisk', 'Kompor', 'Video Call', 'Telfon biasa', 'Surat kehilangan', 'Paket Wesel'],
-    'Pendidikan': ['Izin SEKOLAH'],
-    'Kesehatan': ['OBAT', 'IZIN SAKIT'],
-    "Jam'iyyah": ['Alat Rebana 1 Set', 'Alat Rebana Perbaikan']
-};
-
-const SERVICE_PRICES = {
-    // Sekretariat
-    'KTK': 5000,
-    'SIM': 5000,
-    'KTS': 15000,
-    'Surat Domisili': 2000,
-    'Surat Pindah': 5000,
-    'Surat Boyong': 5000,
-    // Keamanan
-    'Izin KELUAR/PULANG': 2000,
-    'Motor Baru': 100000,
-    'Motor Lama': 50000,
-    'Ontel Baru': 15000,
-    'Ontel Lama': 10000,
-    'Hp': 20000,
-    'Laptop': 25000,
-    'Flashdisk': 5000,
-    'Kompor': 10000,
-    'Video Call': 2000,
-    'Telfon biasa': 1000,
-    'Surat kehilangan': 2000,
-    'Paket Wesel': 2000,
-    // Pendidikan
-    'Izin SEKOLAH': 2000,
-    // Kesehatan
-    'OBAT': 5000,
-    'IZIN SAKIT': 2000
-};
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
+import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function LayananUnitPage({ unit: forceUnit }) {
-    const { user, isAdmin } = useAuth();
-    const { showToast } = useToast();
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
-
-    // Dynamic Master Data State
+    const { user } = useAuth();
     const [dynamicServices, setDynamicServices] = useState([]);
     const [dynamicPrices, setDynamicPrices] = useState({});
+    const [santriOptions, setSantriOptions] = useState([]);
+    const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [viewData, setViewData] = useState(null);
-    const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({
+    const {
+        data, setData, loading, setLoading, search, setSearch, submitting,
+        isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
+        viewData, formData, setFormData, editId,
+        handleSave, handleDelete, openModal: baseOpenModal, openView, isAdmin
+    } = useDataManagement('layanan_admin', {
         tanggal: new Date().toISOString().split('T')[0],
         unit: forceUnit, nama_santri: '', stambuk: '', jenis_layanan: '',
         nominal: '0', jumlah: '1', keterangan: '', pj: '', pemohon_tipe: 'Santri'
     });
-    const [submitting, setSubmitting] = useState(false);
-    const [santriOptions, setSantriOptions] = useState([]);
 
-    useEffect(() => {
-        loadData();
-        fetchSantri();
-        fetchMasterLayanan();
-    }, [forceUnit]);
-
-    const fetchMasterLayanan = async () => {
+    const loadEnrichedData = useCallback(async () => {
+        setLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'layanan_master' });
-            // Filter services for current unit and status 'Aktif'
-            const unitServices = (res || [])
-                .filter(s => s.unit === forceUnit && s.status === 'Aktif')
-                .map(s => s.nama_layanan);
+            const [res, resSantri, resMaster] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'layanan_admin' }),
+                apiCall('getData', 'GET', { type: 'santri' }),
+                apiCall('getData', 'GET', { type: 'layanan_master' })
+            ]);
 
-            // Build price mapping
+            const filtered = res?.filter(d => d.unit === forceUnit) || [];
+            setData(filtered.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)));
+            setSantriOptions(resSantri || []);
+
+            const unitServices = (resMaster || []).filter(s => s.unit === forceUnit && s.status === 'Aktif').map(s => s.nama_layanan);
             const prices = {};
-            (res || []).forEach(s => {
-                prices[s.nama_layanan] = s.harga;
-            });
+            (resMaster || []).forEach(s => { prices[s.nama_layanan] = s.harga; });
 
             setDynamicServices(unitServices);
             setDynamicPrices(prices);
 
-            // Set default service if none selected
             if (unitServices.length > 0 && !formData.jenis_layanan) {
-                setFormData(prev => ({
-                    ...prev,
-                    jenis_layanan: unitServices[0],
-                    nominal: prices[unitServices[0]] || '0'
-                }));
+                setFormData(prev => ({ ...prev, jenis_layanan: unitServices[0], nominal: prices[unitServices[0]] || '0' }));
             }
-        } catch (e) {
-            console.error('Error fetching master layanan:', e);
-            // Fallback to static if needed (optional)
-        }
-    };
+        } catch (e) { console.error(e); } finally { setLoading(false); }
+    }, [forceUnit, setData, setLoading, formData.jenis_layanan, setFormData]);
 
-    const fetchSantri = async () => {
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'santri' });
-            setSantriOptions(res || []);
-        } catch (e) { console.error(e); }
-    };
+    useEffect(() => { loadEnrichedData(); }, [loadEnrichedData]);
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'layanan_admin' });
-            // Filter by unit if it's forced
-            const filtered = res?.filter(d => d.unit === forceUnit) || [];
-            setData(filtered.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)));
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-    };
-
-    useEffect(() => {
-        if (dynamicServices.length > 0 && !dynamicServices.includes(formData.jenis_layanan)) {
-            setFormData(prev => ({
-                ...prev,
-                jenis_layanan: dynamicServices[0],
-                nominal: dynamicPrices[dynamicServices[0]] || '0'
-            }));
-        }
-    }, [dynamicServices]);
-
-    const displayData = data.filter(d =>
-        (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.jenis_layanan || '').toLowerCase().includes(search.toLowerCase())
-    );
+    const stats = useMemo(() => [
+        { title: 'Total Layanan', value: data.length, icon: 'fas fa-concierge-bell', color: 'var(--primary)' },
+        { title: 'Pendapatan Unit', value: formatCurrency(data.reduce((acc, d) => acc + parseInt(d.nominal || 0), 0)), icon: 'fas fa-hand-holding-usd', color: 'var(--success)' },
+        { title: 'Layanan Terpopuler', value: data.length > 0 ? (data.reduce((acc, d) => { acc[d.jenis_layanan] = (acc[d.jenis_layanan] || 0) + 1; return acc; }, {})) : '-', icon: 'fas fa-crown', color: 'var(--warning)', renderValue: (v) => v === '-' ? '-' : Object.entries(v).sort((a, b) => b[1] - a[1])[0][0] }
+    ], [data]);
 
     const openModal = (item = null) => {
-        if (item) {
-            setEditId(item.id);
-            setFormData({ ...item });
-        } else {
-            setEditId(null);
+        if (!item) {
+            baseOpenModal();
             const defaultService = dynamicServices?.[0] || '';
-            setFormData({
-                tanggal: new Date().toISOString().split('T')[0],
-                unit: forceUnit,
-                nama_santri: '',
-                stambuk: '',
-                jenis_layanan: defaultService,
-                nominal: dynamicPrices[defaultService] || '0',
-                jumlah: '1',
-                keterangan: '',
-                pj: '',
-                pemohon_tipe: 'Santri'
-            });
-        }
-        setIsModalOpen(true);
+            setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0], unit: forceUnit, jenis_layanan: defaultService, nominal: dynamicPrices[defaultService] || '0', pj: user?.fullname || user?.username || '' }));
+        } else { baseOpenModal(item); }
     };
 
-    const openViewModal = (item) => {
-        setViewData(item);
-        setIsViewModalOpen(true);
-    };
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        setSubmitting(true);
-        try {
-            await apiCall('saveData', 'POST', {
-                type: 'layanan_admin',
-                data: editId ? { ...formData, id: editId } : formData
-            });
-            setIsModalOpen(false);
-            loadData();
-            showToast(`Log layanan ${forceUnit} tersimpan!`, "success");
-        } catch (err) { showToast(err.message, "error"); }
-        finally { setSubmitting(false); }
-    };
-
-    const deleteItem = async (id) => {
-        if (!confirm('Hapus log layanan ini?')) return;
-        try {
-            await apiCall('deleteData', 'POST', { type: 'layanan_admin', id });
-            loadData();
-            showToast("Log layanan dihapus.", "info");
-        } catch (err) { showToast(err.message, "error"); }
-    };
+    const displayData = data.filter(d => (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) || (d.jenis_layanan || '').toLowerCase().includes(search.toLowerCase()));
 
     const columns = [
+        { key: 'tanggal', label: 'Tanggal', render: (row) => <span style={{ fontWeight: 600 }}>{formatDate(row.tanggal)}</span> },
+        { key: 'nama_santri', label: 'Pemohon', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_santri}</div><small>Stambuk: {row.stambuk || '-'}</small></div> },
+        { key: 'jenis_layanan', label: 'Layanan', render: (row) => <span className="th-badge">{row.jenis_layanan}</span> },
+        { key: 'nominal', label: 'Biaya', render: (row) => <div style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(row.nominal)}</div> },
         {
-            key: 'tanggal',
-            label: 'Tanggal',
-            render: (row) => <span style={{ fontWeight: 600 }}>{formatDate(row.tanggal)}</span>
-        },
-        {
-            key: 'nama_santri',
-            label: 'Nama Pemohon',
-            render: (row) => (
-                <div>
-                    <div style={{ fontWeight: 800 }}>{row.nama_santri}</div>
-                    <div style={{ fontSize: '0.7rem' }}>Stambuk: {row.stambuk || '-'}</div>
-                </div>
-            )
-        },
-        {
-            key: 'jenis_layanan',
-            label: 'Layanan',
-            render: (row) => (
-                <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
-                    {row.jenis_layanan}
-                </span>
-            )
-        },
-        {
-            key: 'nominal',
-            label: 'Biaya',
-            render: (row) => (
-                <div style={{ fontWeight: 800, color: 'var(--success)' }}>
-                    {formatCurrency(row.nominal)}
-                </div>
-            )
-        },
-        {
-            key: 'actions',
-            label: 'Opsi',
-            sortable: false,
-            width: '150px',
-            render: (row) => (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Lihat Detail">
-                        <i className="fas fa-eye"></i>
-                    </button>
-                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit">
-                        <i className="fas fa-edit"></i>
-                    </button>
-                    {isAdmin && (
-                        <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus">
-                            <i className="fas fa-trash"></i>
-                        </button>
-                    )}
+            key: 'actions', label: 'Opsi', width: '150px', render: (row) => (
+                <div className="table-actions">
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)}><i className="fas fa-eye"></i></button>
+                    <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>
+                    {isAdmin && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -251,147 +94,59 @@ export default function LayananUnitPage({ unit: forceUnit }) {
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Layanan {forceUnit}</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} aktivitas pelayanan unit {forceUnit.toLowerCase()}.</p>
-                    </div>
-                    <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Input Layanan Baru
-                    </button>
-                </div>
+            <KopSurat judul={`Log Pelayanan Unit ${forceUnit}`} subJudul={`Pusat administrasi harian seksi ${forceUnit.toLowerCase()}.`} />
 
-                <div className="table-controls" style={{ padding: '1rem 1.5rem' }}>
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Cari nama pemohon atau jenis layanan..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                </div>
+            <StatsPanel items={stats} />
 
-                <SortableTable
-                    columns={columns}
-                    data={displayData}
-                    loading={loading}
-                    emptyMessage={`Belum ada riwayat layanan ${forceUnit}.`}
-                />
-            </div>
+            <DataViewContainer
+                title={`Administrasi Layanan ${forceUnit}`}
+                subtitle={`Menampilkan riwayat transaksi unit.`}
+                headerActions={<button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Input Layanan Baru</button>}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
+                tableProps={{ columns, data: displayData, loading }}
+            />
 
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editId ? `Update Layanan ${forceUnit}` : `Registrasi Layanan ${forceUnit}`}
-                footer={(
-                    <>
-                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Kembali</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                            {submitting ? 'Menyimpan...' : 'Simpan Log'}
-                        </button>
-                    </>
-                )}
-            >
-                <form onSubmit={handleSubmit}>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Form Layanan ${forceUnit}`} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
+                <TextInput label="Tanggal Log" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
+                <div className="form-grid">
                     <div className="form-group">
-                        <label className="form-label">Tanggal Pengajuan</label>
-                        <input type="date" className="form-control" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
+                        <label className="form-label">Nama Pemohon</label>
+                        <Autocomplete options={santriOptions} value={formData.nama_santri} onChange={v => setFormData({ ...formData, nama_santri: v })} onSelect={s => setFormData({ ...formData, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok || formData.stambuk })} placeholder="Cari santri..." labelKey="nama_siswa" subLabelKey="kelas" />
                     </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Nama Pemohon</label>
-                            <Autocomplete
-                                options={santriOptions}
-                                value={formData.nama_santri}
-                                onChange={(val) => setFormData({ ...formData, nama_santri: val })}
-                                onSelect={(s) => setFormData({
-                                    ...formData,
-                                    nama_santri: s.nama_siswa,
-                                    stambuk: s.stambuk_pondok || formData.stambuk
-                                })}
-                                placeholder="Ketik nama santri..."
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Stambuk (Jika Ada)</label>
-                            <input type="text" className="form-control" value={formData.stambuk} onChange={e => setFormData({ ...formData, stambuk: e.target.value })} />
-                        </div>
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">Jenis Layanan</label>
-                            <select
-                                className="form-control"
-                                value={formData.jenis_layanan}
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    setFormData({
-                                        ...formData,
-                                        jenis_layanan: val,
-                                        nominal: dynamicPrices[val] || '0'
-                                    });
-                                }}
-                            >
-                                {(dynamicServices || []).map(s => <option key={s}>{s}</option>)}
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Biaya (IDR)</label>
-                            <input type="number" className="form-control" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} style={{ fontWeight: 800, color: 'var(--success)' }} />
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Keterangan / PJ Layanan</label>
-                        <textarea className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows="2"></textarea>
-                    </div>
-                </form>
+                    <TextInput label="Nomor Stambuk" value={formData.stambuk} onChange={e => setFormData({ ...formData, stambuk: e.target.value })} />
+                </div>
+                <div className="form-grid">
+                    <SelectInput label="Jenis Layanan" value={formData.jenis_layanan} onChange={e => { const val = e.target.value; setFormData({ ...formData, jenis_layanan: val, nominal: dynamicPrices[val] || '0' }); }} options={dynamicServices} />
+                    <TextInput label="Biaya Tagihan (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} style={{ fontWeight: 800, color: 'var(--success)' }} icon="fas fa-札" />
+                </div>
+                <TextAreaInput label="Keterangan / PJ Layanan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
             </Modal>
 
-            <Modal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                title={`Rincian Layanan ${forceUnit}`}
-                footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
-            >
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Transaksi Layanan" width="600px">
                 {viewData && (
                     <div className="detail-view">
-                        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Jenis Pelayanan</div>
-                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', margin: '5px 0' }}>{viewData.jenis_layanan}</h2>
-                            <div style={{ fontWeight: 700, color: 'var(--primary)' }}>Unit {viewData.unit}</div>
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900 }}>{viewData.jenis_layanan}</h2>
+                            <div className="th-badge" style={{ padding: '5px 15px' }}>Unit {viewData.unit}</div>
                         </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Nama Pemohon</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.nama_santri}</div>
-                            </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>No. Stambuk</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{viewData.stambuk || '-'}</div>
-                            </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Tanggal</small>
-                                <div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal)}</div>
-                            </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)' }}>Biaya Adm</small>
-                                <div style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--success)' }}>{formatCurrency(viewData.nominal)}</div>
-                            </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
+                            <div><small>Pemohon</small><div style={{ fontWeight: 800 }}>{viewData.nama_santri}</div></div>
+                            <div><small>Stambuk</small><div style={{ fontWeight: 700 }}>{viewData.stambuk || '-'}</div></div>
+                            <div><small>Tanggal</small><div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal)}</div></div>
+                            <div><small>Biaya</small><div style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(viewData.nominal)}</div></div>
                         </div>
-
-                        <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '1.5rem', borderRadius: '15px' }}>
-                            <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>Catatan Layanan</small>
-                            <p style={{ lineHeight: '1.6', fontSize: '1rem', whiteSpace: 'pre-wrap' }}>{viewData.keterangan || 'Tidak ada catatan tambahan.'}</p>
-                        </div>
+                        <div style={{ marginTop: '1.5rem' }}><small>Catatan / Keterangan</small><p style={{ background: '#fff', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '12px', marginTop: '5px' }}>{viewData.keterangan || '-'}</p></div>
                     </div>
                 )}
             </Modal>
+
+            <ConfirmModal
+                isOpen={confirmDelete.open}
+                onClose={() => setConfirmDelete({ open: false, id: null })}
+                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
+                title="Hapus Log Layanan?"
+                message="Data pelayanan ini akan dihapus permanen dari buku unit."
+            />
         </div>
     );
 }
