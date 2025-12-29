@@ -186,47 +186,47 @@ export default function LoginPage() {
 
       {/* Main Card */}
       <div className="glass-card" style={{
-        borderRadius: '32px',
-        padding: '3.5rem',
-        maxWidth: '480px',
+        borderRadius: '24px', // Adjusted
+        padding: '2.5rem',    // Adjusted
+        maxWidth: '380px',    // Adjusted: Compact for PC
         width: '100%',
         position: 'relative',
         zIndex: 10
       }}>
         {/* LOGO & TITLE */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            margin: '0 auto 1.5rem',
+            margin: '0 auto 1rem',
             animation: 'float 6s ease-in-out infinite'
           }}>
             <img
               src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"
               alt="Logo PPTQ"
               style={{
-                width: '120px',
+                width: '80px', // Adjusted
                 height: 'auto',
                 filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
               }}
             />
           </div>
-          <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 800, color: 'white', marginBottom: '0.5rem', letterSpacing: '-0.5px' }}>
+          <h1 className="outfit" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'white', marginBottom: '0.25rem', letterSpacing: '-0.5px' }}>
             SIM-PPDS
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '1rem', letterSpacing: '0.5px', textTransform: 'uppercase', opacity: 0.8 }}>Access Control System</p>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', letterSpacing: '0.5px', textTransform: 'uppercase', opacity: 0.8 }}>Access Control System</p>
         </div>
 
         {/* PIN DOTS */}
         <div style={{
-          marginBottom: '2rem',
+          marginBottom: '1.5rem',
           display: 'flex',
           justifyContent: 'center',
-          gap: '1.5rem', // Lebih renggang
-          height: '40px',
+          gap: '1rem', // Adjusted
+          height: '30px',
           alignItems: 'center'
         }}>
           {/* Tampilkan loader jika sedang memverifikasi */}
           {isVerifying ? (
-            <div style={{ color: '#38bdf8', fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ color: '#38bdf8', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="fas fa-circle-notch fa-spin"></i>
               <span>MEMVERIFIKASI...</span>
             </div>
@@ -235,6 +235,7 @@ export default function LoginPage() {
               <div
                 key={i}
                 className={`pin-dot ${i < pin.length ? 'filled' : ''}`}
+                style={{ width: '12px', height: '12px' }} // Adjusted
               ></div>
             ))
           )}
@@ -242,8 +243,8 @@ export default function LoginPage() {
 
         {/* Error Message */}
         <div style={{
-          height: '30px',
-          marginBottom: '1rem',
+          height: '24px',
+          marginBottom: '0.8rem',
           textAlign: 'center',
           opacity: error ? 1 : 0,
           transition: 'opacity 0.3s'
@@ -252,10 +253,10 @@ export default function LoginPage() {
             <span className="outfit" style={{
               color: '#ef4444',
               background: 'rgba(239, 68, 68, 0.1)',
-              padding: '5px 15px',
-              borderRadius: '20px',
+              padding: '4px 12px',
+              borderRadius: '16px',
               border: '1px solid rgba(239, 68, 68, 0.2)',
-              fontSize: '0.9rem'
+              fontSize: '0.8rem'
             }}>
               {error}
             </span>
@@ -266,8 +267,8 @@ export default function LoginPage() {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1.2rem', // Spasi lebih lebar
-          marginBottom: '2rem'
+          gap: '0.8rem', // Adjusted
+          marginBottom: '1.5rem'
         }}>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
             <button
@@ -277,13 +278,13 @@ export default function LoginPage() {
               onClick={() => handleNumberClick(num.toString())}
               disabled={loading || isVerifying}
               style={{
-                padding: '1.25rem',
-                fontSize: '1.8rem', // Angka lebih besar
+                padding: '1rem', // Adjusted
+                fontSize: '1.4rem', // Adjusted
                 fontWeight: 500,
-                borderRadius: '20px',
+                borderRadius: '16px',
                 cursor: 'pointer',
                 border: 'none',
-                background: 'rgba(255, 255, 255, 0.08)' // Sedikit lebih terang
+                background: 'rgba(255, 255, 255, 0.08)'
               }}
             >
               {num}
@@ -297,9 +298,9 @@ export default function LoginPage() {
             onClick={handleClear}
             disabled={loading || isVerifying}
             style={{
-              padding: '1.25rem',
-              fontSize: '1.2rem',
-              borderRadius: '20px',
+              padding: '1rem', // Adjusted
+              fontSize: '1rem',
+              borderRadius: '16px',
               cursor: 'pointer',
               color: '#ef4444',
               borderColor: 'rgba(239, 68, 68, 0.3)',
@@ -316,10 +317,10 @@ export default function LoginPage() {
             onClick={() => handleNumberClick('0')}
             disabled={loading || isVerifying}
             style={{
-              padding: '1.25rem',
-              fontSize: '1.8rem',
+              padding: '1rem', // Adjusted
+              fontSize: '1.4rem', // Adjusted
               fontWeight: 500,
-              borderRadius: '20px',
+              borderRadius: '16px',
               cursor: 'pointer',
               background: 'rgba(255, 255, 255, 0.08)'
             }}
@@ -334,9 +335,9 @@ export default function LoginPage() {
             onClick={handleBackspace}
             disabled={loading || isVerifying}
             style={{
-              padding: '1.25rem',
-              fontSize: '1.2rem',
-              borderRadius: '20px',
+              padding: '1rem', // Adjusted
+              fontSize: '1rem',
+              borderRadius: '16px',
               cursor: 'pointer',
               color: '#facc15',
               borderColor: 'rgba(250, 204, 21, 0.3)',
@@ -349,9 +350,9 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div style={{
-          marginTop: '2rem',
+          marginTop: '1.5rem',
           textAlign: 'center',
-          fontSize: '0.75rem',
+          fontSize: '0.7rem',
           color: 'rgba(255, 255, 255, 0.3)',
           letterSpacing: '1px'
         }}>

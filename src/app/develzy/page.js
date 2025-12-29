@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { apiCall } from '@/lib/utils';
 import Modal from '@/components/Modal';
+import { NAV_ITEMS } from '@/lib/navConfig';
 
 export default function DevelzyControlPage() {
     const { isDevelzy, loading: authLoading } = useAuth(); // Pakai isDevelzy
@@ -44,6 +45,20 @@ export default function DevelzyControlPage() {
     const [editingRole, setEditingRole] = useState(null);
     const [rolesList, setRolesList] = useState([]);
     const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [] });
+
+    // Generate menu options dynamically
+    const allPossibleMenus = React.useMemo(() => {
+        let menus = [];
+        const extract = (items) => {
+            items.forEach(item => {
+                if (item.label === 'DEVELZY Control') return; // Skip System Menu
+                menus.push(item.label);
+                if (item.submenu) extract(item.submenu);
+            });
+        };
+        extract(NAV_ITEMS);
+        return [...new Set(menus)];
+    }, []);
 
     useEffect(() => {
         isMounted.current = true;
@@ -1046,8 +1061,8 @@ export default function DevelzyControlPage() {
                         <label className="form-label">Akses Menu</label>
                         <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                             <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>Centang menu yang diizinkan:</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                                {['Data Santri', 'Keuangan', 'Perizinan', 'Kesehatan', 'Laporan', 'Arsip Digital'].map((menu, i) => (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '5px' }}>
+                                {allPossibleMenus.map((menu, i) => (
                                     <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer' }}>
                                         <input
                                             type="checkbox"
@@ -1057,6 +1072,12 @@ export default function DevelzyControlPage() {
                                                     ? [...roleFormData.menus, menu]
                                                     : roleFormData.menus.filter(m => m !== menu);
                                                 setRoleFormData({ ...roleFormData, menus: newMenus });
+                                            }}
+                                            style={{
+                                                width: '16px',
+                                                height: '16px',
+                                                accentColor: '#3b82f6',
+                                                cursor: 'pointer'
                                             }}
                                         />
                                         {menu}
