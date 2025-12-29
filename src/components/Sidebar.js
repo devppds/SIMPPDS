@@ -92,7 +92,7 @@ export default function Sidebar() {
                             <i className={item.icon} style={{ width: '24px', textAlign: 'center' }}></i>
                             <span style={{ marginLeft: '10px' }}>{item.label}</span>
                         </div>
-                        {isAdminOrDev && <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} submenu-arrow`} style={{ fontSize: '0.8rem' }}></i>}
+                        <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} submenu-arrow`} style={{ fontSize: '0.8rem' }}></i>
                     </div>
                     {isOpen && (
                         <ul className="submenu" style={{ display: 'block', paddingLeft: 0 }}>
