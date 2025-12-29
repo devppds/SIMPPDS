@@ -37,6 +37,52 @@ const headersConfig = {
     'keuangan_kas': ["tanggal", "tipe", "kategori", "nominal", "keterangan", "pembayaran_id", "petugas"]
 };
 
+const FILE_COLUMNS = {
+    'santri': ["foto_santri", "foto_kk"],
+    'ustadz': ["foto_ustadz"],
+    'pengurus': ["foto_pengurus"],
+    'arsip_surat': ["file_surat"],
+    'arsip_proposal': ["file_proposal"],
+    'arsip_akta_tanah': ["file_akta"],
+    'arsip_pengurus_periode': ["foto_pengurus"],
+    'arsip_pengajar_periode': ["foto_pengajar"]
+};
+
+async function deleteCloudinaryFile(url, env) {
+    if (!url || !url.includes('cloudinary.com')) return;
+    try {
+        const cloudName = env.CLOUDINARY_CLOUD_NAME?.trim();
+        const apiKey = env.CLOUDINARY_API_KEY?.trim();
+        const apiSecret = env.CLOUDINARY_API_SECRET?.trim();
+        if (!cloudName || !apiKey || !apiSecret) return;
+
+        // Extract Public ID and Resource Type
+        const match = url.match(/\/([^\/]+)\/upload\/v?\d*\/?(.*)$/);
+        if (!match) return;
+        const resourceType = match[1]; // image, raw, etc.
+        let publicId = match[2];
+        const lastDot = publicId.lastIndexOf('.');
+        if (lastDot !== -1) publicId = publicId.substring(0, lastDot);
+
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        const signString = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+        const encoder = new TextEncoder();
+        const hashBuffer = await crypto.subtle.digest('SHA-1', encoder.encode(signString));
+        const signature = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const fd = new FormData();
+        fd.append('public_id', publicId);
+        fd.append('api_key', apiKey);
+        fd.append('timestamp', timestamp);
+        fd.append('signature', signature);
+
+        await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/destroy`, {
+            method: 'POST',
+            body: fd
+        });
+    } catch (e) { console.error('Cloudinary Delete Error:', e.message); }
+}
+
 export async function GET(request) { return handle(request); }
 export async function POST(request) { return handle(request); }
 
@@ -119,6 +165,19 @@ async function handle(request) {
         }
 
         if (action === 'deleteData') {
+            if (!type || !id) return Response.json({ error: "Type and ID required" }, { status: 400 });
+
+            // Check for files to delete
+            const cols = FILE_COLUMNS[type];
+            if (cols) {
+                const item = await db.prepare(`SELECT * FROM ${type} WHERE id = ?`).bind(id).first();
+                if (item) {
+                    for (const col of cols) {
+                        if (item[col]) await deleteCloudinaryFile(item[col], env);
+                    }
+                }
+            }
+
             await db.prepare(`DELETE FROM ${type} WHERE id = ?`).bind(id).run();
             return Response.json({ success: true });
         }
