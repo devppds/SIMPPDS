@@ -23,7 +23,7 @@ export default function DevelzyControlPage() {
         nama_instansi: 'Pondok Pesantren Darussalam Lirboyo',
         tahun_ajaran: '2025/2026',
         deskripsi: 'Sistem Informasi Manajemen Terpadu Pondok Pesantren Darussalam Lirboyo',
-        logo_url: '',
+        logo_url: 'https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=256&bold=true',
         primary_color: '#2563eb',
         sidebar_theme: '#1e1b4b'
     });
