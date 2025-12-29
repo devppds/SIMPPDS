@@ -591,7 +591,7 @@ export default function DevelzyControlPage() {
         };
     };
 
-    if (!isAdmin) {
+    if (!isDevelzy) {
         return (
             <div className="view-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
                 <div style={{ textAlign: 'center' }}>
