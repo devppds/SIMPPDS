@@ -363,7 +363,6 @@ export default function AksesPage() {
                                 onChange={e => setUserFormData({ ...userFormData, role: e.target.value })}
                             >
                                 <option value="">-- Pilih Role --</option>
-                                <option value="admin">Super Administrator</option>
                                 {roles.filter(r => r.is_public == 1).map((r, i) => (
                                     <option key={i} value={r.role}>{r.label}</option>
                                 ))}
@@ -395,10 +394,7 @@ export default function AksesPage() {
                     </p>
 
                     <div style={{ display: 'grid', gap: '1rem' }}>
-                        {[
-                            { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: ['Semua Menu', 'DEVELZY Control', 'Laporan Pimpinan', 'Manajemen Akses'] },
-                            ...roles
-                        ].map((item, idx) => (
+                        {roles.map((item, idx) => (
                             <div key={idx} style={{
                                 padding: '1.5rem',
                                 border: '2px solid #f1f5f9',
