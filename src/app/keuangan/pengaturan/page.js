@@ -59,7 +59,7 @@ export default function PengaturanKeuanganPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Konfigurasi Tarif Syahriah" subJudul="Master data iuran bulanan santri." />
+            <KopSurat judul="Konfigurasi Tarif Syahriah" subJudul="Master data iuran bulanan santri." hideOnScreen={true} />
 
             <DataViewContainer
                 title="Management Tarif"

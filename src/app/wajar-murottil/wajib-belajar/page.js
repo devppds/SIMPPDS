@@ -94,7 +94,7 @@ export default function WajibBelajarPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Presensi Wajib Belajar Malam" subJudul="Santri MIU Ibtida'iyyah & Madin Ula." />
+            <KopSurat judul="Presensi Wajib Belajar Malam" subJudul="Santri MIU Ibtida'iyyah & Madin Ula." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

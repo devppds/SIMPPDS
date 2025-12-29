@@ -81,7 +81,7 @@ export default function ArusKasPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Pembukuan Arus Kas Utama" subJudul="Bendahara Pondok Pesantren" />
+            <KopSurat judul="Pembukuan Arus Kas Utama" subJudul="Bendahara Pondok Pesantren" hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

@@ -118,7 +118,7 @@ export default function MurottilMalamPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Murottil Malam & Penilaian" subJudul="Evaluasi bacaan Al-Qur'an santri MHM Ibtida'iyyah." />
+            <KopSurat judul="Murottil Malam & Penilaian" subJudul="Evaluasi bacaan Al-Qur'an santri MHM Ibtida'iyyah." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

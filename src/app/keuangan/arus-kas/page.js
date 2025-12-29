@@ -50,7 +50,7 @@ export default function ArusKasKeuanganPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Kas Pelayanan Keuangan" subJudul="Log harian kas unit keuangan." />
+            <KopSurat judul="Kas Pelayanan Keuangan" subJudul="Log harian kas unit keuangan." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

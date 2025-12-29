@@ -92,7 +92,7 @@ export default function SetoranUnitPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Monitoring Setoran Keuangan Unit" subJudul="Rekonsiliasi pendapatan harian seksi." />
+            <KopSurat judul="Monitoring Setoran Keuangan Unit" subJudul="Rekonsiliasi pendapatan harian seksi." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

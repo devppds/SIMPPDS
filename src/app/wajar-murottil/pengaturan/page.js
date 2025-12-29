@@ -53,7 +53,7 @@ export default function PengaturanWajarPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Pengaturan Struktur Wajar & Murottil" subJudul="Manajemen pengajar dan pembagian kelompok." />
+            <KopSurat judul="Pengaturan Struktur Wajar & Murottil" subJudul="Manajemen pengajar dan pembagian kelompok." hideOnScreen={true} />
 
             <DataViewContainer
                 title="Daftar Pengurus / Pengajar"

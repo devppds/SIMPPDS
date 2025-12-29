@@ -91,7 +91,7 @@ export default function KeamananRegPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Registrasi Kepemilikan Barang" subJudul="Pendataan kendaraan, elektronik, dan peralatan santri." />
+            <KopSurat judul="Registrasi Kepemilikan Barang" subJudul="Pendataan kendaraan, elektronik, dan peralatan santri." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

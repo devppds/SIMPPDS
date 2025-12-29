@@ -106,7 +106,7 @@ export default function MurottilPagiPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Monitoring Kehadiran Murottil Pagi" subJudul="Absensi rutin santri unit MIU." />
+            <KopSurat judul="Monitoring Kehadiran Murottil Pagi" subJudul="Absensi rutin santri unit MIU." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

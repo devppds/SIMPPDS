@@ -57,7 +57,7 @@ export default function AturLayananPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Master Layanan & Tarif Unit" subJudul="Konfigurasi administrasi seksi-seksi." />
+            <KopSurat judul="Master Layanan & Tarif Unit" subJudul="Konfigurasi administrasi seksi-seksi." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

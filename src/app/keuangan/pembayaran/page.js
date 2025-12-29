@@ -108,7 +108,7 @@ export default function PembayaranSantriPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Loket Pembayaran Syahriah & Tabungan" subJudul="Pusat administrasi keuangan santri." />
+            <KopSurat judul="Loket Pembayaran Syahriah & Tabungan" subJudul="Pusat administrasi keuangan santri." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 

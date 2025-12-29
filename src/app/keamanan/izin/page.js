@@ -67,7 +67,7 @@ export default function IzinPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Sistem Perizinan Santri" subJudul="Pusat Keamanan & Ketertiban Pondok." />
+            <KopSurat judul="Sistem Perizinan Santri" subJudul="Pusat Keamanan & Ketertiban Pondok." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 
