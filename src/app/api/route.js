@@ -88,6 +88,44 @@ async function deleteCloudinaryFile(url, env) {
 export async function GET(request) { return handle(request); }
 export async function POST(request) { return handle(request); }
 
+// Helper to log actions automatically
+async function logAudit(db, request, action, type, id, details = "") {
+    try {
+        const username = request.headers.get('x-user-id') || 'system';
+        const role = request.headers.get('x-user-role') || 'unknown';
+        const ip = request.headers.get('cf-connecting-ip') || '0.0.0.0';
+
+        await db.prepare(`
+            INSERT INTO audit_logs (timestamp, username, role, action, target_type, target_id, details, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            new Date().toISOString(),
+            username,
+            role,
+            action,
+            type,
+            id?.toString() || null,
+            details,
+            ip
+        ).run();
+    } catch (e) {
+        console.error("Audit log failed:", e.message);
+    }
+}
+
+// Helper to verify admin role (Async with DB check)
+async function verifyAdmin(request, db) {
+    const username = request.headers.get('x-user-id');
+    if (!username) return false;
+
+    try {
+        const user = await db.prepare("SELECT role FROM users WHERE username = ?").bind(username).first();
+        return user?.role === 'admin';
+    } catch (e) {
+        return false;
+    }
+}
+
 async function handle(request) {
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
@@ -107,7 +145,7 @@ async function handle(request) {
         return Response.json({
             status: "error",
             error: "CONTEXT_ERROR",
-            message: "Gagal mengambil Cloudflare Context. Pastikan file dikelola oleh next-on-pages.",
+            message: "Gagal mengambil Cloudflare Context.",
             details: e.message
         }, { status: 500 });
     }
@@ -116,16 +154,51 @@ async function handle(request) {
         return Response.json({
             status: "error",
             error: "DATABASE_NOT_BOUND",
-            message: "Database 'DB' tidak terbaca. Pastikan sudah di-bind di Dashboard Cloudflare."
+            message: "Database 'DB' tidak terbaca."
         }, { status: 500 });
     }
 
     const { DB: db } = env;
 
     try {
+        // --- SYSTEM INITIALIZATION (One-time or occasional) ---
+        if (action === 'initSystem') {
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Unauthorized" }, { status: 403 });
+
+            await db.prepare(`CREATE TABLE IF NOT EXISTS audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                username TEXT,
+                role TEXT,
+                action TEXT,
+                target_type TEXT,
+                target_id TEXT,
+                details TEXT,
+                ip_address TEXT
+            )`).run();
+
+            await db.prepare(`CREATE TABLE IF NOT EXISTS system_configs (
+                key TEXT PRIMARY KEY,
+                value TEXT,
+                updated_at TEXT
+            )`).run();
+
+            return Response.json({ success: true, message: "System tables initialized" });
+        }
+
         if (action === 'ping') {
             await db.prepare("SELECT 1").run();
             return Response.json({ status: "success", message: "Koneksi D1 Aktif!" });
+        }
+
+        // --- AUTH PROTECTED ACTIONS ---
+        const writeActions = ['saveData', 'deleteData', 'updateConfig'];
+        const adminActions = ['getAuditLogs', 'updateConfig', 'initSystem'];
+
+        if (adminActions.includes(action)) {
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden: Admin access required" }, { status: 403 });
         }
 
         if (action === 'getQuickStats') {
@@ -163,7 +236,32 @@ async function handle(request) {
             return Response.json(results || []);
         }
 
+        if (action === 'getAuditLogs') {
+            const { results } = await db.prepare(`SELECT * FROM audit_logs ORDER BY id DESC LIMIT 100`).all();
+            return Response.json(results || []);
+        }
+
+        if (action === 'getConfigs') {
+            const { results } = await db.prepare(`SELECT * FROM system_configs`).all();
+            return Response.json(results || []);
+        }
+
+        if (action === 'updateConfig') {
+            const body = await request.json();
+            const { key, value } = body;
+            await db.prepare(`INSERT OR REPLACE INTO system_configs (key, value, updated_at) VALUES (?, ?, ?)`)
+                .bind(key, value, new Date().toISOString()).run();
+
+            await logAudit(db, request, 'UPDATE_CONFIG', 'system_configs', key, `Value: ${value}`);
+            return Response.json({ success: true });
+        }
+
         if (action === 'saveData') {
+            // Check write permission? For now let's assume valid login is enough for basic CRUD
+            // But for higher security, we might want to check role here too.
+            // Current req only asked for 'initSystem' and 'updateConfig' to be strictly admin.
+            // But let's log everything.
+
             const body = await request.json();
             const config = headersConfig[type];
             if (!config) return Response.json({ error: "Invalid type" }, { status: 400 });
@@ -181,15 +279,21 @@ async function handle(request) {
                 const setClause = fields.map(f => `${f} = ?`).join(', ');
                 values.push(body.id);
                 await db.prepare(`UPDATE ${type} SET ${setClause} WHERE id = ?`).bind(...values).run();
+                await logAudit(db, request, 'UPDATE', type, body.id, `Fields: ${fields.join(', ')}`);
                 return Response.json({ success: true });
             } else {
                 const placeholders = fields.map(() => '?').join(', ');
-                await db.prepare(`INSERT INTO ${type} (${fields.join(', ')}) VALUES (${placeholders})`).bind(...values).run();
+                const res = await db.prepare(`INSERT INTO ${type} (${fields.join(', ')}) VALUES (${placeholders})`).bind(...values).run();
+                await logAudit(db, request, 'CREATE', type, res.meta?.last_row_id || 'new');
                 return Response.json({ success: true });
             }
         }
 
         if (action === 'deleteData') {
+            // Optional: Restricted delete
+            // const isAdmin = await verifyAdmin(request, db); 
+            // if (!isAdmin && type === 'users') ... 
+
             if (!type || !id) return Response.json({ error: "Type and ID required" }, { status: 400 });
 
             // Check for files to delete
@@ -204,6 +308,7 @@ async function handle(request) {
             }
 
             await db.prepare(`DELETE FROM ${type} WHERE id = ?`).bind(id).run();
+            await logAudit(db, request, 'DELETE', type, id);
             return Response.json({ success: true });
         }
 
@@ -217,12 +322,7 @@ async function handle(request) {
             if (!apiSecret || !apiKey || !cloudName) {
                 return Response.json({
                     status: "error",
-                    message: "Konfigurasi Cloudinary (API Key/Secret/Cloud Name) tidak ditemukan di Environment Variables Cloudflare. Silakan atur di Dashboard Cloudflare Pages.",
-                    missing: {
-                        secret: !apiSecret,
-                        key: !apiKey,
-                        name: !cloudName
-                    }
+                    message: "Konfigurasi Cloudinary tidak ditemukan.",
                 }, { status: 500 });
             }
 
@@ -239,9 +339,7 @@ async function handle(request) {
         return Response.json({
             status: "error",
             error: "DB_RUNTIME_ERROR",
-            details: err.message,
-            action,
-            type
+            details: err.message
         }, { status: 500 });
     }
 }

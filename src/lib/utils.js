@@ -21,8 +21,24 @@ export const apiCall = async (action, method = 'GET', options = {}) => {
 
     const config = {
         method,
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+            'Content-Type': 'application/json'
+        }
     };
+
+    // Inject Auth Headers from LocalStorage
+    if (typeof window !== 'undefined') {
+        const session = localStorage.getItem('sim_session');
+        if (session) {
+            try {
+                const user = JSON.parse(session);
+                config.headers['x-user-id'] = user.username;
+                config.headers['x-user-role'] = user.role;
+            } catch (e) {
+                console.error("Auth header injection failed", e);
+            }
+        }
+    }
 
     if (data) config.body = JSON.stringify(data);
 

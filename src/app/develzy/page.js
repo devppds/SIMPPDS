@@ -10,16 +10,83 @@ export default function DevelzyControlPage() {
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState('general');
     const [maintenanceMode, setMaintenanceMode] = useState(false);
-    const [loading, setLoading] = useState(false);
 
-    // Placeholder data for stats
-    const [systemStats] = useState({
-        uptime: '12 Hari, 4 Jam',
-        requests: '1.2k today',
-        bandwidth: '240MB used',
-        cpu: '18%',
-        memory: '312MB'
+    // Real Data State
+    const [logs, setLogs] = useState([]);
+    const [configs, setConfigs] = useState({
+        nama_instansi: 'Pondok Pesantren Darussalam Lirboyo',
+        tahun_ajaran: '2025/2026',
+        deskripsi: 'Sistem Informasi Manajemen Terpadu Pondok Pesantren Darussalam Lirboyo'
     });
+
+    // Placeholder stats
+    const [systemStats] = useState({
+        uptime: 'Running',
+        requests: 'Calculating...',
+        bandwidth: 'Unknown',
+        cpu: 'Optimal',
+        memory: 'Stable'
+    });
+
+    useEffect(() => {
+        if (isAdmin) {
+            loadData();
+        }
+    }, [isAdmin, activeTab]);
+
+    const loadData = async () => {
+        try {
+            if (activeTab === 'audit') {
+                const res = await apiCall('getAuditLogs');
+                setLogs(Array.isArray(res) ? res : []);
+            }
+            if (activeTab === 'general') {
+                const res = await apiCall('getConfigs');
+                if (res && Array.isArray(res)) {
+                    const newConfigs = { ...configs };
+                    res.forEach(item => {
+                        if (newConfigs[item.key] !== undefined) {
+                            newConfigs[item.key] = item.value;
+                        }
+                    });
+                    setConfigs(newConfigs);
+                }
+            }
+        } catch (e) {
+            console.error("Load data error:", e);
+        }
+    };
+
+    const handleSaveConfig = async () => {
+        try {
+            await Promise.all([
+                apiCall('updateConfig', 'POST', { data: { key: 'nama_instansi', value: configs.nama_instansi } }),
+                apiCall('updateConfig', 'POST', { data: { key: 'tahun_ajaran', value: configs.tahun_ajaran } }),
+                apiCall('updateConfig', 'POST', { data: { key: 'deskripsi', value: configs.deskripsi } })
+            ]);
+            showToast("Konfigurasi global berhasil disimpan!", "success");
+        } catch (e) {
+            showToast("Gagal menyimpan konfigurasi", "error");
+        }
+    };
+
+    const handleInitSystem = async () => {
+        if (!confirm("Inisialisasi Database System Tables? Ini aman dilakukan berulang kali.")) return;
+        try {
+            await apiCall('initSystem', 'GET'); // Using GET as defined in previous step logic or handled by generic handle()
+            // Actually API mostly uses handle() for both. Let's send POST just in case or follow route logic.
+            // Route logic: if action is initSystem, verifyAdmin.
+            // Let's use generic apiCall which uses GET by default unless specified. 
+            // Better to use POST for state changing operations.
+            // But apiCall wrapper handles it.
+
+            // Wait, my apiCall defaults to matching the request.
+            showToast("System Tables Ready!", "success");
+            loadData();
+        } catch (e) {
+            showToast("Gagal inisialisasi: " + e.message, "error");
+        }
+    };
 
     if (!isAdmin) {
         return (
@@ -145,18 +212,33 @@ export default function DevelzyControlPage() {
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label className="form-label">Nama Instansi / Pondok</label>
-                                    <input type="text" className="form-control" defaultValue="Pondok Pesantren Darussalam Lirboyo" />
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={configs.nama_instansi}
+                                        onChange={e => setConfigs({ ...configs, nama_instansi: e.target.value })}
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Tahun Ajaran Aktif</label>
-                                    <input type="text" className="form-control" defaultValue="2025/2026" />
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={configs.tahun_ajaran}
+                                        onChange={e => setConfigs({ ...configs, tahun_ajaran: e.target.value })}
+                                    />
                                 </div>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Deskripsi Sistem (Meta)</label>
-                                <textarea className="form-control" rows="3" defaultValue="Sistem Informasi Manajemen Terpadu Pondok Pesantren Darussalam Lirboyo"></textarea>
+                                <textarea
+                                    className="form-control"
+                                    rows="3"
+                                    value={configs.deskripsi}
+                                    onChange={e => setConfigs({ ...configs, deskripsi: e.target.value })}
+                                ></textarea>
                             </div>
-                            <button className="btn btn-primary" style={{ marginTop: '1rem' }}>Simpan Konfigurasi</button>
+                            <button className="btn btn-primary" onClick={handleSaveConfig} style={{ marginTop: '1rem' }}>Simpan Konfigurasi</button>
                         </div>
                     )}
 
@@ -215,24 +297,38 @@ export default function DevelzyControlPage() {
 
                     {activeTab === 'audit' && (
                         <div className="animate-in">
-                            <h1 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>Audit Trail & Security Logs</h1>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                                <h1 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Audit Trail & Security Logs</h1>
+                                <button className="btn btn-secondary" onClick={loadData}><i className="fas fa-sync"></i> Refresh</button>
+                            </div>
                             <div style={{ border: '1.5px solid #f1f5f9', borderRadius: '16px', overflow: 'hidden' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead style={{ background: '#f8fafc' }}>
                                         <tr>
                                             <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left' }}>User Action</th>
+                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left' }}>IP / Role</th>
                                             <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left' }}>Timestamp</th>
-                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left' }}>IP Address</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {[1, 2, 3, 4, 5].map(i => (
+                                        {logs.length === 0 ? (
+                                            <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+                                                <td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada catatan aktivitas.</td>
+                                            </tr>
+                                        ) : logs.map((log, i) => (
                                             <tr key={i} style={{ borderBottom: '1px solid #f8fafc' }}>
                                                 <td style={{ padding: '12px 20px', fontSize: '0.85rem' }}>
-                                                    <span style={{ fontWeight: 700 }}>Admin</span> mengubah password user <code style={{ color: 'var(--primary)' }}>@bendahara</code>
+                                                    <div style={{ fontWeight: 700 }}>{log.username} <span style={{ fontWeight: 400, opacity: 0.7 }}>melakukan</span> <span style={{ color: 'var(--primary)' }}>{log.action}</span></div>
+                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Target: {log.target_type} ({log.target_id || '-'})</div>
+                                                    {log.details && <div style={{ fontSize: '0.75rem', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>{log.details}</div>}
                                                 </td>
-                                                <td style={{ padding: '12px 20px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>29 Des 2025, 17:40</td>
-                                                <td style={{ padding: '12px 20px', fontSize: '0.8rem', fontFamily: 'monospace' }}>192.168.1.{i * 10}</td>
+                                                <td style={{ padding: '12px 20px', fontSize: '0.8rem' }}>
+                                                    <div>{log.ip_address}</div>
+                                                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 800, color: '#94a3b8' }}>{log.role}</div>
+                                                </td>
+                                                <td style={{ padding: '12px 20px', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                                                    {new Date(log.timestamp).toLocaleString('id-ID')}
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -244,12 +340,21 @@ export default function DevelzyControlPage() {
                     {activeTab === 'system' && (
                         <div className="animate-in">
                             <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>System Health Metrics</h3>
+
+                            <div style={{ marginBottom: '2rem', padding: '20px', background: '#ecfdf5', borderRadius: '16px', border: '1px solid #a7f3d0' }}>
+                                <h4 style={{ color: '#047857', marginBottom: '10px' }}>Database Maintenance</h4>
+                                <p style={{ fontSize: '0.9rem', color: '#065f46', marginBottom: '15px' }}>
+                                    Jika ini pertama kali panel digunakan, silakan inisialisasi tabel sistem (Config & Audit Log) agar fitur berjalan normal.
+                                </p>
+                                <button className="btn btn-primary" onClick={handleInitSystem} style={{ background: '#059669' }}>
+                                    <i className="fas fa-database" style={{ marginRight: '8px' }}></i> Initialize System Tables
+                                </button>
+                            </div>
+
                             <div style={{ background: '#0f172a', borderRadius: '16px', padding: '1.5rem', color: '#10b981', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.6' }}>
-                                <div>[2025-12-29 17:35:12] INFO: Edge Runtime starting...</div>
-                                <div>[2025-12-29 17:35:13] INFO: Database connection established.</div>
-                                <div>[2025-12-29 17:35:15] DEBUG: Cache warming 80% complete.</div>
-                                <div>[2025-12-29 17:40:01] INFO: Daily analytics job started.</div>
-                                <div style={{ color: '#fbbf24' }}>[2025-12-29 17:42:10] WARN: Higher latency detected in Singapore-1 edge node.</div>
+                                <div>[System] Ready to monitor events.</div>
+                                <div>[Worker] Edge Runtime Active</div>
+                                <div>[DB] Binding status: Checked.</div>
                             </div>
                         </div>
                     )}
