@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import ArsipFileUpload from '@/components/ArsipFileUpload';
 
 export default function ProposalPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -39,14 +41,15 @@ export default function ProposalPage() {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault(); setSubmitting(true);
-        try { await apiCall('saveData', 'POST', { type: 'arsip_proposal', data: editId ? { ...formData, id: editId } : formData }); setIsModalOpen(false); loadData(); alert('Proposal berhasil disimpan!'); }
-        catch (err) { alert(err.message); } finally { setSubmitting(false); }
+        if (e) e.preventDefault();
+        setSubmitting(true);
+        try { await apiCall('saveData', 'POST', { type: 'arsip_proposal', data: editId ? { ...formData, id: editId } : formData }); setIsModalOpen(false); loadData(); showToast('Proposal berhasil disimpan!', "success"); }
+        catch (err) { showToast(err.message, "error"); } finally { setSubmitting(false); }
     };
 
     const deleteItem = async (id) => {
         if (!confirm('Hapus proposal ini?')) return;
-        try { await apiCall('deleteData', 'POST', { type: 'arsip_proposal', id }); loadData(); } catch (err) { alert(err.message); }
+        try { await apiCall('deleteData', 'POST', { type: 'arsip_proposal', id }); loadData(); showToast("Proposal dihapus.", "info"); } catch (err) { showToast(err.message, "error"); }
     };
 
     const displayData = data.filter(d => (d.nomor_proposal || '').toLowerCase().includes(search.toLowerCase()) || (d.judul || '').toLowerCase().includes(search.toLowerCase()) || (d.pengaju || '').toLowerCase().includes(search.toLowerCase()));
@@ -89,11 +92,11 @@ export default function ProposalPage() {
             </Modal>
 
             {/* View Detail Modal */}
-            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Arsip Proposal" width="700px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Tutup</button>}>
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Arsip Proposal" width="800px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Tutup</button>}>
                 {viewData && (
                     <div className="detail-view">
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Judul Proposal</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Judul Proposal Dokumen</div>
                             <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-dark)', lineHeight: 1.3 }}>{viewData.judul}</div>
                             <div style={{ marginTop: '10px' }}>
                                 <span className="th-badge" style={{
@@ -102,19 +105,19 @@ export default function ProposalPage() {
                                     padding: '6px 20px',
                                     fontWeight: 800
                                 }}>
-                                    {viewData.status}
+                                    STATUS: {viewData.status.toUpperCase()}
                                 </span>
                             </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
                             <div>
                                 <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nominal Pengajuan</small>
-                                <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--success)' }}>{formatCurrency(viewData.nominal)}</div>
+                                <div style={{ fontWeight: 800, fontSize: '1.3rem', color: 'var(--success)' }}>{formatCurrency(viewData.nominal)}</div>
                             </div>
                             <div>
                                 <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Pengaju / PJ</small>
-                                <div style={{ fontWeight: 700 }}>{viewData.pengaju}</div>
+                                <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{viewData.pengaju}</div>
                             </div>
                             <div>
                                 <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tanggal Pengajuan</small>
@@ -129,21 +132,45 @@ export default function ProposalPage() {
                         {viewData.keterangan && (
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Keterangan / Alasan</small>
-                                <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }}>
+                                <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem', color: '#475569' }}>
                                     {viewData.keterangan}
                                 </div>
                             </div>
                         )}
 
                         {viewData.file_proposal && (
-                            <div style={{ marginTop: '2rem', borderTop: '2px dashed #e2e8f0', paddingTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>Berkas Proposal</small>
-                                <a href={viewData.file_proposal} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center', gap: '10px' }}>
-                                    <i className="fas fa-file-pdf"></i> Lihat Dokumen Lengkap
-                                </a>
-                                {viewData.file_proposal.match(/\.(jpg|jpeg|png|gif)$/i) && (
-                                    <img src={viewData.file_proposal} alt="Preview" style={{ width: '100%', marginTop: '15px', borderRadius: '12px', border: '1px solid #eee' }} />
-                                )}
+                            <div style={{ marginTop: '2.5rem', borderTop: '2px dashed #cbd5e1', paddingTop: '2.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}><i className="fas fa-file-pdf" style={{ marginRight: '8px', color: '#ef4444' }}></i>Lampiran Proposal</h3>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <a href={viewData.file_proposal} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                                            <i className="fas fa-external-link-alt"></i> Buka Full
+                                        </a>
+                                        <a href={viewData.file_proposal.replace('/upload/', '/upload/fl_attachment/')} className="btn btn-primary btn-sm">
+                                            <i className="fas fa-download"></i> Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div style={{ background: '#334155', borderRadius: '15px', padding: '10px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
+                                    {viewData.file_proposal.toLowerCase().endsWith('.pdf') ? (
+                                        <iframe
+                                            src={viewData.file_proposal}
+                                            style={{ width: '100%', height: '550px', border: 'none', borderRadius: '10px' }}
+                                            title="Proposal Preview"
+                                        />
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                                            <img
+                                                src={viewData.file_proposal}
+                                                alt="Proposal Preview"
+                                                style={{ maxWidth: '100%', borderRadius: '8px', cursor: 'zoom-in' }}
+                                                onClick={() => window.open(viewData.file_proposal, '_blank')}
+                                            />
+                                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', marginTop: '10px' }}>Klik gambar untuk memperbesar.</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>

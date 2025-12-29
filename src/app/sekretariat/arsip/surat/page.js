@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import ArsipFileUpload from '@/components/ArsipFileUpload';
 
 export default function SuratPage() {
     const { isAdmin } = useAuth();
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -53,14 +55,14 @@ export default function SuratPage() {
             await apiCall('saveData', 'POST', { type: 'arsip_surat', data: editId ? { ...formData, id: editId } : formData });
             setIsModalOpen(false);
             loadData();
-            alert('Surat berhasil disimpan!');
-        } catch (err) { alert(err.message); }
+            showToast('Surat berhasil disimpan!', "success");
+        } catch (err) { showToast(err.message, "error"); }
         finally { setSubmitting(false); }
     };
 
     const deleteItem = async (id) => {
         if (!confirm('Hapus arsip surat ini?')) return;
-        try { await apiCall('deleteData', 'POST', { type: 'arsip_surat', id }); loadData(); } catch (err) { alert(err.message); }
+        try { await apiCall('deleteData', 'POST', { type: 'arsip_surat', id }); loadData(); showToast("Surat dihapus dari arsip.", "info"); } catch (err) { showToast(err.message, "error"); }
     };
 
     const displayData = data.filter(d => {
@@ -150,51 +152,84 @@ export default function SuratPage() {
             </Modal>
 
             {/* View Detail Modal */}
-            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Arsip Surat" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Tutup</button>}>
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Arsip Surat" width="800px" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Tutup Halaman</button>}>
                 {viewData && (
                     <div className="detail-view">
-                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nomor Surat</div>
-                            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.nomor_surat}</div>
-                            <span className="th-badge" style={{
-                                background: viewData.tipe === 'Masuk' ? '#dcfce7' : '#dbeafe',
-                                color: viewData.tipe === 'Masuk' ? '#166534' : '#1e40af',
-                                marginTop: '10px'
-                            }}>
-                                Surat {viewData.tipe}
-                            </span>
-                        </div>
-                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tanggal</small>
-                                <div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal)}</div>
-                            </div>
-                            <div>
-                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Pengirim/Penerima</small>
-                                <div style={{ fontWeight: 700 }}>{viewData.pengirim_penerima}</div>
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Nomor Dokumen Surat</div>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--primary-dark)' }}>{viewData.nomor_surat}</div>
+                            <div style={{ marginTop: '10px' }}>
+                                <span className="th-badge" style={{
+                                    background: viewData.tipe === 'Masuk' ? '#dcfce7' : '#dbeafe',
+                                    color: viewData.tipe === 'Masuk' ? '#166534' : '#1e40af',
+                                    padding: '6px 15px',
+                                    fontWeight: 800
+                                }}>
+                                    ARSIP SURAT {viewData.tipe.toUpperCase()}
+                                </span>
                             </div>
                         </div>
+
+                        <div className="form-grid" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tanggal Arsip</small>
+                                <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{formatDate(viewData.tanggal)}</div>
+                            </div>
+                            <div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>{viewData.tipe === 'Masuk' ? 'Asal Pengirim' : 'Tujuan Penerima'}</small>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)' }}>{viewData.pengirim_penerima}</div>
+                            </div>
+                        </div>
+
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Perihal</small>
-                            <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontWeight: 600 }}>
+                            <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Hal / Perihal Surat</small>
+                            <div style={{ padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', fontWeight: 600, fontSize: '1.05rem', lineHeight: '1.5' }}>
                                 {viewData.perihal}
                             </div>
                         </div>
+
                         {viewData.keterangan && (
                             <div style={{ marginBottom: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Keterangan</small>
-                                <p style={{ fontSize: '0.9rem', color: '#475569' }}>{viewData.keterangan}</p>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Catatan Tambahan</small>
+                                <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '10px', fontSize: '0.9rem', color: '#475569' }}>
+                                    {viewData.keterangan}
+                                </div>
                             </div>
                         )}
+
                         {viewData.file_surat && (
-                            <div style={{ marginTop: '2rem', borderTop: '2px dashed #e2e8f0', paddingTop: '1.5rem' }}>
-                                <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>Lampiran File</small>
-                                <a href={viewData.file_surat} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center', gap: '10px' }}>
-                                    <i className="fas fa-external-link-alt"></i> Lihat / Download Dokumen
-                                </a>
-                                {viewData.file_surat.match(/\.(jpg|jpeg|png|gif)$/i) && (
-                                    <img src={viewData.file_surat} alt="Preview" style={{ width: '100%', marginTop: '15px', borderRadius: '12px', border: '1px solid #eee' }} />
-                                )}
+                            <div style={{ marginTop: '2.5rem', borderTop: '2px dashed #cbd5e1', paddingTop: '2rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}><i className="fas fa-file-pdf" style={{ marginRight: '8px', color: '#ef4444' }}></i>Dokumen Digital</h3>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <a href={viewData.file_surat} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                                            <i className="fas fa-external-link-alt"></i> Buka Full
+                                        </a>
+                                        <a href={viewData.file_surat.replace('/upload/', '/upload/fl_attachment/')} className="btn btn-primary btn-sm">
+                                            <i className="fas fa-download"></i> Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div style={{ background: '#334155', borderRadius: '15px', padding: '10px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
+                                    {viewData.file_surat.toLowerCase().endsWith('.pdf') ? (
+                                        <iframe
+                                            src={viewData.file_surat}
+                                            style={{ width: '100%', height: '500px', border: 'none', borderRadius: '10px' }}
+                                            title="PDF Preview"
+                                        />
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                                            <img
+                                                src={viewData.file_surat}
+                                                alt="Arsip Surat"
+                                                style={{ maxWidth: '100%', borderRadius: '8px', cursor: 'zoom-in' }}
+                                                onClick={() => window.open(viewData.file_surat, '_blank')}
+                                            />
+                                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', marginTop: '10px' }}>Pratinjau Gambar. Klik untuk memperbesar.</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
