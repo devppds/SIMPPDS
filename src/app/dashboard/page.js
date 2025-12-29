@@ -74,18 +74,18 @@ export default function DashboardPage() {
 
     return (
         <div className="view-container">
-            <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className="animate-in">
-                    <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, background: 'linear-gradient(to right, var(--primary), #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '8px' }}>
+            <div className="dashboard-header animate-in">
+                <div className="welcome-section">
+                    <h1 className="dashboard-title outfit">
                         Dashboard Pintar {role.charAt(0).toUpperCase() + role.slice(1)}
                     </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
+                    <p className="dashboard-subtitle">
                         Ahlan wa Sahlan, <strong>{user?.fullname || 'User'}</strong>. Mendeteksi {dynamicStats.length} metrik aktif dari Develzy.
                     </p>
                 </div>
-                <div className="card-glass" style={{ padding: '12px 24px', borderRadius: '16px' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tahun Ajaran</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)' }}>1447 H / 2025-2026 M</div>
+                <div className="academic-badge card-glass">
+                    <div className="badge-label">Tahun Ajaran</div>
+                    <div className="badge-value">1447 H / 2025-2026 M</div>
                 </div>
             </div>
 
@@ -100,20 +100,20 @@ export default function DashboardPage() {
                 )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1.4fr', gap: '2.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+            <div className="main-grid-layout">
+                <div className="primary-column">
                     {hasAccess('Arus Kas Pondok') && <RecentActivityCard activities={lastActivities} loading={loading} mounted={mounted} />}
                     {hasAccess('Data Santri') && <SantriDistributionCard stats={stats} loading={loading} />}
                     {!hasAccess('Data Santri') && !hasAccess('Arus Kas Pondok') && (
-                        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-                            <i className="fas fa-shield-alt" style={{ fontSize: '3rem', color: 'var(--primary-light)', marginBottom: '1rem' }}></i>
+                        <div className="card access-limited-card">
+                            <i className="fas fa-shield-alt icon-limited"></i>
                             <h3 style={{ fontWeight: 800 }}>Akses Terenkripsi</h3>
                             <p style={{ color: 'var(--text-muted)' }}>Anda memiliki akses terbatas. Gunakan sidebar untuk navigasi menu yang diizinkan.</p>
                         </div>
                     )}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                <div className="secondary-column">
                     {/* Dynamic Banners Contextual to User Menus */}
                     {hasAccess('Pelanggaran') ? (
                         <WelcomeBanner title="Bagian Keamanan" desc="Pantau ketertiban dan perizinan santri secara real-time." link="/keamanan/pelanggaran" linkText="Menu Keamanan" />
@@ -130,9 +130,103 @@ export default function DashboardPage() {
             </div>
 
             <style jsx>{`
-                .animate-in { animation: slideInLeft 0.6s ease-out; }
+                .animate-in { animation: slideInLeft 0.6s ease-out forwards; }
                 @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-                .card-glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid #f1f5f9; box-shadow: var(--shadow-sm); }
+                
+                .dashboard-header {
+                    margin-bottom: 3rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 1.5rem;
+                }
+                .dashboard-title {
+                    font-size: 2.5rem;
+                    font-weight: 900;
+                    background: linear-gradient(to right, var(--primary), #3b82f6);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    margin-bottom: 8px;
+                }
+                .dashboard-subtitle {
+                    color: var(--text-muted);
+                    font-size: 1.1rem;
+                }
+                .academic-badge {
+                    padding: 12px 24px;
+                    border-radius: 16px;
+                    min-width: 200px;
+                }
+                .badge-label {
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                }
+                .badge-value {
+                    font-size: 1.1rem;
+                    font-weight: 800;
+                    color: var(--primary);
+                }
+                .card-glass {
+                    background: rgba(255, 255, 255, 0.8);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid #f1f5f9;
+                    box-shadow: var(--shadow-sm);
+                }
+                .main-grid-layout {
+                    display: grid;
+                    grid-template-columns: 1.6fr 1.4fr;
+                    gap: 2.5rem;
+                }
+                .primary-column, .secondary-column {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2.5rem;
+                }
+                .access-limited-card {
+                    text-align: center;
+                    padding: 3rem;
+                }
+                .icon-limited {
+                    font-size: 3rem;
+                    color: var(--primary-light);
+                    margin-bottom: 1rem;
+                }
+
+                @media (max-width: 1024px) {
+                    .dashboard-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 1rem;
+                    }
+                    .main-grid-layout {
+                        grid-template-columns: 1fr;
+                        gap: 1.5rem;
+                    }
+                    .primary-column, .secondary-column {
+                        gap: 1.5rem;
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .dashboard-title {
+                        font-size: 1.8rem;
+                    }
+                    .dashboard-subtitle {
+                        font-size: 0.95rem;
+                    }
+                    .academic-badge {
+                        width: 100%;
+                        padding: 1rem;
+                    }
+                    .dashboard-header {
+                        margin-bottom: 2rem;
+                    }
+                    .stats-grid {
+                        margin-bottom: 2rem !important;
+                    }
+                }
             `}</style>
         </div>
     );
