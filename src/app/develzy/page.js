@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { apiCall } from '@/lib/utils';
+import Modal from '@/components/Modal';
 
 export default function DevelzyControlPage() {
     const { isAdmin } = useAuth();
@@ -35,6 +36,21 @@ export default function DevelzyControlPage() {
         database: { status: 'Checking...', color: '#94a3b8' },
         email: { status: 'Not Configured', color: '#94a3b8' }
     });
+
+    // Role Management State
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [editingRole, setEditingRole] = useState(null);
+    const [rolesList, setRolesList] = useState([
+        { role: 'admin', label: 'Super Administrator', color: '#2563eb', users: 2, menus: ['Semua Menu', 'DEVELZY Control', 'Laporan Pimpinan', 'Manajemen Akses'] },
+        { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', users: 5, menus: ['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis'] },
+        { role: 'bendahara', label: 'Bendahara', color: '#10b981', users: 3, menus: ['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri'] },
+        { role: 'keamanan', label: 'Keamanan', color: '#ef4444', users: 4, menus: ['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang'] },
+        { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', users: 6, menus: ['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil'] },
+        { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', users: 2, menus: ['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'] },
+        { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', users: 2, menus: ['Data Kesehatan', 'Layanan Kesehatan'] },
+        { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', users: 1, menus: ["Layanan Jam'iyyah"] },
+    ]);
+    const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [] });
 
     useEffect(() => {
         isMounted.current = true;
@@ -321,6 +337,49 @@ export default function DevelzyControlPage() {
         };
     };
 
+    const handleAddRole = () => {
+        setEditingRole(null);
+        setRoleFormData({ label: '', role: '', color: '#64748b', menus: [] });
+        setIsRoleModalOpen(true);
+    };
+
+    const handleEditRole = (role) => {
+        setEditingRole(role);
+        setRoleFormData({ ...role });
+        setIsRoleModalOpen(true);
+    };
+
+    const handleSaveRole = (e) => {
+        if (e) e.preventDefault();
+
+        if (editingRole) {
+            // Update existing role
+            setRolesList(rolesList.map(r => r.role === editingRole.role ? { ...roleFormData, users: r.users } : r));
+            showToast("Role berhasil diperbarui (Simulasi)", "success");
+        } else {
+            // Add new role
+            const newRole = {
+                ...roleFormData,
+                role: roleFormData.role.toLowerCase().replace(/\s+/g, '_'),
+                users: 0
+            };
+            setRolesList([...rolesList, newRole]);
+            showToast("Role baru berhasil ditambahkan (Simulasi)", "success");
+        }
+        setIsRoleModalOpen(false);
+    };
+
+    const handleDeleteRole = (roleToDelete) => {
+        if (roleToDelete.role === 'admin') {
+            showToast("Role Super Administrator tidak dapat dihapus!", "error");
+            return;
+        }
+
+        if (confirm(`Apakah Anda yakin ingin menghapus role "${roleToDelete.label}"?`)) {
+            setRolesList(rolesList.filter(r => r.role !== roleToDelete.role));
+            showToast("Role berhasil dihapus (Simulasi)", "success");
+        }
+    };
     const handleInitSystem = async () => {
         // Create custom modal
         const modal = document.createElement('div');
@@ -754,22 +813,13 @@ export default function DevelzyControlPage() {
                         <div className="animate-in">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                                 <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Role & Permissions Management</h3>
-                                <button className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+                                <button className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem' }} onClick={handleAddRole}>
                                     <i className="fas fa-plus" style={{ marginRight: '8px' }}></i> Tambah Role Baru
                                 </button>
                             </div>
 
                             <div style={{ display: 'grid', gap: '1.5rem' }}>
-                                {[
-                                    { role: 'admin', label: 'Super Administrator', color: '#2563eb', users: 2, menus: ['Semua Menu', 'DEVELZY Control', 'Laporan Pimpinan', 'Manajemen Akses'] },
-                                    { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', users: 5, menus: ['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Data Pengajar', 'Arsiparis'] },
-                                    { role: 'bendahara', label: 'Bendahara', color: '#10b981', users: 3, menus: ['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri'] },
-                                    { role: 'keamanan', label: 'Keamanan', color: '#ef4444', users: 4, menus: ['Pelanggaran', 'Perizinan Santri', 'Barang Sitaan', 'Registrasi Barang'] },
-                                    { role: 'pendidikan', label: 'Pendidikan', color: '#f59e0b', users: 6, menus: ['Agenda & Nilai', 'Layanan Pendidikan', 'Wajar-Murottil'] },
-                                    { role: 'wajar_murottil', label: 'Wajar-Murottil', color: '#06b6d4', users: 2, menus: ['Wajib Belajar', 'Murottil Malam', 'Murottil Pagi'] },
-                                    { role: 'kesehatan', label: 'Kesehatan (BK)', color: '#ec4899', users: 2, menus: ['Data Kesehatan', 'Layanan Kesehatan'] },
-                                    { role: 'jamiyyah', label: "Jam'iyyah", color: '#6366f1', users: 1, menus: ["Layanan Jam'iyyah"] },
-                                ].map((item, idx) => (
+                                {rolesList.map((item, idx) => (
                                     <div key={idx} style={{
                                         padding: '1.5rem',
                                         border: '2px solid #f1f5f9',
@@ -832,11 +882,19 @@ export default function DevelzyControlPage() {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                                            <button
+                                                className="btn btn-secondary"
+                                                style={{ padding: '10px 20px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                                                onClick={() => handleEditRole(item)}
+                                            >
                                                 <i className="fas fa-edit" style={{ marginRight: '8px' }}></i> Edit Permissions
                                             </button>
                                             {item.role !== 'admin' && (
-                                                <button className="btn btn-outline" style={{ padding: '10px 20px', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fee2e2' }}>
+                                                <button
+                                                    className="btn btn-outline"
+                                                    style={{ padding: '10px 20px', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fee2e2' }}
+                                                    onClick={() => handleDeleteRole(item)}
+                                                >
                                                     <i className="fas fa-trash" style={{ marginRight: '8px' }}></i> Hapus Role
                                                 </button>
                                             )}
@@ -864,7 +922,6 @@ export default function DevelzyControlPage() {
                         </div>
                     )}
 
-
                     {activeTab === 'system' && (
                         <div className="animate-in">
                             <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>System Health Metrics</h3>
@@ -888,6 +945,78 @@ export default function DevelzyControlPage() {
                     )}
                 </div>
             </div>
+            {/* Role Form Modal */}
+            <Modal
+                isOpen={isRoleModalOpen}
+                onClose={() => setIsRoleModalOpen(false)}
+                title={editingRole ? `Edit Role: ${editingRole.label}` : "Tambah Role Baru"}
+                footer={(
+                    <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" onClick={() => setIsRoleModalOpen(false)}>Batal</button>
+                        <button className="btn btn-primary" onClick={handleSaveRole}>Simpan Role (Simulasi)</button>
+                    </div>
+                )}
+            >
+                <div style={{ padding: '10px' }}>
+                    <div className="form-group">
+                        <label className="form-label">Nama Role</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={roleFormData.label}
+                            onChange={(e) => setRoleFormData({ ...roleFormData, label: e.target.value })}
+                            placeholder="Contoh: Panitia Qurban"
+                        />
+                    </div>
+                    {/* Only show Role ID input if adding new role */}
+                    {!editingRole && (
+                        <div className="form-group">
+                            <label className="form-label">Kode Role (ID)</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={roleFormData.role}
+                                onChange={(e) => setRoleFormData({ ...roleFormData, role: e.target.value })}
+                                placeholder="panitia_qurban (otomatis lowercase)"
+                            />
+                            <small style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Digunakan untuk coding & database key.</small>
+                        </div>
+                    )}
+                    <div className="form-group">
+                        <label className="form-label">Warna Badge</label>
+                        <input
+                            type="color"
+                            className="form-control"
+                            style={{ height: '50px', padding: '5px' }}
+                            value={roleFormData.color}
+                            onChange={(e) => setRoleFormData({ ...roleFormData, color: e.target.value })}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Akses Menu (Simulasi)</label>
+                        <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>Centang menu yang diizinkan:</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                                {['Data Santri', 'Keuangan', 'Perizinan', 'Kesehatan', 'Laporan', 'Arsip Digital'].map((menu, i) => (
+                                    <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={roleFormData.menus.includes(menu)}
+                                            onChange={(e) => {
+                                                const newMenus = e.target.checked
+                                                    ? [...roleFormData.menus, menu]
+                                                    : roleFormData.menus.filter(m => m !== menu);
+                                                setRoleFormData({ ...roleFormData, menus: newMenus });
+                                            }}
+                                        />
+                                        {menu}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
