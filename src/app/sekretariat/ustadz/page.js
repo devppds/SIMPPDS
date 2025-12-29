@@ -43,9 +43,9 @@ export default function PengajarPage() {
     const columns = [
         { key: 'nama', label: 'Nama Pengajar', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
         { key: 'kelas', label: 'Tugas Mengajar' },
-        { key: 'no_hp', label: 'WhatsApp' },
+        { key: 'no_hp', label: 'WhatsApp', className: 'hide-mobile' },
         {
-            key: 'status', label: 'Status', render: (row) => (
+            key: 'status', label: 'Status', className: 'hide-mobile', render: (row) => (
                 <span className="th-badge" style={{ background: row.status === 'Aktif' ? '#dcfce7' : '#fee2e2', color: row.status === 'Aktif' ? '#166534' : '#991b1b' }}>{row.status}</span>
             )
         },

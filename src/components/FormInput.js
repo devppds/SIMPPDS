@@ -10,12 +10,11 @@ export function FormGroup({ label, children, required, helperText, error }) {
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
             {label && (
                 <label className="form-label" style={{
-                    display: 'block',
+                    display: 'flex',
                     marginBottom: '8px',
                     fontWeight: 700,
                     fontSize: '0.9rem',
                     color: 'var(--primary-dark)',
-                    display: 'flex',
                     alignItems: 'center',
                     gap: '4px'
                 }}>

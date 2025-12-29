@@ -111,10 +111,10 @@ export default function SantriPage() {
     }, [santri, search, filterStatus, filterMadrasah]);
 
     const columns = [
-        { key: 'foto', label: 'Foto', render: (row) => <img src={row.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} /> },
+        { key: 'foto', label: 'Foto', className: 'hide-mobile', render: (row) => <img src={row.foto_santri || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama_siswa)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} /> },
         { key: 'nama_siswa', label: 'Nama Lengkap', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small>{row.stambuk_pondok}</small></div> },
         { key: 'kelas', label: 'Pendidikan', render: (row) => <div><div style={{ fontWeight: 700 }}>{row.kelas}</div><small>{row.madrasah}</small></div> },
-        { key: 'kamar', label: 'Kamar', render: (row) => <span className="th-badge">{row.kamar}</span> },
+        { key: 'kamar', label: 'Kamar', className: 'hide-mobile', render: (row) => <span className="th-badge">{row.kamar}</span> },
         {
             key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
                 <div className="table-actions">

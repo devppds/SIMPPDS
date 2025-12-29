@@ -129,31 +129,34 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="sidebar">
-            <div className="sidebar-header">
-                <div className="logo">
-                    <img
-                        src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"}
-                        style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'contain' }}
-                        alt="Logo"
-                    />
-                    <span>SIMPPDS</span>
+        <>
+            <div className="sidebar-overlay" onClick={() => document.body.classList.remove('sidebar-open')}></div>
+            <aside className="sidebar">
+                <div className="sidebar-header">
+                    <div className="logo">
+                        <img
+                            src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"}
+                            style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'contain' }}
+                            alt="Logo"
+                        />
+                        <span>SIMPPDS</span>
+                    </div>
                 </div>
-            </div>
 
-            <nav className="sidebar-nav">
-                <div className="menu-section">MENU UTAMA</div>
-                <ul>
-                    {isMounted ? NAV_ITEMS.map((item, index) => renderMenuItem(item, index)) : null}
-                </ul>
-            </nav>
+                <nav className="sidebar-nav">
+                    <div className="menu-section">MENU UTAMA</div>
+                    <ul>
+                        {isMounted ? NAV_ITEMS.map((item, index) => renderMenuItem(item, index)) : null}
+                    </ul>
+                </nav>
 
-            <div className="sidebar-footer">
-                <button onClick={logout} className="logout-btn">
-                    <i className="fas fa-sign-out-alt"></i>
-                    <span>Keluar Sistem</span>
-                </button>
-            </div>
-        </aside>
+                <div className="sidebar-footer">
+                    <button onClick={logout} className="logout-btn">
+                        <i className="fas fa-sign-out-alt"></i>
+                        <span>Keluar Sistem</span>
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 }

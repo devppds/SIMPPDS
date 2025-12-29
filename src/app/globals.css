@@ -891,6 +891,28 @@ tr:hover td {
     transform: translateX(0);
   }
 
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 99;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  body.sidebar-open .sidebar-overlay {
+    display: block;
+  }
+
+  /* Increase z-index of sidebar for mobile */
+  .sidebar {
+    z-index: 100 !important;
+  }
+
   header {
     padding: 0 1.25rem;
     height: 70px;

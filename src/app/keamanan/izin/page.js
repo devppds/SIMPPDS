@@ -48,8 +48,8 @@ export default function IzinPage() {
 
     const columns = [
         { key: 'nama_santri', label: 'Nama Santri', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span> },
-        { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
-        { key: 'alasan', label: 'Alasan' },
+        { key: 'kelas', label: 'Kelas', className: 'hide-mobile', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
+        { key: 'alasan', label: 'Alasan', className: 'hide-mobile' },
         {
             key: 'status', label: 'Status', render: (row) => (
                 <span className="th-badge" style={{ background: row.status === 'Aktif' ? '#dcfce7' : row.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9', color: row.status === 'Aktif' ? '#166534' : row.status === 'Menunggu' ? '#9a3412' : '#475569' }}>{row.status}</span>

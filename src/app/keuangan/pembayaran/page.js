@@ -116,7 +116,7 @@ export default function PembayaranSantriPage() {
         { key: 'tanggal', label: 'Tgl Bayar', render: (row) => formatDate(row.tanggal) },
         { key: 'nama_santri', label: 'Santri', render: (row) => <div style={{ fontWeight: 800 }}>{row.nama_santri}</div> },
         { key: 'jenis_pembayaran', label: 'Jenis', render: (row) => <span className="th-badge" style={{ background: row.jenis_pembayaran === 'Syahriah' ? '#e0e7ff' : '#fef3c7', color: row.jenis_pembayaran === 'Syahriah' ? '#4338ca' : '#d97706' }}>{row.jenis_pembayaran}</span> },
-        { key: 'bulan_tagihan', label: 'Bulan', render: (row) => row.bulan_tagihan || '-' },
+        { key: 'bulan_tagihan', label: 'Bulan', className: 'hide-mobile', render: (row) => row.bulan_tagihan || '-' },
         { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800 }}>{formatCurrency(row.nominal)}</span> }
     ];
 
@@ -126,7 +126,7 @@ export default function PembayaranSantriPage() {
 
             <StatsPanel items={stats} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '2rem' }}>
+            <div className="pembayaran-grid">
                 <div className="card" style={{ padding: '2rem' }}>
                     <div className="card-header" style={{ padding: '0 0 1.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1.5rem' }}>
                         <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Lakukan Pembayaran</h2>
@@ -161,12 +161,27 @@ export default function PembayaranSantriPage() {
                     </form>
                 </div>
 
-                <DataViewContainer
-                    title="Riwayat Terbaru"
-                    subtitle="Daftar 50 transaksi pembayaran terakhir."
-                    tableProps={{ columns, data: history, loading }}
-                />
+                <div className="riwayat-container">
+                    <DataViewContainer
+                        title="Riwayat Terbaru"
+                        subtitle="Daftar 50 transaksi pembayaran terakhir."
+                        tableProps={{ columns, data: history, loading }}
+                    />
+                </div>
             </div>
+
+            <style jsx>{`
+                .pembayaran-grid {
+                    display: grid;
+                    grid-template-columns: 1.2fr 1.8fr;
+                    gap: 2rem;
+                }
+                @media (max-width: 1024px) {
+                    .pembayaran-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            `}</style>
         </div>
     );
 }

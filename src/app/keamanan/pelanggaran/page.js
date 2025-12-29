@@ -48,8 +48,8 @@ export default function PelanggaranPage() {
             label: 'Nama Santri',
             render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span>
         },
-        { key: 'kelas', label: 'Kelas', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
-        { key: 'jenis_pelanggaran', label: 'Jenis Pelanggaran' },
+        { key: 'kelas', label: 'Kelas', className: 'hide-mobile', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
+        { key: 'jenis_pelanggaran', label: 'Jenis Pelanggaran', className: 'hide-mobile' },
         {
             key: 'poin',
             label: 'Poin',
@@ -62,8 +62,8 @@ export default function PelanggaranPage() {
                 </span>
             )
         },
-        { key: 'takzir', label: 'Takzir' },
-        { key: 'petugas', label: 'Petugas' },
+        { key: 'takzir', label: 'Takzir', className: 'hide-mobile' },
+        { key: 'petugas', label: 'Petugas', className: 'hide-mobile' },
         {
             key: 'actions',
             label: 'Aksi',

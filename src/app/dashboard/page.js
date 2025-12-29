@@ -60,7 +60,7 @@ export default function DashboardPage() {
         { label: 'Pelanggaran', value: stats.violationsMonth, icon: 'fas fa-exclamation-triangle', color: 'stat-red', show: hasAccess('Pelanggaran'), priority: 3 },
         { label: 'Saldo Kas', value: formatCurrency(stats.kasTotal), icon: 'fas fa-wallet', color: 'stat-indigo', show: hasAccess('Arus Kas Pondok') || hasAccess('Setoran Unit'), priority: 4 },
         { label: 'Izin Aktif', value: stats.activeIzin, icon: 'fas fa-id-card', color: 'stat-yellow', show: hasAccess('Perizinan Santri'), priority: 5 },
-        { label: 'Ustadz/Kader', value: stats.ustadzTotal, icon: 'fas fa-mosque', color: 'stat-purple', show: hasAccess('Data Pengajar'), priority: 6 },
+        { label: 'Pengajar/Kader', value: stats.ustadzTotal, icon: 'fas fa-mosque', color: 'stat-purple', show: hasAccess('Data Pengajar'), priority: 6 },
         { label: 'Santri Sakit', value: stats.activeSakit, icon: 'fas fa-notes-medical', color: 'stat-red', show: hasAccess('Data Kesehatan'), priority: 7 },
         { label: 'Total Pengurus', value: stats.pengurusTotal, icon: 'fas fa-user-tie', color: 'stat-cyan', show: hasAccess('Data Pengurus'), priority: 8 },
         { label: 'Kapasitas Kamar', value: stats.kamarKapasitas, icon: 'fas fa-bed', color: 'stat-indigo', show: hasAccess('Asrama & Kamar'), priority: 9 }
