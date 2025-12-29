@@ -99,11 +99,17 @@ export default function PembayaranSantriPage() {
         } catch (err) { showToast(err.message, "error"); } finally { setSubmitting(false); }
     };
 
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const stats = useMemo(() => [
         { title: 'Total Transaksi', value: history.length, icon: 'fas fa-file-invoice-dollar', color: 'var(--primary)' },
-        { title: 'Pendapatan Hari Ini', value: formatCurrency(history.filter(h => h.tanggal === new Date().toISOString().split('T')[0]).reduce((acc, h) => acc + parseInt(h.nominal || 0), 0)), icon: 'fas fa-calendar-day', color: 'var(--success)' },
+        { title: 'Pendapatan Hari Ini', value: formatCurrency(history.filter(h => mounted && h.tanggal === new Date().toISOString().split('T')[0]).reduce((acc, h) => acc + parseInt(h.nominal || 0), 0)), icon: 'fas fa-calendar-day', color: 'var(--success)' },
         { title: 'Rata-rata Bayar', value: formatCurrency(history.reduce((acc, h) => acc + parseInt(h.nominal || 0), 0) / (history.length || 1)), icon: 'fas fa-chart-line', color: 'var(--warning)' }
-    ], [history]);
+    ], [history, mounted]);
 
     const columns = [
         { key: 'tanggal', label: 'Tgl Bayar', render: (row) => formatDate(row.tanggal) },

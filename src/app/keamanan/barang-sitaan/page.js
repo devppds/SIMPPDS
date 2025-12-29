@@ -25,14 +25,15 @@ export default function BarangSitaanPage() {
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView, isAdmin
     } = useDataManagement('barang_sitaan', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         nama_santri: '', kelas: '', nama_barang: '', alasan_sita: '',
         status: 'Disita', petugas: '', tanggal_kembali: ''
     });
 
     useEffect(() => {
+        setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
         apiCall('getData', 'GET', { type: 'santri' }).then(res => setSantriOptions(res || []));
-    }, []);
+    }, [setFormData]);
 
     const stats = useMemo(() => [
         { title: 'Barang Disita', value: data.filter(d => d.status === 'Disita').length, icon: 'fas fa-box-open', color: 'var(--danger)' },

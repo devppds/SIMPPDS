@@ -28,7 +28,7 @@ export default function KeamananRegPage() {
         nama_santri: '', kelas: '', jenis_barang: 'Kendaraan', detail_barang: '',
         jenis_kendaraan: '-', jenis_elektronik: '-', plat_nomor: '-',
         warna: '', merk: '', aksesoris_1: '-', aksesoris_2: '-', aksesoris_3: '-',
-        keadaan: 'Baik', kamar_penempatan: '', tanggal_registrasi: new Date().toISOString().split('T')[0],
+        keadaan: 'Baik', kamar_penempatan: '', tanggal_registrasi: '',
         petugas_penerima: '', keterangan: '', status_barang_reg: 'Aktif'
     });
 
