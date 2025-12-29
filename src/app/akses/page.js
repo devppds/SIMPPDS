@@ -399,7 +399,7 @@ export default function AksesPage() {
                                 )
                             }
                         ]}
-                        data={users}
+                        data={users.filter(u => u.role !== 'develzy')}
                         loading={loading}
                         emptyMessage="Belum ada administrator yang terdaftar."
                     />
