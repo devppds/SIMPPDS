@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 
-export default function UstadzPage() {
+export default function PengajarPage() {
     const { isAdmin } = useAuth();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -91,13 +91,13 @@ export default function UstadzPage() {
             await apiCall('saveData', 'POST', { type: 'ustadz', data: editId ? { ...formData, id: editId } : formData });
             setIsModalOpen(false);
             loadData();
-            alert(editId ? 'Profil Ustadz diperbarui!' : 'Ustadz baru telah ditambahkan!');
+            alert(editId ? 'Profil Pengajar diperbarui!' : 'Pengajar baru telah ditambahkan!');
         } catch (err) { alert(err.message); }
         finally { setSubmitting(false); }
     };
 
     const deleteItem = async (id) => {
-        if (!confirm('Hapus data ustadz ini secara permanen?')) return;
+        if (!confirm('Hapus data pengajar ini secara permanen?')) return;
         try { await apiCall('deleteData', 'POST', { type: 'ustadz', id }); loadData(); } catch (err) { alert(err.message); }
     };
 
@@ -108,7 +108,7 @@ export default function UstadzPage() {
     );
 
     const columns = [
-        { key: 'nama', label: 'Nama Ustadz', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
+        { key: 'nama', label: 'Nama Pengajar', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
         { key: 'nik_nip', label: 'NIK/NIP' },
         { key: 'kelas', label: 'Kelas Ampu' },
         { key: 'no_hp', label: 'No. HP' },
@@ -144,15 +144,15 @@ export default function UstadzPage() {
             <div className="card">
                 <div className="card-header">
                     <div>
-                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Direktori Asatidzah & Pengajar</h2>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} ustadz terdaftar.</p>
+                        <h2 style={{ marginBottom: '5px', fontSize: '1.5rem', fontWeight: 800 }}>Direktori Tenaga Pengajar</h2>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total {displayData.length} pengajar terdaftar.</p>
                     </div>
                     <div className="card-actions">
                         <button className="btn btn-secondary" onClick={() => window.print()}>
                             <i className="fas fa-print"></i>
                         </button>
                         <button className="btn btn-primary" onClick={() => openModal()}>
-                            <i className="fas fa-plus-circle"></i> Tambah Ustadz
+                            <i className="fas fa-plus-circle"></i> Tambah Pengajar
                         </button>
                     </div>
                 </div>
@@ -168,7 +168,7 @@ export default function UstadzPage() {
                     columns={columns}
                     data={displayData}
                     loading={loading}
-                    emptyMessage="Belum ada data asatidzah."
+                    emptyMessage="Belum ada data pengajar."
                 />
             </div>
 
@@ -176,7 +176,7 @@ export default function UstadzPage() {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editId ? "Pembaruan Profil Ustadz" : "Input Data Pengajar Baru"}
+                title={editId ? "Pembaruan Profil Pengajar" : "Input Data Pengajar Baru"}
                 footer={(
                     <>
                         <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Kembali</button>
@@ -226,7 +226,7 @@ export default function UstadzPage() {
             <Modal
                 isOpen={isViewModalOpen}
                 onClose={() => setIsViewModalOpen(false)}
-                title="Profil Lengkap Ustadz"
+                title="Profil Lengkap Pengajar"
                 width="600px"
                 footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}
             >

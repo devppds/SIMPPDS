@@ -19,7 +19,7 @@ export const NAV_ITEMS = [
             { label: 'Data Santri', path: '/sekretariat/santri', icon: 'fas fa-user-graduate' },
             { label: 'Asrama & Kamar', path: '/sekretariat/kamar', icon: 'fas fa-bed' },
             { label: 'Layanan Sekretariat', path: '/sekretariat/layanan', icon: 'fas fa-concierge-bell' },
-            { label: 'Data Ustadz', path: '/sekretariat/ustadz', icon: 'fas fa-chalkboard-teacher' },
+            { label: 'Data Pengajar', path: '/sekretariat/ustadz', icon: 'fas fa-chalkboard-teacher' },
             { label: 'Data Pengurus', path: '/sekretariat/pengurus', icon: 'fas fa-user-tie' },
             {
                 label: 'Arsiparis',

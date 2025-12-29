@@ -309,7 +309,7 @@ export default function KamarPage() {
                         </div>
 
                         <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--primary-light)', borderRadius: '8px' }}>
-                            <small style={{ color: 'var(--primary)', fontWeight: 700 }}>Ustadz Pembimbing</small>
+                            <small style={{ color: 'var(--primary)', fontWeight: 700 }}>Pengajar Pembimbing</small>
                             <div style={{ fontWeight: 800, color: 'var(--primary-dark)' }}>{viewData.penasihat || 'Belum Ditentukan'}</div>
                         </div>
                     </div>

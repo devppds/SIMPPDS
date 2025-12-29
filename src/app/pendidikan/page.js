@@ -102,7 +102,7 @@ export default function PendidikanPage() {
         { key: 'kegiatan', label: 'Kegiatan' },
         { key: 'nilai', label: 'Nilai', render: (row) => <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{row.nilai}</span> },
         { key: 'kehadiran', label: 'Kehadiran' },
-        { key: 'ustadz', label: 'Ustadz' },
+        { key: 'ustadz', label: 'Pengajar' },
         {
             key: 'actions',
             label: 'Aksi',
@@ -206,7 +206,7 @@ export default function PendidikanPage() {
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Pengajar / Ustadz</label>
+                        <label className="form-label">Tenaga Pengajar</label>
                         <input type="text" className="form-control" value={formData.ustadz} onChange={e => setFormData({ ...formData, ustadz: e.target.value })} />
                     </div>
                     <div className="form-group">
@@ -273,7 +273,7 @@ export default function PendidikanPage() {
                                     <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)' }}>{viewData.nilai || '-'}</div>
                                 </div>
                                 <div>
-                                    <small style={{ color: 'var(--text-muted)' }}>Ustadz / Pengajar</small>
+                                    <small style={{ color: 'var(--text-muted)' }}>Tenaga Pengajar</small>
                                     <div style={{ fontWeight: 600 }}>{viewData.ustadz || '-'}</div>
                                 </div>
                             </div>

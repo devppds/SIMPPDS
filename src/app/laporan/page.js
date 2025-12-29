@@ -237,7 +237,7 @@ export default function LaporanPimpinan() {
                             <span className="dot" style={{ backgroundColor: '#10b981' }}></span>
                             <div className="status-text">
                                 <strong>SDM Pondok</strong>
-                                <p>{stats.ustadzTotal} Tenaga Pendidik Aktif</p>
+                                <p>{stats.ustadzTotal} Tenaga Pengajar Aktif</p>
                             </div>
                         </div>
                         <div className="status-item" style={{ marginTop: '1.2rem' }}>
