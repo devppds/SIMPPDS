@@ -55,26 +55,6 @@ h4,
   }
 }
 
-@keyframes marquee-left {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes marquee-right {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(0);
-  }
-}
-
 @keyframes fadeInUp {
   from {
     opacity: 0;

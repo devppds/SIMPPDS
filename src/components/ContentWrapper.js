@@ -80,14 +80,6 @@ export default function ContentWrapper({ children }) {
                 position: 'relative',
                 overflow: 'hidden'
             }}>
-                {/* Scrolling Arabic Text (Top) */}
-                <div style={{ position: 'absolute', top: '2rem', width: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <div className="scroll-left" style={{ display: 'inline-block', paddingLeft: '100%', animation: 'marquee-left 30s linear infinite' }}>
-                        <span style={{ fontSize: '2rem', fontFamily: "'Amiri', serif", margin: '0 2rem', opacity: 0.4 }}>اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ وَعَلٰى اٰلِ سَيِّدِنَا مُحَمَّدٍ</span>
-                        <span style={{ fontSize: '2rem', fontFamily: "'Amiri', serif", margin: '0 2rem', opacity: 0.4 }}>اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ وَعَلٰى اٰلِ سَيِّدِنَا مُحَمَّدٍ</span>
-                        <span style={{ fontSize: '2rem', fontFamily: "'Amiri', serif", margin: '0 2rem', opacity: 0.4 }}>اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ وَعَلٰى اٰلِ سَيِّدِنَا مُحَمَّدٍ</span>
-                    </div>
-                </div>
 
                 <div style={{
                     background: 'rgba(255, 255, 255, 0.03)',
@@ -156,14 +148,6 @@ export default function ContentWrapper({ children }) {
                     </div>
                 </div>
 
-                {/* Scrolling Arabic Text (Bottom) */}
-                <div style={{ position: 'absolute', bottom: '2rem', width: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <div className="scroll-right" style={{ display: 'inline-block', paddingRight: '100%', animation: 'marquee-right 30s linear infinite' }}>
-                        <span style={{ fontSize: '2rem', fontFamily: "'Amiri', serif", margin: '0 2rem', opacity: 0.4 }}>اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ وَعَلٰى اٰلِ سَيِّدِنَا مُحَمَّدٍ</span>
-                        <span style={{ fontSize: '2rem', fontFamily: "'Amiri', serif", margin: '0 2rem', opacity: 0.4 }}>اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ وَعَلٰى اٰلِ سَيِّدِنَا مُحَمَّدٍ</span>
-                        <span style={{ fontSize: '2rem', fontFamily: "'Amiri', serif", margin: '0 2rem', opacity: 0.4 }}>اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ وَعَلٰى اٰلِ سَيِّدِنَا مُحَمَّدٍ</span>
-                    </div>
-                </div>
             </div>
         );
     }
