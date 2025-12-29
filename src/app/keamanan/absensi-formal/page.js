@@ -15,7 +15,7 @@ export default function AbsensiFormalPage() {
     const [santriList, setSantriList] = useState([]);
 
     // Filters
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+    const [filterDate, setFilterDate] = useState('');
     const [selectedKelas, setSelectedKelas] = useState('');
 
     // Form State: { [santriId]: { status: 'H', keterangan: '', id: null } }
@@ -25,6 +25,7 @@ export default function AbsensiFormalPage() {
 
     useEffect(() => {
         isMounted.current = true;
+        setFilterDate(new Date().toISOString().split('T')[0]);
         loadMasterKelas();
         return () => { isMounted.current = false; };
     }, []);

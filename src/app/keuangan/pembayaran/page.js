@@ -25,9 +25,9 @@ export default function PembayaranSantriPage() {
         data: history, setData: setHistory, loading, setLoading, submitting, setSubmitting,
         formData, setFormData
     } = useDataManagement('keuangan_pembayaran', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '',
         jenis_pembayaran: 'Syahriah',
-        bulan_tagihan: new Date().toISOString().slice(0, 7),
+        bulan_tagihan: '',
         nominal: 0, keterangan: ''
     });
 
@@ -45,7 +45,14 @@ export default function PembayaranSantriPage() {
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [setHistory, setLoading]);
 
-    useEffect(() => { loadInitialData(); }, [loadInitialData]);
+    useEffect(() => {
+        setFormData(prev => ({
+            ...prev,
+            tanggal: new Date().toISOString().split('T')[0],
+            bulan_tagihan: new Date().toISOString().slice(0, 7)
+        }));
+        loadInitialData();
+    }, [loadInitialData, setFormData]);
 
     useEffect(() => {
         if (!selectedSantri || formData.jenis_pembayaran === 'Tabungan') return;

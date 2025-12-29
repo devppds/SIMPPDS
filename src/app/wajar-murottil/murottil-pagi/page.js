@@ -18,7 +18,7 @@ export default function MurottilPagiPage() {
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
     const [attendance, setAttendance] = useState({});
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+    const [filterDate, setFilterDate] = useState('');
     const [filterKelas, setFilterKelas] = useState('Semua');
     const [kelasOptions, setKelasOptions] = useState([]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -26,6 +26,7 @@ export default function MurottilPagiPage() {
 
     React.useEffect(() => {
         isMounted.current = true;
+        setFilterDate(new Date().toISOString().split('T')[0]);
         return () => { isMounted.current = false; };
     }, []);
 
@@ -131,7 +132,7 @@ export default function MurottilPagiPage() {
 
             <DataViewContainer
                 title="Absensi Murottil Pagi"
-                subtitle={`Tanggal: ${formatDate(filterDate)} | ${santriList.length} Santri`}
+                subtitle={filterDate ? `Tanggal: ${formatDate(filterDate)} | ${santriList.length} Santri` : 'Memuat data...'}
                 headerActions={<button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Absensi</button>}
                 filters={(<>
                     <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
@@ -145,7 +146,7 @@ export default function MurottilPagiPage() {
                 onClose={() => setIsConfirmOpen(false)}
                 onConfirm={handleSave}
                 title="Simpan Absensi?"
-                message={`Anda akan menyimpan data kehadiran untuk ${santriList.length} santri pada tanggal ${formatDate(filterDate)}.`}
+                message={filterDate ? `Anda akan menyimpan data kehadiran untuk ${santriList.length} santri pada tanggal ${formatDate(filterDate)}.` : "Menyiapkan data..."}
                 type="info"
             />
         </div>

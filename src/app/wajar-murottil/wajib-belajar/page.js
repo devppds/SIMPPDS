@@ -18,12 +18,13 @@ export default function WajibBelajarPage() {
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
     const [attendance, setAttendance] = useState({});
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+    const [filterDate, setFilterDate] = useState('');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const isMounted = React.useRef(true);
 
     React.useEffect(() => {
         isMounted.current = true;
+        setFilterDate(new Date().toISOString().split('T')[0]);
         return () => { isMounted.current = false; };
     }, []);
 
@@ -119,7 +120,7 @@ export default function WajibBelajarPage() {
 
             <DataViewContainer
                 title="Input Kehadiran Wajib Belajar"
-                subtitle={`Tanggal: ${formatDate(filterDate)}`}
+                subtitle={filterDate ? `Tanggal: ${formatDate(filterDate)}` : 'Memuat data...'}
                 headerActions={<button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
                 filters={<TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />}
                 tableProps={{ columns, data: santriList, loading }}
