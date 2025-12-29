@@ -1,24 +1,30 @@
 // Build trigger: update Cloudinary configuration
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { HEADERS_CONFIG, FILE_COLUMNS } from '@/lib/api/definitions';
-import { verifyAdmin, logAudit, deleteCloudinaryFile } from '@/lib/api/utils';
+import { verifyAdmin } from '@/lib/api/utils';
+
+// Import Handlers
+import * as SystemHandler from '@/lib/api/handlers/system';
+import * as StatsHandler from '@/lib/api/handlers/stats';
+import * as DataHandler from '@/lib/api/handlers/data';
+import * as FilesHandler from '@/lib/api/handlers/files';
 
 export const runtime = 'edge';
 
-export async function GET(request) { return handle(request); }
-export async function POST(request) { return handle(request); }
+export async function GET(request) { return dispatcher(request); }
+export async function POST(request) { return dispatcher(request); }
 
-async function handle(request) {
+async function dispatcher(request) {
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
     const type = url.searchParams.get('type');
     const id = url.searchParams.get('id');
 
-    // 1. Basic Test (No Context needed)
+    // 1. Basic Test
     if (action === 'test') {
         return Response.json({ status: "success", message: "API endpoint is reachable" });
     }
 
+    // 2. Setup Context
     let env;
     try {
         const ctx = getRequestContext();
@@ -34,169 +40,38 @@ async function handle(request) {
     const { DB: db } = env;
 
     try {
-        // --- SYSTEM INITIALIZATION (One-time or occasional) ---
-        if (action === 'initSystem') {
-            const isAdmin = await verifyAdmin(request, db);
-            if (!isAdmin) return Response.json({ error: "Unauthorized" }, { status: 403 });
+        // 3. Routing Logic
 
-            await db.prepare(`CREATE TABLE IF NOT EXISTS audit_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT,
-                username TEXT,
-                role TEXT,
-                action TEXT,
-                target_type TEXT,
-                target_id TEXT,
-                details TEXT,
-                ip_address TEXT
-            )`).run();
-
-            await db.prepare(`CREATE TABLE IF NOT EXISTS system_configs (
-                key TEXT PRIMARY KEY,
-                value TEXT,
-                updated_at TEXT
-            )`).run();
-
-            return Response.json({ success: true, message: "System tables initialized" });
-        }
-
-        if (action === 'ping') {
-            await db.prepare("SELECT 1").run();
-            return Response.json({ status: "success", message: "Koneksi D1 Aktif!" });
-        }
-
-        // --- AUTH PROTECTED ACTIONS ---
-        const adminActions = ['getAuditLogs', 'updateConfig', 'initSystem'];
-        if (adminActions.includes(action)) {
-            const isAdmin = await verifyAdmin(request, db);
-            if (!isAdmin) return Response.json({ error: "Forbidden: Admin access required" }, { status: 403 });
-        }
-
-        if (action === 'getQuickStats') {
-            const s = await db.prepare("SELECT COUNT(*) as total FROM santri").first();
-            const u = await db.prepare("SELECT COUNT(*) as total FROM ustadz").first();
-
-            // Calculate Current Month Income
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const currentMonthPrefix = `${year}-${month}`;
-
-            const p = await db.prepare("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Masuk' AND tanggal LIKE ?").bind(`${currentMonthPrefix}%`).first();
-
-            // Calculate Operational Cash (Total Masuk - Total Keluar)
-            const tm = await db.prepare("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Masuk'").first();
-            const tk = await db.prepare("SELECT SUM(nominal) as total FROM arus_kas WHERE tipe = 'Keluar'").first();
-            const kasTotal = (tm?.total || 0) - (tk?.total || 0);
-
-            // Fetch Santri Distribution for Chart
-            const { results: santriChart } = await db.prepare("SELECT kelas, COUNT(*) as count FROM santri GROUP BY kelas").all();
-
-            return Response.json({
-                santriTotal: s?.total || 0,
-                ustadzTotal: u?.total || 0,
-                keuanganTotal: p?.total || 0,
-                kasTotal: kasTotal,
-                santriChart: santriChart || []
-            });
-        }
-
-        if (action === 'getData') {
-            if (!type || !HEADERS_CONFIG[type]) return Response.json({ error: "Invalid type" }, { status: 400 });
-            const { results } = await db.prepare(`SELECT * FROM ${type} ORDER BY id DESC`).all();
-            return Response.json(results || []);
-        }
-
-        if (action === 'getAuditLogs') {
-            const { results } = await db.prepare(`SELECT * FROM audit_logs ORDER BY id DESC LIMIT 100`).all();
-            return Response.json(results || []);
-        }
-
-        if (action === 'getConfigs') {
-            const { results } = await db.prepare(`SELECT * FROM system_configs`).all();
-            return Response.json(results || []);
-        }
-
+        // --- System & Config ---
+        if (action === 'initSystem') return await SystemHandler.handleInitSystem(request, db);
+        if (action === 'ping') return await SystemHandler.handlePing(db);
+        if (action === 'getConfigs') return await SystemHandler.handleGetConfigs(db);
         if (action === 'updateConfig') {
-            const body = await request.json();
-            const { key, value } = body;
-            await db.prepare(`INSERT OR REPLACE INTO system_configs (key, value, updated_at) VALUES (?, ?, ?)`)
-                .bind(key, value, new Date().toISOString()).run();
-
-            await logAudit(db, request, 'UPDATE_CONFIG', 'system_configs', key, `Value: ${value}`);
-            return Response.json({ success: true });
+            // Check Admin
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+            return await SystemHandler.handleUpdateConfig(request, db);
+        }
+        if (action === 'getAuditLogs') {
+            // Check Admin
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+            return await SystemHandler.handleGetAuditLogs(db);
         }
 
-        if (action === 'saveData') {
-            const body = await request.json();
-            const config = HEADERS_CONFIG[type];
-            if (!config) return Response.json({ error: "Invalid type" }, { status: 400 });
+        // --- Stats ---
+        if (action === 'getQuickStats') return await StatsHandler.handleGetQuickStats(db);
 
-            const fields = [];
-            const values = [];
-            config.forEach(col => {
-                if (Object.prototype.hasOwnProperty.call(body, col)) {
-                    fields.push(col);
-                    values.push(body[col] === '' ? null : body[col]);
-                }
-            });
+        // --- Data CRUD ---
+        if (action === 'getData') return await DataHandler.handleGetData(db, type);
+        if (action === 'saveData') return await DataHandler.handleSaveData(request, db, type, id); // id from URL included
+        if (action === 'deleteData') return await DataHandler.handleDeleteData(request, db, env, type, id);
 
-            // FIX: Use ID from URL query param if body.id is missing (essential for updates)
-            const recordId = body.id || id;
-
-            if (recordId) {
-                const setClause = fields.map(f => `${f} = ?`).join(', ');
-                values.push(recordId);
-                await db.prepare(`UPDATE ${type} SET ${setClause} WHERE id = ?`).bind(...values).run();
-                await logAudit(db, request, 'UPDATE', type, recordId, `Fields: ${fields.join(', ')}`);
-                return Response.json({ success: true });
-            } else {
-                const placeholders = fields.map(() => '?').join(', ');
-                const res = await db.prepare(`INSERT INTO ${type} (${fields.join(', ')}) VALUES (${placeholders})`).bind(...values).run();
-                await logAudit(db, request, 'CREATE', type, res.meta?.last_row_id || 'new');
-                return Response.json({ success: true });
-            }
-        }
-
-        if (action === 'deleteData') {
-            if (!type || !id) return Response.json({ error: "Type and ID required" }, { status: 400 });
-
-            // Check for files to delete
-            const cols = FILE_COLUMNS[type];
-            if (cols) {
-                const item = await db.prepare(`SELECT * FROM ${type} WHERE id = ?`).bind(id).first();
-                if (item) {
-                    for (const col of cols) {
-                        if (item[col]) await deleteCloudinaryFile(item[col], env);
-                    }
-                }
-            }
-
-            await db.prepare(`DELETE FROM ${type} WHERE id = ?`).bind(id).run();
-            await logAudit(db, request, 'DELETE', type, id);
-            return Response.json({ success: true });
-        }
-
-        if (action === 'getCloudinarySignature') {
-            const body = await request.json();
-            const paramsToSign = body.data?.paramsToSign || body.paramsToSign;
-            const apiSecret = env.CLOUDINARY_API_SECRET?.trim();
-            const apiKey = env.CLOUDINARY_API_KEY?.trim();
-            const cloudName = env.CLOUDINARY_CLOUD_NAME?.trim();
-
-            if (!apiSecret || !apiKey || !cloudName) {
-                return Response.json({ status: "error", message: "Konfigurasi Cloudinary tidak ditemukan." }, { status: 500 });
-            }
-
-            const sortedKeys = Object.keys(paramsToSign).sort();
-            const signString = sortedKeys.map(k => `${k}=${paramsToSign[k]}`).join('&') + apiSecret;
-            const encoder = new TextEncoder();
-            const hashBuffer = await crypto.subtle.digest('SHA-1', encoder.encode(signString));
-            const signature = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-            return Response.json({ signature, apiKey, cloudName });
-        }
+        // --- Files ---
+        if (action === 'getCloudinarySignature') return await FilesHandler.handleGetCloudinarySignature(request, env);
 
         return Response.json({ error: "Action Unknown" }, { status: 404 });
+
     } catch (err) {
         return Response.json({
             status: "error",
