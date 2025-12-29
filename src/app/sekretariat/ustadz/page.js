@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
