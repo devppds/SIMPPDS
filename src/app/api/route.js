@@ -276,11 +276,13 @@ async function handle(request) {
                 }
             });
 
-            if (body.id) {
+            const recordId = body.id || id;
+
+            if (recordId) {
                 const setClause = fields.map(f => `${f} = ?`).join(', ');
-                values.push(body.id);
+                values.push(recordId);
                 await db.prepare(`UPDATE ${type} SET ${setClause} WHERE id = ?`).bind(...values).run();
-                await logAudit(db, request, 'UPDATE', type, body.id, `Fields: ${fields.join(', ')}`);
+                await logAudit(db, request, 'UPDATE', type, recordId, `Fields: ${fields.join(', ')}`);
                 return Response.json({ success: true });
             } else {
                 const placeholders = fields.map(() => '?').join(', ');
