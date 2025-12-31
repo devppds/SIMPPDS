@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
@@ -8,19 +8,10 @@ import { useToast } from '@/lib/ToastContext';
 // ✨ Unified Components
 import DataViewContainer from '@/components/DataViewContainer';
 import KopSurat from '@/components/KopSurat';
-import { SelectInput } from '@/components/FormInput';
+import Modal from '@/components/Modal';
+import { TextInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
-
-export const FORMAL_GROUPS = [
-    'SMP / MTS',
-    'SMA / SMK',
-    'Strata 1 - Smt 1-2',
-    'Strata 1 - Smt 3-4',
-    'Strata 1 - Smt 5-6',
-    'Strata 1 - Smt 7-8',
-    'Magister - Smt 1-2',
-    'Magister - Smt 3-4'
-];
+import StatsPanel from '@/components/StatsPanel';
 
 export default function PengaturanFormalPage() {
     const { canEdit } = usePagePermission();
@@ -28,15 +19,21 @@ export default function PengaturanFormalPage() {
 
     // State
     const [loading, setLoading] = useState(false);
-    const [santriList, setSantriList] = useState([]);
-    const [mapping, setMapping] = useState({}); // { [santriId]: { kelompok: '', id: null } }
-    const [kelasOptions, setKelasOptions] = useState([]);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const isMounted = React.useRef(true);
+    const [groups, setGroups] = useState([]); // Array of group names or objects
+    const [mapping, setMapping] = useState([]); // All student-to-group mappings
+    const [allSantri, setAllSantri] = useState([]);
 
-    // Filters & Bulk Actions
-    const [filterKelas, setFilterKelas] = useState('Semua');
-    const [bulkGroup, setBulkGroup] = useState(FORMAL_GROUPS[0]);
+    // Group Form State
+    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+    const [groupForm, setGroupForm] = useState({ id: null, nama: '' });
+
+    // Student Selection Modal State
+    const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+    const [activeGroup, setActiveGroup] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [mappingSubmitting, setMappingSubmitting] = useState(false);
+
+    const isMounted = React.useRef(true);
 
     useEffect(() => {
         isMounted.current = true;
@@ -47,215 +44,306 @@ export default function PengaturanFormalPage() {
     const loadData = async () => {
         if (isMounted.current) setLoading(true);
         try {
-            const [resSantri, resMapping] = await Promise.all([
-                apiCall('getData', 'GET', { type: 'santri' }),
-                apiCall('getData', 'GET', { type: 'keamanan_formal_mapping' })
+            const [resGroups, resMapping, resSantri] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'keamanan_formal_groups' }),
+                apiCall('getData', 'GET', { type: 'keamanan_formal_mapping' }),
+                apiCall('getData', 'GET', { type: 'santri' })
             ]);
 
-            // 1. Filter hanya siswa MIU yang aktif
-            const miuStudents = (resSantri || []).filter(s => s.madrasah === 'MIU' && s.status_santri === 'Aktif')
-                .sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
-
             if (isMounted.current) {
-                setSantriList(miuStudents);
-                // Dapatkan daftar kelas unik untuk filter
-                const classes = [...new Set(miuStudents.map(s => s.kelas))].filter(Boolean).sort();
-                setKelasOptions(classes);
+                // If no groups yet, provide default ones as fallback or start empty
+                setGroups(resGroups || []);
+                setMapping(resMapping || []);
+                // Filter only active MIU students
+                setAllSantri((resSantri || []).filter(s => s.madrasah === 'MIU' && s.status_santri === 'Aktif'));
             }
-
-            // 2. Map data yang sudah ada
-            const initialMapping = {};
-            miuStudents.forEach(s => {
-                const existing = (resMapping || []).find(m => m.santri_id === s.id);
-                initialMapping[s.id] = {
-                    kelompok: existing ? existing.kelompok_formal || '' : '',
-                    id: existing ? existing.id : null
-                };
-            });
-            if (isMounted.current) setMapping(initialMapping);
         } catch (e) {
             console.error("Load Data Error:", e);
-            if (isMounted.current) showToast("Gagal memuat data santri.", "error");
+            if (isMounted.current) showToast("Gagal memuat data.", "error");
         } finally {
             if (isMounted.current) setLoading(false);
         }
     };
 
-    const handleSingleChange = (santriId, value) => {
-        setMapping(prev => ({
-            ...prev,
-            [santriId]: { ...prev[santriId], kelompok: value }
-        }));
-    };
-
-    const applyBulkAction = () => {
-        const newMapping = { ...mapping };
-        let count = 0;
-
-        santriList.forEach(s => {
-            if (filterKelas === 'Semua' || s.kelas === filterKelas) {
-                newMapping[s.id] = { ...newMapping[s.id], kelompok: bulkGroup };
-                count++;
-            }
-        });
-
-        setMapping(newMapping);
-        showToast(`Berhasil menerapkan ke ${count} santri.`, "success");
-    };
-
-    const handleSave = async () => {
-        if (isMounted.current) setLoading(true);
+    // --- Group Actions ---
+    const handleSaveGroup = async () => {
+        if (!groupForm.nama.trim()) return showToast("Nama kelompok harus diisi", "warning");
+        setLoading(true);
         try {
-            const promises = santriList.map(s => {
-                const data = mapping[s.id];
-                // Hanya simpan jika data sudah diisi
-                if (!data.kelompok) return Promise.resolve();
+            await apiCall('saveData', 'POST', {
+                type: 'keamanan_formal_groups',
+                data: groupForm
+            });
+            showToast("Kelompok berhasil disimpan", "success");
+            setIsGroupModalOpen(false);
+            setGroupForm({ id: null, nama: '' });
+            loadData();
+        } catch (e) {
+            showToast(e.message, "error");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                return apiCall('saveData', 'POST', {
+    const handleDeleteGroup = async (id) => {
+        if (!confirm("Hapus kelompok ini? Semua pemetaan santri di dalamnya akan ikut terhapus.")) return;
+        setLoading(true);
+        try {
+            await apiCall('deleteData', 'DELETE', { type: 'keamanan_formal_groups', id });
+            // Also clean up mappings for this group? (Usually backend handles this or we filter it)
+            showToast("Kelompok dihapus", "success");
+            loadData();
+        } catch (e) {
+            showToast(e.message, "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- Student Mapping Actions ---
+    const openManageModal = (group) => {
+        setActiveGroup(group);
+        setSearchTerm('');
+        setIsManageModalOpen(true);
+    };
+
+    const filteredSantriForModal = useMemo(() => {
+        if (!searchTerm) return [];
+        return allSantri.filter(s =>
+            s.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (s.kelas && s.kelas.toLowerCase().includes(searchTerm.toLowerCase()))
+        ).slice(0, 50);
+    }, [allSantri, searchTerm]);
+
+    const activeGroupSantri = useMemo(() => {
+        if (!activeGroup) return [];
+        return mapping.filter(m => m.kelompok_formal === activeGroup.nama);
+    }, [mapping, activeGroup]);
+
+    const toggleSantriMapping = async (santri) => {
+        if (!activeGroup) return;
+        setMappingSubmitting(true);
+        try {
+            const existing = mapping.find(m => m.santri_id === santri.id && m.kelompok_formal === activeGroup.nama);
+
+            if (existing) {
+                await apiCall('deleteData', 'DELETE', { type: 'keamanan_formal_mapping', id: existing.id });
+                showToast(`Dihapus: ${santri.nama_siswa}`, "info");
+            } else {
+                await apiCall('saveData', 'POST', {
                     type: 'keamanan_formal_mapping',
                     data: {
-                        id: data.id,
-                        santri_id: s.id,
-                        nama_santri: s.nama_siswa,
-                        kelas_miu: s.kelas,
-                        kelompok_formal: data.kelompok,
-                        // Maintain legacy fields just in case for backward compatibility during transition
-                        jenjang: data.kelompok.split(' - ')[0],
-                        semester: data.kelompok.includes('Smt') ? data.kelompok.split('Smt ')[1] : '1'
+                        santri_id: santri.id,
+                        nama_santri: santri.nama_siswa,
+                        kelompok_formal: activeGroup.nama,
+                        kelas_miu: santri.kelas
                     }
                 });
-            });
+                showToast(`Ditambahkan: ${santri.nama_siswa}`, "success");
+            }
 
-            await Promise.all(promises);
-            if (isMounted.current) {
-                showToast("Pengaturan kelompok formal berhasil disimpan!", "success");
-                loadData();
-            }
+            const resMapping = await apiCall('getData', 'GET', { type: 'keamanan_formal_mapping' });
+            if (isMounted.current) setMapping(resMapping || []);
         } catch (e) {
-            if (isMounted.current) showToast(e.message, "error");
+            showToast(e.message, "error");
         } finally {
-            if (isMounted.current) {
-                setLoading(false);
-                setIsConfirmOpen(false);
-            }
+            setMappingSubmitting(false);
         }
     };
 
-    const filteredSantri = useMemo(() => {
-        if (filterKelas === 'Semua') return santriList;
-        return santriList.filter(s => s.kelas === filterKelas);
-    }, [santriList, filterKelas]);
-
-    const stats = [
-        { title: 'Total Siswa MIU', value: santriList.length, icon: 'fas fa-graduation-cap', color: 'var(--primary)' },
-        { title: 'Sudah Dipetakan', value: Object.values(mapping).filter(m => m.kelompok).length, icon: 'fas fa-user-check', color: 'var(--success)' },
-        { title: 'Belum Dipetakan', value: Object.values(mapping).filter(m => !m.kelompok).length, icon: 'fas fa-user-clock', color: 'var(--warning)' }
-    ];
-
-    const columns = [
+    // --- Table Config ---
+    const groupColumns = [
+        { key: 'nama', label: 'Nama Kelompok Sekolah', render: (row) => <strong>{row.nama}</strong> },
         {
-            key: 'nama_siswa',
-            label: 'Nama Santri (MIU)',
-            render: (row) => (
-                <div>
-                    <div style={{ fontWeight: 800 }}>{row.nama_siswa}</div>
-                    <small>Kelas MIU: {row.kelas}</small>
-                </div>
-            )
+            key: 'total',
+            label: 'Total Santri',
+            width: '150px',
+            render: (row) => {
+                const count = mapping.filter(m => m.kelompok_formal === row.nama).length;
+                return <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary-dark)' }}>{count} Santri</span>;
+            }
         },
         {
-            key: 'kelompok',
-            label: 'Kelompok Sekolah Formal',
+            key: 'actions',
+            label: 'Aksi',
+            width: '180px',
             render: (row) => (
-                <select
-                    className="form-control form-control-sm"
-                    value={mapping[row.id]?.kelompok || ''}
-                    onChange={(e) => handleSingleChange(row.id, e.target.value)}
-                    disabled={!canEdit}
-                >
-                    <option value="">- Belum Diatur -</option>
-                    {FORMAL_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
-                </select>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        className="btn-vibrant btn-vibrant-purple"
+                        onClick={() => openManageModal(row)}
+                        title="Kelola Santri"
+                    >
+                        <i className="fas fa-users"></i>
+                    </button>
+                    {canEdit && (
+                        <>
+                            <button
+                                className="btn-vibrant btn-vibrant-blue"
+                                onClick={() => { setGroupForm(row); setIsGroupModalOpen(true); }}
+                                title="Edit Nama"
+                            >
+                                <i className="fas fa-edit"></i>
+                            </button>
+                            <button
+                                className="btn-vibrant btn-vibrant-red"
+                                onClick={() => handleDeleteGroup(row.id)}
+                                title="Hapus Kelompok"
+                            >
+                                <i className="fas fa-trash"></i>
+                            </button>
+                        </>
+                    )}
+                </div>
             )
         }
+    ];
+
+    const statsItems = [
+        { title: 'Total Kelompok', value: groups.length, icon: 'fas fa-layer-group', color: 'var(--primary)' },
+        { title: 'Santri Terpetakan', value: mapping.length, icon: 'fas fa-user-check', color: 'var(--success)' },
+        { title: 'Siswa MIU Aktif', value: allSantri.length, icon: 'fas fa-graduation-cap', color: 'var(--info)' }
     ];
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Pengaturan Kelompok Formal" subJudul="Pemetaan siswa madrasah MIU ke kelompok pendidikan formal." hideOnScreen={true} />
+            <KopSurat judul="Pengaturan Struktur Kelompok Formal" subJudul="Definisikan kelompok sekolah dan masukkan santri ke dalamnya." hideOnScreen={true} />
 
-            <div className="stats-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                {stats.map((s, i) => (
-                    <div key={i} className="card-glass" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderRadius: '20px' }}>
-                        <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: s.color + '20', color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
-                            <i className={s.icon}></i>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.title}</div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{s.value}</div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Bulk Action Controls */}
-            <div className="card-glass" style={{ padding: '2rem', borderRadius: '24px', marginBottom: '2rem', border: '1px solid #f1f5f9' }}>
-                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)' }}>
-                    <i className="fas fa-magic" style={{ marginRight: '10px' }}></i> Pengaturan Masal (Bulk Update)
-                </h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'flex-end' }}>
-                    <div style={{ flex: '1 1 200px' }}>
-                        <label className="form-label">Sasaran Kelas MIU</label>
-                        <select className="form-control" value={filterKelas} onChange={e => setFilterKelas(e.target.value)}>
-                            <option value="Semua">Semua Kelas</option>
-                            {kelasOptions.map((k, i) => <option key={i} value={k}>{k}</option>)}
-                        </select>
-                    </div>
-                    <div style={{ flex: '1 1 250px' }}>
-                        <label className="form-label">Setel Kelompok Ke</label>
-                        <select className="form-control" value={bulkGroup} onChange={e => setBulkGroup(e.target.value)}>
-                            {FORMAL_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
-                        </select>
-                    </div>
-                    <button className="btn btn-secondary" onClick={applyBulkAction} style={{ flex: '1 1 150px', height: '50px' }}>
-                        <i className="fas fa-bolt"></i> Terapkan Masal
-                    </button>
-                </div>
-                <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    *Gunakan fitur ini untuk memetakan seluruh santri dalam satu kelas MIU ke Kelompok formal secara cepat.
-                </p>
-            </div>
+            <StatsPanel items={statsItems} />
 
             <DataViewContainer
-                title="Daftar Pemetaan Siswa"
-                subtitle={`Menampilkan ${filteredSantri.length} Santri MIU`}
+                title="Daftar Kelompok Sekolah"
+                subtitle="Gunakan menu ini untuk membagi santri ke dalam kelompok formal (SMP, SMA, Kuliah, dsb)."
                 headerActions={canEdit && (
-                    <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || santriList.length === 0}>
-                        <i className="fas fa-save"></i> Simpan Semua Perubahan
+                    <button className="btn btn-primary" onClick={() => { setGroupForm({ id: null, nama: '' }); setIsGroupModalOpen(true); }}>
+                        <i className="fas fa-plus"></i> Tambah Kelompok
                     </button>
                 )}
-                tableProps={{ columns, data: filteredSantri, loading }}
+                tableProps={{ columns: groupColumns, data: groups, loading }}
             />
 
-            <ConfirmModal
-                isOpen={isConfirmOpen}
-                onClose={() => setIsConfirmOpen(false)}
-                onConfirm={handleSave}
-                title="Simpan Pemetaan?"
-                message="Data pemetaan kelompok formal akan disimpan ke dalam database. Ini akan mempengaruhi laporan absensi sekolah."
-                type="info"
-            />
+            {/* Modal Tambah/Edit Kelompok */}
+            <Modal
+                isOpen={isGroupModalOpen}
+                onClose={() => setIsGroupModalOpen(false)}
+                title={groupForm.id ? "Edit Kelompok" : "Tambah Kelompok Baru"}
+            >
+                <div style={{ padding: '10px' }}>
+                    <TextInput
+                        label="Nama Kelompok"
+                        value={groupForm.nama}
+                        onChange={e => setGroupForm({ ...groupForm, nama: e.target.value })}
+                        placeholder="Contoh: SMA / SMK"
+                        required
+                    />
+                    <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-primary" onClick={handleSaveGroup} disabled={loading}>
+                            {loading ? 'Menyimpan...' : 'Simpan Kelompok'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
-            <style jsx>{`
-                .form-label {
-                    display: block;
-                    font-size: 0.8rem;
-                    font-weight: 700;
-                    color: var(--primary-dark);
-                    margin-bottom: 8px;
-                    text-transform: uppercase;
-                }
-            `}</style>
+            {/* Modal Kelola Santri dalam Kelompok */}
+            <Modal
+                isOpen={isManageModalOpen}
+                onClose={() => setIsManageModalOpen(false)}
+                title={`Kelola Santri: ${activeGroup?.nama}`}
+                width="900px"
+            >
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '10px' }}>
+
+                    {/* Panel Kiri: Pencarian & Tambah */}
+                    <div className="card-glass" style={{ padding: '20px', borderRadius: '15px' }}>
+                        <h4 style={{ fontSize: '0.9rem', marginBottom: '15px', color: 'var(--primary-dark)' }}>Cari & Tambah Santri</h4>
+                        <TextInput
+                            icon="fas fa-search"
+                            placeholder="Ketik nama santri atau kelas..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+
+                        <div style={{ maxHeight: '400px', overflowY: 'auto', marginTop: '10px' }}>
+                            {filteredSantriForModal.length > 0 ? (
+                                filteredSantriForModal.map(s => {
+                                    const inThisGroup = activeGroupSantri.some(m => m.santri_id === s.id);
+                                    const inAnyGroup = mapping.find(m => m.santri_id === s.id && m.kelompok_formal !== activeGroup?.nama);
+
+                                    return (
+                                        <div
+                                            key={s.id}
+                                            style={{
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                padding: '12px', borderBottom: '1px solid #f1f5f9',
+                                                background: inThisGroup ? 'var(--primary-light)' : 'transparent',
+                                                borderRadius: '8px'
+                                            }}
+                                        >
+                                            <div>
+                                                <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{s.nama_siswa}</div>
+                                                <div style={{ fontSize: '0.7rem', color: inAnyGroup ? 'var(--warning-dark)' : 'var(--text-muted)' }}>
+                                                    {inAnyGroup ? `⚠️ Terdaftar di: ${inAnyGroup.kelompok_formal}` : `Kelas MIU: ${s.kelas}`}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => !mappingSubmitting && toggleSantriMapping(s)}
+                                                className={`btn-vibrant ${inThisGroup ? 'btn-vibrant-red' : 'btn-vibrant-blue'}`}
+                                                style={{ width: '32px', height: '32px', padding: 0 }}
+                                                disabled={mappingSubmitting}
+                                            >
+                                                <i className={`fas ${inThisGroup ? 'fa-minus' : 'fa-plus'}`}></i>
+                                            </button>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                    <i className="fas fa-search" style={{ fontSize: '2rem', opacity: 0.1, marginBottom: '10px' }}></i>
+                                    <p style={{ fontSize: '0.8rem' }}>{searchTerm ? 'Santri tidak ditemukan.' : 'Silakan cari nama santri untuk mulai memetakan.'}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Panel Kanan: Daftar Anggota Sekarang */}
+                    <div className="card-glass" style={{ padding: '20px', borderRadius: '15px', border: '1px solid var(--primary)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h4 style={{ fontSize: '0.9rem', color: 'var(--primary-dark)' }}>Anggota Kelompok ({activeGroupSantri.length})</h4>
+                        </div>
+
+                        <div style={{ maxHeight: '425px', overflowY: 'auto' }}>
+                            {activeGroupSantri.length > 0 ? (
+                                activeGroupSantri.map(m => (
+                                    <div
+                                        key={m.id}
+                                        style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '12px', borderBottom: '1px solid #f1f5f9'
+                                        }}
+                                    >
+                                        <div>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{m.nama_santri}</div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>MIU {m.kelas_miu}</div>
+                                        </div>
+                                        <button
+                                            onClick={() => !mappingSubmitting && toggleSantriMapping({ id: m.santri_id, nama_siswa: m.nama_santri })}
+                                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                                            disabled={mappingSubmitting}
+                                        >
+                                            <i className="fas fa-times-circle"></i>
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                                    <p style={{ fontSize: '0.8rem' }}>Belum ada santri di kelompok ini.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                </div>
+            </Modal>
         </div>
     );
 }

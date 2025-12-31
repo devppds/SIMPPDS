@@ -30,6 +30,7 @@ export default function AbsensiFormalPage() {
 
     // State
     const [loading, setLoading] = useState(false);
+    const [groups, setGroups] = useState([]);
     const [santriList, setSantriList] = useState([]);
     const [state, setState] = useState({});
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -43,8 +44,18 @@ export default function AbsensiFormalPage() {
     useEffect(() => {
         isMounted.current = true;
         setFilterDate(new Date().toISOString().split('T')[0]);
+        loadInitialData();
         return () => { isMounted.current = false; };
     }, []);
+
+    const loadInitialData = async () => {
+        try {
+            const resGroups = await apiCall('getData', 'GET', { type: 'keamanan_formal_groups' });
+            if (isMounted.current) setGroups(resGroups || []);
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const loadData = async () => {
         if (!filterDate) return;
@@ -204,16 +215,16 @@ export default function AbsensiFormalPage() {
                     <i className="fas fa-layer-group" style={{ marginRight: '10px' }}></i> Pilih Kelompok Sekolah
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
-                    {FORMAL_GROUPS.map((g, i) => (
+                    {groups.map((g, i) => (
                         <div
                             key={i}
-                            onClick={() => setFilterGroup(g)}
-                            className={`card-glass ${filterGroup === g ? 'active-group-card' : ''}`}
+                            onClick={() => setFilterGroup(g.nama)}
+                            className={`card-glass ${filterGroup === g.nama ? 'active-group-card' : ''}`}
                             style={{
                                 padding: '1.25rem',
                                 borderRadius: '18px',
                                 cursor: 'pointer',
-                                border: filterGroup === g ? '2px solid var(--primary)' : '1px solid #f1f5f9',
+                                border: filterGroup === g.nama ? '2px solid var(--primary)' : '1px solid #f1f5f9',
                                 transition: 'all 0.3s',
                                 textAlign: 'center',
                                 display: 'flex',
@@ -223,9 +234,9 @@ export default function AbsensiFormalPage() {
                                 minHeight: '100px'
                             }}
                         >
-                            <i className={`fas ${g.includes('SMP') ? 'fa-school' : g.includes('SMA') ? 'fa-building-columns' : 'fa-university'}`}
-                                style={{ fontSize: '1.5rem', marginBottom: '10px', color: filterGroup === g ? 'var(--primary)' : '#94a3b8' }}></i>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{g}</div>
+                            <i className={`fas ${g.nama.includes('SMP') ? 'fa-school' : g.nama.includes('SMA') ? 'fa-building-columns' : 'fa-university'}`}
+                                style={{ fontSize: '1.5rem', marginBottom: '10px', color: filterGroup === g.nama ? 'var(--primary)' : '#94a3b8' }}></i>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{g.nama}</div>
                         </div>
                     ))}
                 </div>
