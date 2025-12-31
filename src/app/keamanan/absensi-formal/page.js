@@ -1,281 +1,280 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
+
+// ✨ Unified Components
+import DataViewContainer from '@/components/DataViewContainer';
+import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
+import { TextInput } from '@/components/FormInput';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function AbsensiFormalPage() {
     const { user } = useAuth();
     const { canEdit } = usePagePermission();
     const { showToast } = useToast();
-    const [loading, setLoading] = useState(false);
 
-    // Data Lists
-    const [kelasOptions, setKelasOptions] = useState([]);
+    // State
+    const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
+    const [state, setState] = useState({});
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const isMounted = React.useRef(true);
 
     // Filters
+    const [filterJenjang, setFilterJenjang] = useState('SMP/MTS'); // SMP/MTS, SMA/MA, or Kuliah
+    const [filterSemester, setFilterSemester] = useState('1'); // 1-6
     const [filterDate, setFilterDate] = useState('');
-    const [selectedKelas, setSelectedKelas] = useState('');
-
-    // Form State: { [santriId]: { status: 'H', keterangan: '', id: null } }
-    const [attendance, setAttendance] = useState({});
-    const [stats, setStats] = useState({ H: 0, S: 0, I: 0, A: 0, T: 0 });
-    const isMounted = React.useRef(true);
 
     useEffect(() => {
         isMounted.current = true;
         setFilterDate(new Date().toISOString().split('T')[0]);
-        loadMasterKelas();
         return () => { isMounted.current = false; };
     }, []);
 
-    useEffect(() => {
-        if (selectedKelas && filterDate) {
-            loadAttendanceData();
-        } else {
-            if (isMounted.current) setSantriList([]);
-        }
-    }, [selectedKelas, filterDate]);
-
-    // Recalculate stats whenever attendance changes
-    useEffect(() => {
-        const counts = { H: 0, S: 0, I: 0, A: 0, T: 0 };
-        Object.values(attendance).forEach(val => {
-            if (counts[val.status] !== undefined) counts[val.status]++;
-        });
-        setStats(counts);
-    }, [attendance]);
-
-    const loadMasterKelas = async () => {
-        try {
-            const res = await apiCall('getData', 'GET', { type: 'master_kelas' });
-            // Filter only MIU (Formal)
-            const formal = (res || []).filter(k => k.lembaga === 'MIU');
-            if (isMounted.current) setKelasOptions(formal.sort((a, b) => a.urutan - b.urutan));
-        } catch (e) { console.error(e); }
-    };
-
-    const loadAttendanceData = async () => {
+    const loadData = async () => {
+        if (!filterDate) return;
         if (isMounted.current) setLoading(true);
         try {
-            // 1. Get Santri in Class
-            const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
-            const students = (resSantri || [])
-                .filter(s => s.kelas === selectedKelas && s.status_santri === 'Aktif')
-                .sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
+            // 1. Ambil data santri dan data pemetaan formal
+            const [resSantri, resMapping] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'santri' }),
+                apiCall('getData', 'GET', { type: 'keamanan_formal_mapping' })
+            ]);
+
+            // 2. Filter santri berdasarkan pemetaan yang sudah dibuat di Bagian Keamanan (Menu: Atur Kelompok Formal)
+            const students = (resSantri || []).filter(s => {
+                const map = (resMapping || []).find(m => m.santri_id === s.id);
+                if (!map) return false;
+
+                const jenjangMatch = map.jenjang === filterJenjang;
+                const semesterMatch = map.semester === filterSemester;
+
+                return jenjangMatch && semesterMatch && s.status_santri === 'Aktif';
+            }).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
             if (isMounted.current) setSantriList(students);
 
-            // 2. Get Existing Attendance for Date (Client-side filtered for now)
-            const resAbsensi = await apiCall('getData', 'GET', { type: 'keamanan_absensi' });
-            const todaysLogs = (resAbsensi || []).filter(l => l.tanggal === filterDate);
+            // 3. Ambil data absensi yang sudah ada
+            const resAbsen = await apiCall('getData', 'GET', { type: 'absen_sekolah' });
+            const logs = (resAbsen || []).filter(l => l.tanggal === filterDate && l.jenjang === filterJenjang && l.semester === filterSemester);
 
-            // 3. Map to Attendance State
-            const initialState = {};
+            const newState = {};
             students.forEach(s => {
-                const log = todaysLogs.find(l => l.santri_id === s.id);
-                initialState[s.id] = {
-                    status: log ? log.status : 'H', // Default Hadir
-                    keterangan: log ? log.keterangan : '',
-                    id: log ? log.id : null // Record ID if exists
+                const log = logs.find(l => l.santri_id === s.id);
+                newState[s.id] = {
+                    status: log ? log.status : 'H', // Default Hadir (H)
+                    id: log ? log.id : null,
+                    keterangan: log ? log.keterangan : ''
                 };
             });
-            if (isMounted.current) setAttendance(initialState);
-        } catch (e) { console.error(e); }
-        finally { if (isMounted.current) setLoading(false); }
-    };
-
-    const handleStatusChange = (santriId, newStatus) => {
-        setAttendance(prev => ({
-            ...prev,
-            [santriId]: { ...prev[santriId], status: newStatus }
-        }));
-    };
-
-    const handleNoteChange = (santriId, newNote) => {
-        setAttendance(prev => ({
-            ...prev,
-            [santriId]: { ...prev[santriId], keterangan: newNote }
-        }));
-    };
-
-    const handleSave = async () => {
-        if (!selectedKelas) return showToast("Pilih kelas terlebih dahulu!", "warning");
-        if (santriList.length === 0) return showToast("Tidak ada data santri.", "info");
-
-        if (!confirm(`Simpan absensi untuk ${santriList.length} santri?\nTanggal: ${filterDate}`)) return;
-
-        setLoading(true);
-        try {
-            const promises = santriList.map(s => {
-                const data = attendance[s.id];
-                const payload = {
-                    santri_id: s.id,
-                    nama_santri: s.nama_siswa,
-                    kelas: selectedKelas,
-                    tanggal: filterDate,
-                    status: data.status,
-                    keterangan: data.keterangan,
-                    petugas: user?.fullname || 'Keamanan'
-                };
-
-                // Add ID for Update, remove for Insert
-                if (data.id) payload.id = data.id;
-
-                return apiCall('saveData', 'POST', {
-                    type: 'keamanan_absensi',
-                    data: payload
-                });
-            });
-
-            await Promise.all(promises);
-            if (isMounted.current) {
-                showToast("Absensi berhasil disimpan!", "success");
-                loadAttendanceData(); // Refresh IDs
-            }
+            if (isMounted.current) setState(newState);
         } catch (e) {
-            console.error(e);
-            if (isMounted.current) showToast("Gagal menyimpan: " + e.message, "error");
+            console.error("Load Data Error:", e);
         } finally {
             if (isMounted.current) setLoading(false);
         }
     };
 
-    // Helper for Status Badge
-    const StatusBadge = ({ label, count, color }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'white', padding: '10px', borderRadius: '8px', minWidth: '80px', boxShadow: 'var(--shadow-sm)' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: color }}>{count}</span>
-            <span style={{ fontSize: '0.75rem', color: '#666', fontWeight: 600 }}>{label}</span>
-        </div>
-    );
+    useEffect(() => { loadData(); }, [filterDate, filterJenjang, filterSemester]);
+
+    const handleBulkHadir = () => {
+        const newState = { ...state };
+        santriList.forEach(s => {
+            newState[s.id] = { ...newState[s.id], status: 'H' };
+        });
+        setState(newState);
+        showToast(`Semua santri diatur Hadir (H)`, "info");
+    };
+
+    const handleSave = async () => {
+        if (isMounted.current) setLoading(true);
+        try {
+            const promises = santriList.map(s => {
+                const data = state[s.id];
+                return apiCall('saveData', 'POST', {
+                    type: 'absen_sekolah',
+                    data: {
+                        id: data.id,
+                        santri_id: s.id,
+                        nama_santri: s.nama_siswa,
+                        kelas: s.kelas,
+                        tanggal: filterDate,
+                        jenjang: filterJenjang,
+                        semester: filterSemester,
+                        status: data.status,
+                        keterangan: data.keterangan || '',
+                        petugas: user?.fullname || 'Admin Sekolah'
+                    }
+                });
+            });
+            await Promise.all(promises);
+            if (isMounted.current) {
+                showToast(`Absensi ${filterJenjang} Semester ${filterSemester} berhasil disimpan!`, "success");
+                loadData();
+            }
+        } catch (e) {
+            if (isMounted.current) showToast(e.message, "error");
+        } finally {
+            if (isMounted.current) {
+                setLoading(false);
+                setIsConfirmOpen(false);
+            }
+        }
+    };
+
+    const stats = useMemo(() => {
+        const values = Object.values(state);
+        return [
+            { title: 'Total Santri', value: santriList.length, icon: 'fas fa-users', color: 'var(--primary)' },
+            { title: 'Hadir', value: values.filter(v => v.status === 'H').length, icon: 'fas fa-user-check', color: 'var(--success)' },
+            { title: 'Izin/Sakit', value: values.filter(v => ['I', 'S'].includes(v.status)).length, icon: 'fas fa-envelope', color: 'var(--warning)' },
+            { title: 'Alfa', value: values.filter(v => v.status === 'A').length, icon: 'fas fa-user-times', color: 'var(--danger)' }
+        ];
+    }, [state, santriList]);
+
+    const columns = [
+        {
+            key: 'nama_siswa',
+            label: 'Nama Santri',
+            render: (row) => (
+                <div>
+                    <div style={{ fontWeight: 800 }}>{row.nama_siswa}</div>
+                    <small style={{ color: 'var(--text-muted)' }}>{row.stambuk_pondok} • Kelas {row.kelas}</small>
+                </div>
+            )
+        },
+        {
+            key: 'status',
+            label: 'Status Kehadiran',
+            width: '180px',
+            render: (row) => (
+                <div style={{ display: 'flex', gap: '5px' }}>
+                    {['H', 'S', 'I', 'A'].map(st => (
+                        <button
+                            key={st}
+                            onClick={() => canEdit && setState({ ...state, [row.id]: { ...state[row.id], status: st } })}
+                            disabled={!canEdit}
+                            className={`btn-vibrant ${state[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
+                            style={{ width: '35px', height: '35px', padding: 0, fontSize: '0.8rem', fontWeight: 800 }}
+                        >{st}</button>
+                    ))}
+                </div>
+            )
+        },
+        {
+            key: 'keterangan',
+            label: 'Keterangan',
+            render: (row) => (
+                <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    placeholder="Alasan (Opsional)..."
+                    value={state[row.id]?.keterangan || ''}
+                    onChange={e => canEdit && setState({ ...state, [row.id]: { ...state[row.id], keterangan: e.target.value } })}
+                    disabled={!canEdit}
+                />
+            )
+        }
+    ];
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                        <div>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Absensi Formal / MIU</h2>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Security Checkpoint • Santri Sekolah</p>
-                        </div>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={filterDate}
-                                onChange={e => setFilterDate(e.target.value)}
-                                style={{ width: '160px' }}
-                            />
-                            <select
-                                className="form-control"
-                                value={selectedKelas}
-                                onChange={e => setSelectedKelas(e.target.value)}
-                                style={{ width: '200px' }}
-                            >
-                                <option value="">- Pilih Kelas -</option>
-                                {kelasOptions.map((k, i) => (
-                                    <option key={i} value={k.nama_kelas}>{k.nama_kelas} ({k.lembaga})</option>
-                                ))}
-                            </select>
+            <KopSurat judul="Laporan Kehadiran Formal" subJudul={`Jenjang ${filterJenjang} - Semester ${filterSemester}`} hideOnScreen={true} />
+
+            <StatsPanel items={stats} />
+
+            {/* Filter & Kontrol */}
+            <div className="card-glass" style={{ padding: '1.5rem', borderRadius: '20px', marginBottom: '1.5rem', border: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <label className="form-label">Tanggal</label>
+                        <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ marginBottom: 0 }} />
+                    </div>
+
+                    <div style={{ flex: '1 1 200px' }}>
+                        <label className="form-label">Pilih Jenjang Sekolah</label>
+                        <div style={{ display: 'flex', background: '#f1f5f9', padding: '5px', borderRadius: '12px' }}>
+                            {['SMP/MTS', 'SMA/MA', 'Kuliah'].map(j => (
+                                <button
+                                    key={j}
+                                    onClick={() => setFilterJenjang(j)}
+                                    style={{
+                                        flex: 1, padding: '10px', borderRadius: '8px', border: 'none',
+                                        fontWeight: 800, fontSize: '0.8rem',
+                                        background: filterJenjang === j ? 'var(--primary)' : 'transparent',
+                                        color: filterJenjang === j ? 'white' : '#64748b',
+                                        transition: 'all 0.3s'
+                                    }}
+                                >{j}</button>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Stats Dashboard */}
-                    {selectedKelas && (
-                        <div style={{ display: 'flex', gap: '10px', width: '100%', background: '#f8fafc', padding: '10px', borderRadius: '12px' }}>
-                            <StatusBadge label="HADIR" count={stats.H} color="var(--success)" />
-                            <StatusBadge label="SAKIT" count={stats.S} color="var(--warning)" />
-                            <StatusBadge label="IZIN" count={stats.I} color="#3b82f6" />
-                            <StatusBadge label="ALPHA" count={stats.A} color="var(--danger)" />
-                            <StatusBadge label="TELAT" count={stats.T} color="#a855f7" />
-                            <div style={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                {canEdit && <button className="btn btn-primary" onClick={handleSave} disabled={loading} style={{ height: '50px', padding: '0 30px', fontSize: '1rem' }}>
-                                    {loading ? 'Menyimpan...' : <><i className="fas fa-save" style={{ marginRight: '8px' }}></i> Simpan Absensi</>}
-                                </button>}
-                            </div>
+                    <div style={{ flex: '1 1 300px' }}>
+                        <label className="form-label">Semester</label>
+                        <div style={{ display: 'flex', background: '#f1f5f9', padding: '5px', borderRadius: '12px', gap: '5px' }}>
+                            {['1', '2', '3', '4', '5', '6'].map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => setFilterSemester(s)}
+                                    style={{
+                                        flex: 1, padding: '10px 0', borderRadius: '8px', border: 'none',
+                                        fontWeight: 800,
+                                        background: filterSemester === s ? 'var(--primary)' : 'transparent',
+                                        color: filterSemester === s ? 'white' : '#64748b',
+                                        transition: 'all 0.3s'
+                                    }}
+                                >{s}</button>
+                            ))}
                         </div>
-                    )}
+                    </div>
                 </div>
+            </div>
 
-                {!selectedKelas ? (
-                    <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
-                        <i className="fas fa-chalkboard-teacher" style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}></i>
-                        <h3>Silakan pilih Kelas untuk memulai absensi.</h3>
-                    </div>
-                ) : (
-                    <div className="table-responsive">
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th style={{ width: '50px' }}>No</th>
-                                    <th>Nama Santri (Stambuk)</th>
-                                    <th style={{ textAlign: 'center' }}>Status Kehadiran</th>
-                                    <th>Keterangan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {santriList.length === 0 ? (
-                                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Tidak ada data santri di kelas ini.</td></tr>
-                                ) : (
-                                    santriList.map((s, idx) => (
-                                        <tr key={s.id} style={{ background: attendance[s.id]?.status === 'H' ? 'transparent' : '#fffbeb' }}>
-                                            <td>{idx + 1}</td>
-                                            <td>
-                                                <div style={{ fontWeight: 700 }}>{s.nama_siswa}</div>
-                                                <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.stambuk_pondok}</div>
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', gap: '4px', opacity: canEdit ? 1 : 0.7 }}>
-                                                    {['H', 'S', 'I', 'A', 'T'].map(status => (
-                                                        <label
-                                                            key={status}
-                                                            style={{
-                                                                cursor: canEdit ? 'pointer' : 'default',
-                                                                padding: '6px 12px',
-                                                                borderRadius: '6px',
-                                                                fontWeight: 700,
-                                                                background: attendance[s.id]?.status === status
-                                                                    ? (status === 'H' ? 'var(--success)' : status === 'A' ? 'var(--danger)' : status === 'S' ? 'var(--warning)' : status === 'I' ? '#3b82f6' : '#a855f7')
-                                                                    : 'transparent',
-                                                                color: attendance[s.id]?.status === status ? 'white' : '#64748b',
-                                                                transition: 'all 0.2s'
-                                                            }}
-                                                        >
-                                                            <input
-                                                                type="radio"
-                                                                name={`status-${s.id}`}
-                                                                value={status}
-                                                                checked={attendance[s.id]?.status === status}
-                                                                onChange={() => canEdit && handleStatusChange(s.id, status)}
-                                                                disabled={!canEdit}
-                                                                style={{ display: 'none' }}
-                                                            />
-                                                            {status}
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    placeholder="Contoh: Pulang ke rumah..."
-                                                    value={attendance[s.id]?.keterangan || ''}
-                                                    onChange={e => canEdit && handleNoteChange(s.id, e.target.value)}
-                                                    disabled={!canEdit}
-                                                    style={{ fontSize: '0.9rem' }}
-                                                />
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+            <DataViewContainer
+                title={`Daftar Absensi ${filterJenjang}`}
+                subtitle={`Semester ${filterSemester} | ${santriList.length} Santri`}
+                headerActions={(
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || santriList.length === 0}>
+                            <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
+                        </button>
+                        {canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || santriList.length === 0}>
+                            <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
+                        </button>}
                     </div>
                 )}
-            </div>
+                tableProps={{ columns, data: santriList, loading }}
+            />
+
+            <ConfirmModal
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+                onConfirm={handleSave}
+                title="Simpan Absensi Harian?"
+                message={`Anda akan menyimpan log kehadiran untuk ${santriList.length} santri pada tanggal ${formatDate(filterDate)}.`}
+                type="info"
+            />
+
+            <style jsx>{`
+                .form-label {
+                    display: block;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    color: var(--primary-dark);
+                    margin-bottom: 8px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                @media (max-width: 640px) {
+                    .hide-mobile { display: none; }
+                    .btn { padding: 12px; }
+                }
+            `}</style>
         </div>
     );
 }
