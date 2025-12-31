@@ -12,9 +12,11 @@ import Modal from '@/components/Modal';
 import { TextInput, SelectInput, NumberInput } from '@/components/FormInput';
 import StatsPanel from '@/components/StatsPanel';
 
+import moment from 'moment-hijri';
+
 const MONTHS = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    'Muharram', 'Shafar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir',
+    'Rajab', 'Sya\'ban', 'Ramadhan', 'Syawal', 'Dzulqa\'dah', 'Dzulhijjah'
 ];
 
 export default function AbsensiPengurusPage() {
@@ -22,10 +24,13 @@ export default function AbsensiPengurusPage() {
     const { canEdit } = usePagePermission();
     const { showToast } = useToast();
 
-    // Filters
-    const now = new Date();
-    const [filterMonth, setFilterMonth] = useState(MONTHS[now.getMonth()]);
-    const [filterYear, setFilterYear] = useState(now.getFullYear().toString());
+    // Filters (Default to current Hijri Month/Year)
+    const nowHijri = moment();
+    const currentHijriMonthIdx = nowHijri.iMonth(); // 0-indexed
+    const currentHijriYear = nowHijri.iYear();
+
+    const [filterMonth, setFilterMonth] = useState(MONTHS[currentHijriMonthIdx]);
+    const [filterYear, setFilterYear] = useState(currentHijriYear.toString());
 
     // Data State
     const [loading, setLoading] = useState(false);
@@ -197,7 +202,7 @@ export default function AbsensiPengurusPage() {
                         <SelectInput label="Pilih Bulan" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} options={MONTHS} />
                     </div>
                     <div style={{ flex: 1, minWidth: '150px' }}>
-                        <SelectInput label="Pilih Tahun" value={filterYear} onChange={e => setFilterYear(e.target.value)} options={['2024', '2025', '2026']} />
+                        <SelectInput label="Pilih Tahun" value={filterYear} onChange={e => setFilterYear(e.target.value)} options={['1445', '1446', '1447', '1448', '1449']} />
                     </div>
                     <div style={{ flex: 2, display: 'flex', gap: '10px' }}>
                         <button className="btn btn-primary" onClick={handleSaveAbsensi} disabled={submitting || !canEdit} style={{ height: '45px', flex: 1 }}>
