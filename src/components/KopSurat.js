@@ -22,17 +22,26 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
         setMounted(true);
     }, []);
 
+
     return (
         <div className={`print-header-unified ${hideOnScreen ? 'print-only' : ''}`} style={{ marginBottom: '2rem' }}>
             {/* Kop Surat Corporate */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '3px solid #1e3a8a', paddingBottom: '15px' }}>
+            <div className="kop-header" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '20px',
+                borderBottom: '3px solid #1e3a8a',
+                paddingBottom: '15px',
+                flexWrap: 'wrap'
+            }}>
                 <img
                     src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"}
+                    className="kop-logo"
                     style={{ width: '80px', height: '80px', objectFit: 'contain' }}
                     alt="Logo"
                 />
-                <div style={{ flex: 1 }}>
-                    <h1 style={{
+                <div style={{ flex: '1 1 300px' }}>
+                    <h1 className="kop-title" style={{
                         margin: 0,
                         fontSize: '1.5rem',
                         color: '#1e3a8a',
@@ -42,7 +51,7 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
                     }}>
                         {config?.nama_instansi || 'PONDOK PESANTREN DARUSSALAM LIRBOYO'}
                     </h1>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 700 }}>
+                    <p className="kop-subtitle" style={{ margin: '2px 0 0 0', fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 700 }}>
                         Sistem Informasi Manajemen Terpadu (SIM-PPDS)
                     </p>
                     <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
@@ -74,6 +83,14 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
                     </p>
                 </div>
             )}
+            <style jsx>{`
+                @media (max-width: 640px) {
+                    .kop-header { justify-content: center; text-align: center; gap: 10px; }
+                    .kop-logo { width: 60px !important; height: 60px !important; }
+                    .kop-title { font-size: 1.1rem !important; }
+                    .kop-subtitle { font-size: 0.8rem !important; }
+                }
+            `}</style>
         </div>
     );
 }

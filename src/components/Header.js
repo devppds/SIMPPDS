@@ -168,8 +168,43 @@ export default function Header({ title }) {
             </Modal>
 
             <style jsx>{`
+                header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 2rem;
+                    gap: 1rem;
+                }
+                .header-title {
+                    display: flex;
+                    align-items: center;
+                    min-width: 0; /* Allow title to shrink */
+                }
+                .header-title h1 {
+                    font-size: 1.5rem;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .header-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    flex-shrink: 0;
+                }
+
                 @media (max-width: 1024px) {
                     .mobile-only { display: block !important; }
+                    header { padding: 0 1rem; }
+                }
+
+                @media (max-width: 768px) {
+                    .header-title h1 { font-size: 1.1rem; }
+                    .header-actions { gap: 0.5rem; }
+                }
+
+                @media (max-width: 480px) {
+                    .header-title h1 { max-width: 150px; }
                 }
             `}</style>
         </header>

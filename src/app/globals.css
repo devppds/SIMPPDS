@@ -1702,6 +1702,8 @@ tr:hover td {
 /* Responsive Table Solution */
 .table-container {
   -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -1710,6 +1712,56 @@ tr:hover td {
   th {
     white-space: nowrap;
     /* Prevent messy wrapping in tight tables */
+    padding: 0.75rem !important;
+  }
+}
+
+/* General Layout Fixes */
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+/* Fluid Spacing Utilities */
+.view-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 640px) {
+  .view-container {
+    padding: 1rem !important;
+  }
+
+  .card {
+    padding: 1rem !important;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Fix for Card Headers on Mobile */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }
 
@@ -1719,4 +1771,18 @@ select,
 textarea {
   font-size: 16px !important;
   /* Prevents iOS auto-zoom on focus */
+}
+
+/* Grid helper for forms */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }

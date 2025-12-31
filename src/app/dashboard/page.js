@@ -101,6 +101,7 @@ export default function DashboardPage() {
                 )}
             </div>
 
+
             <div className="main-grid-layout">
                 {mounted ? (
                     <>
@@ -123,7 +124,7 @@ export default function DashboardPage() {
                             ) : (hasAccess('Arus Kas Pondok') || hasAccess('Pembayaran Santri')) ? (
                                 <WelcomeBanner title="Manajemen Keuangan" desc="Pantau sirkulasi kas dan tagihan santri dari satu panel." link="/bendahara/arus-kas" linkText="Buku Besar" />
                             ) : hasAccess('Data Santri') ? (
-                                <WelcomeBanner title="Administrasi Santri" desc="Kelola database pusat santri dan asramaasrama." link="/sekretariat/santri" linkText="Buka Database" />
+                                <WelcomeBanner title="Administrasi Santri" desc="Kelola database pusat santri dan asrama." link="/sekretariat/santri" linkText="Buka Database" />
                             ) : (
                                 <WelcomeBanner title="Selamat Datang" desc="SIM-PPDS siap membantu mempermudah manajemen unit Anda." />
                             )}
@@ -139,12 +140,13 @@ export default function DashboardPage() {
                 )}
             </div>
 
+
             <style jsx>{`
                 .animate-in { animation: slideInLeft 0.6s ease-out forwards; }
                 @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
                 
                 .dashboard-header {
-                    margin-bottom: 3rem;
+                    margin-bottom: 2.5rem;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
@@ -165,7 +167,6 @@ export default function DashboardPage() {
                 .academic-badge {
                     padding: 12px 24px;
                     border-radius: 16px;
-                    min-width: 200px;
                 }
                 .badge-label {
                     font-size: 0.8rem;
@@ -187,12 +188,12 @@ export default function DashboardPage() {
                 .main-grid-layout {
                     display: grid;
                     grid-template-columns: 1.6fr 1.4fr;
-                    gap: 2.5rem;
+                    gap: 2rem;
                 }
                 .primary-column, .secondary-column {
                     display: flex;
                     flex-direction: column;
-                    gap: 2.5rem;
+                    gap: 2rem;
                 }
                 .access-limited-card {
                     text-align: center;
@@ -204,39 +205,35 @@ export default function DashboardPage() {
                     margin-bottom: 1rem;
                 }
 
-                @media (max-width: 1024px) {
+                @media (max-width: 1200px) {
+                    .main-grid-layout {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                @media (max-width: 768px) {
                     .dashboard-header {
                         flex-direction: column;
                         align-items: flex-start;
                         gap: 1rem;
+                        margin-bottom: 2rem;
                     }
-                    .main-grid-layout {
-                        grid-template-columns: 1fr;
-                        gap: 1.5rem;
-                    }
-                    .primary-column, .secondary-column {
-                        gap: 1.5rem;
-                    }
-                }
-
-                @media (max-width: 640px) {
                     .dashboard-title {
-                        font-size: 1.5rem;
+                        font-size: 1.8rem;
                         line-height: 1.2;
                     }
                     .dashboard-subtitle {
-                        font-size: 0.85rem;
+                        font-size: 0.95rem;
                     }
                     .academic-badge {
                         width: 100%;
                         padding: 1rem;
                     }
-                    .dashboard-header {
-                        margin-bottom: 2rem;
-                        gap: 0.5rem;
-                    }
-                    .stats-grid {
-                        margin-bottom: 2rem !important;
+                }
+
+                @media (max-width: 480px) {
+                    .dashboard-title {
+                        font-size: 1.5rem;
                     }
                 }
             `}</style>

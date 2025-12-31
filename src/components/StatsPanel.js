@@ -117,13 +117,19 @@ export default function StatsPanel({ items = [] }) {
             <style jsx>{`
                 .stats-panel-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
                     gap: 1.5rem;
                     margin-bottom: 2rem;
                 }
-                @media (max-width: 640px) {
+                @media (max-width: 768px) {
                     .stats-panel-grid {
                         grid-template-columns: repeat(2, 1fr);
+                        gap: 1rem;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .stats-panel-grid {
+                        grid-template-columns: 1fr;
                         gap: 0.75rem;
                     }
                 }

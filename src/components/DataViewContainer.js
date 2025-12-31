@@ -75,10 +75,11 @@ export default function DataViewContainer({
 
             <style jsx>{`
                 .data-view-container {
-                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+                    box-shadow: var(--shadow-premium);
                     border: 1px solid #f1f5f9;
                     border-radius: 20px;
                     overflow: hidden;
+                    margin-bottom: 2rem;
                 }
                 .card-header {
                     padding: 1.5rem 2rem;
@@ -93,6 +94,7 @@ export default function DataViewContainer({
                 .card-actions {
                     display: flex;
                     gap: 10px;
+                    flex-wrap: wrap;
                 }
                 .table-controls-container {
                     padding: 1rem 2rem;
@@ -119,15 +121,27 @@ export default function DataViewContainer({
                 @media (max-width: 640px) {
                     .card-header, .table-controls-container {
                         padding: 1rem;
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .card-actions {
+                        display: grid;
+                        grid-template-columns: 1fr;
+                        width: 100%;
                     }
                     .table-wrapper-inner {
-                        padding: 0 0.5rem;
+                        padding: 0;
                     }
                     .search-box-wrapper {
                         flex: 1 1 100%;
                     }
+                    .filters-wrapper {
+                        width: 100%;
+                        display: grid;
+                        grid-template-columns: 1fr;
+                    }
                 }
             `}</style>
-        </div>
+        </div >
     );
 }
