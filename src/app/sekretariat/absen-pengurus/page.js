@@ -217,19 +217,19 @@ export default function AbsensiPengurusPage() {
             <KopSurat judul="Rekapitulasi Absensi Pengurus" subJudul={`Laporan kinerja bulanan pengurus Pondok Pesantren - ${filterMonth} ${filterYear}`} hideOnScreen={true} />
 
             <div className="filter-card card-glass" style={{ marginBottom: '20px', padding: '20px', borderRadius: '15px' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                        <SelectInput label="Pilih Bulan" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} options={MONTHS} />
+                <div className="filter-grid" style={{ display: 'flex', gap: '15px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div className="filter-col" style={{ flex: 1, minWidth: '150px' }}>
+                        <SelectInput label="Pilih Bulan" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} options={MONTHS} style={{ marginBottom: 0 }} />
                     </div>
-                    <div style={{ flex: 1, minWidth: '150px' }}>
-                        <SelectInput label="Pilih Tahun" value={filterYear} onChange={e => setFilterYear(e.target.value)} options={['1445', '1446', '1447', '1448', '1449']} />
+                    <div className="filter-col" style={{ flex: 1, minWidth: '100px' }}>
+                        <SelectInput label="Pilih Tahun" value={filterYear} onChange={e => setFilterYear(e.target.value)} options={['1445', '1446', '1447', '1448', '1449']} style={{ marginBottom: 0 }} />
                     </div>
-                    <div style={{ flex: 2, display: 'flex', gap: '10px' }}>
+                    <div className="filter-actions" style={{ flex: '0 0 100%', display: 'flex', gap: '10px', marginTop: '10px' }}>
                         <button className="btn btn-primary" onClick={handleSaveAbsensi} disabled={submitting || !canEdit} style={{ height: '45px', flex: 1 }}>
-                            <i className="fas fa-save"></i> {submitting ? 'Menyimpan...' : 'Simpan Absensi'}
+                            <i className="fas fa-save"></i> <span>{submitting ? 'Menyimpan...' : 'Simpan Absensi'}</span>
                         </button>
                         <button className="btn btn-outline" onClick={() => setIsTargetModalOpen(true)} disabled={!canEdit} style={{ height: '45px' }}>
-                            <i className="fas fa-cog"></i> Atur Target
+                            <i className="fas fa-cog"></i> <span className="hide-mobile">Atur Target</span>
                         </button>
                     </div>
                 </div>
@@ -332,9 +332,35 @@ export default function AbsensiPengurusPage() {
                     background: white;
                     border-radius: 15px;
                     box-shadow: var(--shadow-sm);
-                    overflow: hidden;
+                    overflow-x: auto;
                 }
-                .table th { background: #f8fafc; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+                .table th { 
+                    background: #f8fafc; 
+                    font-size: 0.75rem; 
+                    text-transform: uppercase; 
+                    letter-spacing: 0.05em; 
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                }
+                .table td {
+                    white-space: nowrap;
+                    vertical-align: middle;
+                }
+                @media (max-width: 640px) {
+                    .filter-card {
+                        padding: 15px !important;
+                    }
+                    .filter-grid {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                    }
+                    .filter-col {
+                        width: 100% !important;
+                    }
+                    .filter-actions {
+                        margin-top: 0 !important;
+                    }
+                }
             `}</style>
         </div>
     );
