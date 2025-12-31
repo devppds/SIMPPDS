@@ -187,13 +187,13 @@ export default function AksesPage() {
     return (
         <div className="view-container">
             {/* Header Section */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                <div>
-                    <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px' }}>Manajemen Akses</h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem' }}>Kontrol keamanan dan hak akses pengguna sistem SIM-MIU.</p>
+            <div className="page-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '20px' }}>
+                <div className="header-text">
+                    <h1 className="outfit page-title" style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px' }}>Manajemen Akses</h1>
+                    <p className="page-subtitle" style={{ color: 'var(--text-muted)', fontSize: '1.05rem' }}>Kontrol keamanan dan hak akses pengguna sistem SIM-MIU.</p>
                 </div>
                 <button
-                    className="btn btn-primary"
+                    className="btn btn-primary add-admin-btn"
                     style={{
                         padding: '14px 28px',
                         borderRadius: '16px',
@@ -208,9 +208,8 @@ export default function AksesPage() {
             </div>
 
             {/* Grid Stats & Action */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.3fr) minmax(0, 1fr)', gap: '2rem', marginBottom: '3rem' }}>
-                {/* Security Overview Card */}
-                <div style={{
+            <div className="stats-grid-container" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.3fr) minmax(0, 1fr)', gap: '2rem', marginBottom: '3rem' }}>
+                <div className="security-card" style={{
                     background: '#1e293b',
                     borderRadius: '24px',
                     padding: '2.5rem',
@@ -234,13 +233,13 @@ export default function AksesPage() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '5rem' }}>
+                    <div className="security-stats" style={{ display: 'flex', gap: '5rem' }}>
                         <div>
-                            <div style={{ fontSize: '2.8rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif' }}>{loading ? '...' : users.length}</div>
+                            <div className="security-stats-value" style={{ fontSize: '2.8rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif' }}>{loading ? '...' : users.length}</div>
                             <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.8, letterSpacing: '1.5px' }}>Admin Aktif</div>
                         </div>
                         <div>
-                            <div style={{ fontSize: '2.8rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif' }}>SAFE</div>
+                            <div className="security-stats-value" style={{ fontSize: '2.8rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif' }}>SAFE</div>
                             <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.8, letterSpacing: '1.5px' }}>System Status</div>
                         </div>
                     </div>
@@ -712,6 +711,42 @@ export default function AksesPage() {
                     </div>
                 </div>
             </Modal>
+
+            <style jsx>{`
+                @media (max-width: 768px) {
+                    .page-title {
+                        font-size: 1.8rem !important;
+                    }
+                    .page-subtitle {
+                        font-size: 0.9rem !important;
+                    }
+                    .page-header-container {
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                        gap: 1.5rem !important;
+                        margin-bottom: 2rem !important;
+                    }
+                    .add-admin-btn {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                    .stats-grid-container {
+                        grid-template-columns: 1fr !important;
+                        gap: 1.25rem !important;
+                        margin-bottom: 2rem !important;
+                    }
+                    .security-card {
+                        padding: 1.5rem !important;
+                        min-height: auto !important;
+                    }
+                    .security-stats {
+                        gap: 2rem !important;
+                    }
+                    .security-stats-value {
+                        font-size: 2.2rem !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 }

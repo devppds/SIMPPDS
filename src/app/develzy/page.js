@@ -696,7 +696,7 @@ export default function DevelzyControlPage() {
     return (
         <div className="view-container">
             {/* Hero Header */}
-            <div style={{
+            <div className="develzy-hero" style={{
                 background: 'linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%)',
                 borderRadius: '32px',
                 padding: '3rem',
@@ -711,8 +711,8 @@ export default function DevelzyControlPage() {
                         <i className="fas fa-rocket"></i>
                         Core System Control
                     </div>
-                    <h1 className="outfit" style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '10px' }}>DEVELZY Control</h1>
-                    <p style={{ opacity: 0.8, fontSize: '1.1rem', maxWidth: '600px' }}>
+                    <h1 className="outfit hero-title" style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '10px' }}>DEVELZY Control</h1>
+                    <p className="hero-desc" style={{ opacity: 0.8, fontSize: '1.1rem', maxWidth: '600px' }}>
                         Pusat kendali operasional tingkat tinggi untuk konfigurasi infrastruktur,
                         manajemen layanan, dan pemantauan sistem secara real-time.
                     </p>
@@ -726,55 +726,57 @@ export default function DevelzyControlPage() {
             </div>
 
             {/* Quick Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
+            <div className="quick-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
                 {[
                     { label: 'System Uptime', value: systemStats.uptime, icon: 'fas fa-clock', color: '#2563eb', desc: 'Sejak deployment' },
                     { label: 'Database Status', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981', desc: 'Koneksi aktif' },
                     { label: 'Edge Runtime', value: systemStats.cpu, icon: 'fas fa-microchip', color: '#8b5cf6', desc: 'Auto-scaling' },
                     { label: 'Maintenance', value: maintenanceMode ? 'OFFLINE' : 'LIVE', icon: 'fas fa-power-off', color: maintenanceMode ? '#ef4444' : '#10b981', desc: maintenanceMode ? 'Mode pemeliharaan' : 'Sistem normal' },
                 ].map((stat, i) => (
-                    <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                    <div key={i} className="card stat-card-compact" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem' }}>
+                        <div className="stat-icon" style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                             <i className={stat.icon}></i>
                         </div>
                         <div>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{stat.label}</div>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>{stat.value}</div>
+                            <div className="stat-value" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>{stat.value}</div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 280px) 1fr', gap: '2.5rem' }}>
+            <div className="main-layout-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 280px) 1fr', gap: '2.5rem' }}>
                 {/* Sidebar Navigation */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                padding: '16px 20px',
-                                borderRadius: '14px',
-                                border: 'none',
-                                background: activeTab === tab.id ? 'white' : 'transparent',
-                                color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-muted)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                fontWeight: activeTab === tab.id ? 800 : 600,
-                                fontSize: '0.95rem',
-                                textAlign: 'left',
-                                transition: 'all 0.2s',
-                                cursor: 'pointer',
-                                boxShadow: activeTab === tab.id ? '0 10px 15px -3px rgba(0,0,0,0.05)' : 'none'
-                            }}
-                        >
-                            <i className={tab.icon} style={{ width: '20px' }}></i>
-                            {tab.label}
-                        </button>
-                    ))}
+                <div className="develzy-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div className="sidebar-scrollable" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                style={{
+                                    padding: '16px 20px',
+                                    borderRadius: '14px',
+                                    border: 'none',
+                                    background: activeTab === tab.id ? 'white' : 'transparent',
+                                    color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-muted)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    fontWeight: activeTab === tab.id ? 800 : 600,
+                                    fontSize: '0.95rem',
+                                    textAlign: 'left',
+                                    transition: 'all 0.2s',
+                                    cursor: 'pointer',
+                                    boxShadow: activeTab === tab.id ? '0 10px 15px -3px rgba(0,0,0,0.05)' : 'none'
+                                }}
+                            >
+                                <i className={tab.icon} style={{ width: '20px' }}></i>
+                                <span>{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
 
-                    <div style={{ marginTop: '2rem', padding: '20px', background: '#fff1f2', borderRadius: '20px', border: '1px solid #fee2e2' }}>
+                    <div className="maintenance-box" style={{ marginTop: '2rem', padding: '20px', background: '#fff1f2', borderRadius: '20px', border: '1px solid #fee2e2' }}>
                         <h4 className="outfit" style={{ color: '#be123c', fontSize: '0.9rem', marginBottom: '8px' }}>Zona Bahaya</h4>
                         <button
                             className="btn btn-primary"
@@ -790,7 +792,7 @@ export default function DevelzyControlPage() {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="card" style={{ padding: '2.5rem', minHeight: '500px' }}>
+                <div className="card content-area" style={{ padding: '2.5rem', minHeight: '500px' }}>
                     {activeTab === 'general' && (
                         <div className="animate-in">
                             <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>Global Configuration</h3>
@@ -1331,6 +1333,72 @@ export default function DevelzyControlPage() {
                     </div>
                 </div>
             </Modal>
+
+            <style jsx>{`
+                @media (max-width: 991px) {
+                    .main-layout-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 2rem !important;
+                    }
+                    .develzy-sidebar {
+                        order: 2;
+                    }
+                    .content-area {
+                        order: 1;
+                        padding: 1.5rem !important;
+                    }
+                    .sidebar-scrollable {
+                        flex-direction: row !important;
+                        overflow-x: auto !important;
+                        padding-bottom: 10px;
+                        scrollbar-width: none;
+                    }
+                    .sidebar-scrollable::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .sidebar-scrollable > button {
+                        flex: 0 0 auto;
+                        white-space: nowrap;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .develzy-hero {
+                        padding: 2rem !important;
+                        border-radius: 20px !important;
+                        margin-bottom: 1.5rem !important;
+                    }
+                    .hero-title {
+                        font-size: 1.8rem !important;
+                    }
+                    .hero-desc {
+                        font-size: 0.9rem !important;
+                    }
+                    .quick-stats-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                        gap: 1rem !important;
+                        margin-bottom: 2rem !important;
+                    }
+                    .stat-card-compact {
+                        padding: 1.25rem !important;
+                        gap: 1rem !important;
+                    }
+                    .stat-icon {
+                        width: 40px !important;
+                        height: 40px !important;
+                        font-size: 1rem !important;
+                    }
+                    .stat-value {
+                        font-size: 0.95rem !important;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .quick-stats-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
