@@ -153,38 +153,42 @@ export default function RiwayatAbsensiPage() {
     };
 
     const columns = [
-        { key: 'nama_santri', label: 'Nama Santri', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_santri}</div><small style={{ color: 'var(--text-muted)' }}>{row.kelas}</small></div> },
-        { key: 'kelompok', label: 'Kelompok', className: 'hide-mobile', render: (row) => <span className="th-badge">{row.kelompok}</span> },
-        { key: 'tipe', label: 'Tipe', render: (row) => <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{row.tipe}</span> },
-        { key: 'total', label: 'Total', render: (row) => <strong style={{ fontSize: '1.1rem' }}>{row.total}x</strong> },
+        { key: 'nama_santri', label: 'Nama Santri', width: '200px', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_santri}</div><small style={{ color: 'var(--text-muted)' }}>{row.kelas}</small></div> },
+        { key: 'kelompok', label: 'Kelompok', width: '100px', className: 'hide-mobile', render: (row) => <span className="th-badge">{row.kelompok}</span> },
+        { key: 'tipe', label: 'Tipe', width: '140px', render: (row) => <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{row.tipe}</span> },
+        { key: 'total', label: 'Total', width: '80px', render: (row) => <strong style={{ fontSize: '1.1rem' }}>{row.total}x</strong> },
         {
             key: 'hadir',
             label: 'Hadir',
+            width: '80px',
             render: (row) => <span className="th-badge" style={{ background: '#dcfce7', color: '#166534', fontWeight: 800 }}>{row.hadir}x</span>
         },
         {
             key: 'izin',
             label: 'Izin',
+            width: '80px',
             className: 'hide-mobile',
             render: (row) => <span className="th-badge" style={{ background: '#fef3c7', color: '#92400e', fontWeight: 800 }}>{row.izin}x</span>
         },
         {
             key: 'alfa',
             label: 'Alfa',
+            width: '80px',
             className: 'hide-mobile',
             render: (row) => <span className="th-badge" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: 800 }}>{row.alfa}x</span>
         },
         {
             key: 'persentase',
             label: '% Hadir',
+            width: '100px',
             render: (row) => {
                 const color = row.persentaseKehadiran >= 80 ? '#166534' : row.persentaseKehadiran >= 60 ? '#92400e' : '#991b1b';
                 return <div style={{ fontWeight: 800, color, fontSize: '1rem' }}>{row.persentaseKehadiran}%</div>;
             }
         },
-        { key: 'avgNilai', label: 'Rata² Nilai', className: 'hide-mobile', render: (row) => <strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>{row.avgNilai}</strong> },
+        { key: 'avgNilai', label: 'Rata² Nilai', width: '110px', className: 'hide-mobile', render: (row) => <strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>{row.avgNilai}</strong> },
         {
-            key: 'actions', label: 'Aksi', width: '100px', render: (row) => (
+            key: 'actions', label: 'Aksi', width: '80px', render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => { setViewData(row); setIsViewModalOpen(true); }}>
                         <i className="fas fa-eye"></i>
