@@ -154,43 +154,6 @@ export default function PengaturanFormalPage() {
         { title: 'Data MIU Aktif', value: allSantri.length, icon: 'fas fa-graduation-cap', color: 'var(--info)' }
     ];
 
-    // --- DEBUG SEEDER ---
-    const generateTestData = async () => {
-        if (!confirm("Generate 30 data santri percobaan?")) return;
-        setLoading(true);
-        try {
-            const promises = [];
-            // Generate 15 MIU and 15 MHM
-            for (let i = 1; i <= 30; i++) {
-                const isMIU = i <= 15;
-                const unit = isMIU ? 'MIU' : 'MHM';
-                const name = `Santri ${unit} Test ${String(i).padStart(2, '0')}`;
-
-                promises.push(apiCall('saveData', 'POST', {
-                    type: 'santri',
-                    data: {
-                        stambuk_pondok: `${isMIU ? '24' : '23'}${String(i).padStart(3, '0')}`,
-                        nama_siswa: name,
-                        madrasah: unit,
-                        kelas: isMIU ? '1 ULA' : '1 IBTIDA',
-                        kamar: `A ${String(Math.ceil(i / 5)).padStart(2, '0')}`,
-                        status_santri: 'Aktif',
-                        tahun_masuk: '2024',
-                        tempat_tanggal_lahir: 'KEDIRI, 01-01-2010',
-                        jenis_kelamin: 'Laki-laki'
-                    }
-                }));
-            }
-            await Promise.all(promises);
-            showToast("Berhasil membuat 30 data santri test!", "success");
-            loadData();
-        } catch (e) {
-            showToast(e.message, "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <div className="view-container animate-in">
             <KopSurat judul="Pengaturan Santri : Sekolah Formal" subJudul="Pilih santri MIU untuk dimasukkan ke dalam kelompok sekolah berikut." hideOnScreen={true} />
@@ -200,13 +163,6 @@ export default function PengaturanFormalPage() {
             <DataViewContainer
                 title="Manajemen Kelompok Formal"
                 subtitle="Daftar tetap kelompok sekolah formal sesuai kriteria pondok."
-                headerActions={(
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={generateTestData} style={{ opacity: 0.5 }}>
-                            <i className="fas fa-flask"></i> DEBUG: Generate 30 Santri
-                        </button>
-                    </div>
-                )}
                 tableProps={{ columns: groupColumns, data: FORMAL_GROUPS, loading }}
             />
 
