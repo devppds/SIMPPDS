@@ -28,6 +28,28 @@
   box-sizing: border-box;
 }
 
+/* Base font sizing - optimized for desktop admin panel */
+html {
+  font-size: 16px;
+  /* Mobile default - prevents iOS auto-zoom */
+}
+
+/* Desktop: reduce to 80% for better space utilization */
+@media (min-width: 1024px) {
+  html {
+    font-size: 14px;
+    /* 87.5% of 16px */
+  }
+}
+
+/* Large desktop: slightly smaller for ultra-wide screens */
+@media (min-width: 1920px) {
+  html {
+    font-size: 13px;
+    /* 81.25% of 16px */
+  }
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background: var(--background);
