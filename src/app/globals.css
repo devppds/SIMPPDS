@@ -1517,60 +1517,206 @@ tr:hover td {
 }
 
 /* Minimalist Mobile Utilities */
-@media (max-width: 640px) {
-  .hide-mobile {
-    display: none !important;
+
+/* ==========================================================================
+   RESPONSIVE DESIGN SYSTEM (MOBILE-FIRST ADAPTATIONS)
+   ========================================================================== */
+
+/* 1. Global Layout & Spacing Adaptations */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 0px;
+    /* Hide sidebar space on tablet/mobile */
+    --header-height: 70px;
   }
 
+  .content-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  header {
+    padding: 0 1.5rem !important;
+  }
+
+  .view-container {
+    padding: 1.5rem !important;
+  }
+}
+
+/* 2. Specific Mobile Fixes (< 768px) */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
+
+  /* Prevent zooming by ensuring base font is readable */
+  html {
+    font-size: 15px;
+  }
+
+  /* Make containers fluid */
+  .view-container {
+    padding: 1rem !important;
+  }
+
+  /* Dashboard Stats Grid */
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem !important;
+    grid-template-columns: 1fr !important;
+    /* Stack stats on small mobile if needed */
+    gap: 1rem !important;
   }
 
-  .stat-card {
-    padding: 1rem !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 0.5rem !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-    border-radius: 16px !important;
+  @media (min-width: 480px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
   }
 
-  .stat-icon {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 1rem !important;
-    border-radius: 10px !important;
-  }
-
-  .stat-label {
-    font-size: 0.65rem !important;
-    margin-bottom: 2px !important;
-  }
-
-  .stat-value {
-    font-size: 1.1rem !important;
-  }
-
+  /* Card Adaptations */
   .card {
+    padding: 1.25rem !important;
     border-radius: 20px !important;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03) !important;
-    padding: 1rem !important;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .card-header h2 {
-    font-size: 1.2rem !important;
+    font-size: 1.25rem !important;
   }
 
+  /* Table Controls Stack */
+  .table-controls {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem !important;
+  }
+
+  .table-controls>* {
+    width: 100% !important;
+  }
+
+  /* Search & Filter Inputs */
+  .search-box {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* Header Profile */
+  .user-info {
+    display: none !important;
+    /* Hide name/role on mobile to save space */
+  }
+
+  .header-actions {
+    gap: 0.75rem !important;
+  }
+
+  /* Hijri Date Shrink */
+  .hijri-card {
+    padding: 6px 12px !important;
+    font-size: 0.7rem !important;
+  }
+
+  /* Modal Behavior */
+  .modal-container {
+    max-height: 95vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin-bottom: 0 !important;
+    position: fixed;
+    bottom: 0;
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem !important;
+  }
+
+  .modal-body {
+    padding: 1.5rem !important;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem !important;
+    flex-direction: column-reverse !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Buttons */
   .btn {
-    padding: 8px 16px !important;
-    font-size: 0.8rem !important;
-    border-radius: 10px !important;
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px !important;
   }
 
-  th,
-  td {
-    padding: 0.75rem 1rem !important;
-    font-size: 0.8rem !important;
+  .table-actions {
+    flex-wrap: wrap !important;
+    min-width: auto !important;
   }
+
+  .btn-vibrant {
+    flex: 1;
+    min-width: 40px;
+  }
+}
+
+/* 3. Tiny Mobile Adaptations (< 400px) */
+@media (max-width: 400px) {
+  header h1 {
+    font-size: 1.1rem !important;
+  }
+
+  .logo span {
+    display: none;
+    /* Only show icon logo if space is very tight */
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 4. Sidebar Mobile Logic */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px !important;
+    box-shadow: none;
+  }
+
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.3);
+  }
+
+  body.sidebar-open .sidebar-overlay {
+    display: block !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Responsive Table Solution */
+.table-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+
+  td,
+  th {
+    white-space: nowrap;
+    /* Prevent messy wrapping in tight tables */
+  }
+}
+
+/* General Input Fixes for Mobile */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+  /* Prevents iOS auto-zoom on focus */
 }
