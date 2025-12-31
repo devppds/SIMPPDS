@@ -185,7 +185,7 @@ export default function AksesPage() {
     };
 
     return (
-        <div className="view-container">
+        <div className="view-container akses-page">
             {/* Header Section */}
             <div className="page-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '20px' }}>
                 <div className="header-text">
@@ -712,41 +712,6 @@ export default function AksesPage() {
                 </div>
             </Modal>
 
-            <style jsx>{`
-                @media (max-width: 768px) {
-                    .page-title {
-                        font-size: 1.8rem !important;
-                    }
-                    .page-subtitle {
-                        font-size: 0.9rem !important;
-                    }
-                    .page-header-container {
-                        flex-direction: column;
-                        align-items: flex-start !important;
-                        gap: 1.5rem !important;
-                        margin-bottom: 2rem !important;
-                    }
-                    .add-admin-btn {
-                        width: 100%;
-                        justify-content: center;
-                    }
-                    .stats-grid-container {
-                        grid-template-columns: 1fr !important;
-                        gap: 1.25rem !important;
-                        margin-bottom: 2rem !important;
-                    }
-                    .security-card {
-                        padding: 1.5rem !important;
-                        min-height: auto !important;
-                    }
-                    .security-stats {
-                        gap: 2rem !important;
-                    }
-                    .security-stats-value {
-                        font-size: 2.2rem !important;
-                    }
-                }
-            `}</style>
         </div>
     );
 }

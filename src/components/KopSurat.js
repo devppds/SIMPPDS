@@ -83,14 +83,6 @@ export default function KopSurat({ judul = '', subJudul = '', hideOnScreen = fal
                     </p>
                 </div>
             )}
-            <style jsx>{`
-                @media (max-width: 640px) {
-                    .kop-header { justify-content: center; text-align: center; gap: 10px; }
-                    .kop-logo { width: 60px !important; height: 60px !important; }
-                    .kop-title { font-size: 1.1rem !important; }
-                    .kop-subtitle { font-size: 0.8rem !important; }
-                }
-            `}</style>
         </div>
     );
 }

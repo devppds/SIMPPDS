@@ -1742,6 +1742,7 @@ tr:hover td {
   }
 }
 
+
 /* 4. Sidebar Mobile Logic */
 @media (max-width: 1024px) {
   .sidebar {
@@ -1850,5 +1851,699 @@ textarea {
   .form-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+}
+
+/* ==========================================================================
+   COMPONENT & PAGE SPECIFIC STYLES (CONSOLIDATED)
+   ========================================================================== */
+
+/* 1. Dashboard Page Styles */
+.dashboard-header {
+  margin-bottom: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.dashboard-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(to right, var(--primary), #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.dashboard-subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.academic-badge {
+  padding: 12px 24px;
+  border-radius: 16px;
+}
+
+.badge-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.badge-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.card-glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid #f1f5f9;
+  box-shadow: var(--shadow-sm);
+}
+
+.main-grid-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1.4fr;
+  gap: 2rem;
+}
+
+.primary-column,
+.secondary-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.access-limited-card {
+  text-align: center;
+  padding: 3rem;
+}
+
+.icon-limited {
+  font-size: 3rem;
+  color: var(--primary-light);
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1200px) {
+  .main-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .dashboard-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.8rem;
+    line-height: 1.2;
+  }
+
+  .dashboard-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .academic-badge {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* 2. Laporan Pimpinan Styles */
+.financial-chart-view {
+  padding: 1rem 0;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.bar-bg {
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 6px;
+}
+
+.status-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.status-text strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.status-text p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+@media print {
+
+  :global(.sidebar),
+  :global(header),
+  .card-actions {
+    display: none !important;
+  }
+
+  :global(.content-wrapper) {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  .laporan-view .view-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    animation: none !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  .stat-card {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  .report-row {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #eee !important;
+    break-inside: avoid;
+  }
+
+  .ai-report-box {
+    animation: none !important;
+    border: 1px solid #6366f1 !important;
+    background-color: #f0f4ff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-header-corporate {
+    display: block !important;
+  }
+
+  .print-footer-corporate {
+    display: block !important;
+  }
+}
+
+/* 3. Akses Management Styles */
+@media (max-width: 768px) {
+  .akses-page .page-header-container {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1.5rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  .add-admin-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-grid-container {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  .security-card {
+    padding: 1.5rem !important;
+    min-height: auto !important;
+  }
+
+  .security-stats {
+    gap: 2rem !important;
+  }
+}
+
+/* 4. DataViewContainer Shared Component */
+.data-view-container {
+  box-shadow: var(--shadow-premium);
+  border: 1px solid #f1f5f9;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.table-controls-container {
+  padding: 1rem 2rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-box-wrapper {
+  flex: 1 1 300px;
+}
+
+.filters-wrapper {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.table-wrapper-inner {
+  padding: 0 1rem;
+}
+
+@media (max-width: 640px) {
+  .table-controls-container {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-wrapper-inner {
+    padding: 0;
+  }
+}
+
+/* 5. StatsPanel Component */
+.stats-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.stat-card-title {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card-value {
+  margin: 4px 0 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.stat-trend {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .stats-panel-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .stats-panel-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    padding-bottom: 12px !important;
+    gap: 10px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .stats-panel-grid::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 6. Animations Library */
+.animate-in {
+  animation: fadeInSimple 0.6s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInSimple {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 7. DEVELZY Control Styles */
+@media (max-width: 991px) {
+  .develzy-control-page .main-layout-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .develzy-sidebar {
+    order: 2;
+  }
+
+  .content-area {
+    order: 1;
+    padding: 1.5rem !important;
+  }
+
+  .sidebar-scrollable {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    padding-bottom: 10px;
+    scrollbar-width: none;
+  }
+
+  .sidebar-scrollable::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar-scrollable>button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .develzy-hero {
+    padding: 2rem !important;
+    border-radius: 20px !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .hero-title {
+    font-size: 1.8rem !important;
+  }
+
+  .hero-desc {
+    font-size: 0.9rem !important;
+  }
+
+  .quick-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  .stat-card-compact {
+    padding: 1.25rem !important;
+    gap: 1rem !important;
+  }
+
+  .stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1rem !important;
+  }
+
+  .stat-value {
+    font-size: 0.95rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 8. KopSurat Component Styles */
+@media (max-width: 640px) {
+  .print-header-unified .kop-header {
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .print-header-unified .kop-logo {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .print-header-unified .kop-title {
+    font-size: 1.1rem !important;
+  }
+
+  .print-header-unified .kop-subtitle {
+    font-size: 0.8rem !important;
+  }
+}
+
+/* 9. Header & Navigation Components */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  gap: 1rem;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.header-title h1 {
+  font-size: 1.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .mobile-only {
+    display: block !important;
+  }
+
+  header {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-title h1 {
+    font-size: 1.1rem;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-title h1 {
+    max-width: 150px;
+  }
+}
+
+/* 10. HijriDate Widget */
+.hijri-widget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px -3px rgba(5, 150, 105, 0.4);
+  margin-right: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s;
+  cursor: default;
+}
+
+.hijri-widget:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px -3px rgba(5, 150, 105, 0.5);
+}
+
+.hijri-widget::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1h2v2H1V1zm4 0h2v2H5V1zm4 0h2v2H9V1zm4 0h2v2h-2V1zm4 0h2v2h-2V1z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.3;
+}
+
+.hijri-widget .icon-wrapper {
+  font-size: 1.2rem;
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  z-index: 1;
+  animation: moon-float 3s ease-in-out infinite;
+}
+
+.hijri-text {
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 1rem;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes moon-float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-3px) rotate(10deg);
+  }
+
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .hijri-text {
+    font-size: 0.9rem;
+  }
+
+  .hijri-widget {
+    padding: 6px 15px;
+    margin-right: 10px;
+  }
+}
+
+/* 11. Interactive Card States */
+.active-card {
+  background: var(--primary-light) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* 12. Payment Module Styles */
+.pembayaran-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.8fr;
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .pembayaran-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 13. Administrative Form Styles */
+.form-control-sm {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  transition: 0.2s;
+}
+
+.form-control-sm:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+@media (max-width: 640px) {
+  .filter-card {
+    padding: 15px !important;
+  }
+
+  .filter-grid {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .filter-col {
+    width: 100% !important;
+  }
+
+  .filter-actions {
+    margin-top: 0 !important;
   }
 }

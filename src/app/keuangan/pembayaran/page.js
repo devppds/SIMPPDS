@@ -216,18 +216,6 @@ export default function PembayaranSantriPage() {
                 </div>
             </div>
 
-            <style jsx>{`
-                .pembayaran-grid {
-                    display: grid;
-                    grid-template-columns: 1.2fr 1.8fr;
-                    gap: 2rem;
-                }
-                @media (max-width: 1024px) {
-                    .pembayaran-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-            `}</style>
         </div>
     );
 }

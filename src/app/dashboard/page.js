@@ -74,7 +74,7 @@ export default function DashboardPage() {
         .slice(0, 8);
 
     return (
-        <div className="view-container">
+        <div className="view-container laporan-view">
             <div className="dashboard-header animate-in">
                 <div className="welcome-section">
                     <h1 className="dashboard-title outfit">
@@ -141,106 +141,6 @@ export default function DashboardPage() {
             </div>
 
 
-            <style jsx>{`
-                .animate-in { animation: slideInLeft 0.6s ease-out forwards; }
-                @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-                
-                .dashboard-header {
-                    margin-bottom: 2.5rem;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 1.5rem;
-                }
-                .dashboard-title {
-                    font-size: 2.5rem;
-                    font-weight: 900;
-                    background: linear-gradient(to right, var(--primary), #3b82f6);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    margin-bottom: 8px;
-                }
-                .dashboard-subtitle {
-                    color: var(--text-muted);
-                    font-size: 1.1rem;
-                }
-                .academic-badge {
-                    padding: 12px 24px;
-                    border-radius: 16px;
-                }
-                .badge-label {
-                    font-size: 0.8rem;
-                    font-weight: 700;
-                    color: var(--text-muted);
-                    text-transform: uppercase;
-                }
-                .badge-value {
-                    font-size: 1.1rem;
-                    font-weight: 800;
-                    color: var(--primary);
-                }
-                .card-glass {
-                    background: rgba(255, 255, 255, 0.8);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid #f1f5f9;
-                    box-shadow: var(--shadow-sm);
-                }
-                .main-grid-layout {
-                    display: grid;
-                    grid-template-columns: 1.6fr 1.4fr;
-                    gap: 2rem;
-                }
-                .primary-column, .secondary-column {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 2rem;
-                }
-                .access-limited-card {
-                    text-align: center;
-                    padding: 3rem;
-                }
-                .icon-limited {
-                    font-size: 3rem;
-                    color: var(--primary-light);
-                    margin-bottom: 1rem;
-                }
-
-                @media (max-width: 1200px) {
-                    .main-grid-layout {
-                        grid-template-columns: 1fr;
-                        gap: 1.5rem;
-                    }
-                    .dashboard-title {
-                        font-size: 2rem;
-                    }
-                }
-
-                @media (max-width: 768px) {
-                    .dashboard-header {
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: 1rem;
-                        margin-bottom: 2rem;
-                    }
-                    .dashboard-title {
-                        font-size: 1.8rem;
-                        line-height: 1.2;
-                    }
-                    .dashboard-subtitle {
-                        font-size: 0.95rem;
-                    }
-                    .academic-badge {
-                        width: 100%;
-                        padding: 1rem;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .dashboard-title {
-                        font-size: 1.5rem;
-                    }
-                }
-            `}</style>
         </div>
     );
 }

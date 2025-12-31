@@ -123,7 +123,7 @@ export default function LaporanPimpinan() {
     }, []);
 
     if (loading) return (
-        <div className="view-container">
+        <div className="view-container laporan-view">
             <div className="loading-card" style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div className="spinner"></div>
                 <p style={{ marginLeft: '1rem' }}>Menyusun Laporan Pimpinan...</p>
@@ -132,7 +132,7 @@ export default function LaporanPimpinan() {
     );
 
     return (
-        <div className="view-container">
+        <div className="view-container laporan-view">
             <div className="print-header-corporate" style={{ display: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '3px solid #1e3a8a', paddingBottom: '15px', marginBottom: '25px' }}>
                     <img src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png" style={{ width: '80px' }} alt="Logo" />
@@ -282,97 +282,6 @@ export default function LaporanPimpinan() {
                 </div>
             </div>
 
-            <style jsx>{`
-                .financial-chart-view {
-                    padding: 1rem 0;
-                }
-                .label-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 0.5rem;
-                    font-weight: 500;
-                    color: #475569;
-                }
-                .bar-bg {
-                    height: 12px;
-                    background: #f1f5f9;
-                    border-radius: 6px;
-                    overflow: hidden;
-                }
-                .bar-fill {
-                    height: 100%;
-                    border-radius: 6px;
-                }
-                .status-item {
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 1rem;
-                }
-                .dot {
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    margin-top: 6px;
-                    flex-shrink: 0;
-                }
-                .status-text strong {
-                    display: block;
-                    font-size: 0.95rem;
-                }
-                .status-text p {
-                    font-size: 0.85rem;
-                    color: #64748b;
-                    margin: 0;
-                }
-
-                @media print {
-                    :global(.sidebar), :global(header), .card-actions {
-                        display: none !important;
-                    }
-                    :global(.content-wrapper) {
-                        margin-left: 0 !important;
-                        padding: 0 !important;
-                    }
-                    .view-container {
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        max-width: 100% !important;
-                        animation: none !important;
-                    }
-                    .stats-grid {
-                        grid-template-columns: repeat(2, 1fr) !important;
-                        gap: 1rem !important;
-                    }
-                    .stat-card {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        box-shadow: none !important;
-                        border: 1px solid #ddd !important;
-                    }
-                    .report-row {
-                        grid-template-columns: 1fr !important;
-                        gap: 1.5rem !important;
-                    }
-                    .card {
-                        box-shadow: none !important;
-                        border: 1px solid #eee !important;
-                        break-inside: avoid;
-                    }
-                    .ai-report-box {
-                        animation: none !important;
-                        border: 1px solid #6366f1 !important;
-                        background-color: #f0f4ff !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-                    .print-header-corporate {
-                        display: block !important;
-                    }
-                    .print-footer-corporate {
-                        display: block !important;
-                    }
-                }
-            `}</style>
         </div>
     );
 }

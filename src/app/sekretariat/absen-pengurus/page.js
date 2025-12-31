@@ -318,53 +318,6 @@ export default function AbsensiPengurusPage() {
                 </div>
             </Modal>
 
-            <style jsx>{`
-                .form-control-sm {
-                    padding: 8px 12px;
-                    border: 1px solid #e2e8f0;
-                    borderRadius: 8px;
-                    fontSize: 0.85rem;
-                    transition: 0.2s;
-                }
-                .form-control-sm:focus {
-                    border-color: var(--primary);
-                    outline: none;
-                    box-shadow: 0 0 0 3px var(--primary-light);
-                }
-                .table-wrapper {
-                    background: white;
-                    border-radius: 15px;
-                    box-shadow: var(--shadow-sm);
-                    overflow-x: auto;
-                }
-                .table th { 
-                    background: #f8fafc; 
-                    font-size: 0.75rem; 
-                    text-transform: uppercase; 
-                    letter-spacing: 0.05em; 
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                }
-                .table td {
-                    white-space: nowrap;
-                    vertical-align: middle;
-                }
-                @media (max-width: 640px) {
-                    .filter-card {
-                        padding: 15px !important;
-                    }
-                    .filter-grid {
-                        flex-direction: column !important;
-                        align-items: stretch !important;
-                    }
-                    .filter-col {
-                        width: 100% !important;
-                    }
-                    .filter-actions {
-                        margin-top: 0 !important;
-                    }
-                }
-            `}</style>
         </div>
     );
 }
