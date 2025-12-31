@@ -19,27 +19,10 @@ export default function RiwayatAbsensiPage() {
     const [santriList, setSantriList] = useState([]);
     const [search, setSearch] = useState('');
     const [filterTipe, setFilterTipe] = useState('Semua');
-    const [filterBulan, setFilterBulan] = useState('');
-    const [filterTahun, setFilterTahun] = useState('');
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
 
     const TIPE_OPTIONS = ['Semua', 'Murottil Pagi', 'Murottil Malam', 'Wajib Belajar'];
-    const BULAN_OPTIONS = ['Semua', 'Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', 'Syaban', 'Ramadhan', 'Syawal', 'Dzulqadah', 'Dzulhijjah'];
-    const TAHUN_OPTIONS = ['Semua', '1445', '1446', '1447', '1448', '1449'];
-
-    useEffect(() => {
-        const today = new Date();
-        const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
-            month: 'numeric', year: 'numeric'
-        }).formatToParts(today);
-
-        const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '1');
-        const hYear = parts.find(p => p.type === 'year')?.value?.split(' ')[0] || '1447';
-
-        setFilterBulan(BULAN_OPTIONS[hMonth] || 'Semua');
-        setFilterTahun(hYear);
-    }, []);
 
     const loadData = async () => {
         setLoading(true);
@@ -131,34 +114,23 @@ export default function RiwayatAbsensiPage() {
             // Filter by tipe
             if (filterTipe !== 'Semua' && d.tipe !== filterTipe) return false;
 
-            // Filter by bulan/tahun
-            if (filterBulan !== 'Semua' || filterTahun !== 'Semua') {
-                const date = new Date(d.tanggal);
-                const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
-                    month: 'numeric', year: 'numeric'
-                }).formatToParts(date);
-
-                const hMonth = parseInt(parts.find(p => p.type === 'month')?.value || '1');
-                const hYear = parts.find(p => p.type === 'year')?.value?.split(' ')[0] || '';
-
-                if (filterBulan !== 'Semua' && BULAN_OPTIONS[hMonth] !== filterBulan) return false;
-                if (filterTahun !== 'Semua' && hYear !== filterTahun) return false;
-            }
+            // Note: Month/year filter removed as aggregated data doesn't have single date
+            // If needed, would require tracking date range in aggregation
 
             return true;
         });
-    }, [processedData, search, filterTipe, filterBulan, filterTahun]);
+    }, [processedData, search, filterTipe]);
 
     const stats = useMemo(() => {
-        const totalHadir = displayData.filter(d => d.status === 'H').length;
-        const totalIzin = displayData.filter(d => d.status === 'I').length;
-        const totalAlfa = displayData.filter(d => d.status === 'A').length;
+        const totalHadir = displayData.reduce((sum, d) => sum + d.hadir, 0);
+        const totalIzin = displayData.reduce((sum, d) => sum + d.izin, 0);
+        const totalAlfa = displayData.reduce((sum, d) => sum + d.alfa, 0);
 
         return [
             { title: 'Total Rekaman', value: displayData.length, icon: 'fas fa-database', color: 'var(--primary)' },
-            { title: 'Hadir', value: totalHadir, icon: 'fas fa-check-circle', color: 'var(--success)' },
-            { title: 'Izin', value: totalIzin, icon: 'fas fa-envelope', color: 'var(--warning)' },
-            { title: 'Alfa', value: totalAlfa, icon: 'fas fa-times-circle', color: 'var(--danger)' }
+            { title: 'Total Hadir', value: totalHadir, icon: 'fas fa-check-circle', color: 'var(--success)' },
+            { title: 'Total Izin', value: totalIzin, icon: 'fas fa-envelope', color: 'var(--warning)' },
+            { title: 'Total Alfa', value: totalAlfa, icon: 'fas fa-times-circle', color: 'var(--danger)' }
         ];
     }, [displayData]);
 
@@ -176,7 +148,7 @@ export default function RiwayatAbsensiPage() {
             'Rata-rata Nilai': d.avgNilai
         }));
 
-        const fileName = `Rekap_Absensi_${filterTipe}_${filterBulan}_${filterTahun}`;
+        const fileName = `Rekap_Absensi_${filterTipe.replace(/\s+/g, '_')}`;
         exportToExcel(exportData, fileName, Object.keys(exportData[0] || {}));
     };
 
@@ -243,11 +215,7 @@ export default function RiwayatAbsensiPage() {
                 }
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama santri / kelompok..." }}
                 filters={
-                    <>
-                        <SelectInput value={filterTipe} onChange={e => setFilterTipe(e.target.value)} options={TIPE_OPTIONS} style={{ width: '180px', marginBottom: 0 }} />
-                        <SelectInput value={filterBulan} onChange={e => setFilterBulan(e.target.value)} options={BULAN_OPTIONS} style={{ width: '150px', marginBottom: 0 }} />
-                        <SelectInput value={filterTahun} onChange={e => setFilterTahun(e.target.value)} options={TAHUN_OPTIONS} style={{ width: '120px', marginBottom: 0 }} />
-                    </>
+                    <SelectInput value={filterTipe} onChange={e => setFilterTipe(e.target.value)} options={TIPE_OPTIONS} style={{ width: '200px', marginBottom: 0 }} />
                 }
                 tableProps={{ columns, data: displayData, loading }}
             />
