@@ -103,14 +103,16 @@ export default function SortableTable({
                                     onClick={() => onRowClick && onRowClick(row)}
                                     style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                                 >
-                                    <td key={col.key} className={col.className || ''} style={{
-                                        textAlign: col.align || 'left',
-                                        width: col.width || 'auto',
-                                        whiteSpace: col.wrap ? 'normal' : 'nowrap',
-                                        minWidth: col.wrap ? '200px' : 'auto'
-                                    }}>
-                                        {col.render ? col.render(row) : row[col.key]}
-                                    </td>
+                                    {columns.map((col) => (
+                                        <td key={col.key} className={col.className || ''} style={{
+                                            textAlign: col.align || 'left',
+                                            width: col.width || 'auto',
+                                            whiteSpace: col.wrap ? 'normal' : 'nowrap',
+                                            minWidth: col.wrap ? '200px' : 'auto'
+                                        }}>
+                                            {col.render ? col.render(row) : row[col.key]}
+                                        </td>
+                                    ))}
                                 </tr>
                             ))
                         )}
