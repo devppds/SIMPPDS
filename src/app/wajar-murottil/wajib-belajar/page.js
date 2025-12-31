@@ -163,7 +163,10 @@ export default function WajibBelajarPage() {
             <div style={{ marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '15px' }}>Pilih Kelompok Wajar</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
-                    {kelompokList.map((k, i) => (
+                    {kelompokList.filter(k => {
+                        const j = (k.jabatan || '').toLowerCase();
+                        return j.includes('wajar') || j.includes('wajib belajar');
+                    }).map((k, i) => (
                         <div
                             key={i}
                             onClick={() => setFilterKelompok(k.kelompok)}

@@ -190,19 +190,21 @@ export default function MurottilPagiPage() {
 
             {/* Kelompok Selection Grid */}
             <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '15px' }}>Pilih Kelompok</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
-                    {kelompokList.map((k, i) => (
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '15px' }}>Pilih Kelompok Murottil</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' }}>
+                    {kelompokList.filter(k => (k.jabatan || '').toLowerCase().includes('murottil')).map((k, i) => (
                         <div
                             key={i}
                             onClick={() => setFilterKelompok(k.kelompok)}
                             className={`card-glass ${filterKelompok === k.kelompok ? 'active-card' : ''}`}
                             style={{
-                                padding: '15px',
-                                borderRadius: '15px',
+                                padding: '20px',
+                                borderRadius: '20px',
                                 cursor: 'pointer',
                                 border: filterKelompok === k.kelompok ? '2px solid var(--primary)' : '1px solid #f1f5f9',
-                                transition: 'all 0.3s'
+                                transition: 'all 0.3s',
+                                position: 'relative',
+                                overflow: 'hidden'
                             }}
                         >
                             <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>{k.jabatan}</div>

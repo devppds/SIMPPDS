@@ -187,9 +187,9 @@ export default function MurottilMalamPage() {
 
             {/* Kelompok Selection Grid */}
             <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '15px' }}>Pilih Kelompok</h3>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '15px' }}>Pilih Kelompok Murottil</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
-                    {kelompokList.map((k, i) => (
+                    {kelompokList.filter(k => (k.jabatan || '').toLowerCase().includes('murottil')).map((k, i) => (
                         <div
                             key={i}
                             onClick={() => setFilterKelompok(k.kelompok)}
