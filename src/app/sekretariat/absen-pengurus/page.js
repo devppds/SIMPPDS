@@ -78,12 +78,15 @@ export default function AbsensiPengurusPage() {
                 const initialState = {};
                 activePengurus.forEach(p => {
                     const existing = monthAbsen.find(a => Number(a.pengurus_id) === Number(p.id));
+                    const target = monthTarget.find(t => Number(t.pengurus_id) === Number(p.id));
                     initialState[p.id] = {
                         tugas: existing ? existing.tugas : 0,
                         izin: existing ? existing.izin : 0,
                         alfa: existing ? existing.alfa : 0,
                         alasan_izin: existing ? existing.alasan_izin : '',
-                        id: existing ? existing.id : null
+                        id: existing ? existing.id : null,
+                        target_tugas: target ? Number(target.target_tugas) : 0,
+                        target_id: target ? target.id : null
                     };
                 });
                 setFormState(initialState);
@@ -109,32 +112,49 @@ export default function AbsensiPengurusPage() {
     const handleSaveAbsensi = async () => {
         setSubmitting(true);
         try {
-            const dataToSave = Object.entries(formState).map(([pid, val]) => {
-                const pengurus = pengurusList.find(p => Number(p.id) === Number(pid));
-                if (!pengurus) return null;
-                return {
-                    id: val.id,
-                    pengurus_id: pid,
-                    nama_pengurus: pengurus.nama,
-                    bulan: filterMonth,
-                    tahun: filterYear,
-                    tugas: val.tugas,
-                    izin: val.izin,
-                    alfa: val.alfa,
-                    alasan_izin: val.alasan_izin,
-                    petugas: user?.fullname || 'Sekretariat'
-                };
-            }).filter(d => d !== null);
+            const entries = Object.entries(formState);
 
-            // Execute sequentially to be safe
-            for (const item of dataToSave) {
-                await apiCall('saveData', 'POST', { type: 'pengurus_absen', data: item });
+            // Sequential execution to prevent D1 concurrency issues
+            for (const [pid, val] of entries) {
+                const pengurus = pengurusList.find(p => Number(p.id) === Number(pid));
+                if (!pengurus) continue;
+
+                // 1. Save Attendance
+                await apiCall('saveData', 'POST', {
+                    type: 'pengurus_absen',
+                    data: {
+                        id: val.id,
+                        pengurus_id: pid,
+                        nama_pengurus: pengurus.nama,
+                        bulan: filterMonth,
+                        tahun: filterYear,
+                        tugas: val.tugas,
+                        izin: val.izin,
+                        alfa: val.alfa,
+                        alasan_izin: val.alasan_izin,
+                        petugas: user?.fullname || 'Sekretariat'
+                    }
+                });
+
+                // 2. Save Target
+                await apiCall('saveData', 'POST', {
+                    type: 'pengurus_target',
+                    data: {
+                        id: val.target_id,
+                        pengurus_id: pid,
+                        nama_pengurus: pengurus.nama,
+                        bulan: filterMonth,
+                        tahun: filterYear,
+                        target_tugas: val.target_tugas,
+                        keterangan: `Target manual ${filterMonth} ${filterYear}`
+                    }
+                });
             }
 
-            showToast(`Absensi pengurus bulan ${filterMonth} berhasil disimpan!`, "success");
+            showToast(`Data absensi dan target bulan ${filterMonth} berhasil disimpan!`, "success");
             loadData();
         } catch (e) {
-            showToast(e.message || "Gagal menyimpan absensi.", "error");
+            showToast(e.message || "Gagal menyimpan data.", "error");
         } finally {
             setSubmitting(false);
         }
@@ -242,28 +262,27 @@ export default function AbsensiPengurusPage() {
                                 </thead>
                                 <tbody>
                                     {list.map(p => {
-                                        const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '' };
-                                        const targetObj = targetData.find(t => Number(t.pengurus_id) === Number(p.id));
-                                        const targetVal = targetObj ? Number(targetObj.target_tugas) : 0;
+                                        const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '', target_tugas: 0 };
+                                        const targetVal = Number(values.target_tugas || 0);
                                         const progress = targetVal > 0 ? Math.min(100, Math.round((values.tugas / targetVal) * 100)) : 0;
 
                                         return (
                                             <tr key={p.id}>
                                                 <td><strong>{p.nama}</strong><br /><small style={{ color: 'var(--text-muted)' }}>{p.divisi || '-'}</small></td>
-                                                <td style={{ textAlign: 'center' }}>
-                                                    <span className="badge badge-info">{targetVal}</span>
+                                                <td>
+                                                    <input type="number" className="form-control-sm target-input" value={values.target_tugas} onChange={e => handleInputChange(p.id, 'target_tugas', e.target.value)} style={{ width: '70px', textAlign: 'center', background: '#f0f9ff', fontWeight: 700, borderColor: '#bae6fd' }} />
                                                 </td>
                                                 <td>
-                                                    <input type="number" className="form-control-sm" value={values.tugas} onChange={e => handleInputChange(p.id, 'tugas', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
+                                                    <input type="number" className="form-control-sm" value={values.tugas} onChange={e => handleInputChange(p.id, 'tugas', e.target.value)} style={{ width: '70px', textAlign: 'center' }} />
                                                 </td>
                                                 <td>
-                                                    <input type="number" className="form-control-sm" value={values.izin} onChange={e => handleInputChange(p.id, 'izin', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
+                                                    <input type="number" className="form-control-sm" value={values.izin} onChange={e => handleInputChange(p.id, 'izin', e.target.value)} style={{ width: '70px', textAlign: 'center' }} />
                                                 </td>
                                                 <td>
-                                                    <input type="number" className="form-control-sm" value={values.alfa} onChange={e => handleInputChange(p.id, 'alfa', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
+                                                    <input type="number" className="form-control-sm" value={values.alfa} onChange={e => handleInputChange(p.id, 'alfa', e.target.value)} style={{ width: '70px', textAlign: 'center' }} />
                                                 </td>
                                                 <td>
-                                                    <input type="text" className="form-control-sm" placeholder="Alasan jika izin..." value={values.alasan_izin} onChange={e => handleInputChange(p.id, 'alasan_izin', e.target.value)} style={{ width: '100%' }} />
+                                                    <input type="text" className="form-control-sm" placeholder="Alasan..." value={values.alasan_izin} onChange={e => handleInputChange(p.id, 'alasan_izin', e.target.value)} style={{ width: '100%' }} />
                                                 </td>
                                                 <td style={{ textAlign: 'center' }}>
                                                     <div style={{ fontSize: '0.7rem', fontWeight: 800, marginBottom: '4px' }}>{progress}%</div>
