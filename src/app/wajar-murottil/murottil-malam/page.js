@@ -238,6 +238,9 @@ export default function MurottilMalamPage() {
                         subtitle={`Daftar santri kelompok ${activeKelompokData?.kelompok}`}
                         headerActions={canEdit && (
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <button className="btn btn-outline btn-sm" onClick={() => window.location.href = '/wajar-murottil/riwayat-absensi'}>
+                                    <i className="fas fa-history"></i> <span>Riwayat</span>
+                                </button>
                                 <button className="btn btn-secondary btn-sm" onClick={handleBulkHadir} disabled={loading || filteredSantri.length === 0}>
                                     <i className="fas fa-check-double"></i> <span>Semua Hadir</span>
                                 </button>

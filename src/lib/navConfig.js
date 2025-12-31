@@ -75,6 +75,7 @@ export const NAV_ITEMS = [
             { label: 'Wajib Belajar', path: '/wajar-murottil/wajib-belajar', icon: 'fas fa-book-reader' },
             { label: 'Murottil Malam', path: '/wajar-murottil/murottil-malam', icon: 'fas fa-moon' },
             { label: 'Murottil Pagi', path: '/wajar-murottil/murottil-pagi', icon: 'fas fa-sun' },
+            { label: 'Riwayat Absensi', path: '/wajar-murottil/riwayat-absensi', icon: 'fas fa-history' },
             { label: 'Pengaturan Kelompok', path: '/wajar-murottil/pengaturan', icon: 'fas fa-users-cog' }
         ]
     },
