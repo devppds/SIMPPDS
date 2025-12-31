@@ -12,14 +12,10 @@ import KopSurat from '@/components/KopSurat';
 import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
-const STATUS_OPTIONS = [
-    'Biasa Baru', 'Biasa Lama', 'Ndalem 50% Baru', 'Ndalem 100% Baru',
-    'Ndalem 50% Lama', 'Ndalem 100% Lama', 'PKJ', 'Nduduk', 'Dzuriyyah'
-];
-
 export default function PengaturanKeuanganPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [listKelas, setListKelas] = useState([]);
+    const [kategoriList, setKategoriList] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
@@ -27,19 +23,21 @@ export default function PengaturanKeuanganPage() {
         isModalOpen, setIsModalOpen, formData, setFormData, editId,
         handleSave, handleDelete
     } = useDataManagement('keuangan_tarif', {
-        kategori_status: 'Biasa Baru', kelas: 'Semua', nominal: ''
+        kategori_status: 'Biasa Lama', kelas: 'Semua', nominal: ''
     });
 
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {
-            const [resTarif, resKelas] = await Promise.all([
+            const [resTarif, resKelas, resKategori] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'keuangan_tarif' }),
-                apiCall('getData', 'GET', { type: 'master_kelas' })
+                apiCall('getData', 'GET', { type: 'master_kelas' }),
+                apiCall('getData', 'GET', { type: 'master_kategori_pembayaran' })
             ]);
             setData(resTarif || []);
             const sortedKelas = (resKelas || []).sort((a, b) => a.urutan - b.urutan);
             setListKelas([{ nama_kelas: 'Semua', lembaga: 'Umum' }, ...sortedKelas]);
+            setKategoriList((resKategori || []).filter(k => k.aktif).sort((a, b) => a.urutan - b.urutan));
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [setData, setLoading]);
 
@@ -71,7 +69,12 @@ export default function PengaturanKeuanganPage() {
             />
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Tarif" : "Tarif Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
-                <SelectInput label="Status Santri" value={formData.kategori_status} onChange={e => setFormData({ ...formData, kategori_status: e.target.value })} options={STATUS_OPTIONS} />
+                <SelectInput
+                    label="Kategori Pembayaran"
+                    value={formData.kategori_status}
+                    onChange={e => setFormData({ ...formData, kategori_status: e.target.value })}
+                    options={kategoriList.map(k => k.nama_kategori)}
+                />
                 <SelectInput label="Tingkat Kelas" value={formData.kelas} onChange={e => setFormData({ ...formData, kelas: e.target.value })} options={listKelas.map(k => ({ value: k.nama_kelas, label: `${k.nama_kelas} ${k.lembaga !== 'Umum' ? `(${k.lembaga})` : ''}` }))} />
                 <TextInput label="Nominal Iuran (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required icon="fas fa-tag" />
             </Modal>

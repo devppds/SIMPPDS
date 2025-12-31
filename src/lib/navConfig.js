@@ -116,7 +116,9 @@ export const NAV_ITEMS = [
         submenu: [
             { label: 'Pembayaran Santri', path: '/keuangan/pembayaran', icon: 'fas fa-cash-register' },
             { label: 'Arus Kas Harian', path: '/keuangan/arus-kas', icon: 'fas fa-book-open' },
-            { label: 'Atur Pembayaran', path: '/keuangan/pengaturan', icon: 'fas fa-sliders-h' }
+            { label: 'Kategori Pembayaran', path: '/keuangan/kategori-pembayaran', icon: 'fas fa-tags' },
+            { label: 'Atur Tarif Pembayaran', path: '/keuangan/pengaturan', icon: 'fas fa-sliders-h' },
+            { label: 'Status Keuangan Santri', path: '/keuangan/status-santri', icon: 'fas fa-user-tag' }
         ]
     },
 

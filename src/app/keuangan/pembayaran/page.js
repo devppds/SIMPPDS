@@ -19,6 +19,7 @@ export default function PembayaranSantriPage() {
     const { showToast } = useToast();
     const [santriList, setSantriList] = useState([]);
     const [tarifList, setTarifList] = useState([]);
+    const [statusList, setStatusList] = useState([]);
     const [selectedSantri, setSelectedSantri] = useState(null);
     const [searchSantri, setSearchSantri] = useState('');
 
@@ -35,13 +36,15 @@ export default function PembayaranSantriPage() {
     const loadInitialData = useCallback(async () => {
         setLoading(true);
         try {
-            const [dataSantri, dataTarif, dataHistory] = await Promise.all([
+            const [dataSantri, dataTarif, dataStatus, dataHistory] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'santri' }),
                 apiCall('getData', 'GET', { type: 'keuangan_tarif' }),
+                apiCall('getData', 'GET', { type: 'keuangan_status_santri' }),
                 apiCall('getData', 'GET', { type: 'keuangan_pembayaran' })
             ]);
             setSantriList(dataSantri || []);
             setTarifList(dataTarif || []);
+            setStatusList(dataStatus || []);
             setHistory((dataHistory || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }, [setHistory, setLoading]);
@@ -57,12 +60,24 @@ export default function PembayaranSantriPage() {
 
     useEffect(() => {
         if (!selectedSantri || formData.jenis_pembayaran === 'Tabungan') return;
-        const status = selectedSantri.status_santri || 'Biasa Baru';
+
+        // Cari status keuangan santri (yang aktif: tanggal_selesai = null)
+        const activeStatus = statusList.find(s =>
+            s.santri_id === selectedSantri.id && !s.tanggal_selesai
+        );
+
+        // Default ke "Biasa Lama" jika tidak ada status khusus
+        const kategori = activeStatus?.kategori_pembayaran || 'Biasa Lama';
         const kelas = selectedSantri.kelas || 'Semua';
-        let rule = tarifList.find(t => t.kategori_status === status && t.kelas === kelas);
-        if (!rule) rule = tarifList.find(t => t.kategori_status === status && t.kelas === 'Semua');
+
+        // Cari tarif berdasarkan kategori + kelas
+        let rule = tarifList.find(t => t.kategori_status === kategori && t.kelas === kelas);
+
+        // Fallback ke tarif "Semua" jika tidak ada tarif spesifik
+        if (!rule) rule = tarifList.find(t => t.kategori_status === kategori && t.kelas === 'Semua');
+
         if (rule) setFormData(prev => ({ ...prev, nominal: rule.nominal }));
-    }, [selectedSantri, formData.jenis_pembayaran, tarifList, setFormData]);
+    }, [selectedSantri, formData.jenis_pembayaran, tarifList, statusList, setFormData]);
 
     const handleReset = () => {
         setSelectedSantri(null);
@@ -138,7 +153,12 @@ export default function PembayaranSantriPage() {
                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'var(--primary-light)', padding: '12px', borderRadius: '12px', border: '1px solid var(--primary)' }}>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontWeight: 800, color: 'var(--primary)' }}>{selectedSantri.nama_siswa}</div>
-                                    <small style={{ color: 'var(--primary-dark)', opacity: 0.8 }}>{selectedSantri.kelas} | {selectedSantri.status_santri}</small>
+                                    <small style={{ color: 'var(--primary-dark)', opacity: 0.8 }}>
+                                        {selectedSantri.kelas} |
+                                        <span style={{ fontWeight: 700, marginLeft: '5px' }}>
+                                            {statusList.find(s => s.santri_id === selectedSantri.id && !s.tanggal_selesai)?.kategori_pembayaran || 'Biasa Lama'}
+                                        </span>
+                                    </small>
                                 </div>
                                 <button onClick={handleReset} className="btn-vibrant btn-vibrant-red" style={{ padding: '8px 12px' }}><i className="fas fa-times"></i></button>
                             </div>
