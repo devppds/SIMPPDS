@@ -105,12 +105,48 @@ export default function PengaturanWajarPage() {
         }
     };
 
+    const handleAddSantri = async (santri) => {
+        setMappingSubmitting(true);
+        try {
+            await apiCall('saveData', 'POST', {
+                type: 'wajar_kelompok_mapping',
+                data: {
+                    santri_id: santri.id,
+                    nama_santri: santri.nama_siswa,
+                    kelompok: mappingModal.kelompok,
+                    pengurus_id: mappingModal.pengurusId
+                }
+            });
+            const resMapping = await apiCall('getData', 'GET', { type: 'wajar_kelompok_mapping' });
+            if (isMounted.current) setMappedSantri(resMapping || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (isMounted.current) setMappingSubmitting(false);
+        }
+    };
+
     const filteredSantriForModal = useMemo(() => {
-        return allSantri.filter(s =>
-            s.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (s.kelas && s.kelas.toLowerCase().includes(searchTerm.toLowerCase()))
-        ).slice(0, 50); // Limit display for performance
-    }, [allSantri, searchTerm]);
+        if (!allSantri || !Array.isArray(allSantri)) return [];
+
+        // 🎯 Filter berdasarkan Jabatan Kelompok
+        const jabatan = (mappingModal.jabatan || '').toLowerCase();
+        let targetMadrasah = 'MHM'; // Default
+
+        if (jabatan.includes('pagi')) {
+            targetMadrasah = 'MIU';
+        } else if (jabatan.includes('malam') || jabatan.includes('wajar') || jabatan.includes('wajib belajar')) {
+            targetMadrasah = 'MHM';
+        }
+
+        return allSantri.filter(s => {
+            const matchMadrasah = s.madrasah === targetMadrasah;
+            const name = (s.nama_siswa || '').toLowerCase();
+            const term = (searchTerm || '').toLowerCase();
+            const kelas = (s.kelas || '').toLowerCase();
+            return matchMadrasah && (name.includes(term) || kelas.includes(term));
+        }).slice(0, 50);
+    }, [allSantri, searchTerm, mappingModal]);
 
     const activeGroupSantri = useMemo(() => {
         return mappedSantri.filter(m => m.kelompok === mappingModal.kelompok);
@@ -191,34 +227,35 @@ export default function PengaturanWajarPage() {
                         <div className="card-glass" style={{ padding: '15px', borderRadius: '15px' }}>
                             <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', color: 'var(--primary-dark)' }}>Pilih Santri</h4>
                             <div style={{ maxHeight: '350px', overflowY: 'auto', paddingRight: '5px' }}>
-                                {filteredSantriForModal.map(s => {
-                                    const inAnyGroup = mappedSantri.some(m => m.santri_id === s.id);
-                                    const inThisGroup = isSantriInGroup(s.id, mappingModal.kelompok);
-                                    return (
-                                        <div
-                                            key={s.id}
-                                            className={`santri-select-item ${inThisGroup ? 'active' : ''}`}
-                                            onClick={() => !mappingSubmitting && toggleSantriMapping(s)}
-                                            style={{
-                                                padding: '10px',
-                                                marginBottom: '5px',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                border: '1px solid #f1f5f9',
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                background: inThisGroup ? 'var(--primary-light)' : 'white'
-                                            }}
-                                        >
-                                            <div>
-                                                <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{s.nama_siswa}</div>
-                                                <small>{s.kelas} {inAnyGroup && !inThisGroup && <span style={{ color: 'var(--warning-dark)' }}>(Sudah ada kelompok)</span>}</small>
+                                {filteredSantriForModal.length > 0 ? (
+                                    filteredSantriForModal.map(s => {
+                                        const isAlreadyMapped = mappedSantri.some(m => m.santri_id === s.id);
+                                        const currentGroup = mappedSantri.find(m => m.santri_id === s.id)?.kelompok;
+
+                                        return (
+                                            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f1f5f9' }}>
+                                                <div>
+                                                    <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{s.nama_siswa}</div>
+                                                    <div style={{ fontSize: '0.7rem', color: isAlreadyMapped ? 'var(--warning-dark)' : 'var(--text-muted)' }}>
+                                                        {isAlreadyMapped ? `⚠️ Terdaftar di: ${currentGroup}` : `Kelas: ${s.kelas}`}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleAddSantri(s)}
+                                                    className="btn-vibrant btn-vibrant-blue"
+                                                    style={{ width: '30px', height: '30px', padding: 0 }}
+                                                    title="Tambah ke Kelompok"
+                                                >
+                                                    <i className="fas fa-plus"></i>
+                                                </button>
                                             </div>
-                                            <i className={`fas ${inThisGroup ? 'fa-check-circle text-primary' : 'fa-plus-circle text-muted'}`}></i>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                        {searchTerm ? 'Santri tidak ditemukan.' : 'Memuat data santri...'}
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -110,8 +110,10 @@ export default function PengaturanFormalPage() {
     const filteredSantriForModal = useMemo(() => {
         if (!searchTerm) return [];
         return allSantri.filter(s =>
-            s.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (s.kelas && s.kelas.toLowerCase().includes(searchTerm.toLowerCase()))
+            s.madrasah === 'MIU' && (
+                s.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (s.kelas && s.kelas.toLowerCase().includes(searchTerm.toLowerCase()))
+            )
         ).slice(0, 50);
     }, [allSantri, searchTerm]);
 
