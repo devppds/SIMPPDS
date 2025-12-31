@@ -28,7 +28,7 @@ export default function PengaturanWajarPage() {
         isModalOpen, setIsModalOpen, formData, setFormData, editId,
         handleSave, handleDelete, openModal
     } = useDataManagement('wajar_pengurus', {
-        nama_pengurus: '', kelompok: '', jabatan: 'Wajar & Murottil', keterangan: ''
+        nama_pengurus: '', kelompok: '', jabatan: 'Pembimbing Wajar', keterangan: ''
     });
 
     useEffect(() => {
@@ -41,7 +41,7 @@ export default function PengaturanWajarPage() {
         try {
             const [resPengurus, resJabatan, resSantri, resMapping] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'wajar_pengurus' }),
-                apiCall('getData', 'GET', { type: 'master_jabatan' }),
+                apiCall('getData', 'GET', { type: 'master_pembimbing' }),
                 apiCall('getData', 'GET', { type: 'santri' }),
                 apiCall('getData', 'GET', { type: 'wajar_kelompok_mapping' })
             ]);

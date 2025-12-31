@@ -26,6 +26,7 @@ export const HEADERS_CONFIG = {
     'lembaga': ["nama"],
     'master_kelas': ["lembaga", "nama_kelas", "urutan"],
     'master_jabatan': ["kelompok", "nama_jabatan", "urutan"],
+    'master_pembimbing': ["nama_jabatan", "urutan"],
     'keamanan_absensi': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "keterangan", "petugas"],
     'keuangan_tarif': ["kategori_status", "kelas", "nominal", "keterangan"],
     'keuangan_pembayaran': ["santri_id", "nama_santri", "tanggal", "jenis_pembayaran", "bulan_tagihan", "nominal", "keterangan", "petugas"],

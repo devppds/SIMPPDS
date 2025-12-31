@@ -83,7 +83,26 @@ export async function handleInitSystem(request, db) {
             }
         }
     } catch (e) {
-        console.error("Seeding failed", e);
+        console.error("Seeding roles failed", e);
+    }
+
+    // 4. Seed master_pembimbing if empty
+    try {
+        const pembimbingCheck = await db.prepare("SELECT COUNT(*) as count FROM master_pembimbing").first();
+        if (pembimbingCheck && pembimbingCheck.count === 0) {
+            const defaultPembimbing = [
+                { nama_jabatan: 'Pembimbing Wajar', urutan: 1 },
+                { nama_jabatan: 'Murottil Malam', urutan: 2 },
+                { nama_jabatan: 'Murottil Pagi', urutan: 3 },
+            ];
+
+            for (const p of defaultPembimbing) {
+                await db.prepare(`INSERT INTO master_pembimbing (nama_jabatan, urutan) VALUES (?, ?)`)
+                    .bind(p.nama_jabatan, p.urutan).run();
+            }
+        }
+    } catch (e) {
+        console.error("Seeding master_pembimbing failed", e);
     }
 
     return Response.json({ success: true, message: "System tables initialized and all module schemas synchronized." });
