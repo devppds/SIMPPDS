@@ -23,6 +23,7 @@ export const NAV_ITEMS = [
         roles: ['admin', 'sekretariat'],
         submenu: [
             { label: 'Data Santri', path: '/sekretariat/santri', icon: 'fas fa-user-graduate' },
+            { label: 'Absen Sekolah', path: '/sekretariat/absen-sekolah', icon: 'fas fa-clipboard-check' },
             { label: 'Asrama & Kamar', path: '/sekretariat/kamar', icon: 'fas fa-bed' },
             { label: 'Layanan Sekretariat', path: '/sekretariat/layanan', icon: 'fas fa-concierge-bell' },
             { label: 'Data Pengajar', path: '/sekretariat/ustadz', icon: 'fas fa-chalkboard-teacher' },
