@@ -61,36 +61,64 @@ export default function RiwayatAbsensiPage() {
 
     useEffect(() => { loadData(); }, []);
 
-    // Group data by date and santri
+    // Group data by santri and aggregate attendance
     const processedData = useMemo(() => {
         const grouped = {};
 
         absenData.forEach(absen => {
-            const key = `${absen.tanggal}_${absen.santri_id}_${absen.tipe}`;
-            if (!grouped[key]) {
-                const santri = santriList.find(s => s.id === absen.santri_id);
-                const nilai = nilaiData.find(n =>
-                    n.tanggal === absen.tanggal &&
-                    n.santri_id === absen.santri_id &&
-                    n.tipe === absen.tipe
-                );
+            const santri = santriList.find(s => s.id === absen.santri_id);
+            if (!santri) return;
 
+            const key = `${absen.santri_id}_${absen.tipe}`;
+
+            if (!grouped[key]) {
                 grouped[key] = {
                     id: key,
-                    tanggal: absen.tanggal,
                     santri_id: absen.santri_id,
-                    nama_santri: santri?.nama_siswa || '-',
-                    kelas: santri?.kelas || '-',
+                    nama_santri: santri.nama_siswa,
+                    kelas: santri.kelas || '-',
                     tipe: absen.tipe,
-                    status: absen.status,
-                    nilai: nilai?.nilai || '-',
-                    materi: nilai?.materi || '-',
-                    kelompok: absen.kelompok || '-'
+                    kelompok: absen.kelompok || '-',
+                    hadir: 0,
+                    izin: 0,
+                    alfa: 0,
+                    total: 0,
+                    nilaiList: []
                 };
+            }
+
+            // Count attendance
+            if (absen.status === 'H') grouped[key].hadir++;
+            else if (absen.status === 'I') grouped[key].izin++;
+            else if (absen.status === 'A') grouped[key].alfa++;
+            grouped[key].total++;
+
+            // Collect nilai
+            const nilai = nilaiData.find(n =>
+                n.tanggal === absen.tanggal &&
+                n.santri_id === absen.santri_id &&
+                n.tipe === absen.tipe
+            );
+            if (nilai && nilai.nilai && !isNaN(nilai.nilai)) {
+                grouped[key].nilaiList.push(parseFloat(nilai.nilai));
             }
         });
 
-        return Object.values(grouped).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+        // Calculate averages and percentages
+        return Object.values(grouped).map(item => {
+            const avgNilai = item.nilaiList.length > 0
+                ? (item.nilaiList.reduce((a, b) => a + b, 0) / item.nilaiList.length).toFixed(1)
+                : '-';
+            const persentaseKehadiran = item.total > 0
+                ? ((item.hadir / item.total) * 100).toFixed(1)
+                : 0;
+
+            return {
+                ...item,
+                avgNilai,
+                persentaseKehadiran: parseFloat(persentaseKehadiran)
+            };
+        }).sort((a, b) => b.total - a.total);
     }, [absenData, nilaiData, santriList]);
 
     const displayData = useMemo(() => {
@@ -136,39 +164,53 @@ export default function RiwayatAbsensiPage() {
 
     const handleExport = () => {
         const exportData = displayData.map(d => ({
-            Tanggal: formatDate(d.tanggal),
             'Nama Santri': d.nama_santri,
             Kelas: d.kelas,
             Kelompok: d.kelompok,
             Tipe: d.tipe,
-            Status: d.status === 'H' ? 'Hadir' : d.status === 'I' ? 'Izin' : 'Alfa',
-            Nilai: d.nilai,
-            Materi: d.materi
+            'Total Pertemuan': d.total,
+            Hadir: d.hadir,
+            Izin: d.izin,
+            Alfa: d.alfa,
+            '% Kehadiran': d.persentaseKehadiran + '%',
+            'Rata-rata Nilai': d.avgNilai
         }));
 
-        const fileName = `Riwayat_Absensi_${filterTipe}_${filterBulan}_${filterTahun}`;
+        const fileName = `Rekap_Absensi_${filterTipe}_${filterBulan}_${filterTahun}`;
         exportToExcel(exportData, fileName, Object.keys(exportData[0] || {}));
     };
 
     const columns = [
-        { key: 'tanggal', label: 'Tanggal', render: (row) => <span style={{ fontWeight: 600 }}>{formatDate(row.tanggal)}</span> },
         { key: 'nama_santri', label: 'Nama Santri', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_santri}</div><small style={{ color: 'var(--text-muted)' }}>{row.kelas}</small></div> },
         { key: 'kelompok', label: 'Kelompok', className: 'hide-mobile', render: (row) => <span className="th-badge">{row.kelompok}</span> },
         { key: 'tipe', label: 'Tipe', render: (row) => <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{row.tipe}</span> },
+        { key: 'total', label: 'Total', render: (row) => <strong style={{ fontSize: '1.1rem' }}>{row.total}x</strong> },
         {
-            key: 'status',
-            label: 'Status',
+            key: 'hadir',
+            label: 'Hadir',
+            render: (row) => <span className="th-badge" style={{ background: '#dcfce7', color: '#166534', fontWeight: 800 }}>{row.hadir}x</span>
+        },
+        {
+            key: 'izin',
+            label: 'Izin',
+            className: 'hide-mobile',
+            render: (row) => <span className="th-badge" style={{ background: '#fef3c7', color: '#92400e', fontWeight: 800 }}>{row.izin}x</span>
+        },
+        {
+            key: 'alfa',
+            label: 'Alfa',
+            className: 'hide-mobile',
+            render: (row) => <span className="th-badge" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: 800 }}>{row.alfa}x</span>
+        },
+        {
+            key: 'persentase',
+            label: '% Hadir',
             render: (row) => {
-                const colors = {
-                    'H': { bg: '#dcfce7', color: '#166534', text: 'Hadir' },
-                    'I': { bg: '#fef3c7', color: '#92400e', text: 'Izin' },
-                    'A': { bg: '#fee2e2', color: '#991b1b', text: 'Alfa' }
-                };
-                const style = colors[row.status] || colors['H'];
-                return <span className="th-badge" style={{ background: style.bg, color: style.color }}>{style.text}</span>;
+                const color = row.persentaseKehadiran >= 80 ? '#166534' : row.persentaseKehadiran >= 60 ? '#92400e' : '#991b1b';
+                return <div style={{ fontWeight: 800, color, fontSize: '1rem' }}>{row.persentaseKehadiran}%</div>;
             }
         },
-        { key: 'nilai', label: 'Nilai', className: 'hide-mobile', render: (row) => <strong style={{ color: 'var(--primary)' }}>{row.nilai}</strong> },
+        { key: 'avgNilai', label: 'Rata² Nilai', className: 'hide-mobile', render: (row) => <strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>{row.avgNilai}</strong> },
         {
             key: 'actions', label: 'Aksi', width: '100px', render: (row) => (
                 <div className="table-actions">
@@ -210,7 +252,7 @@ export default function RiwayatAbsensiPage() {
                 tableProps={{ columns, data: displayData, loading }}
             />
 
-            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Absensi" width="600px">
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Ringkasan Kehadiran" width="600px">
                 {viewData && (
                     <div className="detail-view">
                         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
@@ -221,19 +263,41 @@ export default function RiwayatAbsensiPage() {
                             />
                             <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{viewData.nama_santri}</h2>
                             <p style={{ color: 'var(--text-muted)' }}>{viewData.kelas} - Kelompok {viewData.kelompok}</p>
+                            <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '5px 15px', marginTop: '5px' }}>{viewData.tipe}</span>
                         </div>
-                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
+
+                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px', marginBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-muted)' }}>REKAPITULASI KEHADIRAN</h3>
                             <div className="form-grid">
-                                <div><small>Tanggal</small><div style={{ fontWeight: 800 }}>{formatDate(viewData.tanggal)}</div></div>
-                                <div><small>Tipe</small><div style={{ fontWeight: 800, color: 'var(--primary)' }}>{viewData.tipe}</div></div>
-                                <div><small>Status</small><div style={{ fontWeight: 800 }}>{viewData.status === 'H' ? 'Hadir' : viewData.status === 'I' ? 'Izin' : 'Alfa'}</div></div>
-                                <div><small>Nilai</small><div style={{ fontWeight: 800, fontSize: '1.5rem', color: 'var(--success)' }}>{viewData.nilai}</div></div>
-                            </div>
-                            {viewData.materi && (
-                                <div style={{ marginTop: '1rem' }}>
-                                    <small>Materi</small>
-                                    <p style={{ fontWeight: 600, marginTop: '5px' }}>{viewData.materi}</p>
+                                <div style={{ textAlign: 'center', padding: '1rem', background: 'white', borderRadius: '12px' }}>
+                                    <small style={{ color: 'var(--text-muted)' }}>Total Pertemuan</small>
+                                    <div style={{ fontWeight: 900, fontSize: '2rem', color: 'var(--primary)' }}>{viewData.total}</div>
                                 </div>
+                                <div style={{ textAlign: 'center', padding: '1rem', background: '#dcfce7', borderRadius: '12px' }}>
+                                    <small style={{ color: '#166534' }}>Hadir</small>
+                                    <div style={{ fontWeight: 900, fontSize: '2rem', color: '#166534' }}>{viewData.hadir}</div>
+                                </div>
+                                <div style={{ textAlign: 'center', padding: '1rem', background: '#fef3c7', borderRadius: '12px' }}>
+                                    <small style={{ color: '#92400e' }}>Izin</small>
+                                    <div style={{ fontWeight: 900, fontSize: '2rem', color: '#92400e' }}>{viewData.izin}</div>
+                                </div>
+                                <div style={{ textAlign: 'center', padding: '1rem', background: '#fee2e2', borderRadius: '12px' }}>
+                                    <small style={{ color: '#991b1b' }}>Alfa</small>
+                                    <div style={{ fontWeight: 900, fontSize: '2rem', color: '#991b1b' }}>{viewData.alfa}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%)', padding: '1.5rem', borderRadius: '15px', color: 'white', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '5px' }}>Persentase Kehadiran</div>
+                            <div style={{ fontSize: '3rem', fontWeight: 900 }}>{viewData.persentaseKehadiran}%</div>
+                            {viewData.avgNilai !== '-' && (
+                                <>
+                                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+                                        <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '5px' }}>Rata-rata Nilai</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 900 }}>{viewData.avgNilai}</div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>
