@@ -78,22 +78,25 @@ export function StatsCard({ title, value, icon, color = 'var(--primary)', trend,
 
                 @media (max-width: 640px) {
                     .stat-card {
-                        padding: 1rem;
-                        gap: 0.75rem;
-                        flex-direction: column;
-                        align-items: flex-start;
-                        text-align: left;
+                        padding: 0.75rem;
+                        gap: 0.5rem;
+                        /* Force horizontal layout even on mobile */
+                        flex-direction: row !important;
+                        align-items: center !important;
+                        text-align: left !important;
                     }
                     .stat-icon-wrapper {
-                        width: 40px;
-                        height: 40px;
-                        font-size: 1.1rem;
+                        width: 32px;
+                        height: 32px;
+                        font-size: 0.9rem;
+                        border-radius: 8px;
                     }
                     .stat-card-title {
-                        font-size: 0.65rem;
+                        font-size: 0.55rem;
                     }
                     .stat-card-value {
-                        font-size: 1.1rem;
+                        font-size: 0.9rem;
+                        margin: 0;
                     }
                 }
             `}</style>
@@ -123,14 +126,26 @@ export default function StatsPanel({ items = [] }) {
                 }
                 @media (max-width: 768px) {
                     .stats-panel-grid {
-                        grid-template-columns: repeat(2, 1fr);
+                        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                         gap: 1rem;
                     }
                 }
                 @media (max-width: 480px) {
                     .stats-panel-grid {
-                        grid-template-columns: 1fr;
-                        gap: 0.75rem;
+                        /* Force 1 row with horizontal scroll for best mobile UX */
+                        display: flex;
+                        overflow-x: auto;
+                        grid-template-columns: none;
+                        padding-bottom: 8px;
+                        gap: 0.5rem;
+                        scrollbar-width: none; /* Firefox */
+                    }
+                    .stats-panel-grid::-webkit-scrollbar {
+                        display: none; /* Chrome/Safari */
+                    }
+                    :global(.stat-card) {
+                        flex: 0 0 calc(33.33% - 0.5rem); /* Show ~3 items on screen */
+                        min-width: 100px;
                     }
                 }
             `}</style>
