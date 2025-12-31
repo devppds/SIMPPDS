@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { apiCall } from '@/lib/utils';
+import { getFirstAllowedPath } from '@/lib/navConfig';
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,9 +23,10 @@ export default function LoginPage() {
 
     // Redirect if already logged in
     if (!authLoading && user) {
-      router.push('/dashboard');
+      router.push(getFirstAllowedPath(user));
       return;
     }
+
 
     // Pre-fetch users and roles data silently
     const fetchUsers = async () => {
@@ -80,8 +83,10 @@ export default function LoginPage() {
           avatar: matchedUser.avatar || '',
           allowedMenus: matchedUser.allowedMenus || []
         });
-        router.push('/dashboard');
+        const targetPath = getFirstAllowedPath({ role: matchedUser.role, allowedMenus: matchedUser.allowedMenus });
+        router.push(targetPath);
       }, 300); // 0.3 detik
+
 
       return true;
     }

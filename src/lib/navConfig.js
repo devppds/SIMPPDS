@@ -123,3 +123,98 @@ export const NAV_ITEMS = [
         roles: ['develzy']
     }
 ];
+
+export const getFirstAllowedPath = (user) => {
+    if (!user) return '/';
+    if (user.role === 'admin' || user.role === 'develzy') return '/dashboard';
+
+    const count = countAllowedMenus(user);
+    if (count > 1) return '/dashboard';
+
+    // Helper to check if a menu item is allowed
+    const isAllowed = (item) => {
+        if (!item.roles && !item.path && !item.submenu) return true;
+
+        // Check dynamic permissions
+        if (user.allowedMenus && Array.isArray(user.allowedMenus) && user.allowedMenus.length > 0) {
+            const hasAccess = (label) => user.allowedMenus.some(m => {
+                if (typeof m === 'string') return m === label;
+                return m.name === label;
+            });
+            if (item.label === 'Dashboard') return true;
+            if (hasAccess(item.label)) return true;
+            if (item.submenu) return item.submenu.some(sub => hasAccess(sub.label));
+            return false;
+        }
+
+        // Fallback to role-based
+        if (!item.roles) return true;
+        return item.roles.includes(user.role);
+    };
+
+    // Find first leaf path (excluding Dashboard)
+    for (const item of NAV_ITEMS) {
+        if (item.label === 'Dashboard') continue;
+        if (isAllowed(item)) {
+            if (item.path) return item.path;
+            if (item.submenu) {
+                for (const sub of item.submenu) {
+                    if (isAllowed(sub)) {
+                        if (sub.path) return sub.path;
+                        if (sub.submenu) {
+                            for (const deep of sub.submenu) {
+                                if (isAllowed(deep) && deep.path) return deep.path;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return '/dashboard'; // Fallback
+};
+
+export const countAllowedMenus = (user) => {
+    if (!user) return 0;
+    if (user.role === 'admin' || user.role === 'develzy') return 99; // Unlimited
+
+    const isAllowed = (item) => {
+        if (!item.roles && !item.path && !item.submenu) return true;
+
+        if (user.allowedMenus && Array.isArray(user.allowedMenus) && user.allowedMenus.length > 0) {
+            const hasAccess = (label) => user.allowedMenus.some(m => {
+                if (typeof m === 'string') return m === label;
+                return m.name === label;
+            });
+            if (item.label === 'Dashboard') return true;
+            if (hasAccess(item.label)) return true;
+            if (item.submenu) return item.submenu.some(sub => hasAccess(sub.label));
+            return false;
+        }
+
+        if (!item.roles) return true;
+        return item.roles.includes(user.role);
+    };
+
+    let count = 0;
+    NAV_ITEMS.forEach(item => {
+        if (item.label === 'Dashboard') return;
+        if (isAllowed(item)) {
+            if (item.path) count++;
+            if (item.submenu) {
+                item.submenu.forEach(sub => {
+                    if (isAllowed(sub)) {
+                        if (sub.path) count++;
+                        if (sub.submenu) {
+                            sub.submenu.forEach(deep => {
+                                if (isAllowed(deep) && deep.path) count++;
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    });
+    return count;
+};

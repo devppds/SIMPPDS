@@ -5,12 +5,18 @@ import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/lib/AuthContext';
 import { usePathname } from 'next/navigation';
-import { NAV_ITEMS } from '@/lib/navConfig';
+import { NAV_ITEMS, countAllowedMenus } from '@/lib/navConfig';
+
 
 export default function ContentWrapper({ children }) {
     const { loading, config, isAdmin, isDevelzy, user } = useAuth();
     const pathname = usePathname();
     const isLoginPage = pathname === '/'; // Login page is root
+
+    const { logout } = useAuth();
+    const isSingleMenuUser = user && countAllowedMenus(user) === 1;
+    const isImmersiveMode = isSingleMenuUser && !isLoginPage;
+
 
     if (loading) {
         return (
@@ -158,13 +164,55 @@ export default function ContentWrapper({ children }) {
 
     return (
         <div className="app-container">
-            <Sidebar />
-            <div className="content-wrapper">
-                <Header title={pageTitle} />
-                <main id="main-content">
-                    {children}
-                </main>
-            </div>
+            {isImmersiveMode ? (
+                <>
+                    <main id="main-content" style={{ padding: '1rem', width: '100%', minHeight: '100vh', background: '#f8fafc' }}>
+                        {children}
+                    </main>
+                    {/* Floating Logout for Immersive Mode */}
+                    <button
+                        onClick={logout}
+                        style={{
+                            position: 'fixed',
+                            bottom: '20px',
+                            right: '20px',
+                            width: '50px',
+                            height: '50px',
+                            borderRadius: '50%',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.2rem',
+                            zIndex: 9999,
+                            transition: 'all 0.3s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1) rotate(-10deg)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        title="Keluar Sistem"
+                    >
+                        <i className="fas fa-sign-out-alt"></i>
+                    </button>
+                    <style jsx global>{`
+                        .content-wrapper { margin-left: 0 !important; width: 100% !important; }
+                    `}</style>
+                </>
+            ) : (
+                <>
+                    <Sidebar />
+                    <div className="content-wrapper">
+                        <Header title={pageTitle} />
+                        <main id="main-content">
+                            {children}
+                        </main>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
+
