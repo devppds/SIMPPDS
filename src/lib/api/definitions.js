@@ -33,9 +33,12 @@ export const HEADERS_CONFIG = {
     'kalender_kerja': ["hari", "tanggal_masehi", "tanggal_hijriyah", "nama_kegiatan", "kategori", "file_kalender", "keterangan", "periode"],
     'roles': ["role", "label", "color", "menus", "is_public"],
     'wajar_pengurus': ["nama_pengurus", "kelompok", "jabatan", "keterangan"],
+    'wajar_kelompok_mapping': ["santri_id", "nama_santri", "kelompok", "pengurus_id"],
     'wajar_mhm_absen': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "tipe", "petugas"],
     'wajar_miu_absen': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "tipe", "petugas"],
-    'wajar_nilai': ["santri_id", "nama_santri", "tanggal", "tipe", "nilai", "materi", "petugas"]
+    'wajar_nilai': ["santri_id", "nama_santri", "tanggal", "tipe", "nilai", "materi", "petugas"],
+    'keamanan_formal_mapping': ["santri_id", "nama_santri", "kelompok_formal", "kelas_miu", "jenjang", "semester"],
+    'absen_sekolah': ["santri_id", "nama_santri", "kelas", "tanggal", "kelompok_formal", "status", "keterangan", "petugas"]
 };
 
 export const FILE_COLUMNS = {
