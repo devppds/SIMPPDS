@@ -92,7 +92,7 @@ export default function PengaturanFormalPage() {
         if (!activeGroup) return;
         setMappingSubmitting(true);
         try {
-            const existing = mapping.find(m => m.santri_id === santri.id && m.kelompok_formal === activeGroup);
+            const existing = mapping.find(m => Number(m.santri_id) === Number(santri.id) && m.kelompok_formal === activeGroup);
 
             if (existing) {
                 await apiCall('deleteData', 'DELETE', { type: 'keamanan_formal_mapping', id: existing.id });
@@ -190,8 +190,8 @@ export default function PengaturanFormalPage() {
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                             {filteredSantriForModal.length > 0 ? (
                                 filteredSantriForModal.map(s => {
-                                    const inThisGroup = mapping.some(m => m.santri_id === s.id && m.kelompok_formal === activeGroup);
-                                    const otherGroup = mapping.find(m => m.santri_id === s.id && m.kelompok_formal !== activeGroup);
+                                    const inThisGroup = mapping.some(m => Number(m.santri_id) === Number(s.id) && m.kelompok_formal === activeGroup);
+                                    const otherGroup = mapping.find(m => Number(m.santri_id) === Number(s.id) && m.kelompok_formal !== activeGroup);
 
                                     return (
                                         <div

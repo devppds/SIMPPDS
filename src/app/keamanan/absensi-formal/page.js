@@ -56,15 +56,18 @@ export default function AbsensiFormalPage() {
                 apiCall('getData', 'GET', { type: 'keamanan_formal_mapping' })
             ]);
 
+            const allSantri = resSantri || [];
             const mappingData = resMapping || [];
             if (isMounted.current) setMappedSantriStore(mappingData);
 
             // 2. Filter santri berdasarkan kelompok yang dipilih
-            const students = (resSantri || []).filter(s => {
-                const map = mappingData.find(m => m.santri_id === s.id);
-                if (!map) return false;
+            // Kita ambil santri dari tabel 'santri' yang ID-nya ada di mappingData kelompok tersebut
+            const students = allSantri.filter(s => {
+                // Cari apakah santri ini dipetakan ke kelompok yang dipilih
+                const maps = mappingData.filter(m => Number(m.santri_id) === Number(s.id));
+                if (maps.length === 0) return false;
 
-                const groupMatch = filterGroup === 'Semua' || map.kelompok_formal === filterGroup;
+                const groupMatch = filterGroup === 'Semua' || maps.some(m => m.kelompok_formal === filterGroup);
                 return groupMatch && s.status_santri === 'Aktif';
             }).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
@@ -76,7 +79,7 @@ export default function AbsensiFormalPage() {
 
             const newState = {};
             students.forEach(s => {
-                const log = logs.find(l => l.santri_id === s.id);
+                const log = logs.find(l => Number(l.santri_id) === Number(s.id));
                 newState[s.id] = {
                     status: log ? log.status : 'H', // Default Hadir (H)
                     id: log ? log.id : null,

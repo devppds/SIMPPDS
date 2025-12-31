@@ -73,14 +73,14 @@ export default function MurottilPagiPage() {
                 .map(m => m.santri_id);
 
             relevantSantriIds.forEach(sid => {
-                const logA = logsAbsen.find(l => l.santri_id === sid);
-                const logN = logsNilai.find(l => l.santri_id === sid);
+                const logAbsen = logsAbsen.find(l => Number(l.santri_id) === Number(sid));
+                const logNilai = logsNilai.find(l => Number(l.santri_id) === Number(sid));
                 newState[sid] = {
-                    status: logA ? logA.status : 'H',
-                    nilai: logN ? logN.nilai : '',
-                    materi: logN ? logN.materi : '',
-                    id_absen: logA ? logA.id : null,
-                    id_nilai: logN ? logN.id : null
+                    status: logAbsen ? logAbsen.status : 'H',
+                    nilai: logNilai ? logNilai.nilai : '',
+                    materi: logNilai ? logNilai.materi : '',
+                    id_absen: logAbsen ? logAbsen.id : null,
+                    id_nilai: logNilai ? logNilai.id : null
                 };
             });
             if (isMounted.current) setState(newState);

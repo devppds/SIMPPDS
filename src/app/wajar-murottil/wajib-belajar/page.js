@@ -67,8 +67,12 @@ export default function WajibBelajarPage() {
                 .map(m => m.santri_id);
 
             relevantSantriIds.forEach(sid => {
-                const log = logs.find(l => l.santri_id === sid);
-                newState[sid] = { status: log ? log.status : 'H', id: log ? log.id : null };
+                const log = logs.find(l => Number(l.santri_id) === Number(sid));
+                newState[sid] = {
+                    status: log ? log.status : 'H', // Default Hadir (H)
+                    id: log ? log.id : null,
+                    keterangan: log ? log.keterangan : ''
+                };
             });
             if (isMounted.current) setState(newState);
         } catch (e) {

@@ -70,7 +70,7 @@ export default function PengaturanWajarPage() {
     };
 
     const isSantriInGroup = (santriId, kelompok) => {
-        return mappedSantri.some(m => m.santri_id === santriId && m.kelompok === kelompok);
+        return mappedSantri.some(m => Number(m.santri_id) === Number(santriId) && m.kelompok === kelompok);
     };
 
     const toggleSantriMapping = async (santri) => {
@@ -229,8 +229,8 @@ export default function PengaturanWajarPage() {
                             <div style={{ maxHeight: '350px', overflowY: 'auto', paddingRight: '5px' }}>
                                 {filteredSantriForModal.length > 0 ? (
                                     filteredSantriForModal.map(s => {
-                                        const isAlreadyMapped = mappedSantri.some(m => m.santri_id === s.id);
-                                        const currentGroup = mappedSantri.find(m => m.santri_id === s.id)?.kelompok;
+                                        const isAlreadyMapped = mappedSantri.some(m => Number(m.santri_id) === Number(s.id));
+                                        const currentGroup = mappedSantri.find(m => Number(m.santri_id) === Number(s.id))?.kelompok;
 
                                         return (
                                             <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f1f5f9' }}>
