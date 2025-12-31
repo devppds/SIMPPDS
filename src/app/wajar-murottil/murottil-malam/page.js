@@ -20,6 +20,8 @@ export default function MurottilMalamPage() {
     const [santriList, setSantriList] = useState([]);
     const [state, setState] = useState({});
     const [filterDate, setFilterDate] = useState('');
+    const [filterKelompok, setFilterKelompok] = useState('Semua');
+    const [kelompokOptions, setKelompokOptions] = useState([]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const isMounted = React.useRef(true);
 
@@ -32,12 +34,26 @@ export default function MurottilMalamPage() {
     const loadData = async () => {
         if (isMounted.current) setLoading(true);
         try {
-            const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
-            const students = (resSantri || []).filter(s =>
+            const [resSantri, resPengurus] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'santri' }),
+                apiCall('getData', 'GET', { type: 'wajar_pengurus' })
+            ]);
+
+            // Get unique kelompok list from pengurus
+            const groups = [...new Set((resPengurus || []).map(p => p.kelompok))].filter(Boolean).sort();
+            if (isMounted.current) setKelompokOptions(groups);
+
+            let students = (resSantri || []).filter(s =>
                 (s.madrasah === 'MHM' || (s.kelas || '').toUpperCase().includes('IBTIDA')) &&
                 !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO'))
-            ).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
+            );
 
+            // Filter by Kelompok if selected (Assuming santri has kelompok field or using a mapping)
+            if (filterKelompok !== 'Semua') {
+                students = students.filter(s => s.kelompok === filterKelompok || s.kelompok_murottil === filterKelompok);
+            }
+
+            students.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
             if (isMounted.current) setSantriList(students);
 
             const [resAbsen, resNilai] = await Promise.all([
@@ -68,7 +84,16 @@ export default function MurottilMalamPage() {
         }
     };
 
-    useEffect(() => { loadData(); }, [filterDate]);
+    useEffect(() => { loadData(); }, [filterDate, filterKelompok]);
+
+    const handleBulkHadir = () => {
+        const newState = { ...state };
+        santriList.forEach(s => {
+            newState[s.id] = { ...newState[s.id], status: 'H' };
+        });
+        setState(newState);
+        showToast("Semua santri diatur Hadir (H)", "info");
+    };
 
     const handleSave = async () => {
         if (isMounted.current) setLoading(true);
@@ -146,9 +171,28 @@ export default function MurottilMalamPage() {
 
             <DataViewContainer
                 title="Input Kehadiran & Nilai"
-                subtitle={filterDate ? `Periode: ${formatDate(filterDate)}` : 'Memuat data...'}
-                headerActions={canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
-                filters={<TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />}
+                subtitle={filterDate ? `Periode: ${formatDate(filterDate)} | ${filterKelompok}` : 'Memuat data...'}
+                headerActions={canEdit && (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || santriList.length === 0}>
+                            <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
+                        </button>
+                        <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || santriList.length === 0}>
+                            <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
+                        </button>
+                    </div>
+                )}
+                filters={(
+                    <>
+                        <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
+                        <select className="form-control" value={filterKelompok} onChange={e => setFilterKelompok(e.target.value)} style={{ width: '180px' }}>
+                            <option value="Semua">Semua Kelompok</option>
+                            {kelompokOptions.map((k, i) => (
+                                <option key={i} value={k}>{k}</option>
+                            ))}
+                        </select>
+                    </>
+                )}
                 tableProps={{ columns, data: santriList, loading }}
             />
 
@@ -163,3 +207,4 @@ export default function MurottilMalamPage() {
         </div>
     );
 }
+

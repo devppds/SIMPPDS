@@ -18,8 +18,10 @@ export default function WajibBelajarPage() {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
-    const [attendance, setAttendance] = useState({});
+    const [state, setState] = useState({});
     const [filterDate, setFilterDate] = useState('');
+    const [filterKelompok, setFilterKelompok] = useState('Semua');
+    const [kelompokOptions, setKelompokOptions] = useState([]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const isMounted = React.useRef(true);
 
@@ -32,37 +34,59 @@ export default function WajibBelajarPage() {
     const loadData = useCallback(async () => {
         if (isMounted.current) setLoading(true);
         try {
-            const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
-            const mhmIbtida = (resSantri || []).filter(s =>
+            const [resSantri, resPengurus] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'santri' }),
+                apiCall('getData', 'GET', { type: 'wajar_pengurus' })
+            ]);
+
+            if (isMounted.current) {
+                setKelompokOptions([...new Set((resPengurus || []).map(p => p.kelompok))].filter(Boolean).sort());
+            }
+
+            let students = (resSantri || []).filter(s =>
                 (s.madrasah === 'MHM' || (s.kelas || '').toUpperCase().includes('IBTIDA')) &&
                 !((s.kelas || '').toUpperCase().includes('ULA') || (s.kelas || '').toUpperCase().includes('WUSTHO'))
-            ).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
+            );
 
-            if (isMounted.current) setSantriList(mhmIbtida);
+            if (filterKelompok !== 'Semua') {
+                students = students.filter(s => s.kelompok === filterKelompok || s.kelompok_murottil === filterKelompok);
+            }
+
+            students.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
+            if (isMounted.current) setSantriList(students);
 
             const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_mhm_absen' });
             const logs = (resAbsen || []).filter(l => l.tanggal === filterDate && l.tipe === 'Wajib Belajar');
 
-            const state = {};
-            mhmIbtida.forEach(s => {
+            const newState = {};
+            students.forEach(s => {
                 const log = logs.find(l => l.santri_id === s.id);
-                state[s.id] = { status: log ? log.status : 'H', id: log ? log.id : null };
+                newState[s.id] = { status: log ? log.status : 'H', id: log ? log.id : null };
             });
-            if (isMounted.current) setAttendance(state);
+            if (isMounted.current) setState(newState);
         } catch (e) {
             console.error(e);
         } finally {
             if (isMounted.current) setLoading(false);
         }
-    }, [filterDate]);
+    }, [filterDate, filterKelompok]);
 
     useEffect(() => { loadData(); }, [loadData]);
+
+    const handleBulkHadir = () => {
+        const newState = { ...state };
+        santriList.forEach(s => {
+            newState[s.id] = { ...newState[s.id], status: 'H' };
+        });
+        setState(newState);
+        showToast("Semua santri diatur Hadir (H)", "info");
+    };
 
     const handleSave = async () => {
         if (isMounted.current) setLoading(true);
         try {
             const promises = santriList.map(s => {
-                const data = attendance[s.id];
+                const data = state[s.id];
                 return apiCall('saveData', 'POST', {
                     type: 'wajar_mhm_absen',
                     data: {
@@ -88,13 +112,13 @@ export default function WajibBelajarPage() {
     };
 
     const stats = useMemo(() => {
-        const values = Object.values(attendance);
+        const values = Object.values(state);
         return [
             { title: 'Total Santri', value: santriList.length, icon: 'fas fa-users', color: 'var(--primary)' },
             { title: 'Hadir', value: values.filter(v => v.status === 'H').length, icon: 'fas fa-check-double', color: 'var(--success)' },
             { title: 'Alfa / Bolos', value: values.filter(v => v.status === 'A').length, icon: 'fas fa-user-times', color: 'var(--danger)' }
         ];
-    }, [attendance, santriList]);
+    }, [state, santriList]);
 
     const columns = [
         { key: 'nama_siswa', label: 'Nama Santri', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small>{row.kelas}</small></div> },
@@ -102,9 +126,9 @@ export default function WajibBelajarPage() {
             key: 'status', label: 'Presensi', render: (row) => (
                 <div style={{ display: 'flex', gap: '8px' }}>
                     {['H', 'S', 'I', 'A'].map(st => (
-                        <button key={st} onClick={() => canEdit && setAttendance({ ...attendance, [row.id]: { ...attendance[row.id], status: st } })}
+                        <button key={st} onClick={() => canEdit && setState({ ...state, [row.id]: { ...state[row.id], status: st } })}
                             disabled={!canEdit}
-                            className={`btn-vibrant ${attendance[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
+                            className={`btn-vibrant ${state[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
                             style={{ width: '40px', height: '35px', padding: 0, fontWeight: 800 }}>
                             {st}
                         </button>
@@ -122,9 +146,26 @@ export default function WajibBelajarPage() {
 
             <DataViewContainer
                 title="Input Kehadiran Wajib Belajar"
-                subtitle={filterDate ? `Tanggal: ${formatDate(filterDate)}` : 'Memuat data...'}
-                headerActions={canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
-                filters={<TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />}
+                subtitle={filterDate ? `Tanggal: ${formatDate(filterDate)} | ${filterKelompok}` : 'Memuat data...'}
+                headerActions={canEdit && (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || santriList.length === 0}>
+                            <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
+                        </button>
+                        <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || santriList.length === 0}>
+                            <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
+                        </button>
+                    </div>
+                )}
+                filters={(<>
+                    <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
+                    <select className="form-control" value={filterKelompok} onChange={e => setFilterKelompok(e.target.value)} style={{ width: '180px' }}>
+                        <option value="Semua">Semua Kelompok</option>
+                        {kelompokOptions.map((k, i) => (
+                            <option key={i} value={k}>{k}</option>
+                        ))}
+                    </select>
+                </>)}
                 tableProps={{ columns, data: santriList, loading }}
             />
 
@@ -139,3 +180,4 @@ export default function WajibBelajarPage() {
         </div>
     );
 }
+
