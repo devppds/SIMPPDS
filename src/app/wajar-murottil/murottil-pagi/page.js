@@ -18,7 +18,7 @@ export default function MurottilPagiPage() {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
-    const [attendance, setAttendance] = useState({});
+    const [state, setState] = useState({});
     const [filterDate, setFilterDate] = useState('');
     const [filterKelas, setFilterKelas] = useState('Semua');
     const [kelasOptions, setKelasOptions] = useState([]);
@@ -51,15 +51,27 @@ export default function MurottilPagiPage() {
             students.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
             if (isMounted.current) setSantriList(students);
 
-            const resAbsen = await apiCall('getData', 'GET', { type: 'wajar_miu_absen' });
-            const logs = (resAbsen || []).filter(l => l.tanggal === filterDate);
+            const [resAbsen, resNilai] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'wajar_miu_absen' }),
+                apiCall('getData', 'GET', { type: 'wajar_nilai' })
+            ]);
 
-            const state = {};
+            const logsAbsen = (resAbsen || []).filter(l => l.tanggal === filterDate && l.tipe === 'Murottil Pagi');
+            const logsNilai = (resNilai || []).filter(l => l.tanggal === filterDate && l.tipe === 'Murottil Pagi');
+
+            const newState = {};
             students.forEach(s => {
-                const log = logs.find(l => l.santri_id === s.id);
-                state[s.id] = { status: log ? log.status : 'H', id: log ? log.id : null };
+                const logA = logsAbsen.find(l => l.santri_id === s.id);
+                const logN = logsNilai.find(l => l.santri_id === s.id);
+                newState[s.id] = {
+                    status: logA ? logA.status : 'H',
+                    nilai: logN ? logN.nilai : '',
+                    materi: logN ? logN.materi : '',
+                    id_absen: logA ? logA.id : null,
+                    id_nilai: logN ? logN.id : null
+                };
             });
-            if (isMounted.current) setAttendance(state);
+            if (isMounted.current) setState(newState);
         } catch (e) {
             console.error(e);
         } finally {
@@ -73,19 +85,28 @@ export default function MurottilPagiPage() {
         if (isMounted.current) setLoading(true);
         try {
             const promises = santriList.map(s => {
-                const data = attendance[s.id];
-                return apiCall('saveData', 'POST', {
+                const data = state[s.id];
+                const p1 = apiCall('saveData', 'POST', {
                     type: 'wajar_miu_absen',
                     data: {
-                        id: data.id, santri_id: s.id, nama_santri: s.nama_siswa,
+                        id: data.id_absen, santri_id: s.id, nama_santri: s.nama_siswa,
                         kelas: s.kelas, tanggal: filterDate, status: data.status,
                         tipe: 'Murottil Pagi', petugas: user?.fullname || 'Admin'
                     }
                 });
+                const p2 = apiCall('saveData', 'POST', {
+                    type: 'wajar_nilai',
+                    data: {
+                        id: data.id_nilai, santri_id: s.id, nama_santri: s.nama_siswa,
+                        tanggal: filterDate, tipe: 'Murottil Pagi', nilai: data.nilai,
+                        materi: data.materi, petugas: user?.fullname || 'Admin'
+                    }
+                });
+                return Promise.all([p1, p2]);
             });
             await Promise.all(promises);
             if (isMounted.current) {
-                showToast("Absensi berhasil disimpan!", "success");
+                showToast("Data Murottil Pagi & Nilai berhasil disimpan!", "success");
                 loadData();
             }
         } catch (e) {
@@ -99,43 +120,45 @@ export default function MurottilPagiPage() {
     };
 
     const stats = useMemo(() => {
-        const values = Object.values(attendance);
+        const values = Object.values(state);
         return [
-            { title: 'Hadir', value: values.filter(v => v.status === 'H').length, icon: 'fas fa-check-circle', color: 'var(--success)' },
-            { title: 'Izin/Sakit', value: values.filter(v => ['I', 'S'].includes(v.status)).length, icon: 'fas fa-envelope', color: 'var(--warning)' },
-            { title: 'Alfa', value: values.filter(v => v.status === 'A').length, icon: 'fas fa-times-circle', color: 'var(--danger)' }
+            { title: 'Total Santri', value: santriList.length, icon: 'fas fa-users', color: 'var(--primary)' },
+            { title: 'Hadir', value: values.filter(v => v.status === 'H').length, icon: 'fas fa-user-check', color: 'var(--success)' },
+            { title: 'Nilai Terisi', value: values.filter(v => v.nilai !== '').length, icon: 'fas fa-star', color: 'var(--warning)' }
         ];
-    }, [attendance]);
+    }, [state, santriList]);
 
     const columns = [
-        { key: 'nama_siswa', label: 'Nama Santri', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small>{row.kelas} (MIU)</small></div> },
+        { key: 'nama_siswa', label: 'Santri', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small>{row.kelas} (MIU)</small></div> },
         {
-            key: 'status', label: 'Status Kehadiran', render: (row) => (
-                <div style={{ display: 'flex', gap: '8px' }}>
+            key: 'status', label: 'Absen', width: '150px', render: (row) => (
+                <div style={{ display: 'flex', gap: '5px' }}>
                     {['H', 'S', 'I', 'A'].map(st => (
                         <button
                             key={st}
-                            onClick={() => canEdit && setAttendance({ ...attendance, [row.id]: { ...attendance[row.id], status: st } })}
+                            onClick={() => canEdit && setState({ ...state, [row.id]: { ...state[row.id], status: st } })}
                             disabled={!canEdit}
-                            className={`btn-vibrant ${attendance[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
-                            style={{ width: '40px', height: '35px', padding: 0, fontWeight: 800 }}
+                            className={`btn-vibrant ${state[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
+                            style={{ width: '30px', height: '30px', padding: 0, fontSize: '0.7rem' }}
                         >{st}</button>
                     ))}
                 </div>
             )
-        }
+        },
+        { key: 'materi', label: 'Materi / Surah', render: (row) => <input type="text" className="form-control form-control-sm" style={{ border: '1px solid #e2e8f0' }} value={state[row.id]?.materi || ''} onChange={e => canEdit && setState({ ...state, [row.id]: { ...state[row.id], materi: e.target.value } })} disabled={!canEdit} placeholder="Halaman/Ayat..." /> },
+        { key: 'nilai', label: 'Nilai', width: '80px', render: (row) => <input type="text" className="form-control form-control-sm" style={{ textAlign: 'center', fontWeight: 800 }} value={state[row.id]?.nilai || ''} onChange={e => canEdit && setState({ ...state, [row.id]: { ...state[row.id], nilai: e.target.value } })} disabled={!canEdit} placeholder="0-100" /> }
     ];
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Monitoring Kehadiran Murottil Pagi" subJudul="Absensi rutin santri unit MIU." hideOnScreen={true} />
+            <KopSurat judul="Murottil Pagi & Penilaian" subJudul="Evaluasi bacaan Al-Qur'an santri unit MIU." hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 
             <DataViewContainer
-                title="Absensi Murottil Pagi"
-                subtitle={filterDate ? `Tanggal: ${formatDate(filterDate)} | ${santriList.length} Santri` : 'Memuat data...'}
-                headerActions={canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Absensi</button>}
+                title="Input Kehadiran & Nilai"
+                subtitle={filterDate ? `Periode: ${formatDate(filterDate)}` : 'Memuat data...'}
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading}><i className="fas fa-save"></i> Simpan Data</button>}
                 filters={(<>
                     <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
                     <SelectInput value={filterKelas} onChange={e => setFilterKelas(e.target.value)} options={['Semua', ...kelasOptions.map(k => k.nama_kelas)]} style={{ width: '180px', marginBottom: 0 }} />
@@ -147,10 +170,11 @@ export default function MurottilPagiPage() {
                 isOpen={isConfirmOpen}
                 onClose={() => setIsConfirmOpen(false)}
                 onConfirm={handleSave}
-                title="Simpan Absensi?"
-                message={filterDate ? `Anda akan menyimpan data kehadiran untuk ${santriList.length} santri pada tanggal ${formatDate(filterDate)}.` : "Menyiapkan data..."}
+                title="Konfirmasi Berkas"
+                message="Anda akan menyimpan log kehadiran beserta nilai murottil untuk seluruh santri yang tampil."
                 type="info"
             />
         </div>
     );
 }
+
