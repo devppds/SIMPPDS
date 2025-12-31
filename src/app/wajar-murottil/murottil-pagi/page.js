@@ -16,51 +16,48 @@ export default function MurottilPagiPage() {
     const { user } = useAuth();
     const { canEdit } = usePagePermission();
     const { showToast } = useToast();
+
+    // State
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
     const [state, setState] = useState({});
     const [filterDate, setFilterDate] = useState('');
-    const [filterKelas, setFilterKelas] = useState('Semua');
     const [filterKelompok, setFilterKelompok] = useState('Semua');
-    const [kelasOptions, setKelasOptions] = useState([]);
-    const [kelompokOptions, setKelompokOptions] = useState([]);
+    const [kelompokList, setKelompokList] = useState([]);
+    const [mappedSantri, setMappedSantri] = useState([]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const isMounted = React.useRef(true);
 
-    React.useEffect(() => {
+    useEffect(() => {
         isMounted.current = true;
         setFilterDate(new Date().toISOString().split('T')[0]);
         return () => { isMounted.current = false; };
     }, []);
 
-    const loadData = async () => {
+    const loadInitialData = async () => {
         if (isMounted.current) setLoading(true);
         try {
-            const [resSantri, resKelas, resPengurus] = await Promise.all([
-                apiCall('getData', 'GET', { type: 'santri' }),
-                apiCall('getData', 'GET', { type: 'master_kelas' }),
-                apiCall('getData', 'GET', { type: 'wajar_pengurus' })
+            const [resPengurus, resMapping] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'wajar_pengurus' }),
+                apiCall('getData', 'GET', { type: 'wajar_kelompok_mapping' })
             ]);
-
             if (isMounted.current) {
-                setKelasOptions(resKelas.filter(k => k.lembaga === 'MIU'));
-                setKelompokOptions([...new Set((resPengurus || []).map(p => p.kelompok))].filter(Boolean).sort());
+                setKelompokList(resPengurus || []);
+                setMappedSantri(resMapping || []);
             }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (isMounted.current) setLoading(false);
+        }
+    };
 
-            let students = (resSantri || []).filter(s =>
-                s.madrasah === 'MIU' ||
-                (s.kelas || '').toUpperCase().includes('ULA') ||
-                (s.kelas || '').toUpperCase().includes('WUSTHO')
-            );
+    useEffect(() => { loadInitialData(); }, []);
 
-            if (filterKelas !== 'Semua') students = students.filter(s => s.kelas === filterKelas);
-            if (filterKelompok !== 'Semua') {
-                students = students.filter(s => s.kelompok === filterKelompok || s.kelompok_murottil === filterKelompok);
-            }
-
-            students.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
-            if (isMounted.current) setSantriList(students);
-
+    const loadAttendanceData = async () => {
+        if (!filterDate) return;
+        if (isMounted.current) setLoading(true);
+        try {
             const [resAbsen, resNilai] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'wajar_miu_absen' }),
                 apiCall('getData', 'GET', { type: 'wajar_nilai' })
@@ -70,10 +67,15 @@ export default function MurottilPagiPage() {
             const logsNilai = (resNilai || []).filter(l => l.tanggal === filterDate && l.tipe === 'Murottil Pagi');
 
             const newState = {};
-            students.forEach(s => {
-                const logA = logsAbsen.find(l => l.santri_id === s.id);
-                const logN = logsNilai.find(l => l.santri_id === s.id);
-                newState[s.id] = {
+            // We use santriList which is already filtered by kelompok in the render or effect
+            const relevantSantriIds = mappedSantri
+                .filter(m => filterKelompok === 'Semua' || m.kelompok === filterKelompok)
+                .map(m => m.santri_id);
+
+            relevantSantriIds.forEach(sid => {
+                const logA = logsAbsen.find(l => l.santri_id === sid);
+                const logN = logsNilai.find(l => l.santri_id === sid);
+                newState[sid] = {
                     status: logA ? logA.status : 'H',
                     nilai: logN ? logN.nilai : '',
                     materi: logN ? logN.materi : '',
@@ -89,12 +91,22 @@ export default function MurottilPagiPage() {
         }
     };
 
-    useEffect(() => { loadData(); }, [filterDate, filterKelas, filterKelompok]);
+    useEffect(() => { loadAttendanceData(); }, [filterDate, filterKelompok, mappedSantri]);
+
+    const activeKelompokData = useMemo(() => {
+        if (filterKelompok === 'Semua') return null;
+        return kelompokList.find(k => k.kelompok === filterKelompok);
+    }, [filterKelompok, kelompokList]);
+
+    const filteredSantri = useMemo(() => {
+        if (filterKelompok === 'Semua') return [];
+        return mappedSantri.filter(m => m.kelompok === filterKelompok);
+    }, [mappedSantri, filterKelompok]);
 
     const handleBulkHadir = () => {
         const newState = { ...state };
-        santriList.forEach(s => {
-            newState[s.id] = { ...newState[s.id], status: 'H' };
+        filteredSantri.forEach(s => {
+            newState[s.santri_id] = { ...newState[s.santri_id], status: 'H' };
         });
         setState(newState);
         showToast("Semua santri diatur Hadir (H)", "info");
@@ -103,20 +115,20 @@ export default function MurottilPagiPage() {
     const handleSave = async () => {
         if (isMounted.current) setLoading(true);
         try {
-            const promises = santriList.map(s => {
-                const data = state[s.id];
+            const promises = filteredSantri.map(s => {
+                const data = state[s.santri_id] || { status: 'H', nilai: '', materi: '' };
                 const p1 = apiCall('saveData', 'POST', {
                     type: 'wajar_miu_absen',
                     data: {
-                        id: data.id_absen, santri_id: s.id, nama_santri: s.nama_siswa,
-                        kelas: s.kelas, tanggal: filterDate, status: data.status,
+                        id: data.id_absen, santri_id: s.santri_id, nama_santri: s.nama_santri,
+                        tanggal: filterDate, status: data.status,
                         tipe: 'Murottil Pagi', petugas: user?.fullname || 'Admin'
                     }
                 });
                 const p2 = apiCall('saveData', 'POST', {
                     type: 'wajar_nilai',
                     data: {
-                        id: data.id_nilai, santri_id: s.id, nama_santri: s.nama_siswa,
+                        id: data.id_nilai, santri_id: s.santri_id, nama_santri: s.nama_santri,
                         tanggal: filterDate, tipe: 'Murottil Pagi', nilai: data.nilai,
                         materi: data.materi, petugas: user?.fullname || 'Admin'
                     }
@@ -126,7 +138,7 @@ export default function MurottilPagiPage() {
             await Promise.all(promises);
             if (isMounted.current) {
                 showToast("Data Murottil Pagi & Nilai berhasil disimpan!", "success");
-                loadData();
+                loadAttendanceData();
             }
         } catch (e) {
             if (isMounted.current) showToast(e.message, "error");
@@ -139,66 +151,109 @@ export default function MurottilPagiPage() {
     };
 
     const stats = useMemo(() => {
-        const values = Object.values(state);
+        const values = Object.values(state).filter(v => filteredSantri.some(s => s.santri_id === parseInt(Object.keys(state).find(key => state[key] === v))));
+        // Simplified for now based on state keys
+        const countHadir = Object.values(state).filter(v => v.status === 'H').length;
+        const countNilai = Object.values(state).filter(v => v.nilai !== '').length;
+
         return [
-            { title: 'Total Santri', value: santriList.length, icon: 'fas fa-users', color: 'var(--primary)' },
-            { title: 'Hadir', value: values.filter(v => v.status === 'H').length, icon: 'fas fa-user-check', color: 'var(--success)' },
-            { title: 'Nilai Terisi', value: values.filter(v => v.nilai !== '').length, icon: 'fas fa-star', color: 'var(--warning)' }
+            { title: 'Total Santri', value: filteredSantri.length, icon: 'fas fa-users', color: 'var(--primary)' },
+            { title: 'Hadir', value: countHadir, icon: 'fas fa-user-check', color: 'var(--success)' },
+            { title: 'Nilai Terisi', value: countNilai, icon: 'fas fa-star', color: 'var(--warning)' }
         ];
-    }, [state, santriList]);
+    }, [state, filteredSantri]);
 
     const columns = [
-        { key: 'nama_siswa', label: 'Santri', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama_siswa}</div><small>{row.kelas} (MIU)</small></div> },
+        { key: 'nama_santri', label: 'Santri', render: (row) => <strong>{row.nama_santri}</strong> },
         {
             key: 'status', label: 'Absen', width: '150px', render: (row) => (
                 <div style={{ display: 'flex', gap: '5px' }}>
                     {['H', 'S', 'I', 'A'].map(st => (
                         <button
                             key={st}
-                            onClick={() => canEdit && setState({ ...state, [row.id]: { ...state[row.id], status: st } })}
+                            onClick={() => canEdit && setState({ ...state, [row.santri_id]: { ...state[row.santri_id], status: st } })}
                             disabled={!canEdit}
-                            className={`btn-vibrant ${state[row.id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
+                            className={`btn-vibrant ${state[row.santri_id]?.status === st ? 'btn-vibrant-blue' : 'btn-vibrant-gray'}`}
                             style={{ width: '30px', height: '30px', padding: 0, fontSize: '0.7rem' }}
                         >{st}</button>
                     ))}
                 </div>
             )
         },
-        { key: 'materi', label: 'Materi / Surah', render: (row) => <input type="text" className="form-control form-control-sm" style={{ border: '1px solid #e2e8f0' }} value={state[row.id]?.materi || ''} onChange={e => canEdit && setState({ ...state, [row.id]: { ...state[row.id], materi: e.target.value } })} disabled={!canEdit} placeholder="Halaman/Ayat..." /> },
-        { key: 'nilai', label: 'Nilai', width: '80px', render: (row) => <input type="text" className="form-control form-control-sm" style={{ textAlign: 'center', fontWeight: 800 }} value={state[row.id]?.nilai || ''} onChange={e => canEdit && setState({ ...state, [row.id]: { ...state[row.id], nilai: e.target.value } })} disabled={!canEdit} placeholder="0-100" /> }
+        { key: 'materi', label: 'Materi / Surah', render: (row) => <input type="text" className="form-control form-control-sm" style={{ border: '1px solid #e2e8f0' }} value={state[row.santri_id]?.materi || ''} onChange={e => canEdit && setState({ ...state, [row.santri_id]: { ...state[row.santri_id], materi: e.target.value } })} disabled={!canEdit} placeholder="Halaman/Ayat..." /> },
+        { key: 'nilai', label: 'Nilai', width: '80px', render: (row) => <input type="text" className="form-control form-control-sm" style={{ textAlign: 'center', fontWeight: 800 }} value={state[row.santri_id]?.nilai || ''} onChange={e => canEdit && setState({ ...state, [row.santri_id]: { ...state[row.santri_id], nilai: e.target.value } })} disabled={!canEdit} placeholder="0-100" /> }
     ];
 
     return (
         <div className="view-container animate-in">
             <KopSurat judul="Murottil Pagi & Penilaian" subJudul="Evaluasi bacaan Al-Qur'an santri unit MIU." hideOnScreen={true} />
 
-            <StatsPanel items={stats} />
+            {/* Kelompok Selection Grid */}
+            <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '15px' }}>Pilih Kelompok</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
+                    {kelompokList.map((k, i) => (
+                        <div
+                            key={i}
+                            onClick={() => setFilterKelompok(k.kelompok)}
+                            className={`card-glass ${filterKelompok === k.kelompok ? 'active-card' : ''}`}
+                            style={{
+                                padding: '15px',
+                                borderRadius: '15px',
+                                cursor: 'pointer',
+                                border: filterKelompok === k.kelompok ? '2px solid var(--primary)' : '1px solid #f1f5f9',
+                                transition: 'all 0.3s'
+                            }}
+                        >
+                            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>{k.jabatan}</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 800, margin: '5px 0' }}>{k.kelompok}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--primary-dark)' }}>
+                                <i className="fas fa-user-tie" style={{ marginRight: '5px' }}></i> {k.nama_pengurus}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
-            <DataViewContainer
-                title="Input Kehadiran & Nilai"
-                subtitle={filterDate ? `Periode: ${formatDate(filterDate)}` : 'Memuat data...'}
-                headerActions={canEdit && (
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || santriList.length === 0}>
-                            <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
-                        </button>
-                        <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || santriList.length === 0}>
-                            <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
-                        </button>
+            {filterKelompok !== 'Semua' && (
+                <>
+                    <StatsPanel items={stats} />
+
+                    <div className="card-glass" style={{ padding: '20px', borderRadius: '20px', marginBottom: '20px', background: 'var(--primary-light)', border: '1px solid var(--primary)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-dark)' }}>KELOMPOK AKTIF</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{filterKelompok}</div>
+                                <div style={{ fontWeight: 600 }}>Pembimbing: <span style={{ fontWeight: 800 }}>{activeKelompokData?.nama_pengurus}</span></div>
+                            </div>
+                            <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
+                        </div>
                     </div>
-                )}
-                filters={(<>
-                    <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
-                    <SelectInput value={filterKelas} onChange={e => setFilterKelas(e.target.value)} options={['Semua', ...kelasOptions.map(k => k.nama_kelas)]} style={{ width: '180px', marginBottom: 0 }} />
-                    <select className="form-control" value={filterKelompok} onChange={e => setFilterKelompok(e.target.value)} style={{ width: '180px' }}>
-                        <option value="Semua">Semua Kelompok</option>
-                        {kelompokOptions.map((k, i) => (
-                            <option key={i} value={k}>{k}</option>
-                        ))}
-                    </select>
-                </>)}
-                tableProps={{ columns, data: santriList, loading }}
-            />
+
+                    <DataViewContainer
+                        title="Input Kehadiran & Nilai"
+                        subtitle={`Daftar santri kelompok ${activeKelompokData?.kelompok}`}
+                        headerActions={canEdit && (
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || filteredSantri.length === 0}>
+                                    <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
+                                </button>
+                                <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || filteredSantri.length === 0}>
+                                    <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
+                                </button>
+                            </div>
+                        )}
+                        tableProps={{ columns, data: filteredSantri, loading }}
+                    />
+                </>
+            )}
+
+            {filterKelompok === 'Semua' && (
+                <div style={{ textAlign: 'center', padding: '100px 20px', color: 'var(--text-muted)' }}>
+                    <i className="fas fa-hand-pointer" style={{ fontSize: '3rem', marginBottom: '20px', opacity: 0.3 }}></i>
+                    <p>Silakan pilih kelompok terlebih dahulu untuk menginput absensi.</p>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={isConfirmOpen}
@@ -208,8 +263,16 @@ export default function MurottilPagiPage() {
                 message="Anda akan menyimpan log kehadiran beserta nilai murottil untuk seluruh santri yang tampil."
                 type="info"
             />
+
+            <style jsx>{`
+                .active-card {
+                    background: var(--primary-light) !important;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                }
+            `}</style>
         </div>
     );
 }
+
 
 
