@@ -128,11 +128,37 @@ export default function PembayaranSantriPage() {
     ], [history, mounted]);
 
     const columns = [
-        { key: 'tanggal', label: 'Tgl Bayar', render: (row) => formatDate(row.tanggal) },
-        { key: 'nama_santri', label: 'Santri', render: (row) => <div style={{ fontWeight: 800 }}>{row.nama_santri}</div> },
-        { key: 'jenis_pembayaran', label: 'Jenis', render: (row) => <span className="th-badge" style={{ background: row.jenis_pembayaran === 'Syahriah' ? '#e0e7ff' : '#fef3c7', color: row.jenis_pembayaran === 'Syahriah' ? '#4338ca' : '#d97706' }}>{row.jenis_pembayaran}</span> },
-        { key: 'bulan_tagihan', label: 'Bulan', className: 'hide-mobile', render: (row) => row.bulan_tagihan || '-' },
-        { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800 }}>{formatCurrency(row.nominal)}</span> }
+        {
+            key: 'tanggal',
+            label: 'Tgl Bayar',
+            width: '120px',
+            render: (row) => formatDate(row.tanggal)
+        },
+        {
+            key: 'nama_santri',
+            label: 'Santri',
+            width: '200px',
+            render: (row) => <div style={{ fontWeight: 800 }}>{row.nama_santri}</div>
+        },
+        {
+            key: 'jenis_pembayaran',
+            label: 'Jenis',
+            width: '120px',
+            render: (row) => <span className="th-badge" style={{ background: row.jenis_pembayaran === 'Syahriah' ? '#e0e7ff' : '#fef3c7', color: row.jenis_pembayaran === 'Syahriah' ? '#4338ca' : '#d97706' }}>{row.jenis_pembayaran}</span>
+        },
+        {
+            key: 'bulan_tagihan',
+            label: 'Bulan',
+            width: '100px',
+            className: 'hide-mobile',
+            render: (row) => row.bulan_tagihan || '-'
+        },
+        {
+            key: 'nominal',
+            label: 'Nominal',
+            width: '150px',
+            render: (row) => <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--success)' }}>{formatCurrency(row.nominal)}</span>
+        }
     ];
 
     return (

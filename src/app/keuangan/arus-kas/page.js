@@ -47,11 +47,40 @@ export default function ArusKasKeuanganPage() {
     };
 
     const columns = [
-        { key: 'tanggal', label: 'Tanggal', render: (row) => formatDate(row.tanggal) },
-        { key: 'kategori', label: 'Keterangan', render: (row) => <div><div style={{ fontWeight: 700 }}>{row.kategori}</div><div style={{ fontSize: '0.7rem' }}>{row.keterangan}</div></div> },
-        { key: 'masuk', label: 'Masuk', render: (row) => row.tipe === 'Masuk' ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>{formatCurrency(row.nominal)}</span> : '-' },
-        { key: 'keluar', label: 'Keluar', render: (row) => row.tipe === 'Keluar' ? <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{formatCurrency(row.nominal)}</span> : '-' },
-        { key: 'petugas', label: 'Petugas' }
+        {
+            key: 'tanggal',
+            label: 'Tanggal',
+            width: '120px',
+            render: (row) => formatDate(row.tanggal)
+        },
+        {
+            key: 'kategori',
+            label: 'Keterangan',
+            render: (row) => (
+                <div>
+                    <div style={{ fontWeight: 700 }}>{row.kategori}</div>
+                    <small style={{ color: 'var(--text-muted)' }}>{row.keterangan || '-'}</small>
+                </div>
+            )
+        },
+        {
+            key: 'masuk',
+            label: 'Masuk',
+            width: '150px',
+            render: (row) => row.tipe === 'Masuk' ? <span style={{ color: 'var(--success)', fontWeight: 800, fontSize: '1.1rem' }}>{formatCurrency(row.nominal)}</span> : <span style={{ color: 'var(--text-muted)' }}>-</span>
+        },
+        {
+            key: 'keluar',
+            label: 'Keluar',
+            width: '150px',
+            render: (row) => row.tipe === 'Keluar' ? <span style={{ color: 'var(--danger)', fontWeight: 800, fontSize: '1.1rem' }}>{formatCurrency(row.nominal)}</span> : <span style={{ color: 'var(--text-muted)' }}>-</span>
+        },
+        {
+            key: 'petugas',
+            label: 'Petugas',
+            width: '150px',
+            className: 'hide-mobile'
+        }
     ];
 
     return (

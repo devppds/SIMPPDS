@@ -7,6 +7,7 @@ import { usePagePermission } from '@/lib/AuthContext';
 // ✨ Unified Components
 import DataViewContainer from '@/components/DataViewContainer';
 import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
 import Modal from '@/components/Modal';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 
@@ -52,6 +53,12 @@ export default function KategoriPembayaranPage() {
         }
     };
 
+    const stats = [
+        { title: 'Total Kategori', value: data.length, icon: 'fas fa-tags', color: 'var(--primary)' },
+        { title: 'Kategori Aktif', value: data.filter(d => d.aktif).length, icon: 'fas fa-check-circle', color: 'var(--success)' },
+        { title: 'Kategori Nonaktif', value: data.filter(d => !d.aktif).length, icon: 'fas fa-times-circle', color: 'var(--danger)' }
+    ];
+
     const columns = [
         {
             key: 'urutan',
@@ -62,6 +69,7 @@ export default function KategoriPembayaranPage() {
         {
             key: 'nama_kategori',
             label: 'Nama Kategori',
+            width: '250px',
             render: (row) => (
                 <div>
                     <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{row.nama_kategori}</div>
@@ -112,6 +120,8 @@ export default function KategoriPembayaranPage() {
                 subJudul="Kelola kategori pembayaran untuk menentukan tarif syahriah"
                 hideOnScreen={true}
             />
+
+            <StatsPanel items={stats} />
 
             <DataViewContainer
                 title="Master Kategori Pembayaran"

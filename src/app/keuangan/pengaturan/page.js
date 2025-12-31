@@ -9,6 +9,7 @@ import Modal from '@/components/Modal';
 // ✨ Unified Components
 import DataViewContainer from '@/components/DataViewContainer';
 import KopSurat from '@/components/KopSurat';
+import StatsPanel from '@/components/StatsPanel';
 import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -43,10 +44,31 @@ export default function PengaturanKeuanganPage() {
 
     useEffect(() => { loadEnrichedData(); }, [loadEnrichedData]);
 
+    const stats = [
+        { title: 'Total Tarif', value: data.length, icon: 'fas fa-file-invoice-dollar', color: 'var(--primary)' },
+        { title: 'Kategori Terdaftar', value: [...new Set(data.map(d => d.kategori_status))].length, icon: 'fas fa-tags', color: 'var(--success)' },
+        { title: 'Kelas Spesifik', value: data.filter(d => d.kelas !== 'Semua').length, icon: 'fas fa-graduation-cap', color: 'var(--warning)' }
+    ];
+
     const columns = [
-        { key: 'kategori_status', label: 'Status Santri', render: (row) => <strong>{row.kategori_status}</strong> },
-        { key: 'kelas', label: 'Berlaku Kelas', render: (row) => <span className="th-badge">{row.kelas}</span> },
-        { key: 'nominal', label: 'Syahriah', render: (row) => <span style={{ color: 'var(--success)', fontWeight: 800 }}>{formatCurrency(row.nominal)}</span> },
+        {
+            key: 'kategori_status',
+            label: 'Kategori Pembayaran',
+            width: '220px',
+            render: (row) => <strong>{row.kategori_status}</strong>
+        },
+        {
+            key: 'kelas',
+            label: 'Berlaku Kelas',
+            width: '150px',
+            render: (row) => <span className="th-badge">{row.kelas}</span>
+        },
+        {
+            key: 'nominal',
+            label: 'Nominal Syahriah',
+            width: '180px',
+            render: (row) => <span style={{ color: 'var(--success)', fontWeight: 800, fontSize: '1.1rem' }}>{formatCurrency(row.nominal)}</span>
+        },
         {
             key: 'actions', label: 'Aksi', width: '120px', render: (row) => (
                 <div className="table-actions">
@@ -59,12 +81,14 @@ export default function PengaturanKeuanganPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Konfigurasi Tarif Syahriah" subJudul="Master data iuran bulanan santri." hideOnScreen={true} />
+            <KopSurat judul="Atur Tarif Pembayaran" subJudul="Kelola besaran iuran berdasarkan kategori dan kelas santri" hideOnScreen={true} />
+
+            <StatsPanel items={stats} />
 
             <DataViewContainer
-                title="Management Tarif"
-                subtitle="Daftar besaran iuran berdasarkan status dan tingkat kelas."
-                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => { setFormData({ kategori_status: 'Biasa Baru', kelas: 'Semua', nominal: '' }); setIsModalOpen(true); }}><i className="fas fa-plus"></i> Tambah Tarif</button>}
+                title="Management Tarif Pembayaran"
+                subtitle={`${data.length} tarif terdaftar`}
+                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => { setFormData({ kategori_status: 'Biasa Lama', kelas: 'Semua', nominal: '' }); setIsModalOpen(true); }}><i className="fas fa-plus"></i> Tambah Tarif</button>}
                 tableProps={{ columns, data: data, loading }}
             />
 
