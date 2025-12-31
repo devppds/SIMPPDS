@@ -72,7 +72,7 @@ export default function PengurusPage() {
         { key: 'foto_pengurus', label: 'Profil', width: '80px', render: (row) => <img src={row.foto_pengurus || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '45px', height: '45px', borderRadius: '12px', objectFit: 'cover' }} alt="" /> },
         { key: 'nama', label: 'Nama Lengkap', render: (row) => <div><div style={{ fontWeight: 800 }}>{row.nama}</div><small>WA: {row.no_hp ? <a href={`https://wa.me/${row.no_hp.replace(/^0/, '62').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 700 }}>{row.no_hp}</a> : '-'}</small></div> },
         { key: 'jabatan', label: 'Jabatan', render: (row) => <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{row.jabatan || '-'}</span> },
-        { key: 'divisi', label: 'Divisi', render: (row) => <span className="th-badge" style={{ background: '#f1f5f9', color: '#475569' }}>{row.divisi || '-'}</span> },
+        { key: 'divisi', label: 'Divisi', className: 'hide-mobile', render: (row) => <span className="th-badge" style={{ background: '#f1f5f9', color: '#475569' }}>{row.divisi || '-'}</span> },
         { key: 'status', label: 'Status', render: (row) => <span className="th-badge" style={{ background: row.status === 'Aktif' ? '#dcfce7' : '#f1f5f9', color: row.status === 'Aktif' ? '#166534' : '#64748b' }}>{row.status?.toUpperCase() || 'AKTIF'}</span> },
         {
             key: 'actions', label: 'Opsi', width: '150px', render: (row) => (

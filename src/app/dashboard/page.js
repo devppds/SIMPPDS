@@ -208,6 +208,10 @@ export default function DashboardPage() {
                 @media (max-width: 1200px) {
                     .main-grid-layout {
                         grid-template-columns: 1fr;
+                        gap: 1.5rem;
+                    }
+                    .dashboard-title {
+                        font-size: 2rem;
                     }
                 }
 

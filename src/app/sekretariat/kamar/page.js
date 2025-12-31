@@ -92,7 +92,7 @@ export default function KamarPage() {
                 );
             }
         },
-        { key: 'penasihat', label: 'Pembimbing', render: (row) => <span style={{ fontWeight: 600 }}>{row.penasihat || '-'}</span> },
+        { key: 'penasihat', label: 'Pembimbing', className: 'hide-mobile', render: (row) => <span style={{ fontWeight: 600 }}>{row.penasihat || '-'}</span> },
         {
             key: 'actions', label: 'Opsi', width: '150px', render: (row) => (
                 <div className="table-actions">

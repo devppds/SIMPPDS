@@ -68,9 +68,9 @@ export default function ArusKasPage() {
     const columns = [
         { key: 'tanggal', label: 'Tanggal', render: (row) => <span style={{ fontWeight: 600 }}>{formatDate(row.tanggal)}</span> },
         { key: 'tipe', label: 'Jenis', render: (row) => <span className="th-badge" style={{ background: row.tipe === 'Masuk' ? '#dcfce7' : '#fee2e2', color: row.tipe === 'Masuk' ? '#166534' : '#991b1b' }}>{row.tipe.toUpperCase()}</span> },
-        { key: 'kategori', label: 'Kategori', render: (row) => <strong>{row.kategori}</strong> },
+        { key: 'kategori', label: 'Kategori', className: 'hide-mobile', render: (row) => <strong>{row.kategori}</strong> },
         { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800, color: row.tipe === 'Masuk' ? '#059669' : '#dc2626' }}>{row.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(row.nominal)}</span> },
-        { key: 'pj', label: 'PJ' },
+        { key: 'pj', label: 'PJ', className: 'hide-mobile' },
         {
             key: 'actions', label: 'Aksi', width: '150px', render: (row) => (
                 <div className="table-actions">

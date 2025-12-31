@@ -1462,6 +1462,33 @@ tr:hover td {
   }
 }
 
+/* Responsive Helpers */
+.hide-mobile {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}
+
+.show-mobile {
+  display: none !important;
+
+  @media (max-width: 768px) {
+    display: block !important;
+  }
+}
+
+.mobile-stack-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 769px) {
+  .mobile-stack-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
 .only-print {
   display: none;
 }
@@ -1712,7 +1739,11 @@ tr:hover td {
   th {
     white-space: nowrap;
     /* Prevent messy wrapping in tight tables */
-    padding: 0.75rem !important;
+    padding: 1rem 1.25rem !important;
+  }
+
+  .table-actions {
+    gap: 4px !important;
   }
 }
 
