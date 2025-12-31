@@ -42,8 +42,12 @@ export default function WajibBelajarPage() {
                 apiCall('getData', 'GET', { type: 'wajar_kelompok_mapping' })
             ]);
             if (isMounted.current) {
-                setKelompokList(resPengurus || []);
-                setMappedSantri(resMapping || []);
+                const groups = (resPengurus || []).filter(p => p.jabatan === 'Pembimbing Wajar');
+                const groupNames = groups.map(g => g.kelompok);
+
+                setKelompokList(groups);
+                // Filter mapped santri to only those in the correctly categorized groups
+                setMappedSantri((resMapping || []).filter(m => groupNames.includes(m.kelompok)));
             }
         } catch (e) {
             console.error(e);
