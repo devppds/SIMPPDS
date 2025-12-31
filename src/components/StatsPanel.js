@@ -126,26 +126,26 @@ export default function StatsPanel({ items = [] }) {
                 }
                 @media (max-width: 768px) {
                     .stats-panel-grid {
-                        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
                         gap: 1rem;
                     }
                 }
-                @media (max-width: 480px) {
+                @media (max-width: 600px) {
                     .stats-panel-grid {
-                        /* Force 1 row with horizontal scroll for best mobile UX */
-                        display: flex;
-                        overflow-x: auto;
-                        grid-template-columns: none;
-                        padding-bottom: 8px;
-                        gap: 0.5rem;
-                        scrollbar-width: none; /* Firefox */
+                        display: flex !important;
+                        flex-direction: row !important;
+                        overflow-x: auto !important;
+                        padding-bottom: 12px !important;
+                        gap: 10px !important;
+                        -webkit-overflow-scrolling: touch;
+                        scrollbar-width: none;
                     }
                     .stats-panel-grid::-webkit-scrollbar {
-                        display: none; /* Chrome/Safari */
+                        display: none;
                     }
                     :global(.stat-card) {
-                        flex: 0 0 calc(33.33% - 0.5rem); /* Show ~3 items on screen */
-                        min-width: 100px;
+                        flex: 0 0 200px !important;
+                        width: 200px !important;
                     }
                 }
             `}</style>

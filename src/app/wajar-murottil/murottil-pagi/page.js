@@ -225,14 +225,16 @@ export default function MurottilPagiPage() {
                 <>
                     <StatsPanel items={stats} />
 
-                    <div className="card-glass" style={{ padding: '20px', borderRadius: '20px', marginBottom: '20px', background: 'var(--primary-light)', border: '1px solid var(--primary)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="card-glass active-group-header" style={{ padding: '20px', borderRadius: '20px', marginBottom: '20px', background: 'var(--primary-light)', border: '1px solid var(--primary)' }}>
+                        <div className="header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                             <div>
                                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-dark)' }}>KELOMPOK AKTIF</div>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{filterKelompok}</div>
                                 <div style={{ fontWeight: 600 }}>Pembimbing: <span style={{ fontWeight: 800 }}>{activeKelompokData?.nama_pengurus}</span></div>
                             </div>
-                            <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
+                            <div className="filter-item" style={{ minWidth: '180px' }}>
+                                <TextInput type="date" label="Pilih Tanggal" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ marginBottom: 0 }} />
+                            </div>
                         </div>
                     </div>
 
@@ -240,12 +242,12 @@ export default function MurottilPagiPage() {
                         title="Input Kehadiran & Nilai"
                         subtitle={`Daftar santri kelompok ${activeKelompokData?.kelompok}`}
                         headerActions={canEdit && (
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || filteredSantri.length === 0}>
-                                    <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <button className="btn btn-secondary btn-sm" onClick={handleBulkHadir} disabled={loading || filteredSantri.length === 0}>
+                                    <i className="fas fa-check-double"></i> <span>Semua Hadir</span>
                                 </button>
-                                <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || filteredSantri.length === 0}>
-                                    <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
+                                <button className="btn btn-primary btn-sm" onClick={() => setIsConfirmOpen(true)} disabled={loading || filteredSantri.length === 0}>
+                                    <i className="fas fa-save"></i> <span>Simpan</span>
                                 </button>
                             </div>
                         )}
