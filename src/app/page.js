@@ -141,7 +141,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
+    <div className="login-container" style={{
       minHeight: '100vh',
       width: '100%',
       // Background Premium Dark Elegant
@@ -207,13 +207,35 @@ export default function LoginPage() {
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
+        @media (max-width: 480px) {
+          .glass-card {
+            padding: 1.5rem !important;
+            border-radius: 20px !important;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4) !important;
+          }
+          .numpad-btn {
+            padding: 0.8rem !important;
+            font-size: 1.2rem !important;
+            border-radius: 12px !important;
+          }
+          .login-container {
+            padding: 1rem !important;
+          }
+          .brand-logo {
+            width: 80px !important;
+            margin-bottom: 1rem !important;
+          }
+          .brand-title {
+            font-size: 1.5rem !important;
+          }
+        }
       `}</style>
 
       {/* Main Card */}
       <div className="glass-card" style={{
-        borderRadius: '24px', // Adjusted
-        padding: '2.5rem',    // Adjusted
-        maxWidth: '380px',    // Adjusted: Compact for PC
+        borderRadius: '24px',
+        padding: '2.5rem',
+        maxWidth: '380px',
         width: '100%',
         position: 'relative',
         zIndex: 10
@@ -227,10 +249,11 @@ export default function LoginPage() {
             <img
               src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=256&bold=true"}
               alt="Logo"
+              className="brand-logo"
               style={{ width: '100px', marginBottom: '1.5rem', borderRadius: '20px', boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)' }}
             />
           </div>
-          <h1 className="outfit" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'white', marginBottom: '0.25rem', letterSpacing: '-0.5px' }}>
+          <h1 className="outfit brand-title" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'white', marginBottom: '0.25rem', letterSpacing: '-0.5px' }}>
             SIM-PPDS
           </h1>
           <p style={{ color: '#94a3b8', fontSize: '0.85rem', letterSpacing: '0.5px', textTransform: 'uppercase', opacity: 0.8 }}>Access Control System</p>
@@ -381,7 +404,7 @@ export default function LoginPage() {
           SECURED BY DENYR A.K.A DEVELZY
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
