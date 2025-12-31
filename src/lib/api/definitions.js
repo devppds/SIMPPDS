@@ -34,7 +34,9 @@ export const HEADERS_CONFIG = {
     'wajar_miu_absen': ["santri_id", "nama_santri", "kelas", "tanggal", "status", "tipe", "petugas"],
     'wajar_nilai': ["santri_id", "nama_santri", "tanggal", "tipe", "nilai", "materi", "petugas"],
     'keamanan_formal_mapping': ["santri_id", "nama_santri", "kelompok_formal", "kelas_miu", "jenjang", "semester"],
-    'absen_sekolah': ["santri_id", "nama_santri", "kelas", "tanggal", "kelompok_formal", "status", "keterangan", "petugas"]
+    'absen_sekolah': ["santri_id", "nama_santri", "kelas", "tanggal", "kelompok_formal", "status", "keterangan", "petugas"],
+    'pengurus_target': ["pengurus_id", "nama_pengurus", "bulan", "tahun", "target_tugas", "keterangan"],
+    'pengurus_absen': ["pengurus_id", "nama_pengurus", "bulan", "tahun", "tugas", "izin", "alfa", "alasan_izin", "petugas"]
 };
 
 export const FILE_COLUMNS = {

@@ -27,6 +27,7 @@ export const NAV_ITEMS = [
             { label: 'Layanan Sekretariat', path: '/sekretariat/layanan', icon: 'fas fa-concierge-bell' },
             { label: 'Data Pengajar', path: '/sekretariat/ustadz', icon: 'fas fa-chalkboard-teacher' },
             { label: 'Data Pengurus', path: '/sekretariat/pengurus', icon: 'fas fa-user-tie' },
+            { label: 'Absensi Pengurus', path: '/sekretariat/absen-pengurus', icon: 'fas fa-clipboard-list' },
             { label: 'Kalender Kerja', path: '/sekretariat/kalender', icon: 'fas fa-calendar-alt' },
             {
                 label: 'Arsiparis',
