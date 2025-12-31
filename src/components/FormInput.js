@@ -114,3 +114,22 @@ export function TextAreaInput({ label, value, onChange, placeholder, rows = 3, r
         </FormGroup>
     );
 }
+
+/**
+ * NumberInput - Input khusus angka
+ */
+export function NumberInput({ label, value, onChange, placeholder, required, ...props }) {
+    return (
+        <FormGroup label={label} required={required}>
+            <input
+                type="number"
+                className="form-control"
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                required={required}
+                {...props}
+            />
+        </FormGroup>
+    );
+}

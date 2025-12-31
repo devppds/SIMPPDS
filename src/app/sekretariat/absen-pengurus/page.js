@@ -109,43 +109,44 @@ export default function AbsensiPengurusPage() {
     const handleSaveAbsensi = async () => {
         setSubmitting(true);
         try {
-            const promises = Object.entries(formState).map(([pid, val]) => {
+            const dataToSave = Object.entries(formState).map(([pid, val]) => {
                 const pengurus = pengurusList.find(p => Number(p.id) === Number(pid));
                 if (!pengurus) return null;
+                return {
+                    id: val.id,
+                    pengurus_id: pid,
+                    nama_pengurus: pengurus.nama,
+                    bulan: filterMonth,
+                    tahun: filterYear,
+                    tugas: val.tugas,
+                    izin: val.izin,
+                    alfa: val.alfa,
+                    alasan_izin: val.alasan_izin,
+                    petugas: user?.fullname || 'Sekretariat'
+                };
+            }).filter(d => d !== null);
 
-                return apiCall('saveData', 'POST', {
-                    type: 'pengurus_absen',
-                    data: {
-                        id: val.id,
-                        pengurus_id: pid,
-                        nama_pengurus: pengurus.nama,
-                        bulan: filterMonth,
-                        tahun: filterYear,
-                        tugas: val.tugas,
-                        izin: val.izin,
-                        alfa: val.alfa,
-                        alasan_izin: val.alasan_izin,
-                        petugas: user?.fullname || 'Sekretariat'
-                    }
-                });
-            }).filter(p => p !== null);
+            // Execute sequentially to be safe
+            for (const item of dataToSave) {
+                await apiCall('saveData', 'POST', { type: 'pengurus_absen', data: item });
+            }
 
-            await Promise.all(promises);
             showToast(`Absensi pengurus bulan ${filterMonth} berhasil disimpan!`, "success");
             loadData();
         } catch (e) {
-            showToast(e.message, "error");
+            showToast(e.message || "Gagal menyimpan absensi.", "error");
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleApplyTarget = async () => {
+        if (!targetForm.target) return showToast("Masukkan jumlah target!", "warning");
         setSubmitting(true);
         try {
-            const promises = pengurusList.map(p => {
+            for (const p of pengurusList) {
                 const existing = targetData.find(t => Number(t.pengurus_id) === Number(p.id));
-                return apiCall('saveData', 'POST', {
+                await apiCall('saveData', 'POST', {
                     type: 'pengurus_target',
                     data: {
                         id: existing ? existing.id : null,
@@ -157,14 +158,13 @@ export default function AbsensiPengurusPage() {
                         keterangan: `Target otomatis ${filterMonth} ${filterYear}`
                     }
                 });
-            });
+            }
 
-            await Promise.all(promises);
             showToast("Target tugas bulanan berhasil diterapkan!", "success");
             setIsTargetModalOpen(false);
             loadData();
         } catch (e) {
-            showToast(e.message, "error");
+            showToast(e.message || "Gagal menerapkan target.", "error");
         } finally {
             setSubmitting(false);
         }
