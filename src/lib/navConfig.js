@@ -27,7 +27,8 @@ export const NAV_ITEMS = [
             { label: 'Layanan Sekretariat', path: '/sekretariat/layanan', icon: 'fas fa-concierge-bell' },
             { label: 'Data Pengajar', path: '/sekretariat/ustadz', icon: 'fas fa-chalkboard-teacher' },
             { label: 'Data Pengurus', path: '/sekretariat/pengurus', icon: 'fas fa-user-tie' },
-            { label: 'Absensi Pengurus', path: '/sekretariat/absen-pengurus', icon: 'fas fa-clipboard-list' },
+            { label: 'Absensi Pengurus', path: '/sekretariat/absen-pengurus', icon: 'fas fa-calendar-check' },
+            { label: 'Riwayat Absensi Pengurus', path: '/sekretariat/absen-pengurus/riwayat', icon: 'fas fa-history' },
             { label: 'Kalender Kerja', path: '/sekretariat/kalender', icon: 'fas fa-calendar-alt' },
             {
                 label: 'Arsiparis',
@@ -54,6 +55,7 @@ export const NAV_ITEMS = [
             { label: 'Barang Sitaan', path: '/keamanan/barang-sitaan', icon: 'fas fa-box-open' },
             { label: 'Registrasi Barang', path: '/keamanan/registrasi-barang', icon: 'fas fa-clipboard-list' },
             { label: 'Absensi Formal', path: '/keamanan/absensi-formal', icon: 'fas fa-clipboard-check' },
+            { label: 'Riwayat Absensi Formal', path: '/keamanan/absensi-formal/riwayat', icon: 'fas fa-history' },
             { label: 'Atur Kelompok Formal', path: '/keamanan/pengaturan-formal', icon: 'fas fa-users-cog' },
             { label: 'Layanan Keamanan', path: '/keamanan/layanan', icon: 'fas fa-concierge-bell' }
         ]

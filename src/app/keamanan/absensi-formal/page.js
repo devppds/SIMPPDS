@@ -257,6 +257,9 @@ export default function AbsensiFormalPage() {
                         subtitle={`Daftar santri di ${filterGroup} | ${santriList.length} Santri`}
                         headerActions={(
                             <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="btn btn-outline" onClick={() => window.location.href = '/keamanan/absensi-formal/riwayat'}>
+                                    <i className="fas fa-history"></i> <span className="hide-mobile">Riwayat</span>
+                                </button>
                                 <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || santriList.length === 0}>
                                     <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
                                 </button>

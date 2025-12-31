@@ -225,6 +225,9 @@ export default function AbsensiPengurusPage() {
                         <SelectInput label="Pilih Tahun" value={filterYear} onChange={e => setFilterYear(e.target.value)} options={['1445', '1446', '1447', '1448', '1449']} style={{ marginBottom: 0 }} />
                     </div>
                     <div className="filter-actions" style={{ flex: '0 0 100%', display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        <button className="btn btn-outline" onClick={() => window.location.href = '/sekretariat/absen-pengurus/riwayat'} style={{ height: '45px' }}>
+                            <i className="fas fa-history"></i> <span className="hide-mobile">Riwayat</span>
+                        </button>
                         <button className="btn btn-primary" onClick={handleSaveAbsensi} disabled={submitting || !canEdit} style={{ height: '45px', flex: 1 }}>
                             <i className="fas fa-save"></i> <span>{submitting ? 'Menyimpan...' : 'Simpan Absensi'}</span>
                         </button>
