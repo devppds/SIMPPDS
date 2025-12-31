@@ -12,6 +12,17 @@ import StatsPanel from '@/components/StatsPanel';
 import { TextInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
+const FORMAL_GROUPS = [
+    'SMP / MTS',
+    'SMA / SMK',
+    'Strata 1 - Smt 1-2',
+    'Strata 1 - Smt 3-4',
+    'Strata 1 - Smt 5-6',
+    'Strata 1 - Smt 7-8',
+    'Magister - Smt 1-2',
+    'Magister - Smt 3-4'
+];
+
 export default function AbsensiFormalPage() {
     const { user } = useAuth();
     const { canEdit } = usePagePermission();
@@ -25,9 +36,9 @@ export default function AbsensiFormalPage() {
     const isMounted = React.useRef(true);
 
     // Filters
-    const [filterJenjang, setFilterJenjang] = useState('SMP/MTS'); // SMP/MTS, SMA/MA, or Kuliah
-    const [filterSemester, setFilterSemester] = useState('1'); // 1-6
+    const [filterGroup, setFilterGroup] = useState('Semua');
     const [filterDate, setFilterDate] = useState('');
+    const [mappedSantriStore, setMappedSantriStore] = useState([]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -45,22 +56,23 @@ export default function AbsensiFormalPage() {
                 apiCall('getData', 'GET', { type: 'keamanan_formal_mapping' })
             ]);
 
-            // 2. Filter santri berdasarkan pemetaan yang sudah dibuat di Bagian Keamanan (Menu: Atur Kelompok Formal)
+            const mappingData = resMapping || [];
+            if (isMounted.current) setMappedSantriStore(mappingData);
+
+            // 2. Filter santri berdasarkan kelompok yang dipilih
             const students = (resSantri || []).filter(s => {
-                const map = (resMapping || []).find(m => m.santri_id === s.id);
+                const map = mappingData.find(m => m.santri_id === s.id);
                 if (!map) return false;
 
-                const jenjangMatch = map.jenjang === filterJenjang;
-                const semesterMatch = map.semester === filterSemester;
-
-                return jenjangMatch && semesterMatch && s.status_santri === 'Aktif';
+                const groupMatch = filterGroup === 'Semua' || map.kelompok_formal === filterGroup;
+                return groupMatch && s.status_santri === 'Aktif';
             }).sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
             if (isMounted.current) setSantriList(students);
 
             // 3. Ambil data absensi yang sudah ada
             const resAbsen = await apiCall('getData', 'GET', { type: 'absen_sekolah' });
-            const logs = (resAbsen || []).filter(l => l.tanggal === filterDate && l.jenjang === filterJenjang && l.semester === filterSemester);
+            const logs = (resAbsen || []).filter(l => l.tanggal === filterDate && (filterGroup === 'Semua' || l.kelompok_formal === filterGroup));
 
             const newState = {};
             students.forEach(s => {
@@ -79,7 +91,7 @@ export default function AbsensiFormalPage() {
         }
     };
 
-    useEffect(() => { loadData(); }, [filterDate, filterJenjang, filterSemester]);
+    useEffect(() => { loadData(); }, [filterDate, filterGroup]);
 
     const handleBulkHadir = () => {
         const newState = { ...state };
@@ -95,6 +107,8 @@ export default function AbsensiFormalPage() {
         try {
             const promises = santriList.map(s => {
                 const data = state[s.id];
+                const map = mappedSantriStore.find(m => m.santri_id === s.id);
+
                 return apiCall('saveData', 'POST', {
                     type: 'absen_sekolah',
                     data: {
@@ -103,8 +117,7 @@ export default function AbsensiFormalPage() {
                         nama_santri: s.nama_siswa,
                         kelas: s.kelas,
                         tanggal: filterDate,
-                        jenjang: filterJenjang,
-                        semester: filterSemester,
+                        kelompok_formal: map?.kelompok_formal || filterGroup,
                         status: data.status,
                         keterangan: data.keterangan || '',
                         petugas: user?.fullname || 'Admin Sekolah'
@@ -113,7 +126,7 @@ export default function AbsensiFormalPage() {
             });
             await Promise.all(promises);
             if (isMounted.current) {
-                showToast(`Absensi ${filterJenjang} Semester ${filterSemester} berhasil disimpan!`, "success");
+                showToast(`Absensi ${filterGroup} berhasil disimpan!`, "success");
                 loadData();
             }
         } catch (e) {
@@ -143,7 +156,7 @@ export default function AbsensiFormalPage() {
             render: (row) => (
                 <div>
                     <div style={{ fontWeight: 800 }}>{row.nama_siswa}</div>
-                    <small style={{ color: 'var(--text-muted)' }}>{row.stambuk_pondok} • Kelas {row.kelas}</small>
+                    <small style={{ color: 'var(--text-muted)' }}>{row.stambuk_pondok} • MIU {row.kelas}</small>
                 </div>
             )
         },
@@ -183,73 +196,84 @@ export default function AbsensiFormalPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Laporan Kehadiran Formal" subJudul={`Jenjang ${filterJenjang} - Semester ${filterSemester}`} hideOnScreen={true} />
+            <KopSurat judul="Laporan Kehadiran Formal" subJudul={`Kelompok: ${filterGroup}`} hideOnScreen={true} />
 
-            <StatsPanel items={stats} />
-
-            {/* Filter & Kontrol */}
-            <div className="card-glass" style={{ padding: '1.5rem', borderRadius: '20px', marginBottom: '1.5rem', border: '1px solid #f1f5f9' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }}>
-                    <div style={{ flex: '1 1 200px' }}>
-                        <label className="form-label">Tanggal</label>
-                        <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ marginBottom: 0 }} />
-                    </div>
-
-                    <div style={{ flex: '1 1 200px' }}>
-                        <label className="form-label">Pilih Jenjang Sekolah</label>
-                        <div style={{ display: 'flex', background: '#f1f5f9', padding: '5px', borderRadius: '12px' }}>
-                            {['SMP/MTS', 'SMA/MA', 'Kuliah'].map(j => (
-                                <button
-                                    key={j}
-                                    onClick={() => setFilterJenjang(j)}
-                                    style={{
-                                        flex: 1, padding: '10px', borderRadius: '8px', border: 'none',
-                                        fontWeight: 800, fontSize: '0.8rem',
-                                        background: filterJenjang === j ? 'var(--primary)' : 'transparent',
-                                        color: filterJenjang === j ? 'white' : '#64748b',
-                                        transition: 'all 0.3s'
-                                    }}
-                                >{j}</button>
-                            ))}
+            {/* Group Selection Grid */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--primary-dark)' }}>
+                    <i className="fas fa-layer-group" style={{ marginRight: '10px' }}></i> Pilih Kelompok Sekolah
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
+                    {FORMAL_GROUPS.map((g, i) => (
+                        <div
+                            key={i}
+                            onClick={() => setFilterGroup(g)}
+                            className={`card-glass ${filterGroup === g ? 'active-group-card' : ''}`}
+                            style={{
+                                padding: '1.25rem',
+                                borderRadius: '18px',
+                                cursor: 'pointer',
+                                border: filterGroup === g ? '2px solid var(--primary)' : '1px solid #f1f5f9',
+                                transition: 'all 0.3s',
+                                textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                minHeight: '100px'
+                            }}
+                        >
+                            <i className={`fas ${g.includes('SMP') ? 'fa-school' : g.includes('SMA') ? 'fa-building-columns' : 'fa-university'}`}
+                                style={{ fontSize: '1.5rem', marginBottom: '10px', color: filterGroup === g ? 'var(--primary)' : '#94a3b8' }}></i>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{g}</div>
                         </div>
-                    </div>
-
-                    <div style={{ flex: '1 1 300px' }}>
-                        <label className="form-label">Semester</label>
-                        <div style={{ display: 'flex', background: '#f1f5f9', padding: '5px', borderRadius: '12px', gap: '5px' }}>
-                            {['1', '2', '3', '4', '5', '6'].map(s => (
-                                <button
-                                    key={s}
-                                    onClick={() => setFilterSemester(s)}
-                                    style={{
-                                        flex: 1, padding: '10px 0', borderRadius: '8px', border: 'none',
-                                        fontWeight: 800,
-                                        background: filterSemester === s ? 'var(--primary)' : 'transparent',
-                                        color: filterSemester === s ? 'white' : '#64748b',
-                                        transition: 'all 0.3s'
-                                    }}
-                                >{s}</button>
-                            ))}
-                        </div>
-                    </div>
+                    ))}
                 </div>
             </div>
 
-            <DataViewContainer
-                title={`Daftar Absensi ${filterJenjang}`}
-                subtitle={`Semester ${filterSemester} | ${santriList.length} Santri`}
-                headerActions={(
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || santriList.length === 0}>
-                            <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
-                        </button>
-                        {canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || santriList.length === 0}>
-                            <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
-                        </button>}
+            {filterGroup !== 'Semua' && (
+                <>
+                    <StatsPanel items={stats} />
+
+                    {/* Header Kontrol */}
+                    <div className="card-glass" style={{ padding: '1.5rem', borderRadius: '20px', marginBottom: '1.5rem', background: 'var(--primary-light)', border: '1px solid var(--primary)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                            <div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-dark)' }}>KELOMPOK AKTIF</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>{filterGroup}</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <label className="form-label" style={{ marginBottom: 0 }}>Tanggal:</label>
+                                <TextInput type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '180px', marginBottom: 0 }} />
+                            </div>
+                        </div>
                     </div>
-                )}
-                tableProps={{ columns, data: santriList, loading }}
-            />
+
+                    <DataViewContainer
+                        title="Daftar Absensi"
+                        subtitle={`Daftar santri di ${filterGroup} | ${santriList.length} Santri`}
+                        headerActions={(
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="btn btn-secondary" onClick={handleBulkHadir} disabled={loading || santriList.length === 0}>
+                                    <i className="fas fa-check-double"></i> <span className="hide-mobile">Semua Hadir</span>
+                                </button>
+                                {canEdit && <button className="btn btn-primary" onClick={() => setIsConfirmOpen(true)} disabled={loading || santriList.length === 0}>
+                                    <i className="fas fa-save"></i> <span className="hide-mobile">Simpan Data</span>
+                                </button>}
+                            </div>
+                        )}
+                        tableProps={{ columns, data: santriList, loading }}
+                    />
+                </>
+            )}
+
+            {filterGroup === 'Semua' && (
+                <div className="card-glass" style={{ textAlign: 'center', padding: '4rem 2rem', borderRadius: '30px', color: '#94a3b8' }}>
+                    <i className="fas fa-arrow-up" style={{ fontSize: '3rem', marginBottom: '1.5rem', opacity: 0.3 }}></i>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Silakan Pilih Kelompok</h3>
+                    <p>Klik salah satu kartu kelompok di atas untuk menginput absensi formal hari ini.</p>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={isConfirmOpen}
@@ -261,18 +285,20 @@ export default function AbsensiFormalPage() {
             />
 
             <style jsx>{`
+                .active-group-card {
+                    background: var(--primary-light) !important;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    transform: translateY(-5px);
+                }
                 .form-label {
                     display: block;
                     font-size: 0.8rem;
                     font-weight: 700;
                     color: var(--primary-dark);
-                    margin-bottom: 8px;
                     text-transform: uppercase;
-                    letter-spacing: 0.5px;
                 }
                 @media (max-width: 640px) {
                     .hide-mobile { display: none; }
-                    .btn { padding: 12px; }
                 }
             `}</style>
         </div>

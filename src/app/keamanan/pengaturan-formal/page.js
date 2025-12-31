@@ -11,6 +11,17 @@ import KopSurat from '@/components/KopSurat';
 import { SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
+export const FORMAL_GROUPS = [
+    'SMP / MTS',
+    'SMA / SMK',
+    'Strata 1 - Smt 1-2',
+    'Strata 1 - Smt 3-4',
+    'Strata 1 - Smt 5-6',
+    'Strata 1 - Smt 7-8',
+    'Magister - Smt 1-2',
+    'Magister - Smt 3-4'
+];
+
 export default function PengaturanFormalPage() {
     const { canEdit } = usePagePermission();
     const { showToast } = useToast();
@@ -18,15 +29,14 @@ export default function PengaturanFormalPage() {
     // State
     const [loading, setLoading] = useState(false);
     const [santriList, setSantriList] = useState([]);
-    const [mapping, setMapping] = useState({}); // { [santriId]: { jenjang: '', semester: '', id: null } }
+    const [mapping, setMapping] = useState({}); // { [santriId]: { kelompok: '', id: null } }
     const [kelasOptions, setKelasOptions] = useState([]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const isMounted = React.useRef(true);
 
     // Filters & Bulk Actions
     const [filterKelas, setFilterKelas] = useState('Semua');
-    const [bulkJenjang, setBulkJenjang] = useState('SMP/MTS');
-    const [bulkSemester, setBulkSemester] = useState('1');
+    const [bulkGroup, setBulkGroup] = useState(FORMAL_GROUPS[0]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -58,8 +68,7 @@ export default function PengaturanFormalPage() {
             miuStudents.forEach(s => {
                 const existing = (resMapping || []).find(m => m.santri_id === s.id);
                 initialMapping[s.id] = {
-                    jenjang: existing ? existing.jenjang : '',
-                    semester: existing ? existing.semester : '',
+                    kelompok: existing ? existing.kelompok_formal || '' : '',
                     id: existing ? existing.id : null
                 };
             });
@@ -72,10 +81,10 @@ export default function PengaturanFormalPage() {
         }
     };
 
-    const handleSingleChange = (santriId, field, value) => {
+    const handleSingleChange = (santriId, value) => {
         setMapping(prev => ({
             ...prev,
-            [santriId]: { ...prev[santriId], [field]: value }
+            [santriId]: { ...prev[santriId], kelompok: value }
         }));
     };
 
@@ -85,7 +94,7 @@ export default function PengaturanFormalPage() {
 
         santriList.forEach(s => {
             if (filterKelas === 'Semua' || s.kelas === filterKelas) {
-                newMapping[s.id] = { ...newMapping[s.id], jenjang: bulkJenjang, semester: bulkSemester };
+                newMapping[s.id] = { ...newMapping[s.id], kelompok: bulkGroup };
                 count++;
             }
         });
@@ -99,8 +108,8 @@ export default function PengaturanFormalPage() {
         try {
             const promises = santriList.map(s => {
                 const data = mapping[s.id];
-                // Hanya simpan jika data sudah diisi (Jenjang & Semester)
-                if (!data.jenjang || !data.semester) return Promise.resolve();
+                // Hanya simpan jika data sudah diisi
+                if (!data.kelompok) return Promise.resolve();
 
                 return apiCall('saveData', 'POST', {
                     type: 'keamanan_formal_mapping',
@@ -109,8 +118,10 @@ export default function PengaturanFormalPage() {
                         santri_id: s.id,
                         nama_santri: s.nama_siswa,
                         kelas_miu: s.kelas,
-                        jenjang: data.jenjang,
-                        semester: data.semester
+                        kelompok_formal: data.kelompok,
+                        // Maintain legacy fields just in case for backward compatibility during transition
+                        jenjang: data.kelompok.split(' - ')[0],
+                        semester: data.kelompok.includes('Smt') ? data.kelompok.split('Smt ')[1] : '1'
                     }
                 });
             });
@@ -137,8 +148,8 @@ export default function PengaturanFormalPage() {
 
     const stats = [
         { title: 'Total Siswa MIU', value: santriList.length, icon: 'fas fa-graduation-cap', color: 'var(--primary)' },
-        { title: 'Sudah Dipetakan', value: Object.values(mapping).filter(m => m.jenjang && m.semester).length, icon: 'fas fa-user-check', color: 'var(--success)' },
-        { title: 'Belum Dipetakan', value: Object.values(mapping).filter(m => !m.jenjang || !m.semester).length, icon: 'fas fa-user-clock', color: 'var(--warning)' }
+        { title: 'Sudah Dipetakan', value: Object.values(mapping).filter(m => m.kelompok).length, icon: 'fas fa-user-check', color: 'var(--success)' },
+        { title: 'Belum Dipetakan', value: Object.values(mapping).filter(m => !m.kelompok).length, icon: 'fas fa-user-clock', color: 'var(--warning)' }
     ];
 
     const columns = [
@@ -153,35 +164,17 @@ export default function PengaturanFormalPage() {
             )
         },
         {
-            key: 'jenjang',
-            label: 'Jenjang Formal',
+            key: 'kelompok',
+            label: 'Kelompok Sekolah Formal',
             render: (row) => (
                 <select
                     className="form-control form-control-sm"
-                    value={mapping[row.id]?.jenjang || ''}
-                    onChange={(e) => handleSingleChange(row.id, 'jenjang', e.target.value)}
+                    value={mapping[row.id]?.kelompok || ''}
+                    onChange={(e) => handleSingleChange(row.id, e.target.value)}
                     disabled={!canEdit}
                 >
                     <option value="">- Belum Diatur -</option>
-                    <option value="SMP/MTS">SMP/MTS</option>
-                    <option value="SMA/MA">SMA/MA</option>
-                    <option value="Kuliah">Kuliah</option>
-                </select>
-            )
-        },
-        {
-            key: 'semester',
-            label: 'Semester',
-            width: '120px',
-            render: (row) => (
-                <select
-                    className="form-control form-control-sm"
-                    value={mapping[row.id]?.semester || ''}
-                    onChange={(e) => handleSingleChange(row.id, 'semester', e.target.value)}
-                    disabled={!canEdit}
-                >
-                    <option value="">- Pilih -</option>
-                    {['1', '2', '3', '4', '5', '6'].map(s => <option key={s} value={s}>{s}</option>)}
+                    {FORMAL_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
             )
         }
@@ -189,7 +182,7 @@ export default function PengaturanFormalPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Pengaturan Kelompok Formal" subJudul="Pemetaan siswa madrasah MIU ke jenjang pendidikan formal." hideOnScreen={true} />
+            <KopSurat judul="Pengaturan Kelompok Formal" subJudul="Pemetaan siswa madrasah MIU ke kelompok pendidikan formal." hideOnScreen={true} />
 
             <div className="stats-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                 {stats.map((s, i) => (
@@ -218,18 +211,10 @@ export default function PengaturanFormalPage() {
                             {kelasOptions.map((k, i) => <option key={i} value={k}>{k}</option>)}
                         </select>
                     </div>
-                    <div style={{ flex: '1 1 150px' }}>
-                        <label className="form-label">Setel Jenjang Ke</label>
-                        <select className="form-control" value={bulkJenjang} onChange={e => setBulkJenjang(e.target.value)}>
-                            <option value="SMP/MTS">SMP/MTS</option>
-                            <option value="SMA/MA">SMA/MA</option>
-                            <option value="Kuliah">Kuliah</option>
-                        </select>
-                    </div>
-                    <div style={{ flex: '1 1 100px' }}>
-                        <label className="form-label">Semester</label>
-                        <select className="form-control" value={bulkSemester} onChange={e => setBulkSemester(e.target.value)}>
-                            {['1', '2', '3', '4', '5', '6'].map(s => <option key={s} value={s}>{s}</option>)}
+                    <div style={{ flex: '1 1 250px' }}>
+                        <label className="form-label">Setel Kelompok Ke</label>
+                        <select className="form-control" value={bulkGroup} onChange={e => setBulkGroup(e.target.value)}>
+                            {FORMAL_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
                         </select>
                     </div>
                     <button className="btn btn-secondary" onClick={applyBulkAction} style={{ flex: '1 1 150px', height: '50px' }}>
@@ -237,7 +222,7 @@ export default function PengaturanFormalPage() {
                     </button>
                 </div>
                 <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    *Gunakan fitur ini untuk memetakan seluruh santri dalam satu kelas MIU ke Jenjang/Semester formal secara cepat.
+                    *Gunakan fitur ini untuk memetakan seluruh santri dalam satu kelas MIU ke Kelompok formal secara cepat.
                 </p>
             </div>
 
@@ -257,7 +242,7 @@ export default function PengaturanFormalPage() {
                 onClose={() => setIsConfirmOpen(false)}
                 onConfirm={handleSave}
                 title="Simpan Pemetaan?"
-                message="Data pemetaan jenjang dan semester formal akan disimpan ke dalam database. Ini akan mempengaruhi laporan absensi sekolah."
+                message="Data pemetaan kelompok formal akan disimpan ke dalam database. Ini akan mempengaruhi laporan absensi sekolah."
                 type="info"
             />
 
