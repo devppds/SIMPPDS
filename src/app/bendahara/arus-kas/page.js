@@ -53,9 +53,9 @@ export default function ArusKasPage() {
         const mas = data.filter(d => d.tipe === 'Masuk').reduce((acc, d) => acc + parseInt(d.nominal || 0), 0);
         const kel = data.filter(d => d.tipe === 'Keluar').reduce((acc, d) => acc + parseInt(d.nominal || 0), 0);
         return [
-            { title: 'Pemasukan', value: formatCurrency(mas), icon: 'fas fa-arrow-down', color: 'var(--success)' },
-            { title: 'Pengeluaran', value: formatCurrency(kel), icon: 'fas fa-arrow-up', color: 'var(--danger)' },
-            { title: 'Saldo Akhir', value: formatCurrency(mas - kel), icon: 'fas fa-wallet', color: 'var(--primary)' }
+            { title: 'Pemasukan Pondok', value: formatCurrency(mas), icon: 'fas fa-arrow-down', color: 'var(--success)' },
+            { title: 'Pengeluaran Pondok', value: formatCurrency(kel), icon: 'fas fa-arrow-up', color: 'var(--danger)' },
+            { title: 'Saldo Kas Pondok', value: formatCurrency(mas - kel), icon: 'fas fa-wallet', color: 'var(--primary)' }
         ];
     }, [data]);
 
@@ -84,22 +84,22 @@ export default function ArusKasPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Pembukuan Arus Kas Utama" subJudul="Bendahara Pondok Pesantren" hideOnScreen={true} />
+            <KopSurat judul="Pembukuan Arus Kas Utama Pondok" subJudul="Bendahara Pondok Pesantren" hideOnScreen={true} />
 
             <StatsPanel items={stats} />
 
             <DataViewContainer
-                title="Daftar Transaksi Keuangan"
-                subtitle="Data pemasukan dan pengeluaran berkala."
+                title="Daftar Transaksi Kas Pondok"
+                subtitle="Data pemasukan dan pengeluaran keseluruhan pondok."
                 headerActions={canEdit && (<>
-                    <button className="btn btn-outline btn-sm" onClick={() => exportToExcel(data, 'Arus_Kas_Full', ['Tanggal', 'Tipe', 'Kategori', 'Nominal', 'Keterangan', 'PJ'])}>Export Excel</button>
+                    <button className="btn btn-outline btn-sm" onClick={() => exportToExcel(data, 'Arus_Kas_Pondok', ['Tanggal', 'Tipe', 'Kategori', 'Nominal', 'Keterangan', 'PJ'])}>Export Excel</button>
                     <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Transaksi Baru</button>
                 </>)}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Transaksi" : "Input Transaksi Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Transaksi Pondok" : "Input Transaksi Baru Pondok"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
                 <TextInput label="Tanggal" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
                 <div className="form-grid">
                     <SelectInput label="Tipe" value={formData.tipe} onChange={e => setFormData({ ...formData, tipe: e.target.value })} options={['Masuk', 'Keluar']} />
@@ -113,7 +113,7 @@ export default function ArusKasPage() {
                 </div>
             </Modal>
 
-            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Transaksi" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}>
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Transaksi Pondok" footer={<button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>Selesai</button>}>
                 {viewData && (
                     <div className="detail-view">
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -137,7 +137,7 @@ export default function ArusKasPage() {
                 onClose={() => setConfirmDelete({ open: false, id: null })}
                 onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); loadEnrichedData(); }}
                 title="Hapus Transaksi?"
-                message="Data ini akan dihapus permanen dari buku besar pembukuan."
+                message="Data ini akan dihapus permanen dari buku besar pembukuan pondok."
             />
         </div>
     );

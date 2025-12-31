@@ -250,7 +250,7 @@ function RecentActivityCard({ activities, loading, mounted }) {
         <div className="card" style={{ padding: '0' }}>
             <div className="card-header" style={{ padding: '2rem', borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Aktivitas Arus Kas Terakhir</h2>
-                <Link href="/bendahara/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Detail</Link>
+                <Link href="/keuangan/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Detail</Link>
             </div>
             <SortableTable
                 columns={[

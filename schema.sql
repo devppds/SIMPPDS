@@ -1,8 +1,35 @@
--- SIM-PPDS ACTIVE SCHEMA (v2)
+-- SIM-PPDS ACTIVE SCHEMA (v3)
 -- This file contains all active tables used in the current version of the application.
 
+-- 0. SYSTEM & LOGS
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT,
+    username TEXT,
+    role TEXT,
+    action TEXT,
+    target_type TEXT,
+    target_id TEXT,
+    details TEXT,
+    ip_address TEXT
+);
+
+CREATE TABLE IF NOT EXISTS system_configs (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    updated_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role TEXT UNIQUE,
+    label TEXT,
+    color TEXT,
+    menus TEXT,
+    is_public INTEGER DEFAULT 1
+);
+
 -- 1. CORE MODULE
--- COMPLETE SANTRI TABLE (Synced with Remote D1 Database - 76 columns)
 CREATE TABLE IF NOT EXISTS santri (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     stambuk_pondok TEXT,
@@ -97,7 +124,7 @@ CREATE TABLE IF NOT EXISTS users (
     role TEXT DEFAULT 'sekretariat'
 );
 
--- 1. KEAMANAN & KETERTIBAN
+-- 2. KEAMANAN & KETERTIBAN
 CREATE TABLE IF NOT EXISTS keamanan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tanggal DATE,
@@ -146,7 +173,17 @@ CREATE TABLE IF NOT EXISTS barang_sitaan (
     keterangan TEXT
 );
 
--- 2. KESEHATAN (BK)
+CREATE TABLE IF NOT EXISTS keamanan_formal_mapping (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER,
+    nama_santri TEXT,
+    kelompok_formal TEXT,
+    kelas_miu TEXT,
+    jenjang TEXT,
+    semester TEXT
+);
+
+-- 3. KESEHATAN (BK)
 CREATE TABLE IF NOT EXISTS kesehatan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nama_santri TEXT,
@@ -158,7 +195,7 @@ CREATE TABLE IF NOT EXISTS kesehatan (
     keterangan TEXT
 );
 
--- 3. PENDIDIKAN & MATERI
+-- 4. PENDIDIKAN
 CREATE TABLE IF NOT EXISTS pendidikan (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tanggal DATE,
@@ -171,7 +208,19 @@ CREATE TABLE IF NOT EXISTS pendidikan (
     keterangan TEXT
 );
 
--- 3. KEUANGAN MODULE
+CREATE TABLE IF NOT EXISTS absen_sekolah (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER,
+    nama_santri TEXT,
+    kelas TEXT,
+    tanggal DATE,
+    kelompok_formal TEXT,
+    status TEXT,
+    keterangan TEXT,
+    petugas TEXT
+);
+
+-- 5. KEUANGAN MODULE
 CREATE TABLE IF NOT EXISTS keuangan_tarif (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     kategori_status TEXT NOT NULL, 
@@ -202,17 +251,32 @@ CREATE TABLE IF NOT EXISTS keuangan_kas (
     petugas TEXT
 );
 
-CREATE TABLE IF NOT EXISTS arus_kas (
+CREATE TABLE IF NOT EXISTS keuangan_status_santri (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal TEXT,
-    tipe TEXT,
-    kategori TEXT,
-    nominal REAL,
+    santri_id INTEGER,
+    nama_santri TEXT,
+    kategori_pembayaran TEXT,
+    tanggal_mulai DATE,
+    tanggal_selesai DATE,
     keterangan TEXT,
-    pj TEXT
+    petugas TEXT
 );
 
--- 4. ARSIPARIS MODULE
+CREATE TABLE IF NOT EXISTS layanan_admin (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal DATE,
+    unit TEXT,
+    nama_santri TEXT,
+    stambuk TEXT,
+    jenis_layanan TEXT,
+    nominal INTEGER,
+    keterangan TEXT,
+    pj TEXT,
+    pemohon_tipe TEXT,
+    jumlah INTEGER
+);
+
+-- 6. ARSIPARIS MODULE
 CREATE TABLE IF NOT EXISTS arsip_surat (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tanggal TEXT NOT NULL,
@@ -245,7 +309,28 @@ CREATE TABLE IF NOT EXISTS arsip_akta_tanah (
     file_akta TEXT
 );
 
--- 5. MASTER DATA MODULE
+CREATE TABLE IF NOT EXISTS arsip_pengurus_periode (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    periode_mulai TEXT,
+    periode_selesai TEXT,
+    nama TEXT,
+    jabatan TEXT,
+    divisi TEXT,
+    foto_pengurus TEXT,
+    keterangan TEXT
+);
+
+CREATE TABLE IF NOT EXISTS arsip_pengajar_periode (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    periode_mulai TEXT,
+    periode_selesai TEXT,
+    nama TEXT,
+    kelas_ampu TEXT,
+    foto_pengajar TEXT,
+    keterangan TEXT
+);
+
+-- 7. MASTER DATA MODULE
 CREATE TABLE IF NOT EXISTS master_kelas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     lembaga TEXT NOT NULL,
@@ -259,6 +344,21 @@ CREATE TABLE IF NOT EXISTS master_jabatan (
     divisi TEXT
 );
 
+CREATE TABLE IF NOT EXISTS master_pembimbing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama_jabatan TEXT NOT NULL,
+    urutan INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS master_kategori_pembayaran (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama_kategori TEXT,
+    kode TEXT,
+    keterangan TEXT,
+    urutan INTEGER DEFAULT 0,
+    aktif INTEGER DEFAULT 1
+);
+
 CREATE TABLE IF NOT EXISTS layanan_master (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     unit TEXT,
@@ -267,7 +367,7 @@ CREATE TABLE IF NOT EXISTS layanan_master (
     keterangan TEXT
 );
 
--- 6. WAJAR-MUROTTIL MODULE
+-- 8. WAJAR-MUROTTIL MODULE
 CREATE TABLE IF NOT EXISTS wajar_pengurus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nama_pengurus TEXT NOT NULL,
@@ -277,7 +377,14 @@ CREATE TABLE IF NOT EXISTS wajar_pengurus (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Separate Table for MHM (Ibtida'iyyah)
+CREATE TABLE IF NOT EXISTS wajar_kelompok_mapping (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    santri_id INTEGER,
+    nama_santri TEXT,
+    kelompok TEXT,
+    pengurus_id INTEGER
+);
+
 CREATE TABLE IF NOT EXISTS wajar_mhm_absen (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     santri_id INTEGER NOT NULL,
@@ -291,7 +398,6 @@ CREATE TABLE IF NOT EXISTS wajar_mhm_absen (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Separate Table for MIU (Ula, Wustho, Ulya)
 CREATE TABLE IF NOT EXISTS wajar_miu_absen (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     santri_id INTEGER NOT NULL,
@@ -318,10 +424,50 @@ CREATE TABLE IF NOT EXISTS wajar_nilai (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index for Wajar-Murottil
-CREATE INDEX IF NOT EXISTS idx_wajar_mhm_tgl ON wajar_mhm_absen(tanggal, tipe);
-CREATE INDEX IF NOT EXISTS idx_wajar_miu_tgl ON wajar_miu_absen(tanggal);
-CREATE INDEX IF NOT EXISTS idx_wajar_nilai_tgl ON wajar_nilai(tanggal, tipe);
+-- 9. BENDAHARA (PONDOK) MODULE
+CREATE TABLE IF NOT EXISTS arus_kas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal TEXT,
+    tipe TEXT,
+    kategori TEXT,
+    nominal REAL,
+    keterangan TEXT,
+    pj TEXT
+);
+
+CREATE TABLE IF NOT EXISTS kas_unit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tanggal TEXT,
+    tipe TEXT,
+    kategori TEXT,
+    nominal REAL,
+    keterangan TEXT,
+    petugas TEXT
+);
+
+-- 10. KEPEGAWAIAN (PENGURUS)
+CREATE TABLE IF NOT EXISTS pengurus_target (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pengurus_id INTEGER,
+    nama_pengurus TEXT,
+    bulan TEXT,
+    tahun TEXT,
+    target_tugas TEXT,
+    keterangan TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pengurus_absen (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pengurus_id INTEGER,
+    nama_pengurus TEXT,
+    bulan TEXT,
+    tahun TEXT,
+    tugas INTEGER,
+    izin INTEGER,
+    alfa INTEGER,
+    alasan_izin TEXT,
+    petugas TEXT
+);
 
 -- 10. SECRETARIAT MODULE EXTENSION
 CREATE TABLE IF NOT EXISTS kalender_kerja (
@@ -337,3 +483,7 @@ CREATE TABLE IF NOT EXISTS kalender_kerja (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- INDEXES
+CREATE INDEX IF NOT EXISTS idx_wajar_mhm_tgl ON wajar_mhm_absen(tanggal, tipe);
+CREATE INDEX IF NOT EXISTS idx_wajar_miu_tgl ON wajar_miu_absen(tanggal);
+CREATE INDEX IF NOT EXISTS idx_wajar_nilai_tgl ON wajar_nilai(tanggal, tipe);
