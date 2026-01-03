@@ -201,11 +201,6 @@ export default function SantriPage() {
                 icon="fas fa-user-graduate"
                 floatingIcon="fas fa-mosque"
                 bgGradient="linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)"
-                actionButton={canEdit && (
-                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => { setActiveTab('umum'); openModal(); }}>
-                        <i className="fas fa-user-plus"></i> Tambah Santri
-                    </button>
-                )}
             />
             <StatsPanel items={stats} />
 
