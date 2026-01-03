@@ -144,17 +144,88 @@ export default function SetoranUnitPage() {
 
             <StatsPanel items={globalStats} />
 
-            <div className="main-grid-layout" style={{ marginTop: '2.5rem' }}>
-                {/* Left Side: Activity of Unit Services */}
-                <div className="primary-column">
-                    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                        <div className="card-header" style={{ padding: '2rem', marginBottom: 0, borderBottom: '1px solid #f1f5f9' }}>
-                            <div>
-                                <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Aktivitas Layanan Unit</h2>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Log transaksi layanan santri dari seluruh unit seksi.</p>
+            {/* Top Section: Unit Status Overview */}
+            <div style={{ marginTop: '2.5rem', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Status Kas Per-Unit</h2>
+                    <div className="th-badge" style={{ background: '#e0f2fe', color: '#0369a1' }}><i className="fas fa-info-circle"></i> Monitoring Kewajiban Setor</div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    {unitSummaries.map((s, i) => (
+                        <div key={i} className="card-hover" style={{
+                            background: '#fff',
+                            padding: '1.5rem',
+                            borderRadius: '16px',
+                            border: '1px solid #e2e8f0',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>UNIT</div>
+                                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary-dark)' }}>{s.unit}</div>
+                                </div>
+                                <div className="th-badge" style={{
+                                    background: s.balance <= 0 ? '#dcfce7' : '#fee2e2',
+                                    color: s.balance <= 0 ? '#166534' : '#991b1b',
+                                    fontSize: '0.7rem'
+                                }}>
+                                    {s.balance <= 0 ? 'LUNAS' : 'BELUM SETOR'}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1rem' }}>
+                                <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px' }}>
+                                    <small style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Pendapatan</small>
+                                    <div style={{ fontWeight: 700, color: 'var(--success)', fontSize: '0.9rem' }}>{formatCurrency(s.income)}</div>
+                                </div>
+                                <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px' }}>
+                                    <small style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Disetor</small>
+                                    <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>{formatCurrency(s.deposited)}</div>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px dashed #e2e8f0' }}>
+                                <div>
+                                    <small style={{ fontSize: '0.7rem', color: '#64748b' }}>Sisa (Saldo Unit)</small>
+                                    <div style={{ fontWeight: 800, color: s.balance > 0 ? '#dc2626' : '#64748b' }}>{formatCurrency(s.balance)}</div>
+                                </div>
+                                {s.balance > 0 && (
+                                    <button
+                                        className="btn-vibrant btn-vibrant-blue"
+                                        style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                                        onClick={() => {
+                                            openModal();
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                kategori: `Setoran Unit ${s.unit}`,
+                                                nominal: s.balance.toString(),
+                                                keterangan: `Penyetoran sisa kas unit ${s.unit.toLowerCase()}`
+                                            }));
+                                        }}
+                                    >
+                                        <i className="fas fa-hand-holding-usd"></i> Tagih
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        <div style={{ padding: '1rem' }}>
+                    ))}
+                </div>
+            </div>
+
+            <div className="main-grid-layout">
+                {/* Left Side: Activity of Unit Services */}
+                <div className="primary-column">
+                    <div className="card" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
+                        <div className="card-header" style={{ padding: '1.5rem', marginBottom: 0, borderBottom: '1px solid #f1f5f9' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Log Masuk (Layanan Unit)</h2>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rincian pendapatan dari layanan tiap unit.</p>
+                            </div>
+                        </div>
+                        <div style={{ padding: '0' }}>
                             <SortableTable
                                 columns={serviceColumns}
                                 data={servicesData.slice(0, 50)}
@@ -165,66 +236,16 @@ export default function SetoranUnitPage() {
                     </div>
                 </div>
 
-                {/* Right Side: Units Deposit Status */}
+                {/* Right Side: Riwayat Setoran */}
                 <div className="secondary-column">
-                    <div className="card">
-                        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)', marginBottom: '1.5rem' }}>Status Kas Per-Unit</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                            {unitSummaries.map((s, i) => (
-                                <div key={i} style={{
-                                    background: '#f8fafc',
-                                    padding: '1.5rem',
-                                    borderRadius: '18px',
-                                    border: '1px solid #e2e8f0'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                        <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{s.unit}</div>
-                                        <div className="th-badge" style={{
-                                            background: s.balance <= 0 ? '#dcfce7' : '#fee2e2',
-                                            color: s.balance <= 0 ? '#166534' : '#991b1b'
-                                        }}>
-                                            {s.balance <= 0 ? 'Lunas / Nihil' : `Sisa Rp ${formatCurrency(s.balance).replace('Rp', '')}`}
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                        <div>
-                                            <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Total Income</small>
-                                            <div style={{ fontWeight: 700, color: 'var(--success)' }}>{formatCurrency(s.income)}</div>
-                                        </div>
-                                        <div>
-                                            <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Sudah Setor</small>
-                                            <div style={{ fontWeight: 700, color: 'var(--primary)' }}>{formatCurrency(s.deposited)}</div>
-                                        </div>
-                                    </div>
-                                    {s.balance > 0 && (
-                                        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed #cbd5e1' }}>
-                                            <button
-                                                className="btn btn-secondary btn-sm"
-                                                style={{ width: '100%', justifyContent: 'center' }}
-                                                onClick={() => {
-                                                    openModal();
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        kategori: `Setoran Unit ${s.unit}`,
-                                                        nominal: s.balance.toString(),
-                                                        keterangan: `Penyetoran sisa kas unit ${s.unit.toLowerCase()}`
-                                                    }));
-                                                }}
-                                            >
-                                                Input Setoran Sisa
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                    <div className="card" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
+                        <div className="card-header" style={{ padding: '1.5rem', marginBottom: 0, borderBottom: '1px solid #f1f5f9' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Log Keluar (Setoran Bendahara)</h2>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Riwayat uang yang diserahkan ke bendahara.</p>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                        <div className="card-header" style={{ padding: '2rem', marginBottom: 0, borderBottom: '1px solid #f1f5f9' }}>
-                            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Riwayat Setoran</h2>
-                        </div>
-                        <div style={{ padding: '1rem' }}>
+                        <div style={{ padding: '0' }}>
                             <SortableTable
                                 columns={depositColumns}
                                 data={depositData.filter(d => d.kategori.startsWith('Setoran Unit'))}
