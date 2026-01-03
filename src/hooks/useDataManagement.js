@@ -77,7 +77,10 @@ export function useDataManagement(dataType, defaultFormData = {}) {
 
     // Actual delete execution (called by Modal)
     const confirmDelete = async () => {
-        if (!deleteState.id) return;
+        if (!deleteState.id) {
+            console.error("Delete failed: No ID provided in state");
+            return;
+        }
         setSubmitting(true);
         try {
             await apiCall('deleteData', 'POST', { type: dataType, id: deleteState.id });
@@ -87,7 +90,14 @@ export function useDataManagement(dataType, defaultFormData = {}) {
                 loadData();
             }
         } catch (err) {
-            if (isMounted.current) showToast(err.message, 'error');
+            if (isMounted.current) {
+                let msg = err.message;
+                // Make SQLite/D1 foreign key errors user-friendly
+                if (msg && (msg.includes('FOREIGN KEY') || msg.includes('Constraint'))) {
+                    msg = "Data ini tidak dapat dihapus karena sedang digunakan oleh data lain (Santri/Transaksi).";
+                }
+                showToast(msg, 'error');
+            }
         } finally {
             if (isMounted.current) setSubmitting(false);
         }
