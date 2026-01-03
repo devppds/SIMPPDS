@@ -27,7 +27,7 @@ export default function JamiyyahManajemenPage() {
         isModalOpen, setIsModalOpen, formData, setFormData, editId,
         handleSave, handleDelete, openModal
     } = useDataManagement('jamiyyah_kelompok', {
-        nama_kelompok: '', wilayah: WILAYAH_OPTIONS[0], jumlah_santri: '', ketua: '', pembimbing: '', keterangan: ''
+        wilayah: WILAYAH_OPTIONS[0], jumlah_santri: '', ketua: '', pembimbing: '', keterangan: ''
     });
 
     useEffect(() => { setMounted(true); }, []);
@@ -47,8 +47,8 @@ export default function JamiyyahManajemenPage() {
     ], [data]);
 
     const displayData = data.filter(d =>
-        (d.nama_kelompok || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.wilayah || '').toLowerCase().includes(search.toLowerCase())
+        (d.wilayah || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.ketua || '').toLowerCase().includes(search.toLowerCase())
     );
 
     const handleSelectPembimbing = (p) => {
@@ -67,12 +67,11 @@ export default function JamiyyahManajemenPage() {
 
     const columns = [
         {
-            key: 'kelompok',
-            label: 'Kelompok (Wilayah)',
+            key: 'wilayah',
+            label: 'Kelompok / Wilayah',
             render: (row) => (
-                <div>
-                    <div style={{ fontWeight: 800, color: 'var(--primary-dark)' }}>{row.nama_kelompok}</div>
-                    <small style={{ color: 'var(--text-muted)' }}>{row.wilayah}</small>
+                <div style={{ fontWeight: 800, color: 'var(--primary-dark)', fontSize: '1.1rem' }}>
+                    {row.wilayah}
                 </div>
             )
         },
@@ -80,11 +79,11 @@ export default function JamiyyahManajemenPage() {
         { key: 'ketua', label: 'Ketua', render: (row) => <div style={{ fontWeight: 600 }}>{row.ketua || '-'}</div> },
         {
             key: 'pembimbing',
-            label: 'Beberapa Pembimbing',
+            label: 'Pembimbing',
             render: (row) => (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                     {(row.pembimbing || '').split(', ').filter(Boolean).map((n, i) => (
-                        <span key={i} className="th-badge" style={{ background: '#f1f5f9', fontSize: '0.65rem' }}>{n}</span>
+                        <span key={i} className="th-badge" style={{ background: '#f1f5f9', fontSize: '0.65rem', fontWeight: 600 }}>{n}</span>
                     ))}
                 </div>
             )
@@ -107,26 +106,30 @@ export default function JamiyyahManajemenPage() {
                 <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
                     Manajemen Jam’iyyah
                 </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Pengelolaan struktur, ketua, dan beberapa pembimbing jam'iyyah.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Pengelolaan struktur wilayah/kelompok, ketua, dan tim pembimbing jam'iyyah.</p>
             </div>
 
             <StatsPanel items={stats} />
 
             <DataViewContainer
-                title="Struktur Jamiyyah"
-                subtitle="Daftar wilayah dan kelompok yang terkoordinasi."
-                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Struktur</button>}
-                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari kelompok..." }}
+                title="Struktur Wilayah Jamiyyah"
+                subtitle="Manajemen data wilayah organisasi jam'iyyah santri."
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Wilayah</button>}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari wilayah atau ketua..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Jam'iyyah" : "Tambah Struktur Jam'iyyah Baru"} width="750px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
-                <div className="form-grid">
-                    <TextInput label="Kelompok / Organisasi" value={formData.nama_kelompok} onChange={e => setFormData({ ...formData, nama_kelompok: e.target.value })} required />
-                    <SelectInput label="Wilayah" value={formData.wilayah} onChange={e => setFormData({ ...formData, wilayah: e.target.value })} options={WILAYAH_OPTIONS} />
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Wilayah" : "Tambah Wilayah Jam'iyyah Baru"} width="750px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
+                <div className="form-group">
+                    <SelectInput
+                        label="Pilih Kelompok / Wilayah"
+                        value={formData.wilayah}
+                        onChange={e => setFormData({ ...formData, wilayah: e.target.value })}
+                        options={WILAYAH_OPTIONS}
+                    />
                 </div>
                 <div className="form-grid">
-                    <TextInput label="Jumlah Santri" type="number" value={formData.jumlah_santri} onChange={e => setFormData({ ...formData, jumlah_santri: e.target.value })} />
+                    <TextInput label="Jumlah Santri" type="number" value={formData.jumlah_santri} onChange={e => setFormData({ ...formData, jumlah_santri: e.target.value })} placeholder="0" />
                     <TextInput label="Ketua" value={formData.ketua} onChange={e => setFormData({ ...formData, ketua: e.target.value })} placeholder="Nama Ketua" />
                 </div>
 
@@ -145,15 +148,15 @@ export default function JamiyyahManajemenPage() {
                     </div>
                 </div>
 
-                <TextAreaInput label="Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
+                <TextAreaInput label="Keterangan Lanjutan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
             </Modal>
 
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
                 onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
-                title="Hapus Data?"
-                message="Data ini akan dihapus permanen."
+                title="Hapus Data Wilayah?"
+                message="Seluruh data terkait wilayah ini akan dihapus dari sistem."
             />
         </div>
     );
