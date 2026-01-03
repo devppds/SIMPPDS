@@ -20,6 +20,11 @@ export default function SetoranUnitPage() {
     const [servicesData, setServicesData] = useState([]);
     const [statsLoading, setStatsLoading] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // useDataManagement for kas_unit (The right side & the main focus for Bendahara)
     const {
@@ -116,6 +121,8 @@ export default function SetoranUnitPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">
