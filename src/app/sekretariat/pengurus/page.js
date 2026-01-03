@@ -183,7 +183,7 @@ export default function PengurusPage() {
                     <TextInput label="Nomor WhatsApp" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} placeholder="Contoh: 0812345..." />
                     <TextInput label="Status Saat Ini" value={formData.status} readOnly style={{ background: '#f8fafc' }} />
                 </div>
-                <FileUploader label="Foto Pengurus" value={formData.foto_pengurus} onUploadSuccess={url => setFormData({ ...formData, foto_pengurus: url })} folder="simppds_pengurus" previewShape="square" />
+                <FileUploader label="Foto Pengurus" currentUrl={formData.foto_pengurus} onUploadSuccess={url => setFormData({ ...formData, foto_pengurus: url })} folder="simppds_pengurus" previewShape="square" />
             </Modal>
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Profil Amanah Pengurus" width="600px">

@@ -159,7 +159,12 @@ export default function KalenderKerjaPage() {
             {/* Professional Print Header */}
             <div className="print-header-corporate">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '1.5rem' }}>
-                    <img src="https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png" style={{ width: '80px' }} alt="Logo" />
+                    <img
+                        src={useAuth().config?.logo_url || "https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"}
+                        style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+                        alt="Logo"
+                        onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"; }}
+                    />
                     <div>
                         <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#1e3a8a', fontWeight: 900 }}>PONDOK PESANTREN DARUSSALAM LIRBOYO</h1>
                         <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Sistem Informasi Manajemen Terpadu (SIM-PPDS)</p>

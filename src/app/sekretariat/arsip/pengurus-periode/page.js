@@ -155,7 +155,7 @@ export default function PengurusPeriodePage() {
                     <TextInput label="Mulai Periode" value={formData.periode_mulai} onChange={e => setFormData({ ...formData, periode_mulai: e.target.value })} placeholder="Cth: 2023" required />
                     <TextInput label="Selesai Periode" value={formData.periode_selesai} onChange={e => setFormData({ ...formData, periode_selesai: e.target.value })} placeholder="Cth: 2024" required />
                 </div>
-                <FileUploader label="Foto Profil Pengurus" value={formData.foto_pengurus} onUploadSuccess={url => setFormData({ ...formData, foto_pengurus: url })} folder="arsip_pengurus" />
+                <FileUploader label="Foto Profil Pengurus" currentUrl={formData.foto_pengurus} onUploadSuccess={url => setFormData({ ...formData, foto_pengurus: url })} folder="arsip_pengurus" />
             </Modal>
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Profil Pengurus Periode" width="600px">

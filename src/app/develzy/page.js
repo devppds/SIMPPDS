@@ -247,9 +247,9 @@ export default function DevelzyControlPage() {
 
         // Check Cloudinary
         try {
-            const { cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign: { timestamp: Math.round(Date.now() / 1000) } } });
-            if (cloudName) {
-                newStatus.cloudinary = { status: 'Connected (' + cloudName + ')', color: '#22c55e' };
+            const { cloudName, apiKey } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign: { timestamp: Math.round(Date.now() / 1000) } } });
+            if (cloudName && apiKey) {
+                newStatus.cloudinary = { status: 'Configured (' + cloudName + ')', color: '#0ea5e9' };
             } else {
                 newStatus.cloudinary = { status: 'Not Configured', color: '#94a3b8' };
             }
@@ -867,13 +867,26 @@ export default function DevelzyControlPage() {
                                 </div>
                                 <div style={{ gridColumn: '1 / -1', border: '1px solid #f1f5f9', padding: '1.5rem', borderRadius: '16px', background: 'white' }}>
                                     <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 700 }}>Logo Instansi</label>
-                                    <div style={{ maxWidth: '400px' }}>
-                                        <FileUploader
-                                            currentUrl={configs.logo_url}
-                                            onUploadSuccess={url => setConfigs({ ...configs, logo_url: url })}
-                                            folder="branding_assets"
-                                            label="Upload Logo Baru"
-                                        />
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2rem', alignItems: 'center' }}>
+                                        <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <img
+                                                src={configs.logo_url || "https://ui-avatars.com/api/?name=LOGO&background=2563eb&color=fff&size=512"}
+                                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                                alt="Current Logo"
+                                                onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=404&background=ef4444&color=fff"; }}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <FileUploader
+                                                currentUrl={configs.logo_url}
+                                                onUploadSuccess={url => setConfigs({ ...configs, logo_url: url })}
+                                                folder="branding_assets"
+                                                label="Upload Logo Baru"
+                                            />
+                                            <p style={{ marginTop: '10px', fontSize: '0.8rem', color: '#64748b' }}>
+                                                URL Aktif: <span style={{ fontFamily: 'monospace', color: configs.logo_url?.includes('cloudinary') ? '#10b981' : '#f59e0b' }}>{configs.logo_url || 'Default Image'}</span>
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
