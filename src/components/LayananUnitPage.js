@@ -125,6 +125,7 @@ export default function LayananUnitPage({ unit: forceUnit }) {
             <DataViewContainer
                 title={`Riwayat Transaksi Unit ${forceUnit}`}
                 subtitle={`Menampilkan catatan log aktivitas dan jasa seksi.`}
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Input Layanan Baru</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari pemohon atau jenis layanan..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
