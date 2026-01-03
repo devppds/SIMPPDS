@@ -12,7 +12,7 @@ import Modal from '@/components/Modal';
 import { TextInput, SelectInput, NumberInput } from '@/components/FormInput';
 import StatsPanel from '@/components/StatsPanel';
 
-import moment from 'moment-hijri';
+
 
 const MONTHS = [
     'Muharram', 'Shafar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir',
@@ -43,7 +43,12 @@ export default function AbsensiPengurusPage() {
     const [targetForm, setTargetForm] = useState({ target: 30, applyToAll: true });
     const [mounted, setMounted] = useState(false);
 
-    const isMounted = React.useRef(true);
+    const isMounted = React.useRef(false);
+
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
 
     const loadData = useCallback(async () => {
         if (!filterMonth || !filterYear) return;
@@ -59,14 +64,12 @@ export default function AbsensiPengurusPage() {
                 const activePengurus = (resPengurus || []).filter(p => p.status === 'Aktif');
                 setPengurusList(activePengurus);
 
-                // Filter by month/year
                 const monthAbsen = (resAbsen || []).filter(a => a.bulan === filterMonth && a.tahun === filterYear);
                 const monthTarget = (resTarget || []).filter(t => t.bulan === filterMonth && t.tahun === filterYear);
 
                 setAbsenData(monthAbsen);
                 setTargetData(monthTarget);
 
-                // Initialize formState from monthly data or default
                 const initialState = {};
                 activePengurus.forEach(p => {
                     const existing = monthAbsen.find(a => Number(a.pengurus_id) === Number(p.id));
@@ -92,29 +95,37 @@ export default function AbsensiPengurusPage() {
     }, [filterMonth, filterYear]);
 
     useEffect(() => {
-        try {
-            if (!mounted) {
-                // Safe initialization
-                let m = moment();
-                // Check if iMonth exists (moment-hijri loaded correctly)
-                if (typeof m.iMonth !== 'function') {
-                    console.warn("moment-hijri not loaded correctly, falling back to standard date");
-                    // Fallback to Masehi mapped to Hijri index approximation or just 0
-                    setFilterMonth(MONTHS[0]);
-                    setFilterYear('1446');
-                } else {
-                    const currentHijriMonthIdx = m.iMonth();
-                    const currentHijriYear = m.iYear();
-                    setFilterMonth(MONTHS[currentHijriMonthIdx] || MONTHS[0]);
-                    setFilterYear(currentHijriYear ? currentHijriYear.toString() : '1446');
+        const initDate = async () => {
+            try {
+                // Dynamic import to prevent SSR/Hydration issues
+                const momentModule = await import('moment-hijri');
+                const moment = momentModule.default || momentModule;
+
+                if (!mounted) {
+                    const nowHijri = moment();
+                    // Check if iMonth exists
+                    if (typeof nowHijri.iMonth === 'function') {
+                        const currentHijriMonthIdx = nowHijri.iMonth();
+                        const currentHijriYear = nowHijri.iYear();
+                        setFilterMonth(MONTHS[currentHijriMonthIdx] || MONTHS[0]);
+                        setFilterYear(currentHijriYear ? currentHijriYear.toString() : '1446');
+                    } else {
+                        // Fallback
+                        setFilterMonth(MONTHS[0]);
+                        setFilterYear('1446');
+                    }
+                    setMounted(true);
                 }
+            } catch (e) {
+                console.error("Failed to load moment-hijri:", e);
+                setFilterMonth(MONTHS[0]);
+                setFilterYear('1446');
                 setMounted(true);
             }
-        } catch (e) {
-            console.error("Date initialization error:", e);
-            setFilterMonth(MONTHS[0]);
-            setFilterYear('1446');
-            setMounted(true);
+        };
+
+        if (!mounted) {
+            initDate();
         }
     }, [mounted]);
 
