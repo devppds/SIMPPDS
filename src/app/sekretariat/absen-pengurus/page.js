@@ -135,106 +135,6 @@ export default function AbsensiPengurusPage() {
         }
     }, [mounted, filterMonth, filterYear, loadData]);
 
-    if (!mounted) return (
-        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-            <div style={{ textAlign: 'center' }}>
-                <i className="fas fa-circle-notch fa-spin fa-2x" style={{ color: 'var(--primary)', marginBottom: '1rem' }}></i>
-                <p style={{ fontWeight: 600, color: '#64748b' }}>Menyiapkan Dashboard Absensi...</p>
-            </div>
-        </div>
-    );
-
-    const handleInputChange = (pengurusId, field, value) => {
-        setFormState(prev => ({
-            ...prev,
-            [pengurusId]: {
-                ...prev[pengurusId],
-                [field]: value
-            }
-        }));
-    };
-
-    const handleSaveAbsensi = async () => {
-        setSubmitting(true);
-        try {
-            const entries = Object.entries(formState);
-
-            // Sequential execution to prevent D1 concurrency issues
-            for (const [pid, val] of entries) {
-                const pengurus = pengurusList.find(p => Number(p.id) === Number(pid));
-                if (!pengurus) continue;
-
-                // 1. Save Attendance
-                await apiCall('saveData', 'POST', {
-                    type: 'pengurus_absen',
-                    data: {
-                        id: val.id,
-                        pengurus_id: pid,
-                        nama_pengurus: pengurus.nama,
-                        bulan: filterMonth,
-                        tahun: filterYear,
-                        tugas: val.tugas,
-                        izin: val.izin,
-                        alfa: val.alfa,
-                        alasan_izin: val.alasan_izin,
-                        petugas: user?.fullname || 'Sekretariat'
-                    }
-                });
-
-                // 2. Save Target
-                await apiCall('saveData', 'POST', {
-                    type: 'pengurus_target',
-                    data: {
-                        id: val.target_id,
-                        pengurus_id: pid,
-                        nama_pengurus: pengurus.nama,
-                        bulan: filterMonth,
-                        tahun: filterYear,
-                        target_tugas: val.target_tugas,
-                        keterangan: `Target manual ${filterMonth} ${filterYear}`
-                    }
-                });
-            }
-
-            showToast(`Data absensi dan target bulan ${filterMonth} berhasil disimpan!`, "success");
-            loadData();
-        } catch (e) {
-            showToast(e.message || "Gagal menyimpan data.", "error");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleApplyTarget = async () => {
-        if (!targetForm.target) return showToast("Masukkan jumlah target!", "warning");
-        setSubmitting(true);
-        try {
-            for (const p of pengurusList) {
-                const existing = targetData.find(t => Number(t.pengurus_id) === Number(p.id));
-                await apiCall('saveData', 'POST', {
-                    type: 'pengurus_target',
-                    data: {
-                        id: existing ? existing.id : null,
-                        pengurus_id: p.id,
-                        nama_pengurus: p.nama,
-                        bulan: filterMonth,
-                        tahun: filterYear,
-                        target_tugas: targetForm.target,
-                        keterangan: `Target otomatis ${filterMonth} ${filterYear}`
-                    }
-                });
-            }
-
-            showToast("Target tugas bulanan berhasil diterapkan!", "success");
-            setIsTargetModalOpen(false);
-            loadData();
-        } catch (e) {
-            showToast(e.message || "Gagal menerapkan target.", "error");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
     // Grouping logic
     const groupedData = useMemo(() => {
         const groups = {};
@@ -256,6 +156,15 @@ export default function AbsensiPengurusPage() {
             { title: 'Total Izin', value: totalIzin, icon: 'fas fa-envelope-open-text', color: 'var(--warning)' }
         ];
     }, [pengurusList, formState]);
+
+    if (!mounted) return (
+        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+            <div style={{ textAlign: 'center' }}>
+                <i className="fas fa-circle-notch fa-spin fa-2x" style={{ color: 'var(--primary)', marginBottom: '1rem' }}></i>
+                <p style={{ fontWeight: 600, color: '#64748b' }}>Menyiapkan Dashboard Absensi...</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className="view-container animate-in">
