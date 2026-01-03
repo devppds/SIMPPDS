@@ -17,6 +17,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 export default function AktaTanahPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const [mounted, setMounted] = useState(false);
 
     const {
         data, loading, search, setSearch, submitting,
@@ -31,6 +32,7 @@ export default function AktaTanahPage() {
     });
 
     React.useEffect(() => {
+        setMounted(true);
         setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
     }, [setFormData]);
 
@@ -47,6 +49,8 @@ export default function AktaTanahPage() {
         { title: 'Total Luas', value: `${data.reduce((acc, d) => acc + parseFloat(d.luas_tanah || 0), 0)} m²`, icon: 'fas fa-vector-square', color: 'var(--success)' },
         { title: 'Status Lahan', value: 'Sertifikasi Aman', icon: 'fas fa-shield-alt', color: 'var(--warning)' }
     ], [data]);
+
+    if (!mounted) return null;
 
     const columns = [
         { key: 'nomor_akta', label: 'No. Akta', render: (row) => <strong style={{ color: 'var(--primary-dark)' }}>{row.nomor_akta}</strong> },

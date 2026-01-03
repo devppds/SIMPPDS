@@ -17,6 +17,7 @@ import FileUploader from '@/components/FileUploader';
 export default function ProposalPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const [mounted, setMounted] = useState(false);
 
     const {
         data, loading, search, setSearch, submitting,
@@ -29,14 +30,17 @@ export default function ProposalPage() {
     });
 
     React.useEffect(() => {
+        setMounted(true);
         setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
     }, [setFormData]);
 
-    const displayData = data.filter(d =>
-        (d.nomor_proposal || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.judul || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.pengaju || '').toLowerCase().includes(search.toLowerCase())
-    );
+    const displayData = useMemo(() => {
+        return data.filter(d =>
+            (d.nomor_proposal || '').toLowerCase().includes(search.toLowerCase()) ||
+            (d.judul || '').toLowerCase().includes(search.toLowerCase()) ||
+            (d.pengaju || '').toLowerCase().includes(search.toLowerCase())
+        );
+    }, [data, search]);
 
     const stats = useMemo(() => [
         { title: 'Total Proposal', value: data.length, icon: 'fas fa-file-signature', color: 'var(--primary)' },
@@ -67,6 +71,8 @@ export default function ProposalPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">

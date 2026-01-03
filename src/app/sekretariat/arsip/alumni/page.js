@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import { apiCall } from '@/lib/utils';
 import Modal from '@/components/Modal';
@@ -11,6 +11,12 @@ import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
 
 export default function AlumniPage() {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const {
         data, setData, loading, setLoading, search, setSearch,
         isViewModalOpen, setIsViewModalOpen,
@@ -67,6 +73,8 @@ export default function AlumniPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">

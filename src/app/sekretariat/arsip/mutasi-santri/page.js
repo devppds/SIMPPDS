@@ -14,6 +14,11 @@ import { SelectInput } from '@/components/FormInput';
 
 export default function MutasiSantriPage() {
     const [filterStatus, setFilterStatus] = useState('Semua');
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const {
         data, setData, loading, setLoading, search, setSearch,
@@ -79,6 +84,8 @@ export default function MutasiSantriPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">

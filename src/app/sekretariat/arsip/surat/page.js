@@ -18,6 +18,7 @@ export default function SuratPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [filterTipe, setFilterTipe] = useState('Semua');
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const [mounted, setMounted] = useState(false);
 
     const {
         data, loading, search, setSearch, submitting,
@@ -31,16 +32,19 @@ export default function SuratPage() {
     });
 
     React.useEffect(() => {
+        setMounted(true);
         setFormData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
     }, [setFormData]);
 
-    const displayData = data.filter(d => {
-        const matchSearch = (d.nomor_surat || '').toLowerCase().includes(search.toLowerCase()) ||
-            (d.pengirim_penerima || '').toLowerCase().includes(search.toLowerCase()) ||
-            (d.perihal || '').toLowerCase().includes(search.toLowerCase());
-        const matchFilter = filterTipe === 'Semua' || d.tipe === filterTipe;
-        return matchSearch && matchFilter;
-    });
+    const displayData = useMemo(() => {
+        return data.filter(d => {
+            const matchSearch = (d.nomor_surat || '').toLowerCase().includes(search.toLowerCase()) ||
+                (d.pengirim_penerima || '').toLowerCase().includes(search.toLowerCase()) ||
+                (d.perihal || '').toLowerCase().includes(search.toLowerCase());
+            const matchFilter = filterTipe === 'Semua' || d.tipe === filterTipe;
+            return matchSearch && matchFilter;
+        });
+    }, [data, search, filterTipe]);
 
     const stats = useMemo(() => [
         { title: 'Total Surat', value: data.length, icon: 'fas fa-envelope', color: 'var(--primary)' },
@@ -63,6 +67,8 @@ export default function SuratPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">

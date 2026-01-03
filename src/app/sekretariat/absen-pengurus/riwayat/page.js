@@ -48,8 +48,6 @@ export default function RiwayatAbsensiPengurusPage() {
         loadData();
     }, []);
 
-    if (!mounted) return null;
-
     // Group data by pengurus and aggregate attendance
     const processedData = useMemo(() => {
         const grouped = {};
@@ -96,6 +94,8 @@ export default function RiwayatAbsensiPengurusPage() {
             };
         }).sort((a, b) => b.hadir - a.hadir);
     }, [absenData, pengurusList, targetData]);
+
+    if (!mounted) return null;
 
     const displayData = useMemo(() => {
         return processedData.filter(d => {
