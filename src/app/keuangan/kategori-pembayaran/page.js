@@ -12,6 +12,7 @@ import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
 import Modal from '@/components/Modal';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
+import ConfirmModal from '@/components/ConfirmModal';
 
 const DEFAULT_CATEGORIES = [
     { nama_kategori: 'Biasa Lama', kode: 'BL', keterangan: 'Santri reguler lama', urutan: 1, aktif: true },
@@ -28,9 +29,11 @@ export default function KategoriPembayaranPage() {
     const [editingId, setEditingId] = useState(null);
     const [isSeeding, setIsSeeding] = useState(false);
 
+    // useDataManagement with Elegant Delete Support
     const {
         data, setData, loading, submitting,
-        formData, setFormData, handleSubmit, handleDelete
+        formData, setFormData, handleSave, handleDelete,
+        deleteState, setDeleteState, promptDelete, confirmDelete
     } = useDataManagement('master_kategori_pembayaran', {
         nama_kategori: '',
         kode: '',
@@ -83,12 +86,10 @@ export default function KategoriPembayaranPage() {
     };
 
     const onSubmit = async (e) => {
-        e.preventDefault();
-        const success = await handleSubmit(editingId);
-        if (success) {
-            setIsModalOpen(false);
-            setEditingId(null);
-        }
+        await handleSave(e);
+        // We manually manage the modal open state here
+        setIsModalOpen(false);
+        setEditingId(null);
     };
 
     const stats = [
@@ -143,7 +144,8 @@ export default function KategoriPembayaranPage() {
                     <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}>
                         <i className="fas fa-edit"></i>
                     </button>
-                    <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id)}>
+                    {/* Use promptDelete instead of handleDelete(row.id) to avoid native confirm */}
+                    <button className="btn-vibrant btn-vibrant-red" onClick={() => promptDelete(row.id)}>
                         <i className="fas fa-trash"></i>
                     </button>
                 </div>
@@ -227,6 +229,16 @@ export default function KategoriPembayaranPage() {
                     </div>
                 </form>
             </Modal>
+
+            {/* Elegant Confirmation Modal via useDataManagement */}
+            <ConfirmModal
+                isOpen={deleteState.isOpen}
+                onClose={() => setDeleteState(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmDelete}
+                title={deleteState.title}
+                message={deleteState.message}
+                loading={submitting}
+            />
         </div>
     );
 }

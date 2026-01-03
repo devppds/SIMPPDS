@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiCall } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 
 export function useDataManagement(dataType, defaultFormData = {}) {
     const { isAdmin, user } = useAuth(); // Destructure user to get fullname
+    const { showToast } = useToast();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -30,7 +32,7 @@ export function useDataManagement(dataType, defaultFormData = {}) {
             if (isMounted.current) setData(res || []);
         } catch (e) {
             console.error(e);
-            if (isMounted.current) alert('Gagal memuat data: ' + e.message);
+            if (isMounted.current) showToast('Gagal memuat data: ' + e.message, 'error');
         } finally {
             if (isMounted.current) setLoading(false);
         }
@@ -54,19 +56,55 @@ export function useDataManagement(dataType, defaultFormData = {}) {
                 loadData();
             }
         } catch (err) {
-            if (isMounted.current) alert(err.message);
+            if (isMounted.current) showToast(err.message, 'error');
         } finally {
             if (isMounted.current) setSubmitting(false);
         }
     };
 
-    const handleDelete = async (id, confirmMsg = 'Hapus data ini?') => {
-        if (confirmMsg && !confirm(confirmMsg)) return;
+    // --- Delete Confirmation State (One Door Pattern) ---
+    const [deleteState, setDeleteState] = useState({ isOpen: false, id: null, title: 'Hapus Data?', message: 'Data yang dihapus tidak dapat dikembalikan.' });
+
+    // Helper to open delete confirmation
+    const promptDelete = (id, title = undefined, message = undefined) => {
+        setDeleteState({
+            isOpen: true,
+            id,
+            title: title || 'Hapus Data?',
+            message: message || 'Apakah Anda yakin ingin menghapus data ini secara permanen?'
+        });
+    };
+
+    // Actual delete execution (called by Modal)
+    const confirmDelete = async () => {
+        if (!deleteState.id) return;
+        setSubmitting(true);
+        try {
+            await apiCall('deleteData', 'POST', { type: dataType, id: deleteState.id });
+            if (isMounted.current) {
+                showToast('Data berhasil dihapus', 'success');
+                setDeleteState(prev => ({ ...prev, isOpen: false, id: null }));
+                loadData();
+            }
+        } catch (err) {
+            if (isMounted.current) showToast(err.message, 'error');
+        } finally {
+            if (isMounted.current) setSubmitting(false);
+        }
+    };
+
+    // Legacy/Manual Delete (Updated to not use native confirm by default)
+    const handleDelete = async (id, confirmMsg = null) => {
+        if (confirmMsg && !confirm(confirmMsg)) return; // Only use native confirm if msg is explicitly provided
+
         try {
             await apiCall('deleteData', 'POST', { type: dataType, id });
-            if (isMounted.current) loadData();
+            if (isMounted.current) {
+                showToast('Data berhasil dihapus', 'success');
+                loadData();
+            }
         } catch (err) {
-            if (isMounted.current) alert(err.message);
+            if (isMounted.current) showToast(err.message, 'error');
         }
     };
 
@@ -115,6 +153,8 @@ export function useDataManagement(dataType, defaultFormData = {}) {
         data, setData, loading, setLoading, search, setSearch, submitting,
         isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
         viewData, editId, formData, setFormData, loadData, handleSave,
-        handleDelete, openModal, openView, isAdmin, user // Added user pass-through
+        handleDelete, openModal, openView, isAdmin, user,
+        // New Exports for "One Door" Delete
+        deleteState, setDeleteState, promptDelete, confirmDelete
     };
 }

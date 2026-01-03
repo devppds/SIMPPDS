@@ -5,6 +5,7 @@ import { apiCall } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import Modal from '@/components/Modal';
+import ConfirmModal from '@/components/ConfirmModal';
 import SortableTable from '@/components/SortableTable';
 import ArsipFileUpload from '@/components/ArsipFileUpload';
 
@@ -21,6 +22,7 @@ export default function KalenderKerjaPage() {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
     const [editId, setEditId] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
     const [formData, setFormData] = useState({
         hari: '',
         tanggal_masehi: '',
@@ -94,10 +96,17 @@ export default function KalenderKerjaPage() {
         }
     };
 
-    const deleteItem = async (id) => {
-        if (!confirm('Hapus agenda kalender ini?')) return;
+    const promptDelete = (id) => {
+        setDeleteModal({ isOpen: true, id });
+    };
+
+    const confirmDelete = async () => {
+        const id = deleteModal.id;
+        if (!id) return;
+
         try {
             await apiCall('deleteData', 'POST', { type: 'kalender_kerja', id });
+            setDeleteModal({ isOpen: false, id: null });
             loadData();
             showToast("Agenda dihapus dari kalender.", "info");
         } catch (err) {
@@ -148,7 +157,7 @@ export default function KalenderKerjaPage() {
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openViewModal(row)} title="Detail & Dokumen"><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
-                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => deleteItem(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => promptDelete(row.id)} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -156,6 +165,13 @@ export default function KalenderKerjaPage() {
 
     return (
         <div className="view-container animate-in">
+            <ConfirmModal
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ isOpen: false, id: null })}
+                onConfirm={confirmDelete}
+                title="Hapus Agenda?"
+                message="Agenda ini akan dihapus permanen dari kalender kerja."
+            />
             {/* Professional Print Header */}
             <div className="print-header-corporate">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '1.5rem' }}>

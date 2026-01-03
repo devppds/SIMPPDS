@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { apiCall } from '@/lib/utils';
 import Modal from '@/components/Modal';
+import ConfirmModal from '@/components/ConfirmModal';
 import FileUploader from '@/components/FileUploader';
 import { NAV_ITEMS } from '@/lib/navConfig';
 
@@ -50,6 +51,7 @@ export default function DevelzyControlPage() {
     const [editingRole, setEditingRole] = useState(null);
     const [rolesList, setRolesList] = useState([]);
     const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [], is_public: 1 });
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, role: null });
 
     // Generate menu options dynamically with hierarchy info
     const allPossibleMenus = React.useMemo(() => {
@@ -501,16 +503,22 @@ export default function DevelzyControlPage() {
         }
     };
 
-    const handleDeleteRole = async (roleToDelete) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus role "${roleToDelete.label}"?`)) {
-            try {
-                await apiCall('deleteData', 'DELETE', { type: 'roles', id: roleToDelete.id });
-                showToast("Role berhasil dihapus!", "success");
-                loadData();
-            } catch (err) {
-                console.error(err);
-                showToast("Gagal menghapus role: " + err.message, "error");
-            }
+    const handleDeleteRole = (roleToDelete) => {
+        setConfirmDelete({ isOpen: true, role: roleToDelete });
+    };
+
+    const executeDeleteRole = async () => {
+        const role = confirmDelete.role;
+        if (!role) return;
+
+        try {
+            await apiCall('deleteData', 'DELETE', { type: 'roles', id: role.id });
+            showToast("Role berhasil dihapus!", "success");
+            loadData();
+            setConfirmDelete({ isOpen: false, role: null });
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal menghapus role: " + err.message, "error");
         }
     };
     const handleInitSystem = async () => {
@@ -687,16 +695,23 @@ export default function DevelzyControlPage() {
     }
 
     const tabs = [
-        { id: 'general', label: 'Global Config', icon: 'fas fa-globe' },
-        { id: 'branding', label: 'Branding & UI', icon: 'fas fa-paint-brush' },
-        { id: 'integration', label: 'API Integrations', icon: 'fas fa-plug' },
-        { id: 'audit', label: 'Audit Logs', icon: 'fas fa-history' },
-        { id: 'roles', label: 'Role Management', icon: 'fas fa-user-shield' },
-        { id: 'system', label: 'System Health', icon: 'fas fa-heartbeat' },
+        { id: 'general', label: 'Konfigurasi Global', icon: 'fas fa-globe' },
+        { id: 'branding', label: 'Branding & Tampilan', icon: 'fas fa-paint-brush' },
+        { id: 'integration', label: 'Integrasi API', icon: 'fas fa-plug' },
+        { id: 'audit', label: 'Log Audit', icon: 'fas fa-history' },
+        { id: 'roles', label: 'Manajemen Akses', icon: 'fas fa-user-shield' },
+        { id: 'system', label: 'Kondisi Sistem', icon: 'fas fa-heartbeat' },
     ];
 
     return (
         <div className="view-container">
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, role: null })}
+                onConfirm={executeDeleteRole}
+                title="Hapus Role?"
+                message={`Apakah Anda yakin ingin menghapus role "${confirmDelete.role?.label}"? Tindakan ini tidak dapat dibatalkan.`}
+            />
             {/* Hero Header */}
             <div className="develzy-hero" style={{
                 background: 'linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%)',
@@ -711,9 +726,9 @@ export default function DevelzyControlPage() {
                 <div style={{ position: 'relative', zIndex: 2 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#60a5fa', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem', marginBottom: '1rem' }}>
                         <i className="fas fa-rocket"></i>
-                        Core System Control
+                        Pusat Kontrol Sistem
                     </div>
-                    <h1 className="outfit hero-title" style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '10px' }}>DEVELZY Control</h1>
+                    <h1 className="outfit hero-title" style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '10px' }}>Panel Kontrol DEVELZY</h1>
                     <p className="hero-desc" style={{ opacity: 0.8, fontSize: '1.1rem', maxWidth: '600px' }}>
                         Pusat kendali operasional tingkat tinggi untuk konfigurasi infrastruktur,
                         manajemen layanan, dan pemantauan sistem secara real-time.
@@ -730,10 +745,10 @@ export default function DevelzyControlPage() {
             {/* Quick Stats Grid */}
             <div className="quick-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
                 {[
-                    { label: 'System Uptime', value: systemStats.uptime, icon: 'fas fa-clock', color: '#2563eb', desc: 'Sejak deployment' },
-                    { label: 'Database Status', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981', desc: 'Koneksi aktif' },
-                    { label: 'Edge Runtime', value: systemStats.cpu, icon: 'fas fa-microchip', color: '#8b5cf6', desc: 'Auto-scaling' },
-                    { label: 'Maintenance', value: maintenanceMode ? 'OFFLINE' : 'LIVE', icon: 'fas fa-power-off', color: maintenanceMode ? '#ef4444' : '#10b981', desc: maintenanceMode ? 'Mode pemeliharaan' : 'Sistem normal' },
+                    { label: 'Waktu Operasional', value: systemStats.uptime, icon: 'fas fa-clock', color: '#2563eb', desc: 'Sejak deployment' },
+                    { label: 'Status Database', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981', desc: 'Koneksi aktif' },
+                    { label: 'Runtime Sistem', value: systemStats.cpu, icon: 'fas fa-microchip', color: '#8b5cf6', desc: 'Auto-scaling' },
+                    { label: 'Pemeliharaan', value: maintenanceMode ? 'OFFLINE' : 'LIVE', icon: 'fas fa-power-off', color: maintenanceMode ? '#ef4444' : '#10b981', desc: maintenanceMode ? 'Mode pemeliharaan' : 'Sistem normal' },
                 ].map((stat, i) => (
                     <div key={i} className="card stat-card-compact" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem' }}>
                         <div className="stat-icon" style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
@@ -797,7 +812,7 @@ export default function DevelzyControlPage() {
                 <div className="card content-area" style={{ padding: '2.5rem', minHeight: '500px' }}>
                     {activeTab === 'general' && (
                         <div className="animate-in">
-                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>Global Configuration</h3>
+                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>Konfigurasi Global</h3>
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label className="form-label">Nama Instansi / Pondok</label>
