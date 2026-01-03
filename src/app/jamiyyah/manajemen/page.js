@@ -17,6 +17,7 @@ export default function JamiyyahManajemenPage() {
     const { isAdmin } = useAuth();
     const { canEdit, canDelete } = usePagePermission();
     const [pengurusList, setPengurusList] = useState([]);
+    const [santriList, setSantriList] = useState([]);
     const [mounted, setMounted] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
@@ -32,14 +33,18 @@ export default function JamiyyahManajemenPage() {
 
     useEffect(() => { setMounted(true); }, []);
 
-    const loadPengurus = useCallback(async () => {
+    const loadInitialData = useCallback(async () => {
         try {
-            const res = await apiCall('getData', 'GET', { type: 'pengurus' });
-            setPengurusList(res || []);
+            const [pengurus, santri] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'pengurus' }),
+                apiCall('getData', 'GET', { type: 'santri' })
+            ]);
+            setPengurusList(pengurus || []);
+            setSantriList(santri || []);
         } catch (e) { console.error(e); }
     }, []);
 
-    useEffect(() => { loadPengurus(); }, [loadPengurus]);
+    useEffect(() => { loadInitialData(); }, [loadInitialData]);
 
     const stats = useMemo(() => [
         { title: 'Total Kelompok', value: data.length, icon: 'fas fa-users-cog', color: 'var(--primary)' },
@@ -130,7 +135,18 @@ export default function JamiyyahManajemenPage() {
                 </div>
                 <div className="form-grid">
                     <TextInput label="Jumlah Santri" type="number" value={formData.jumlah_santri} onChange={e => setFormData({ ...formData, jumlah_santri: e.target.value })} placeholder="0" />
-                    <TextInput label="Ketua" value={formData.ketua} onChange={e => setFormData({ ...formData, ketua: e.target.value })} placeholder="Nama Ketua" />
+                    <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800 }}>Pilih Ketua (Dari Santri)</label>
+                        <Autocomplete
+                            options={santriList}
+                            value={formData.ketua}
+                            onChange={v => setFormData({ ...formData, ketua: v })}
+                            onSelect={s => setFormData({ ...formData, ketua: s.nama_siswa })}
+                            placeholder="Cari nama santri..."
+                            labelKey="nama_siswa"
+                            subLabelKey="kelas"
+                        />
+                    </div>
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1rem' }}>

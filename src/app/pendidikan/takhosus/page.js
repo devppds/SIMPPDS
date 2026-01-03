@@ -5,6 +5,7 @@ import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
+import Autocomplete from '@/components/Autocomplete';
 
 // ✨ Unified Components
 import DataViewContainer from '@/components/DataViewContainer';
@@ -13,21 +14,56 @@ import { TextInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function TakhosusSeminarPage() {
-    const { isAdmin } = useAuth();
+    const { user, isAdmin } = useAuth();
     const { canEdit, canDelete } = usePagePermission();
     const [mounted, setMounted] = useState(false);
+    const [staffList, setStaffList] = useState([]); // Combination of Ustadz and Pengurus
+    const [pengurusList, setPengurusList] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
         data, loading, search, setSearch, submitting,
         isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
         viewData, formData, setFormData, editId,
-        handleSave, handleDelete, openModal, openView
+        handleSave, handleDelete, openModal: baseOpenModal, openView
     } = useDataManagement('edu_takhosus_seminar', {
-        tanggal: '', materi: '', pembimbing: '', waktu: '', tempat: '', peserta: '', petugas: ''
+        tanggal: new Date().toISOString().split('T')[0],
+        materi: '', pembimbing: '', waktu: '', tempat: '', peserta: '', petugas: ''
     });
 
     useEffect(() => { setMounted(true); }, []);
+
+    const loadStaff = useCallback(async () => {
+        try {
+            const [ustadz, pengurus] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'ustadz' }),
+                apiCall('getData', 'GET', { type: 'pengurus' })
+            ]);
+
+            const combined = [
+                ...(ustadz || []).map(u => ({ ...u, type: 'Ustadz' })),
+                ...(pengurus || []).map(p => ({ ...p, type: 'Pengurus' }))
+            ].sort((a, b) => a.nama.localeCompare(b.nama));
+
+            setStaffList(combined);
+            setPengurusList(pengurus || []);
+        } catch (e) { console.error(e); }
+    }, []);
+
+    useEffect(() => { loadStaff(); }, [loadStaff]);
+
+    const openModal = (row = null) => {
+        if (!row) {
+            baseOpenModal();
+            setFormData(prev => ({
+                ...prev,
+                tanggal: new Date().toISOString().split('T')[0],
+                petugas: user?.fullname || user?.username || ''
+            }));
+        } else {
+            baseOpenModal(row);
+        }
+    };
 
     const stats = useMemo(() => [
         { title: 'Total Program', value: data.length, icon: 'fas fa-graduation-cap', color: 'var(--primary)' },
@@ -81,15 +117,37 @@ export default function TakhosusSeminarPage() {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Program" : "Input Program Baru"} width="750px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
                 <div className="form-grid">
                     <TextInput label="Tanggal Pelaksanaan" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} required />
-                    <TextInput label="Judul Materi / Tema" value={formData.materi} onChange={e => setFormData({ ...formData, materi: e.target.value })} required placeholder="Contoh: Seminar Fiqh Kontemporer" />
+                    <TextInput label="Judul Materi / Tema" value={formData.materi} onChange={e => setFormData({ ...formData, materi: e.target.value })} required placeholder="Seminar Fiqh Kontemporer" />
                 </div>
                 <div className="form-grid">
-                    <TextInput label="Pembimbing / Narasumber" value={formData.pembimbing} onChange={e => setFormData({ ...formData, pembimbing: e.target.value })} required placeholder="Contoh: Dr. KH. An'im Falahuddin Machrus" />
-                    <TextInput label="Waktu (Jam)" value={formData.waktu} onChange={e => setFormData({ ...formData, waktu: e.target.value })} placeholder="Contoh: 09.00 - 12.00 WIB" />
+                    <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800 }}>Pembimbing / Narasumber</label>
+                        <Autocomplete
+                            options={staffList}
+                            value={formData.pembimbing}
+                            onChange={v => setFormData({ ...formData, pembimbing: v })}
+                            onSelect={s => setFormData({ ...formData, pembimbing: s.nama })}
+                            placeholder="Cari pembimbing..."
+                            labelKey="nama"
+                            subLabelKey="type"
+                        />
+                    </div>
+                    <TextInput label="Waktu (Jam)" value={formData.waktu} onChange={e => setFormData({ ...formData, waktu: e.target.value })} placeholder="09.00 - 12.00 WIB" />
                 </div>
                 <div className="form-grid">
-                    <TextInput label="Tempat" value={formData.tempat} onChange={e => setFormData({ ...formData, tempat: e.target.value })} placeholder="Contoh: Aula Muktamar" />
-                    <TextInput label="Petugas" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} readOnly={!isAdmin} style={!isAdmin ? { background: '#f8fafc' } : {}} />
+                    <TextInput label="Tempat" value={formData.tempat} onChange={e => setFormData({ ...formData, tempat: e.target.value })} placeholder="Aula Muktamar" />
+                    <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800 }}>Petugas Pencatat</label>
+                        <Autocomplete
+                            options={pengurusList}
+                            value={formData.petugas}
+                            onChange={v => setFormData({ ...formData, petugas: v })}
+                            onSelect={p => setFormData({ ...formData, petugas: p.nama })}
+                            placeholder="Cari petugas..."
+                            labelKey="nama"
+                            subLabelKey="jabatan"
+                        />
+                    </div>
                 </div>
                 <TextAreaInput label="Daftar Peserta / Target Peserta" value={formData.peserta} onChange={e => setFormData({ ...formData, peserta: e.target.value })} placeholder="Sebutkan delegasi kelas atau target peserta program." />
             </Modal>

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { apiCall, formatDate } from '@/lib/utils';
-import { usePagePermission } from '@/lib/AuthContext';
+import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import Autocomplete from '@/components/Autocomplete';
@@ -15,25 +15,48 @@ import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function IzinPage() {
+    const { user, isAdmin } = useAuth();
     const { canEdit, canDelete } = usePagePermission();
     const [santriOptions, setSantriOptions] = useState([]);
+    const [pengurusOptions, setPengurusOptions] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
         data, loading, search, setSearch, submitting,
         isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
         viewData, formData, setFormData, editId,
-        handleSave, handleDelete, openModal, openView, isAdmin
+        handleSave, handleDelete, openModal: baseOpenModal, openView
     } = useDataManagement('izin', {
-        tanggal_mulai: '',
+        tanggal_mulai: new Date().toISOString().split('T')[0],
         tanggal_selesai: '', nama_santri: '', kelas: '', alasan: '',
         keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: '', petugas: ''
     });
 
-    // Date auto-filled by hook
-    useEffect(() => {
-        apiCall('getData', 'GET', { type: 'santri' }).then(res => setSantriOptions(res || []));
+    const loadData = useCallback(async () => {
+        try {
+            const [santri, pengurus] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'santri' }),
+                apiCall('getData', 'GET', { type: 'pengurus' })
+            ]);
+            setSantriOptions(santri || []);
+            setPengurusOptions(pengurus || []);
+        } catch (e) { console.error(e); }
     }, []);
+
+    useEffect(() => { loadData(); }, [loadData]);
+
+    const openModal = (row = null) => {
+        if (!row) {
+            baseOpenModal();
+            setFormData(prev => ({
+                ...prev,
+                tanggal_mulai: new Date().toISOString().split('T')[0],
+                petugas: user?.fullname || user?.username || ''
+            }));
+        } else {
+            baseOpenModal(row);
+        }
+    };
 
     const stats = useMemo(() => [
         { title: 'Total Izin', value: data.length, icon: 'fas fa-id-badge', color: 'var(--primary)' },
@@ -70,19 +93,26 @@ export default function IzinPage() {
         <div className="view-container animate-in">
             <KopSurat judul="Sistem Perizinan Santri" subJudul="Pusat Keamanan & Ketertiban Pondok." hideOnScreen={true} />
 
+            <div style={{ marginBottom: '2.5rem' }}>
+                <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
+                    Perizinan Santri
+                </h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Kelola izin keluar, pulang rumah, dan dispensasi santri.</p>
+            </div>
+
             <StatsPanel items={stats} />
 
             <DataViewContainer
                 title="Management Perizinan"
                 subtitle={`Menampilkan ${displayData.length} riwayat izin keluar pondok.`}
-                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Buat Surat Izin</button>}
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Buat Surat Izin</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Izin" : "Izin Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Izin" : "Buat Izin Baru"} width="750px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Izin'}</button>}>
                 <div className="form-group">
-                    <label className="form-label">Nama Santri</label>
+                    <label className="form-label" style={{ fontWeight: 800 }}>Nama Santri</label>
                     <Autocomplete options={santriOptions} value={formData.nama_santri} onChange={v => setFormData({ ...formData, nama_santri: v })} onSelect={s => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })} placeholder="Cari santri..." labelKey="nama_siswa" subLabelKey="kelas" />
                 </div>
                 <div className="form-grid">
@@ -90,50 +120,61 @@ export default function IzinPage() {
                     <TextInput label="Estimasi Kembali" type="date" value={formData.tanggal_selesai} onChange={e => setFormData({ ...formData, tanggal_selesai: e.target.value })} />
                 </div>
                 <div className="form-grid">
-                    <SelectInput label="Keperluan" value={formData.keperluan} onChange={e => setFormData({ ...formData, keperluan: e.target.value })} options={['Pulang Rumah', 'Izin Keluar Sebentar', 'Sakit / Berobat', 'Lainnya']} />
-                    <TextInput label="Penjemput" value={formData.penjemput} onChange={e => setFormData({ ...formData, penjemput: e.target.value })} placeholder="Nama wali..." />
+                    <SelectInput label="Keperluan" value={formData.keperluan} onChange={e => setFormData({ ...formData, keperluan: e.target.value })} options={['Pulang Rumah', 'Izin Keluar Sebentar', 'Sakit / Berobat', 'Nikahan Keluarga', 'Duka Cita', 'Lainnya']} />
+                    <TextInput label="Penjemput / Wali" value={formData.penjemput} onChange={e => setFormData({ ...formData, penjemput: e.target.value })} placeholder="Nama wali..." />
                 </div>
-                <TextAreaInput label="Alasan Detail" value={formData.alasan} onChange={e => setFormData({ ...formData, alasan: e.target.value })} />
+                <TextAreaInput label="Alasan Detail / Keterangan" value={formData.alasan} onChange={e => setFormData({ ...formData, alasan: e.target.value })} />
                 <div className="form-grid">
                     <SelectInput label="Status Izin" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Menunggu', 'Aktif', 'Kembali', 'Terlambat']} />
-                    <TextInput
-                        label="Petugas Record"
-                        value={formData.petugas}
-                        onChange={e => setFormData({ ...formData, petugas: e.target.value })}
-                        readOnly={!isAdmin}
-                        style={!isAdmin ? { background: '#f1f5f9', cursor: 'not-allowed' } : {}}
-                    />
+                    <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800 }}>Petugas Record (Keamanan)</label>
+                        <Autocomplete
+                            options={pengurusOptions}
+                            value={formData.petugas}
+                            onChange={v => setFormData({ ...formData, petugas: v })}
+                            onSelect={p => setFormData({ ...formData, petugas: p.nama })}
+                            placeholder="Cari petugas..."
+                            labelKey="nama"
+                            subLabelKey="jabatan"
+                        />
+                    </div>
                 </div>
             </Modal>
 
-            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Perizinan" width="600px">
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Perizinan" width="650px">
                 {viewData && (
                     <div className="detail-view">
-                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(viewData.nama_santri)}&background=1e3a8a&color=fff&size=128`} style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '1rem' }} alt="" />
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{viewData.nama_santri}</h2>
-                            <p style={{ color: 'var(--text-muted)' }}>Unit/Kelas: {viewData.kelas || '-'}</p>
-                            <span className="th-badge" style={{ background: 'var(--primary-light)', padding: '5px 15px' }}>{viewData.status}</span>
-                        </div>
-                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
-                            <div className="form-grid">
-                                <div><small>Pulang</small><div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal_mulai)}</div></div>
-                                <div><small>Rencana Kembali</small><div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal_selesai)}</div></div>
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{
+                                width: '100px', height: '100px', borderRadius: '50%',
+                                background: 'var(--primary-light)', color: 'var(--primary)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                margin: '0 auto 1rem', fontSize: '2.5rem', border: '4px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            }}>
+                                <i className="fas fa-id-card"></i>
                             </div>
-                            <div style={{ marginTop: '1rem' }}><small>Keperluan</small><div style={{ fontWeight: 700, color: 'var(--primary)' }}>{viewData.keperluan}</div></div>
-                            <div style={{ marginTop: '1rem' }}><small>Alasan</small><p>{viewData.alasan || '-'}</p></div>
+                            <h2 className="outfit" style={{ fontSize: '2rem', fontWeight: 900 }}>{viewData.nama_santri}</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{viewData.kelas || 'Unit Umum'}</p>
+                            <span className="th-badge" style={{ background: 'var(--primary)', color: 'white', padding: '5px 20px', borderRadius: '50px' }}>{viewData.status}</span>
+                        </div>
+
+                        <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '25px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div><small>Tanggal Berangkat</small><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{formatDate(viewData.tanggal_mulai)}</div></div>
+                            <div><small>Estimasi Kembali</small><div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--danger)' }}>{formatDate(viewData.tanggal_selesai)}</div></div>
+                            <div><small>Keperluan</small><div style={{ fontWeight: 700 }}>{viewData.keperluan}</div></div>
+                            <div><small>Penjemput</small><div style={{ fontWeight: 700 }}>{viewData.penjemput || '-'}</div></div>
+                            <div><small>Petugas</small><div style={{ fontWeight: 700 }}>{viewData.petugas || '-'}</div></div>
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <small>Alasan / Catatan</small>
+                            <div style={{ padding: '1.2rem', border: '1px solid #e2e8f0', borderRadius: '15px', marginTop: '8px', lineHeight: '1.6', background: 'white' }}>
+                                {viewData.alasan || 'Tidak ada keterangan tambahan.'}
+                            </div>
                         </div>
                     </div>
                 )}
             </Modal>
-
-            <ConfirmModal
-                isOpen={confirmDelete.open}
-                onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
-                title="Batalkan Izin?"
-                message="Data perizinan ini akan dihapus secara permanen dari sistem."
-            />
         </div>
     );
 }

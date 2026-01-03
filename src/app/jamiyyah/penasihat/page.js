@@ -17,6 +17,7 @@ export default function JamiyyahPenasihatPage() {
     const { isAdmin } = useAuth();
     const { canEdit, canDelete } = usePagePermission();
     const [rooms, setRooms] = useState([]);
+    const [pengurusList, setPengurusList] = useState([]);
     const [mounted, setMounted] = useState(false);
     const [selectedAsrama, setSelectedAsrama] = useState('');
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
@@ -31,14 +32,18 @@ export default function JamiyyahPenasihatPage() {
 
     useEffect(() => { setMounted(true); }, []);
 
-    const loadRooms = useCallback(async () => {
+    const loadInitialData = useCallback(async () => {
         try {
-            const res = await apiCall('getData', 'GET', { type: 'kamar' });
-            setRooms(res || []);
+            const [roomsRes, pengurusRes] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'kamar' }),
+                apiCall('getData', 'GET', { type: 'pengurus' })
+            ]);
+            setRooms(roomsRes || []);
+            setPengurusList(pengurusRes || []);
         } catch (e) { console.error(e); }
     }, []);
 
-    useEffect(() => { loadRooms(); }, [loadRooms]);
+    useEffect(() => { loadInitialData(); }, [loadInitialData]);
 
     const openModal = (row = null) => {
         if (row) {
@@ -132,16 +137,27 @@ export default function JamiyyahPenasihatPage() {
                         disabled={!selectedAsrama}
                     />
                 </div>
-                <TextInput label="Nama Penasihat" value={formData.nama_penasihat} onChange={e => setFormData({ ...formData, nama_penasihat: e.target.value })} required />
-                <TextAreaInput label="Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
+                <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 800 }}>Nama Penasihat (Dari Pengurus)</label>
+                    <Autocomplete
+                        options={pengurusList}
+                        value={formData.nama_penasihat}
+                        onChange={v => setFormData({ ...formData, nama_penasihat: v })}
+                        onSelect={p => setFormData({ ...formData, nama_penasihat: p.nama })}
+                        placeholder="Cari pengurus..."
+                        labelKey="nama"
+                        subLabelKey="jabatan"
+                    />
+                </div>
+                <TextAreaInput label="Keterangan Lanjutan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
             </Modal>
 
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
                 onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
-                title="Hapus Data?"
-                message="Data penasihat kamar ini akan dihapus."
+                title="Hapus Data Penasihat?"
+                message="Data penasihat kamar ini akan dihapus permanen."
             />
         </div>
     );

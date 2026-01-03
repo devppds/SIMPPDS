@@ -5,6 +5,7 @@ import { apiCall, formatDate } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
+import Autocomplete from '@/components/Autocomplete';
 
 // ✨ Unified Components
 import DataViewContainer from '@/components/DataViewContainer';
@@ -14,21 +15,45 @@ import { TextInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function PengajianKitabPage() {
-    const { isAdmin } = useAuth();
+    const { user, isAdmin } = useAuth();
     const { canEdit, canDelete } = usePagePermission();
     const [mounted, setMounted] = useState(false);
+    const [pengurusList, setPengurusList] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
         data, loading, search, setSearch, submitting,
         isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
         viewData, formData, setFormData, editId,
-        handleSave, handleDelete, openModal, openView
+        handleSave, handleDelete, openModal: baseOpenModal, openView
     } = useDataManagement('edu_pengajian', {
-        tanggal: '', qari: '', kitab: '', waktu: '', tempat: '', keterangan: '', petugas: ''
+        tanggal: new Date().toISOString().split('T')[0],
+        qari: '', kitab: '', waktu: '', tempat: '', keterangan: '', petugas: ''
     });
 
     useEffect(() => { setMounted(true); }, []);
+
+    const loadData = useCallback(async () => {
+        try {
+            const res = await apiCall('getData', 'GET', { type: 'pengurus' });
+            setPengurusList(res || []);
+        } catch (e) { console.error(e); }
+    }, []);
+
+    useEffect(() => { loadData(); }, [loadData]);
+
+    const openModal = (row = null) => {
+        if (!row) {
+            baseOpenModal();
+            setFormData(prev => ({
+                ...prev,
+                tanggal: new Date().toISOString().split('T')[0],
+                petugas: user?.fullname || user?.username || ''
+            }));
+        } else {
+            baseOpenModal(row);
+        }
+    };
 
     const stats = useMemo(() => [
         { title: 'Total Pengajian', value: data.length, icon: 'fas fa-book-open', color: 'var(--primary)' },
@@ -85,17 +110,28 @@ export default function PengajianKitabPage() {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Agenda Pengajian" : "Tambah Agenda Baru"} width="700px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
                 <div className="form-grid">
                     <TextInput label="Tanggal" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} required />
-                    <TextInput label="Nama Qari’ / Pembaca" value={formData.qari} onChange={e => setFormData({ ...formData, qari: e.target.value })} required placeholder="Contoh: KH. Abdullah Kafabihi" />
+                    <TextInput label="Nama Qari’ / Pembaca" value={formData.qari} onChange={e => setFormData({ ...formData, qari: e.target.value })} required placeholder="Misal: KH. Abdullah Kafabihi" />
                 </div>
                 <div className="form-grid">
-                    <TextInput label="Nama Kitab" value={formData.kitab} onChange={e => setFormData({ ...formData, kitab: e.target.value })} required placeholder="Contoh: Fathul Qadir" />
-                    <TextInput label="Waktu" value={formData.waktu} onChange={e => setFormData({ ...formData, waktu: e.target.value })} placeholder="Contoh: Barada Maghrib / 20.00 WIB" />
+                    <TextInput label="Nama Kitab" value={formData.kitab} onChange={e => setFormData({ ...formData, kitab: e.target.value })} required placeholder="Misal: Fathul Qadir" />
+                    <TextInput label="Waktu" value={formData.waktu} onChange={e => setFormData({ ...formData, waktu: e.target.value })} placeholder="Bakda Maghrib" />
                 </div>
                 <div className="form-grid">
-                    <TextInput label="Tempat / Lokasi" value={formData.tempat} onChange={e => setFormData({ ...formData, tempat: e.target.value })} placeholder="Contoh: Masjid Jami' / Aula" />
-                    <TextInput label="Petugas" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} readOnly={!isAdmin} style={!isAdmin ? { background: '#f8fafc' } : {}} />
+                    <TextInput label="Tempat / Lokasi" value={formData.tempat} onChange={e => setFormData({ ...formData, tempat: e.target.value })} placeholder="Masjid Jami'" />
+                    <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800 }}>Petugas (Pengurus)</label>
+                        <Autocomplete
+                            options={pengurusList}
+                            value={formData.petugas}
+                            onChange={v => setFormData({ ...formData, petugas: v })}
+                            onSelect={p => setFormData({ ...formData, petugas: p.nama })}
+                            placeholder="Cari petugas..."
+                            labelKey="nama"
+                            subLabelKey="jabatan"
+                        />
+                    </div>
                 </div>
-                <TextAreaInput label="Keterangan Tambahan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
+                <TextAreaInput label="Keterangan Lanjutan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
             </Modal>
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Detail Agenda Pengajian">
@@ -106,14 +142,14 @@ export default function PengajianKitabPage() {
                             <h2 style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--primary-dark)' }}>{viewData.qari}</h2>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '15px' }}>
-                            <div><label>Waktu</label><div className="value">{viewData.waktu}</div></div>
-                            <div><label>Tempat</label><div className="value">{viewData.tempat}</div></div>
-                            <div><label>Tanggal</label><div className="value">{formatDate(viewData.tanggal)}</div></div>
-                            <div><label>Petugas</label><div className="value">{viewData.petugas}</div></div>
+                            <div><small>Waktu</small><div style={{ fontWeight: 700 }}>{viewData.waktu || '-'}</div></div>
+                            <div><small>Tempat</small><div style={{ fontWeight: 700 }}>{viewData.tempat || '-'}</div></div>
+                            <div><small>Tanggal</small><div style={{ fontWeight: 700 }}>{formatDate(viewData.tanggal)}</div></div>
+                            <div><small>Petugas</small><div style={{ fontWeight: 700 }}>{viewData.petugas || '-'}</div></div>
                         </div>
                         <div style={{ marginTop: '1.5rem', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-                            <label>Keterangan</label>
-                            <p style={{ margin: 0 }}>{viewData.keterangan || '-'}</p>
+                            <small>Catatan / Keterangan</small>
+                            <p style={{ margin: '5px 0 0' }}>{viewData.keterangan || '-'}</p>
                         </div>
                     </div>
                 )}
