@@ -13,7 +13,7 @@ import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 import SortableTable from '@/components/SortableTable';
 
-const UNITS = ['Sekretariat', 'Keamanan', 'Pendidikan', 'Kesehatan', "Jam'iyyah"];
+const UNITS = ['Sekretariat', 'Keamanan', 'Pendidikan', 'Kesehatan', "Jam'iyyah", 'Lab', 'Media'];
 
 export default function SetoranUnitPage() {
     const { canEdit, canDelete } = usePagePermission();

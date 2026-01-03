@@ -40,6 +40,8 @@ export default function LayananUnitPage({ unit: forceUnit }) {
             case 'Kesehatan': return { color: '#ec4899', icon: 'fas fa-heartbeat', bg: '#fdf2f8', border: '#fce7f3' };
             case 'Pendidikan': return { color: '#f59e0b', icon: 'fas fa-graduation-cap', bg: '#fffbeb', border: '#fef3c7' };
             case "Jam'iyyah": return { color: '#6366f1', icon: 'fas fa-users', bg: '#eef2ff', border: '#e0e7ff' };
+            case 'Lab': return { color: '#0ea5e9', icon: 'fas fa-desktop', bg: '#f0f9ff', border: '#e0f2fe' };
+            case 'Media': return { color: '#8b5cf6', icon: 'fas fa-camera', bg: '#f5f3ff', border: '#ede9fe' };
             case 'Sekretariat': default: return { color: 'var(--primary)', icon: 'fas fa-file-signature', bg: '#f8fafc', border: '#e2e8f0' };
         }
     }, [forceUnit]);

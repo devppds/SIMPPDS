@@ -150,6 +150,16 @@ export const NAV_ITEMS = [
             { label: 'Status Keuangan Santri', path: '/keuangan/status-santri', icon: 'fas fa-user-tag' }
         ]
     },
+    {
+        label: 'Lab & Media',
+        icon: 'fas fa-laptop-code',
+        roles: ['admin', 'bendahara'], // Adjust roles as needed
+        submenu: [
+            { label: 'Layanan Lab', path: '/lab-media/lab', icon: 'fas fa-desktop' },
+            { label: 'Layanan Media', path: '/lab-media/media', icon: 'fas fa-camera' },
+            { label: 'Atur Tarif Layanan', path: '/lab-media/tarif', icon: 'fas fa-tags' }
+        ]
+    },
 
 
     {
