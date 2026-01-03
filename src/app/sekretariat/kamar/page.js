@@ -25,25 +25,17 @@ export default function KamarPage() {
         viewData, setViewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, isAdmin
     } = useDataManagement('kamar', {
-        nama_kamar: '1', asrama: 'DS A', kapasitas: '10', penasihat: ''
+        nama_kamar: '1', asrama: 'DS A', kapasitas: '10'
     });
 
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {
-            const [res, santri, resUstadz, resPengurus] = await Promise.all([
+            const [res, santri] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'kamar' }),
-                apiCall('getData', 'GET', { type: 'santri' }),
-                apiCall('getData', 'GET', { type: 'ustadz' }),
-                apiCall('getData', 'GET', { type: 'pengurus' })
+                apiCall('getData', 'GET', { type: 'santri' })
             ]);
             setAllSantri(santri || []);
-
-            const staff = [
-                ...(resUstadz || []).map(u => ({ id: `u-${u.id}`, nama: u.nama, role: 'Pengajar' })),
-                ...(resPengurus || []).map(p => ({ id: `p-${p.id}`, nama: p.nama, role: p.jabatan || 'Pengurus' }))
-            ].sort((a, b) => a.nama.localeCompare(b.nama));
-            setPenasihatList(staff);
 
             const rooms = res || [];
             const occupancies = {};
@@ -92,7 +84,6 @@ export default function KamarPage() {
                 );
             }
         },
-        { key: 'penasihat', label: 'Pembimbing', className: 'hide-mobile', render: (row) => <span style={{ fontWeight: 600 }}>{row.penasihat || '-'}</span> },
         {
             key: 'actions', label: 'Opsi', width: '150px', render: (row) => (
                 <div className="table-actions">
@@ -123,10 +114,6 @@ export default function KamarPage() {
                     <SelectInput label="Nomor Kamar" value={formData.nama_kamar} onChange={e => setFormData({ ...formData, nama_kamar: e.target.value })} options={Array.from({ length: 30 }, (_, i) => (i + 1).toString())} />
                 </div>
                 <TextInput label="Kapasitas Bed" type="number" value={formData.kapasitas} onChange={e => setFormData({ ...formData, kapasitas: e.target.value })} icon="fas fa-bed" />
-                <SelectInput label="Pembimbing (Penasihat)" value={formData.penasihat} onChange={e => setFormData({ ...formData, penasihat: e.target.value })} options={[
-                    { label: '- Pilih Pembimbing -', value: '' },
-                    ...penasihatList.map(p => ({ label: `${p.nama} (${p.role})`, value: p.nama }))
-                ]} />
             </Modal>
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Profil Detail Kamar" width="600px">
