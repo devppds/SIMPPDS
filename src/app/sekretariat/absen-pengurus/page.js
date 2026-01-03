@@ -45,14 +45,18 @@ export default function AbsensiPengurusPage() {
     // Modal State
     const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
     const [targetForm, setTargetForm] = useState({ target: 30, applyToAll: true });
+    const [mounted, setMounted] = useState(false);
 
     const isMounted = React.useRef(true);
 
     useEffect(() => {
+        setMounted(true);
         isMounted.current = true;
         loadData();
         return () => { isMounted.current = false; };
     }, [filterMonth, filterYear]);
+
+    if (!mounted) return null;
 
     const loadData = async () => {
         if (isMounted.current) setLoading(true);

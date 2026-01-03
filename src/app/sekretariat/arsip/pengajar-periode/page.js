@@ -18,7 +18,7 @@ export default function PengajarPeriodePage() {
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
-        data, loading, search, setSearch, submitting,
+        data: archiveData, setData: setArchiveData, loading, setLoading, search, setSearch, submitting,
         isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView,
@@ -27,18 +27,49 @@ export default function PengajarPeriodePage() {
         nama: '', kelas_ampu: '', periode_mulai: '', periode_selesai: '', foto_pengajar: ''
     });
 
+    const [mainUstadz, setMainUstadz] = useState([]);
+
+    const loadData = React.useCallback(async () => {
+        setLoading(true);
+        try {
+            const { apiCall: call } = await import('@/lib/utils');
+            const [resArchive, resMain] = await Promise.all([
+                call('getData', 'GET', { type: 'arsip_pengajar_periode' }),
+                call('getData', 'GET', { type: 'ustadz' })
+            ]);
+            setArchiveData(resArchive || []);
+            // Filter inactive from main ustadz
+            setMainUstadz((resMain || []).filter(u => u.status !== 'Aktif').map(u => ({
+                ...u,
+                is_from_main: true,
+                kelas_ampu: u.kelas,
+                foto_pengajar: u.foto_ustadz,
+                periode_mulai: 'Aktif',
+                periode_selesai: u.tanggal_nonaktif?.split('-')[0] || '?'
+            })));
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, [setArchiveData, setLoading]);
+
+    React.useEffect(() => { loadData(); }, [loadData]);
+
+    const combinedData = useMemo(() => [...archiveData, ...mainUstadz], [archiveData, mainUstadz]);
+
     const displayData = useMemo(() => {
-        return data.filter(d =>
+        return combinedData.filter(d =>
             (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
             (d.kelas_ampu || '').toLowerCase().includes(search.toLowerCase())
         );
-    }, [data, search]);
+    }, [combinedData, search]);
 
     const stats = useMemo(() => [
-        { title: 'Total Pengajar', value: data.length, icon: 'fas fa-chalkboard-teacher', color: 'var(--primary)' },
-        { title: 'Kelas Tercover', value: [...new Set(data.map(d => d.kelas_ampu))].length, icon: 'fas fa-school', color: 'var(--success)' },
-        { title: 'Arsip Digital', value: 'Ready', icon: 'fas fa-check-circle', color: 'var(--warning)' }
-    ], [data]);
+        { title: 'Total Pengajar', value: combinedData.length, icon: 'fas fa-chalkboard-teacher', color: 'var(--primary)' },
+        { title: 'Kelas Ter-Arsip', value: [...new Set(combinedData.map(d => d.kelas_ampu))].length, icon: 'fas fa-school', color: 'var(--success)' },
+        { title: 'Data Mutasi', value: mainUstadz.length, icon: 'fas fa-exchange-alt', color: 'var(--warning)' }
+    ], [combinedData, mainUstadz]);
 
     const columns = [
         {
@@ -57,8 +88,9 @@ export default function PengajarPeriodePage() {
             key: 'actions', label: 'Aksi', sortable: false, width: '150px', render: (row) => (
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
-                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
-                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {!row.is_from_main && canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {!row.is_from_main && canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
+                    {row.is_from_main && <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}><i className="fas fa-lock"></i> System Sync</span>}
                 </div>
             )
         }
@@ -73,12 +105,15 @@ export default function PengajarPeriodePage() {
             <DataViewContainer
                 title="Log Arsip Pengajar"
                 subtitle={`Menampilkan ${displayData.length} data ustadz terdaftar.`}
-                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Arsip</button>}
+                headerActions={(<>
+                    <button className="btn btn-secondary btn-sm" onClick={loadData}><i className="fas fa-sync"></i> Refresh</button>
+                    {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Arsip</button>}
+                </>)}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama atau kelas..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? 'Edit Data Pengajar' : 'Tambah Pengajar Baru'} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? 'Edit Data Pengajar' : 'Tambah Pengajar Baru'} footer={<button className="btn btn-primary" onClick={async () => { await handleSave(); loadData(); }} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
                 <TextInput label="Nama Lengkap" value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })} required icon="fas fa-user-tie" />
                 <TextInput label="Kelas yang Diampu" value={formData.kelas_ampu} onChange={e => setFormData({ ...formData, kelas_ampu: e.target.value })} required />
                 <div className="form-grid">

@@ -44,6 +44,43 @@ export default function PengurusPage() {
         tahun_mulai: getAcademicYear(), tahun_akhir: '', foto_pengurus: '', tanggal_nonaktif: ''
     });
 
+    const [isMutasiModalOpen, setIsMutasiModalOpen] = useState(false);
+    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Demisioner', tanggal: new Date().toISOString().split('T')[0] });
+
+    const openMutasi = (row) => {
+        setMutasiData({
+            id: row.id,
+            nama: row.nama,
+            status: 'Demisioner',
+            tanggal: new Date().toISOString().split('T')[0]
+        });
+        setIsMutasiModalOpen(true);
+    };
+
+    const handleMutasi = async () => {
+        try {
+            setLoading(true);
+            const target = data.find(d => d.id === mutasiData.id);
+            if (!target) return;
+
+            const updated = {
+                ...target,
+                status: mutasiData.status,
+                tanggal_nonaktif: mutasiData.tanggal,
+                tahun_akhir: mutasiData.tanggal.split('-')[0] // Auto-fill tahun akhir
+            };
+
+            await apiCall('saveData', 'POST', { type: 'pengurus', id: mutasiData.id, data: updated });
+            setIsMutasiModalOpen(false);
+            loadEnrichedData();
+        } catch (e) {
+            console.error(e);
+            alert("Gagal melakukan mutasi");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const loadEnrichedData = useCallback(async () => {
         setLoading(true);
         try {
@@ -77,9 +114,10 @@ export default function PengurusPage() {
         {
             key: 'actions', label: 'Opsi', width: '150px', render: (row) => (
                 <div className="table-actions">
-                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)}><i className="fas fa-eye"></i></button>
-                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
-                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
+                    {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {canEdit && row.status === 'Aktif' && <button className="btn-vibrant btn-vibrant-yellow" onClick={() => openMutasi(row)} title="Mutasi / Non-Aktif"><i className="fas fa-exchange-alt"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -122,7 +160,7 @@ export default function PengurusPage() {
                 </div>
                 <div className="form-grid">
                     <TextInput label="Nomor WhatsApp" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} placeholder="Contoh: 0812345..." />
-                    <SelectInput label="Status" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Aktif', 'Demisioner', 'Non-Aktif']} />
+                    <TextInput label="Status Saat Ini" value={formData.status} readOnly style={{ background: '#f8fafc' }} />
                 </div>
                 <FileUploader label="Foto Pengurus" value={formData.foto_pengurus} onUploadSuccess={url => setFormData({ ...formData, foto_pengurus: url })} folder="simppds_pengurus" previewShape="square" />
             </Modal>
@@ -149,6 +187,33 @@ export default function PengurusPage() {
                         )}
                     </div>
                 )}
+            </Modal>
+
+            <Modal
+                isOpen={isMutasiModalOpen}
+                onClose={() => setIsMutasiModalOpen(false)}
+                title={`Mutasi Pengurus: ${mutasiData.nama}`}
+                footer={<button className="btn btn-primary" onClick={handleMutasi} disabled={loading}>{loading ? 'Memproses...' : 'Simpan Mutasi'}</button>}
+            >
+                <div style={{ padding: '10px' }}>
+                    <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>Pindahkan pengurus ini ke status non-aktif atau demisioner.</p>
+                    <SelectInput
+                        label="Pilih Status Baru"
+                        value={mutasiData.status}
+                        onChange={e => setMutasiData({ ...mutasiData, status: e.target.value })}
+                        options={['Demisioner', 'Non-Aktif', 'Cuti']}
+                    />
+                    <TextInput
+                        label="Tanggal Mutasi"
+                        type="date"
+                        value={mutasiData.tanggal}
+                        onChange={e => setMutasiData({ ...mutasiData, tanggal: e.target.value })}
+                    />
+                    <div style={{ marginTop: '1rem', padding: '1rem', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fef3c7' }}>
+                        <small style={{ color: '#92400e', fontWeight: 700 }}>Info:</small>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#78350f' }}>Masa bakti (Tahun Akhir) akan otomatis disesuaikan dengan tahun mutasi ini.</p>
+                    </div>
+                </div>
             </Modal>
 
             <ConfirmModal

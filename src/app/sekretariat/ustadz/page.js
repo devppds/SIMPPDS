@@ -18,7 +18,7 @@ export default function PengajarPage() {
     const { canEdit, canDelete } = usePagePermission();
 
     const {
-        data, loading, search, setSearch, submitting,
+        data, setData, loading, setLoading, search, setSearch, submitting,
         isModalOpen, setIsModalOpen, isViewModalOpen, setIsViewModalOpen,
         viewData, formData, setFormData, editId,
         handleSave, handleDelete, openModal, openView, isAdmin
@@ -26,6 +26,40 @@ export default function PengajarPage() {
         nama: '', kelas: '', alamat: '', no_hp: '', status: 'Aktif',
         foto_ustadz: '', tanggal_nonaktif: ''
     });
+
+    const [isMutasiModalOpen, setIsMutasiModalOpen] = useState(false);
+    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Non-Aktif', tanggal: new Date().toISOString().split('T')[0] });
+
+    const openMutasi = (row) => {
+        setMutasiData({ id: row.id, nama: row.nama, status: 'Non-Aktif', tanggal: new Date().toISOString().split('T')[0] });
+        setIsMutasiModalOpen(true);
+    };
+
+    const handleMutasi = async () => {
+        try {
+            setLoading(true);
+            const target = data.find(d => d.id === mutasiData.id);
+            if (!target) return;
+
+            const updated = {
+                ...target,
+                status: mutasiData.status,
+                tanggal_nonaktif: mutasiData.tanggal
+            };
+
+            const { apiCall: call } = await import('@/lib/utils');
+            await call('saveData', 'POST', { type: 'ustadz', id: mutasiData.id, data: updated });
+            setIsMutasiModalOpen(false);
+            // Refresh data
+            const res = await call('getData', 'GET', { type: 'ustadz' });
+            setData(res || []);
+        } catch (e) {
+            console.error(e);
+            alert("Gagal melakukan mutasi");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const stats = useMemo(() => [
         { title: 'Total Pengajar', value: data.length, icon: 'fas fa-chalkboard-teacher', color: 'var(--primary)' },
@@ -54,6 +88,7 @@ export default function PengajarPage() {
                 <div className="table-actions">
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
+                    {canEdit && row.status === 'Aktif' && <button className="btn-vibrant btn-vibrant-yellow" onClick={() => openMutasi(row)} title="Mutasi / Berhenti"><i className="fas fa-exchange-alt"></i></button>}
                     {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDelete(row.id, 'Hapus pengajar ini?')} title="Hapus"><i className="fas fa-trash"></i></button>}
                 </div>
             )
@@ -82,7 +117,7 @@ export default function PengajarPage() {
                 <TextInput label="Tugas Mengajar" value={formData.kelas} onChange={e => setFormData({ ...formData, kelas: e.target.value })} icon="fas fa-chalkboard" />
                 <div className="form-grid">
                     <TextInput label="WhatsApp" value={formData.no_hp} onChange={e => setFormData({ ...formData, no_hp: e.target.value })} icon="fab fa-whatsapp" />
-                    <SelectInput label="Status" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} options={['Aktif', 'Non-Aktif', 'Cuti']} />
+                    <TextInput label="Status Saat Ini" value={formData.status} readOnly style={{ background: '#f8fafc' }} />
                 </div>
                 <TextAreaInput label="Alamat Domisili" value={formData.alamat} onChange={e => setFormData({ ...formData, alamat: e.target.value })} />
                 <FileUploader label="Foto Profil" folder="simppds_pengajar" currentUrl={formData.foto_ustadz} onUploadSuccess={(url) => setFormData({ ...formData, foto_ustadz: url })} />
@@ -106,6 +141,28 @@ export default function PengajarPage() {
                         </div>
                     </div>
                 )}
+            </Modal>
+            <Modal
+                isOpen={isMutasiModalOpen}
+                onClose={() => setIsMutasiModalOpen(false)}
+                title={`Mutasi Pengajar: ${mutasiData.nama}`}
+                footer={<button className="btn btn-primary" onClick={handleMutasi} disabled={loading}>{loading ? 'Memproses...' : 'Simpan Mutasi'}</button>}
+            >
+                <div style={{ padding: '10px' }}>
+                    <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>Atur status non-aktif atau cuti untuk pengajar ini.</p>
+                    <SelectInput
+                        label="Status Baru"
+                        value={mutasiData.status}
+                        onChange={e => setMutasiData({ ...mutasiData, status: e.target.value })}
+                        options={['Non-Aktif', 'Cuti', 'Pensiun', 'Lainnya']}
+                    />
+                    <TextInput
+                        label="Tanggal Mutasi"
+                        type="date"
+                        value={mutasiData.tanggal}
+                        onChange={e => setMutasiData({ ...mutasiData, tanggal: e.target.value })}
+                    />
+                </div>
             </Modal>
         </div >
     );

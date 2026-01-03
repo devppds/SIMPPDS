@@ -247,12 +247,14 @@ export default function DevelzyControlPage() {
 
         // Check Cloudinary
         try {
-            const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dkwzpkqxq';
-            const testUrl = `https://res.cloudinary.com/${cloudName}/image/upload/v1/test.jpg`;
-            const response = await fetch(testUrl, { method: 'HEAD' });
-            newStatus.cloudinary = { status: 'Connected', color: '#22c55e' };
+            const { cloudName } = await apiCall('getCloudinarySignature', 'POST', { data: { paramsToSign: { timestamp: Math.round(Date.now() / 1000) } } });
+            if (cloudName) {
+                newStatus.cloudinary = { status: 'Connected (' + cloudName + ')', color: '#22c55e' };
+            } else {
+                newStatus.cloudinary = { status: 'Not Configured', color: '#94a3b8' };
+            }
         } catch (e) {
-            newStatus.cloudinary = { status: 'Connected', color: '#22c55e' }; // Assume connected if env vars exist
+            newStatus.cloudinary = { status: 'Config Error', color: '#f59e0b' };
         }
 
         // WhatsApp - Check if configured (placeholder for now)
