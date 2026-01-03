@@ -141,13 +141,61 @@ export default function LabPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Layanan Lab Komputer" subJudul="Manajemen rental dan jasa cetak." hideOnScreen={true} />
+            <div style={{
+                marginBottom: '3.5rem',
+                padding: '2.5rem',
+                background: 'linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)',
+                borderRadius: 'var(--radius-lg)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2.5rem',
+                boxShadow: 'var(--shadow-premium)',
+                color: '#fff',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    top: '-20%',
+                    right: '-10%',
+                    fontSize: '15rem',
+                    color: 'rgba(255,255,255,0.03)',
+                    transform: 'rotate(-15deg)',
+                    pointerEvents: 'none'
+                }}>
+                    <i className="fas fa-desktop"></i>
+                </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <StatsPanel items={stats} style={{ flex: 1, marginRight: '1.5rem' }} />
-                <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1rem 2rem' }} onClick={handleSetoran}>
+                <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '24px',
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '2.5rem',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                }}>
+                    <i className="fas fa-microchip"></i>
+                </div>
+                <div style={{ flex: 1 }}>
+                    <h1 className="outfit" style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '6px', letterSpacing: '-0.5px' }}>
+                        Layanan Lab Komputer
+                    </h1>
+                    <p style={{ opacity: 0.8, margin: 0, fontSize: '1.1rem', fontWeight: 500 }}>
+                        Manajemen operasional rental PC, jasa pengetikan, dan percetakan dokumen.
+                    </p>
+                </div>
+                <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1.25rem 2.5rem', borderRadius: '18px', fontSize: '1rem', fontWeight: 800 }} onClick={handleSetoran}>
                     <i className="fas fa-university"></i> Setor ke Bendahara
                 </button>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+                <StatsPanel items={stats} />
             </div>
 
             <div className="main-grid-layout">
@@ -170,18 +218,96 @@ export default function LabPage() {
             </div>
 
             {/* Income Modal */}
-            <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan Lab" footer={<button className="btn btn-primary" onClick={handleSaveIncome}>Simpan</button>}>
+            <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan Lab" footer={<button className="btn btn-primary" onClick={handleSaveIncome} disabled={submitting}>Simpan</button>}>
                 <TextInput label="Tanggal" type="date" value={incomeForm.tanggal} onChange={e => setIncomeForm({ ...incomeForm, tanggal: e.target.value })} />
-                <div className="form-group">
-                    <label className="form-label">Nama Santri</label>
-                    <Autocomplete options={santriOptions} value={incomeForm.nama_santri} onChange={v => setIncomeForm({ ...incomeForm, nama_santri: v })} onSelect={s => setIncomeForm({ ...incomeForm, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok })} placeholder="Cari santri..." labelKey="nama_siswa" subLabelKey="kelas" />
+
+                <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+                    <SelectInput
+                        label="Pilih Kategori Layanan"
+                        value={incomeForm.jenis_layanan.includes('Rental') ? 'Rental' : incomeForm.jenis_layanan.includes('Print') ? 'Print' : incomeForm.jenis_layanan}
+                        onChange={e => {
+                            const val = e.target.value;
+                            const t = tarifList.find(tarif => tarif.nama_layanan.toLowerCase().includes(val.toLowerCase()));
+                            setIncomeForm({
+                                ...incomeForm,
+                                jenis_layanan: t ? t.nama_layanan : val,
+                                nominal: t ? t.harga : '0',
+                                jumlah: '1',
+                                keterangan: ''
+                            });
+                        }}
+                        options={['Rental', 'Print', ...tarifList.map(t => t.nama_layanan).filter(n => !n.includes('Rental') && !n.includes('Print'))]}
+                    />
                 </div>
-                <SelectInput label="Jenis Layanan" value={incomeForm.jenis_layanan} onChange={e => {
-                    const sel = tarifList.find(t => t.nama_layanan === e.target.value);
-                    setIncomeForm({ ...incomeForm, jenis_layanan: e.target.value, nominal: sel?.harga || '0' });
-                }} options={tarifList.map(t => t.nama_layanan)} />
-                <TextInput label="Biaya (Rp)" type="number" value={incomeForm.nominal} onChange={e => setIncomeForm({ ...incomeForm, nominal: e.target.value })} />
-                <TextAreaInput label="Memo" value={incomeForm.keterangan} onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })} />
+
+                {/* Conditional Fields Based on Service Type */}
+                {incomeForm.jenis_layanan.toLowerCase().includes('rental') && (
+                    <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
+                        <SelectInput
+                            label="Pilih PC / Unit"
+                            value={incomeForm.keterangan || ''}
+                            onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
+                            options={Array.from({ length: 20 }, (_, i) => `PC ${String(i + 1).padStart(2, '0')}`)}
+                        />
+                        <TextInput
+                            label="Durasi (Jam)"
+                            type="number"
+                            value={incomeForm.jumlah}
+                            onChange={e => {
+                                const hours = e.target.value;
+                                const rate = tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.harga || 0;
+                                setIncomeForm({ ...incomeForm, jumlah: hours, nominal: parseInt(hours || 0) * parseInt(rate) });
+                            }}
+                        />
+                    </div>
+                )}
+
+                {incomeForm.jenis_layanan.toLowerCase().includes('print') && (
+                    <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
+                        <TextInput
+                            label="Jumlah Lembar"
+                            type="number"
+                            value={incomeForm.jumlah}
+                            onChange={e => {
+                                const pages = e.target.value;
+                                const rate = tarifList.find(t => t.nama_layanan.toLowerCase().includes('print'))?.harga || 0;
+                                setIncomeForm({ ...incomeForm, jumlah: pages, nominal: parseInt(pages || 0) * parseInt(rate) });
+                            }}
+                        />
+                        <TextInput
+                            label="Keterangan (Warna/BW)"
+                            value={incomeForm.keterangan}
+                            onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
+                            placeholder="Contoh: Print Warna"
+                        />
+                    </div>
+                )}
+
+                {!incomeForm.jenis_layanan.toLowerCase().includes('rental') && !incomeForm.jenis_layanan.toLowerCase().includes('print') && (
+                    <TextInput label="Jumlah / Kuantitas" type="number" value={incomeForm.jumlah} onChange={e => {
+                        const qty = e.target.value;
+                        const basePrice = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
+                        setIncomeForm({ ...incomeForm, jumlah: qty, nominal: parseInt(qty || 0) * parseInt(basePrice) });
+                    }} />
+                )}
+
+                <div className="form-group" style={{ marginTop: '1rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1.5rem' }}>
+                    <label className="form-label" style={{ fontWeight: 800 }}>Identitas Pemohon (Opsional)</label>
+                    <Autocomplete
+                        options={santriOptions}
+                        value={incomeForm.nama_santri}
+                        onChange={v => setIncomeForm({ ...incomeForm, nama_santri: v })}
+                        onSelect={s => setIncomeForm({ ...incomeForm, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok })}
+                        placeholder="Ketik nama santri jika ada..."
+                        labelKey="nama_siswa"
+                        subLabelKey="kelas"
+                    />
+                </div>
+
+                <div style={{ marginTop: '1.5rem', background: 'var(--primary-light)', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>Total Biaya:</span>
+                    <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary)' }}>{formatCurrency(incomeForm.nominal)}</span>
+                </div>
             </Modal>
 
             {/* Expense Modal */}

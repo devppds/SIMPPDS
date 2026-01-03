@@ -51,6 +51,7 @@ html {
 }
 
 body {
+  zoom: 65%;
   font-family: 'Inter', sans-serif;
   background: var(--background);
   color: var(--text-main);

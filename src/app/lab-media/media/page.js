@@ -127,13 +127,61 @@ export default function MediaPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Layanan Media & Dokumentasi" subJudul="Penyewaan Alat (Kamera, Proyektor, dll)." hideOnScreen={true} />
+            <div style={{
+                marginBottom: '3.5rem',
+                padding: '2.5rem',
+                background: 'linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)',
+                borderRadius: 'var(--radius-lg)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2.5rem',
+                boxShadow: 'var(--shadow-premium)',
+                color: '#fff',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    top: '-20%',
+                    right: '-10%',
+                    fontSize: '15rem',
+                    color: 'rgba(255,255,255,0.03)',
+                    transform: 'rotate(-15deg)',
+                    pointerEvents: 'none'
+                }}>
+                    <i className="fas fa-camera"></i>
+                </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <StatsPanel items={stats} style={{ flex: 1, marginRight: '1.5rem' }} />
-                <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1rem 2rem' }} onClick={handleSetoran}>
+                <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '24px',
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '2.5rem',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                }}>
+                    <i className="fas fa-photo-video"></i>
+                </div>
+                <div style={{ flex: 1 }}>
+                    <h1 className="outfit" style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '6px', letterSpacing: '-0.5px' }}>
+                        Layanan Media & Dokumentasi
+                    </h1>
+                    <p style={{ opacity: 0.8, margin: 0, fontSize: '1.1rem', fontWeight: 500 }}>
+                        Pusat pengelolaan inventaris peralatan media, dokumentasi, dan penyewaan alat digital.
+                    </p>
+                </div>
+                <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1.25rem 2.5rem', borderRadius: '18px', fontSize: '1rem', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={handleSetoran}>
                     <i className="fas fa-university"></i> Setor ke Bendahara
                 </button>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+                <StatsPanel items={stats} />
             </div>
 
             <div className="main-grid-layout">
