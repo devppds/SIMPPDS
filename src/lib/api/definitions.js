@@ -43,7 +43,9 @@ export const HEADERS_CONFIG = {
     'edu_lbm_delegasi': ["tanggal", "nama_santri", "kelas", "acara", "tempat", "hasil", "petugas"],
     'edu_sorogan_absen': ["tanggal", "nama_santri", "kelas", "kelompok", "status", "keterangan", "petugas"],
     'edu_sorogan_kelompok': ["nama_santri", "kelas", "kelompok", "pembimbing", "keterangan"],
-    'edu_takhosus_seminar': ["tanggal", "materi", "pembimbing", "waktu", "tempat", "peserta", "petugas"]
+    'edu_takhosus_seminar': ["tanggal", "materi", "pembimbing", "waktu", "tempat", "peserta", "petugas"],
+    'jamiyyah_penasihat': ["kamar", "asrama", "nama_penasihat", "keterangan"],
+    'jamiyyah_kelompok': ["nama_kelompok", "wilayah", "jumlah_santri", "ketua", "pembimbing", "keterangan"]
 };
 
 export const FILE_COLUMNS = {

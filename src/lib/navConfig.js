@@ -124,6 +124,16 @@ export const NAV_ITEMS = [
         icon: 'fas fa-users',
         roles: ['admin', 'jamiyyah'],
         submenu: [
+            {
+                label: 'Penasihat Kamar',
+                icon: 'fas fa-user-friends',
+                path: '/jamiyyah/penasihat',
+            },
+            {
+                label: 'Manajemen Jam’iyyah',
+                icon: 'fas fa-sitemap',
+                path: '/jamiyyah/manajemen',
+            },
             { label: "Layanan Jam'iyyah", path: '/jamiyyah/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
