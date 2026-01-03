@@ -11,6 +11,7 @@ import Autocomplete from '@/components/Autocomplete';
 export default function PendidikanPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [santriOptions, setSantriOptions] = useState([]);
+    const [mounted, setMounted] = useState(false); // Fix: Hydration check
 
     // ✨ Use Universal Data Hook
     const {
@@ -20,7 +21,7 @@ export default function PendidikanPage() {
         handleSave, handleDelete, openModal, openView,
         isAdmin
     } = useDataManagement('pendidikan', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '', // Fix: Empty init to prevent hydration error
         nama_santri: '', kelas: '', kegiatan: '', nilai: '',
         kehadiran: 'Hadir', keterangan: '', ustadz: ''
     });
@@ -39,6 +40,7 @@ export default function PendidikanPage() {
     }, [setData, setLoading]);
 
     useEffect(() => {
+        setMounted(true); // Signal that client has mounted
         loadEnrichedData();
     }, [loadEnrichedData]);
 
@@ -70,6 +72,15 @@ export default function PendidikanPage() {
         }
     ];
 
+    if (!mounted) {
+        return (
+            <div className="view-container animate-in" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                <i className="fas fa-circle-notch fa-spin fa-2x"></i>
+                <p style={{ marginTop: '1rem' }}>Memuat Data Pendidikan...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="view-container animate-in">
             <PremiumBanner
@@ -84,7 +95,11 @@ export default function PendidikanPage() {
                 title="Log Data Pendidikan"
                 subtitle={`Mencatat ${displayData.length} agenda kegiatan pendidikan.`}
                 headerActions={canEdit && (
-                    <button className="btn btn-primary" onClick={() => openModal()}>
+                    <button className="btn btn-primary" onClick={() => {
+                        openModal();
+                        // Set default date strictly on client side action
+                        setFormData(prev => ({ ...prev, tanggal: new Date().toLocaleDateString('en-CA') }));
+                    }}>
                         <i className="fas fa-plus"></i> Input Nilai / Agenda
                     </button>
                 )}

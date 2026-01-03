@@ -147,7 +147,7 @@ export default function LabPage() {
         formData: incomeForm, setFormData: setIncomeForm, editId: incomeEditId,
         handleSave: handleSaveIncome, handleDelete: handleDeleteIncome, openModal: openIncomeModal
     } = useDataManagement('layanan_admin', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '', // Fix: Empty init to prevent hydration error
         unit: 'Lab',
         nama_santri: '',
         stambuk: '',
@@ -163,7 +163,7 @@ export default function LabPage() {
     // 2. Expenses & Setoran (unit_lab_media_kas)
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
     const [expenseForm, setExpenseForm] = useState({
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '', // Fix: Empty init to prevent hydration error
         unit: 'Lab', tipe: 'Keluar', kategori: 'Belanja Alat', nominal: '', keterangan: '', petugas: user?.fullname || ''
     });
 
@@ -358,105 +358,122 @@ export default function LabPage() {
                 bgGradient="linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)"
             />
 
-            <div style={{ marginBottom: '4rem' }}>
-                <StatsPanel items={stats} />
-            </div>
-
-            <div style={{ marginBottom: '4rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                    <div className="welcome-section">
-                        <h2 className="outfit" style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', letterSpacing: '-0.5px' }}>
-                            Pusat Monitoring Billing
-                        </h2>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>
-                            Pantau status <strong style={{ color: 'var(--primary)' }}>{pcCount} Workstation</strong> & Printer.
-                        </p>
-                    </div>
-
-                    {/* PC Management Controls */}
-                    <div className="flex gap-3">
-                        <button
-                            className="btn btn-outline btn-sm"
-                            onClick={() => { if (pcCount > 5) setPcCount(c => c - 1); }}
-                            title="Kurangi Unit PC"
-                        >
-                            <i className="fas fa-minus"></i>
-                        </button>
-                        <button
-                            className="btn btn-outline btn-sm"
-                            onClick={() => setPcCount(c => c + 1)}
-                            title="Tambah Unit PC"
-                        >
-                            <i className="fas fa-plus"></i> Tambah PC
-                        </button>
-                    </div>
+            {!mounted ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                    <i className="fas fa-circle-notch fa-spin fa-2x"></i>
+                    <p style={{ marginTop: '1rem' }}>Memuat Sistem Lab...</p>
                 </div>
+            ) : (
+                <>
+                    <div style={{ marginBottom: '4rem' }}>
+                        <StatsPanel items={stats} />
+                    </div>
 
-                <BillingGrid
-                    pcs={pcStations}
-                    onPcClick={(pc) => {
-                        // Special handling for Service Stations (Percetakan & Media)
-                        if (pc.type === 'SERVICE') {
-                            openIncomeModal();
+                    <div style={{ marginBottom: '4rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <div className="welcome-section">
+                                <h2 className="outfit" style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', letterSpacing: '-0.5px' }}>
+                                    Pusat Monitoring Billing
+                                </h2>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>
+                                    Pantau status <strong style={{ color: 'var(--primary)' }}>{pcCount} Workstation</strong> & Printer.
+                                </p>
+                            </div>
 
-                            let defaultService = '';
-                            let defaultPrice = '0';
-
-                            if (pc.category === 'Percetakan' && categorizedTariffs.print.length > 0) {
-                                defaultService = categorizedTariffs.print[0].nama_layanan;
-                                defaultPrice = categorizedTariffs.print[0].harga;
-                            } else if (pc.category === 'Media' && categorizedTariffs.media.length > 0) {
-                                defaultService = categorizedTariffs.media[0].nama_layanan;
-                                defaultPrice = categorizedTariffs.media[0].harga;
-                            }
-
-                            setIncomeForm(prev => ({
-                                ...prev,
-                                kategori: pc.category,
-                                jenis_layanan: defaultService,
-                                keterangan: '',
-                                nominal: defaultPrice,
-                                jumlah: '1'
-                            }));
-                            return;
-                        }
-
-                        // Normal PC Rental Logic
-                        if (!pc.active) {
-                            handleStartRentalClick(pc);
-                        }
-                    }}
-                    onStopClick={handleStopRentalClick}
-                />
-            </div>
-
-            <div className="main-grid-layout">
-                <div className="primary-column">
-                    <DataViewContainer
-                        title="Log Pendapatan Lab"
-                        subtitle="Catatan pendapatan dari rental PC dan jasa print."
-                        headerActions={(
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button className="btn btn-outline" style={{ borderStyle: 'dashed' }} onClick={handleSetoran}>
-                                    <i className="fas fa-university"></i> Setor ke Bendahara
+                            {/* PC Management Controls */}
+                            <div className="flex gap-3">
+                                <button
+                                    className="btn btn-outline btn-sm"
+                                    onClick={() => { if (pcCount > 5) setPcCount(c => c - 1); }}
+                                    title="Kurangi Unit PC"
+                                >
+                                    <i className="fas fa-minus"></i>
                                 </button>
-                                <button className="btn btn-primary" onClick={() => openIncomeModal()}>
-                                    <i className="fas fa-plus"></i> Input Layanan Baru
+                                <button
+                                    className="btn btn-outline btn-sm"
+                                    onClick={() => setPcCount(c => c + 1)}
+                                    title="Tambah Unit PC"
+                                >
+                                    <i className="fas fa-plus"></i> Tambah PC
                                 </button>
                             </div>
-                        )}
-                        tableProps={{ columns: incomeColumns, data: labLayananData, loading: loadingLayanan }}
-                    />
-                </div>
-                <div className="secondary-column">
-                    <DataViewContainer
-                        title="Log Pengeluaran Lab"
-                        subtitle="Belanja & Setoran"
-                        headerActions={canEdit && <button className="btn btn-outline btn-sm" onClick={() => setIsExpenseModalOpen(true)}><i className="fas fa-minus"></i> Catat Biaya</button>}
-                        tableProps={{ columns: kasColumns, data: kasData, loading: loadingKas }}
-                    />
-                </div>
-            </div>
+                        </div>
+
+                        <BillingGrid
+                            pcs={pcStations}
+                            onPcClick={(pc) => {
+                                // Special handling for Service Stations (Percetakan & Media)
+                                if (pc.type === 'SERVICE') {
+                                    openIncomeModal();
+
+                                    let defaultService = '';
+                                    let defaultPrice = '0';
+
+                                    if (pc.category === 'Percetakan' && categorizedTariffs.print.length > 0) {
+                                        defaultService = categorizedTariffs.print[0].nama_layanan;
+                                        defaultPrice = categorizedTariffs.print[0].harga;
+                                    } else if (pc.category === 'Media' && categorizedTariffs.media.length > 0) {
+                                        defaultService = categorizedTariffs.media[0].nama_layanan;
+                                        defaultPrice = categorizedTariffs.media[0].harga;
+                                    }
+
+                                    setIncomeForm(prev => ({
+                                        ...prev,
+                                        tanggal: new Date().toLocaleDateString('en-CA'), // Set default date
+                                        kategori: pc.category,
+                                        jenis_layanan: defaultService,
+                                        keterangan: '',
+                                        nominal: defaultPrice,
+                                        jumlah: '1'
+                                    }));
+                                    return;
+                                }
+
+                                // Normal PC Rental Logic
+                                if (!pc.active) {
+                                    handleStartRentalClick(pc);
+                                }
+                            }}
+                            onStopClick={handleStopRentalClick}
+                        />
+                    </div>
+
+                    <div className="main-grid-layout">
+                        <div className="primary-column">
+                            <DataViewContainer
+                                title="Log Pendapatan Lab"
+                                subtitle="Catatan pendapatan dari rental PC dan jasa print."
+                                headerActions={(
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <button className="btn btn-outline" style={{ borderStyle: 'dashed' }} onClick={handleSetoran}>
+                                            <i className="fas fa-university"></i> Setor ke Bendahara
+                                        </button>
+                                        <button className="btn btn-primary" onClick={() => {
+                                            openIncomeModal();
+                                            // Set default date client-side
+                                            setIncomeForm(prev => ({ ...prev, tanggal: new Date().toLocaleDateString('en-CA') }));
+                                        }}>
+                                            <i className="fas fa-plus"></i> Input Layanan Baru
+                                        </button>
+                                    </div>
+                                )}
+                                tableProps={{ columns: incomeColumns, data: labLayananData, loading: loadingLayanan }}
+                            />
+                        </div>
+                        <div className="secondary-column">
+                            <DataViewContainer
+                                title="Log Pengeluaran Lab"
+                                subtitle="Belanja & Setoran"
+                                headerActions={canEdit && <button className="btn btn-outline btn-sm" onClick={() => {
+                                    setIsExpenseModalOpen(true);
+                                    setExpenseForm(prev => ({ ...prev, tanggal: new Date().toLocaleDateString('en-CA') }));
+                                }}><i className="fas fa-minus"></i> Catat Biaya</button>}
+                                tableProps={{ columns: kasColumns, data: kasData, loading: loadingKas }}
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Modal Start Rental */}
             <Modal isOpen={isStartRentalOpen} onClose={() => setIsStartRentalOpen(false)} title={`Mulai Rental: ${selectedPcForRental}`} footer={<button className="btn btn-primary" onClick={confirmStartRental}>Mulai Timer</button>}>

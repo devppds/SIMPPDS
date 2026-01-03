@@ -12,6 +12,7 @@ import PremiumBanner from '@/components/PremiumBanner';
 export default function KesehatanPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [santriOptions, setSantriOptions] = useState([]);
+    const [mounted, setMounted] = useState(false); // Fix: Hydration check
 
     // ✨ Use Universal Data Hook
     const {
@@ -21,15 +22,16 @@ export default function KesehatanPage() {
         handleSave, handleDelete, openModal, openView,
         isAdmin
     } = useDataManagement('kesehatan', {
-        nama_santri: '', kelas: '', mulai_sakit: new Date().toISOString().split('T')[0],
+        nama_santri: '', kelas: '', mulai_sakit: '', // Fix: Empty init to prevent hydration error
         gejala: '', obat_tindakan: '', status_periksa: 'Rawat Jalan', keterangan: '',
         biaya_obat: '0'
     });
 
-    const isMounted = React.useRef(true);
+    const isMounted = React.useRef(true); // Existing ref for async safety
 
     React.useEffect(() => {
         isMounted.current = true;
+        setMounted(true); // Signal that client has mounted
         return () => { isMounted.current = false; };
     }, []);
 
@@ -94,6 +96,15 @@ export default function KesehatanPage() {
         }
     ];
 
+    if (!mounted) {
+        return (
+            <div className="view-container animate-in" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                <i className="fas fa-circle-notch fa-spin fa-2x"></i>
+                <p style={{ marginTop: '1rem' }}>Memuat Data Kesehatan...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="view-container animate-in">
             <PremiumBanner
@@ -107,7 +118,11 @@ export default function KesehatanPage() {
             <DataViewContainer
                 title="Data Rekam Medis"
                 subtitle="Manajemen riwayat kesehatan dan pengobatan santri."
-                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Input Rekam Medis</button>}
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => {
+                    openModal();
+                    // Set default date strictly on client side action
+                    setFormData(prev => ({ ...prev, mulai_sakit: new Date().toLocaleDateString('en-CA') }));
+                }}><i className="fas fa-plus"></i> Input Rekam Medis</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama santri, kelas atau gejala..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />

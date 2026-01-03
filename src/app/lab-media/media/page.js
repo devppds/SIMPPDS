@@ -21,6 +21,7 @@ export default function MediaPage() {
     const [kasData, setKasData] = useState([]);
     const [loadingKas, setLoadingKas] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null, type: 'layanan' });
+    const [mounted, setMounted] = useState(false); // Fix: Hydration check
 
     // 1. Incomes (layanan_admin)
     const {
@@ -29,7 +30,7 @@ export default function MediaPage() {
         formData: incomeForm, setFormData: setIncomeForm, editId: incomeEditId,
         handleSave: handleSaveIncome, handleDelete: handleDeleteIncome, openModal: openIncomeModal
     } = useDataManagement('layanan_admin', {
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '', // Fix: Empty init to prevent hydration error
         unit: 'Media', nama_santri: '', stambuk: '', jenis_layanan: '',
         nominal: '0', jumlah: '1', keterangan: '', pj: user?.fullname || '', pemohon_tipe: 'Santri'
     });
@@ -37,7 +38,7 @@ export default function MediaPage() {
     // 2. Expenses & Setoran (unit_lab_media_kas)
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
     const [expenseForm, setExpenseForm] = useState({
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: '', // Fix: Empty init to prevent hydration error
         unit: 'Media', tipe: 'Keluar', kategori: 'Pemeliharaan Alat', nominal: '', keterangan: '', petugas: user?.fullname || ''
     });
 
@@ -55,17 +56,23 @@ export default function MediaPage() {
         } catch (e) { console.error(e); } finally { setLoadingKas(false); }
     }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        setMounted(true); // Signal that client has mounted
+        loadData();
+    }, [loadData]);
+
+    // 🔍 Filter Data strictly for Media unit
+    const mediaLayananData = useMemo(() => layananData.filter(d => d.unit === 'Media'), [layananData]);
 
     const stats = useMemo(() => {
-        const income = layananData.reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
+        const income = mediaLayananData.reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
         const expense = kasData.filter(k => k.tipe === 'Keluar').reduce((acc, k) => acc + (parseInt(k.nominal) || 0), 0);
         return [
             { title: 'Pendapatan Media', value: formatCurrency(income), icon: 'fas fa-arrow-down', color: '#8b5cf6' },
             { title: 'Biaya Pemeliharaan', value: formatCurrency(expense), icon: 'fas fa-arrow-up', color: 'var(--danger)' },
             { title: 'Saldo Kas Media', value: formatCurrency(income - expense), icon: 'fas fa-wallet', color: 'var(--primary)' }
         ];
-    }, [layananData, kasData]);
+    }, [mediaLayananData, kasData]);
 
     const handleSaveExpense = async (e) => {
         if (e) e.preventDefault();
@@ -77,13 +84,14 @@ export default function MediaPage() {
     };
 
     const handleSetoran = async () => {
-        const income = layananData.reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
+        const income = mediaLayananData.reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
         const expense = kasData.filter(k => k.tipe === 'Keluar').reduce((acc, k) => acc + (parseInt(k.nominal) || 0), 0);
         const balance = income - expense;
 
         if (balance <= 0) return alert("Tidak ada saldo untuk disetorkan.");
 
         if (confirm(`Setorkan saldo Media sebesar ${formatCurrency(balance)} ke Bendahara?`)) {
+            // ... (rest of logic remains same, just ensure it uses correct values)
             try {
                 // 1. Record in Media Kas as Setoran (Keluar)
                 await apiCall('saveData', 'POST', {
@@ -121,10 +129,20 @@ export default function MediaPage() {
             key: 'actions', label: 'Opsi', width: '80px', render: (row) => (
                 <div className="table-actions">
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openIncomeModal(row)}><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id, type: 'layanan' })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
     ];
+
+    if (!mounted) {
+        return (
+            <div className="view-container animate-in" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                <i className="fas fa-circle-notch fa-spin fa-2x"></i>
+                <p style={{ marginTop: '1rem' }}>Memuat Data Media...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="view-container animate-in">
@@ -150,19 +168,25 @@ export default function MediaPage() {
                                 <button className="btn btn-outline" style={{ borderStyle: 'dashed' }} onClick={handleSetoran}>
                                     <i className="fas fa-university"></i> Setor ke Bendahara
                                 </button>
-                                <button className="btn btn-primary" onClick={() => openIncomeModal()}>
+                                <button className="btn btn-primary" onClick={() => {
+                                    openIncomeModal();
+                                    setIncomeForm(prev => ({ ...prev, tanggal: new Date().toLocaleDateString('en-CA') }));
+                                }}>
                                     <i className="fas fa-plus"></i> Input Sewa Baru
                                 </button>
                             </div>
                         )}
-                        tableProps={{ columns: incomeColumns, data: layananData, loading: loadingLayanan }}
+                        tableProps={{ columns: incomeColumns, data: mediaLayananData, loading: loadingLayanan }}
                     />
                 </div>
                 <div className="secondary-column">
                     <DataViewContainer
                         title="Log Kas Media"
                         subtitle="Pemeliharaan & Setoran"
-                        headerActions={canEdit && <button className="btn btn-outline btn-sm" onClick={() => setIsExpenseModalOpen(true)}><i className="fas fa-minus"></i> Catat Pemeliharaan</button>}
+                        headerActions={canEdit && <button className="btn btn-outline btn-sm" onClick={() => {
+                            setIsExpenseModalOpen(true);
+                            setExpenseForm(prev => ({ ...prev, tanggal: new Date().toLocaleDateString('en-CA') }));
+                        }}><i className="fas fa-minus"></i> Catat Pemeliharaan</button>}
                         tableProps={{
                             columns: [
                                 { key: 'tanggal', label: 'Tgl', render: (row) => formatDate(row.tanggal) },
