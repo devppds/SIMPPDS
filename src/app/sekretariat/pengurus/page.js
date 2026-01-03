@@ -21,10 +21,6 @@ export default function PengurusPage() {
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     const getAcademicYear = useCallback(() => {
         try {
             const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
@@ -46,11 +42,24 @@ export default function PengurusPage() {
         handleSave, handleDelete, openModal, openView, isAdmin
     } = useDataManagement('pengurus', {
         nama: '', jabatan: '', divisi: '', no_hp: '', status: 'Aktif',
-        tahun_mulai: getAcademicYear(), tahun_akhir: '', foto_pengurus: '', tanggal_nonaktif: ''
+        tahun_mulai: '', tahun_akhir: '', foto_pengurus: '', tanggal_nonaktif: ''
     });
 
+    useEffect(() => {
+        setMounted(true);
+        // Only calculate on client
+        setFormData(prev => ({
+            ...prev,
+            tahun_mulai: getAcademicYear()
+        }));
+        setMutasiData(prev => ({
+            ...prev,
+            tanggal: new Date().toISOString().split('T')[0]
+        }));
+    }, [getAcademicYear, setFormData]);
+
     const [isMutasiModalOpen, setIsMutasiModalOpen] = useState(false);
-    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Non-Aktif', tanggal: new Date().toISOString().split('T')[0] });
+    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Non-Aktif', tanggal: '' });
 
     const openMutasi = (row) => {
         setMutasiData({

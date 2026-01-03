@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
@@ -16,10 +16,11 @@ import DataViewContainer from '@/components/DataViewContainer';
 
 export default function PengajarPage() {
     const { canEdit, canDelete } = usePagePermission();
-    const [mounted, setMounted] = React.useState(false);
+    const [mounted, setMounted] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         setMounted(true);
+        setMutasiData(prev => ({ ...prev, tanggal: new Date().toISOString().split('T')[0] }));
     }, []);
 
     const {
@@ -33,10 +34,10 @@ export default function PengajarPage() {
     });
 
     const [isMutasiModalOpen, setIsMutasiModalOpen] = useState(false);
-    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Non-Aktif', tanggal: new Date().toISOString().split('T')[0] });
+    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Non-Aktif', tanggal: '' });
 
     const openMutasi = (row) => {
-        setMutasiData({ id: row.id, nama: row.nama, status: 'Non-Aktif', tanggal: new Date().toISOString().split('T')[0] });
+        setMutasiData({ id: row.id, nama: row.nama, status: 'Non-Aktif', tanggal: '' });
         setIsMutasiModalOpen(true);
     };
 

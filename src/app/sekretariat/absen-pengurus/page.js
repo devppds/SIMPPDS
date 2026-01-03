@@ -25,12 +25,8 @@ export default function AbsensiPengurusPage() {
     const { showToast } = useToast();
 
     // Filters (Default to current Hijri Month/Year)
-    const nowHijri = moment();
-    const currentHijriMonthIdx = nowHijri.iMonth(); // 0-indexed
-    const currentHijriYear = nowHijri.iYear();
-
-    const [filterMonth, setFilterMonth] = useState(MONTHS[currentHijriMonthIdx]);
-    const [filterYear, setFilterYear] = useState(currentHijriYear.toString());
+    const [filterMonth, setFilterMonth] = useState('');
+    const [filterYear, setFilterYear] = useState('');
 
     // Data State
     const [loading, setLoading] = useState(false);
@@ -49,16 +45,8 @@ export default function AbsensiPengurusPage() {
 
     const isMounted = React.useRef(true);
 
-    useEffect(() => {
-        setMounted(true);
-        isMounted.current = true;
-        loadData();
-        return () => { isMounted.current = false; };
-    }, [filterMonth, filterYear]);
-
-    if (!mounted) return null;
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
+        if (!filterMonth || !filterYear) return;
         if (isMounted.current) setLoading(true);
         try {
             const [resPengurus, resAbsen, resTarget] = await Promise.all([
@@ -101,7 +89,30 @@ export default function AbsensiPengurusPage() {
         } finally {
             if (isMounted.current) setLoading(false);
         }
-    };
+    }, [filterMonth, filterYear]);
+
+    useEffect(() => {
+        if (!mounted) {
+            const nowHijri = moment();
+            const currentHijriMonthIdx = nowHijri.iMonth();
+            const currentHijriYear = nowHijri.iYear();
+            setFilterMonth(MONTHS[currentHijriMonthIdx]);
+            setFilterYear(currentHijriYear.toString());
+            setMounted(true);
+        }
+        isMounted.current = true;
+        if (mounted) loadData();
+        return () => { isMounted.current = false; };
+    }, [mounted, filterMonth, filterYear, loadData]);
+
+    if (!mounted) return (
+        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+            <div style={{ textAlign: 'center' }}>
+                <i className="fas fa-circle-notch fa-spin fa-2x" style={{ color: 'var(--primary)', marginBottom: '1rem' }}></i>
+                <p style={{ fontWeight: 600, color: '#64748b' }}>Menyiapkan Dashboard Absensi...</p>
+            </div>
+        </div>
+    );
 
     const handleInputChange = (pengurusId, field, value) => {
         setFormState(prev => ({

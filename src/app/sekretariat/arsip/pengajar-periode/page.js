@@ -59,6 +59,32 @@ export default function PengajarPeriodePage() {
         }
     }, [setArchiveData, setLoading]);
 
+    const handleReactivate = async (row) => {
+        if (!window.confirm(`Aktifkan kembali ${row.nama} sebagai pengajar aktif?`)) return;
+        setLoading(true);
+        try {
+            const { apiCall: call } = await import('@/lib/utils');
+            const cleanData = { ...row };
+            delete cleanData.is_from_main;
+            delete cleanData.periode_mulai;
+            delete cleanData.periode_selesai;
+            delete cleanData.kelas_ampu;
+            delete cleanData.foto_pengajar;
+
+            await call('saveData', 'POST', {
+                type: 'ustadz',
+                id: row.id,
+                data: { ...cleanData, status: 'Aktif', tanggal_nonaktif: null }
+            });
+            await loadData();
+        } catch (e) {
+            console.error(e);
+            alert("Gagal mengaktifkan kembali");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     React.useEffect(() => { loadData(); }, [loadData]);
 
     const combinedData = useMemo(() => [...archiveData, ...mainUstadz], [archiveData, mainUstadz]);
@@ -95,7 +121,8 @@ export default function PengajarPeriodePage() {
                     <button className="btn-vibrant btn-vibrant-purple" onClick={() => openView(row)} title="Detail"><i className="fas fa-eye"></i></button>
                     {!row.is_from_main && canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)} title="Edit"><i className="fas fa-edit"></i></button>}
                     {!row.is_from_main && canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })} title="Hapus"><i className="fas fa-trash"></i></button>}
-                    {row.is_from_main && <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}><i className="fas fa-lock"></i> System Sync</span>}
+                    {row.is_from_main && canEdit && <button className="btn-vibrant btn-vibrant-green" onClick={() => handleReactivate(row)} title="Aktifkan Kembali"><i className="fas fa-user-check"></i></button>}
+                    {row.is_from_main && <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, marginLeft: '5px' }}><i className="fas fa-lock"></i> System Sync</span>}
                 </div>
             )
         }
