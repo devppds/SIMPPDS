@@ -20,7 +20,7 @@ const MONTHS = [
 ];
 
 export default function AbsensiPengurusPage() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const { canEdit } = usePagePermission();
     const { showToast } = useToast();
 
@@ -100,9 +100,14 @@ export default function AbsensiPengurusPage() {
             setFilterYear(currentHijriYear.toString());
             setMounted(true);
         }
-        isMounted.current = true;
-        if (mounted) loadData();
-        return () => { isMounted.current = false; };
+    }, [mounted]);
+
+    useEffect(() => {
+        if (mounted && filterMonth && filterYear) {
+            isMounted.current = true;
+            loadData();
+            return () => { isMounted.current = false; };
+        }
     }, [mounted, filterMonth, filterYear, loadData]);
 
     if (!mounted) return (
