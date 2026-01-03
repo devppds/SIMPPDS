@@ -157,6 +157,7 @@ export const NAV_ITEMS = [
         submenu: [
             { label: 'Layanan Lab', path: '/lab-media/lab', icon: 'fas fa-desktop' },
             { label: 'Layanan Media', path: '/lab-media/media', icon: 'fas fa-camera' },
+            { label: 'Histori & Rekap', path: '/lab-media/histori', icon: 'fas fa-history' },
             { label: 'Atur Tarif Layanan', path: '/lab-media/tarif', icon: 'fas fa-tags' }
         ]
     },

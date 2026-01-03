@@ -24,14 +24,58 @@ export default function LabPage() {
     const [loadingKas, setLoadingKas] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null, type: 'layanan' });
 
-    // PC Workstations Configuration (30 units as requested)
-    const pcStations = Array.from({ length: 30 }, (_, i) => ({
-        id: `PC ${String(i + 1).padStart(2, '0')}`,
-        active: false,
-        userName: '',
-        duration: '',
-        cost: 0
-    }));
+    // Real-time Active Sessions Logic
+    const [activeSessions, setActiveSessions] = useState({}); // { "PC 01": { startTime: timestamp, user: "Nama" } }
+    const [now, setNow] = useState(Date.now());
+
+    // Update timer every minute for UI duration
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 10000); // Update every 10s is enough for UI
+        return () => clearInterval(interval);
+    }, []);
+
+    // Load active sessions from local storage on mount (Simulation of persistence)
+    useEffect(() => {
+        const saved = localStorage.getItem('lab_active_sessions');
+        if (saved) setActiveSessions(JSON.parse(saved));
+    }, []);
+
+    // Save to local storage whenever changed
+    useEffect(() => {
+        localStorage.setItem('lab_active_sessions', JSON.stringify(activeSessions));
+    }, [activeSessions]);
+
+    // PC Workstations Configuration (30 units)
+    const pcStations = useMemo(() => Array.from({ length: 30 }, (_, i) => {
+        const id = `PC ${String(i + 1).padStart(2, '0')}`;
+        const session = activeSessions[id];
+        let durationStr = '';
+        let currentCost = 0;
+
+        if (session) {
+            const diffMinutes = Math.floor((now - session.startTime) / 60000);
+            const hours = Math.floor(diffMinutes / 60);
+            const mins = diffMinutes % 60;
+            durationStr = `${hours}j ${mins}m`;
+
+            // Calculate cost based on tariff
+            const ratePerHour = parseInt(tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.harga || 3000);
+            // Cost = (minutes / 60) * rate. Round up to nearest 500 maybe? or just raw.
+            // Let's do raw calculation first, maybe integer.
+            currentCost = Math.ceil((diffMinutes / 60) * ratePerHour);
+            // Minimum 1000 maybe?
+            if (currentCost < 1000) currentCost = 1000;
+        }
+
+        return {
+            id,
+            active: !!session,
+            userName: session?.user || '',
+            duration: durationStr,
+            cost: currentCost,
+            startTime: session?.startTime
+        };
+    }), [activeSessions, now, tarifList]);
 
     // 1. Incomes (layanan_admin)
     const {
@@ -51,6 +95,13 @@ export default function LabPage() {
         tanggal: new Date().toISOString().split('T')[0],
         unit: 'Lab', tipe: 'Keluar', kategori: 'Belanja Alat', nominal: '', keterangan: '', petugas: user?.fullname || ''
     });
+
+    const [isStartRentalOpen, setIsStartRentalOpen] = useState(false);
+    const [selectedPcForRental, setSelectedPcForRental] = useState(null);
+    const [rentalForm, setRentalForm] = useState({ nama_santri: '', stambuk: '' });
+
+    const [isStopRentalOpen, setIsStopRentalOpen] = useState(false);
+    const [stopSessionData, setStopSessionData] = useState(null);
 
     const loadData = useCallback(async () => {
         setLoadingKas(true);
@@ -78,31 +129,69 @@ export default function LabPage() {
         ];
     }, [layananData, kasData]);
 
-    // ✨ Compute Active PC Grid from Logs
-    const computedPcs = useMemo(() => {
-        const activeMap = {};
-        // Map recent rental logs to PC grid (only show today's activities as 'active' for simulation)
-        const today = new Date().toISOString().split('T')[0];
-        layananData.filter(d => d.tanggal === today && d.jenis_layanan.toLowerCase().includes('rental')).forEach(log => {
-            if (log.keterangan && log.keterangan.startsWith('PC')) {
-                activeMap[log.keterangan] = log;
-            }
-        });
+    // --- Actions ---
 
-        return pcStations.map(pc => {
-            const activeLog = activeMap[pc.id];
-            if (activeLog) {
-                return {
-                    ...pc,
-                    active: true,
-                    userName: activeLog.nama_santri || 'Personal User',
-                    duration: `${activeLog.jumlah} Jam`,
-                    cost: activeLog.nominal
-                };
+    const handleStartRentalClick = (pc) => {
+        if (pc.active) return;
+        setSelectedPcForRental(pc.id);
+        setRentalForm({ nama_santri: '', stambuk: '' });
+        setIsStartRentalOpen(true);
+    };
+
+    const confirmStartRental = () => {
+        setActiveSessions(prev => ({
+            ...prev,
+            [selectedPcForRental]: {
+                startTime: Date.now(),
+                user: rentalForm.nama_santri || 'Umum'
             }
-            return pc;
-        });
-    }, [layananData, pcStations]);
+        }));
+        setIsStartRentalOpen(false);
+    };
+
+    const handleStopRentalClick = (pc) => {
+        setStopSessionData(pc);
+        setIsStopRentalOpen(true);
+    };
+
+    const confirmStopRental = async () => {
+        if (!stopSessionData) return;
+
+        // 1. Save to DB
+        try {
+            const diffMinutes = Math.floor((Date.now() - stopSessionData.startTime) / 60000);
+            // Default "Rental PC" tariff if exists, else derive from page cost
+            const tariffName = tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.nama_layanan || 'Rental Komputer';
+
+            const payload = {
+                tanggal: new Date().toISOString().split('T')[0],
+                unit: 'Lab',
+                nama_santri: stopSessionData.userName,
+                jenis_layanan: tariffName,
+                nominal: stopSessionData.cost, // Calculated cost
+                jumlah: diffMinutes, // We store minutes in 'jumlah' or maybe convert to hours string? Let's assume schema allows number. Or string "X menit".
+                keterangan: `${stopSessionData.id} - ${diffMinutes} Menit`,
+                pj: user?.fullname || '',
+                pemohon_tipe: 'Santri'
+            };
+
+            await apiCall('saveData', 'POST', { type: 'layanan_admin', data: payload });
+
+            // 2. Clear Session
+            setActiveSessions(prev => {
+                const copy = { ...prev };
+                delete copy[stopSessionData.id];
+                return copy;
+            });
+
+            setIsStopRentalOpen(false);
+            setStopSessionData(null);
+            loadData(); // Refresh logs
+
+        } catch (err) {
+            alert("Gagal menyimpan log: " + err.message);
+        }
+    };
 
     const handleSaveExpense = async (e) => {
         if (e) e.preventDefault();
@@ -153,11 +242,13 @@ export default function LabPage() {
     const incomeColumns = [
         { key: 'tanggal', label: 'Tgl', width: '100px', render: (row) => formatDate(row.tanggal) },
         { key: 'nama_santri', label: 'Santri', render: (row) => <div><strong>{row.nama_santri}</strong><br /><small>{row.jenis_layanan}</small></div> },
+        { key: 'keterangan', label: 'Detail' },
         { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(row.nominal)}</span> },
         {
             key: 'actions', label: 'Opsi', width: '80px', render: (row) => (
                 <div className="table-actions">
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openIncomeModal(row)}><i className="fas fa-edit"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => handleDeleteIncome(row.id)}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -200,18 +291,9 @@ export default function LabPage() {
                     </div>
                 </div>
                 <BillingGrid
-                    pcs={computedPcs}
-                    onPcClick={(pc) => {
-                        if (!pc.active) {
-                            openIncomeModal();
-                            setIncomeForm(prev => ({
-                                ...prev,
-                                jenis_layanan: tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.nama_layanan || 'Rental Komputer',
-                                keterangan: pc.id,
-                                nominal: tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.harga || '0'
-                            }));
-                        }
-                    }}
+                    pcs={pcStations}
+                    onPcClick={handleStartRentalClick}
+                    onStopClick={handleStopRentalClick}
                 />
             </div>
 
@@ -243,8 +325,46 @@ export default function LabPage() {
                 </div>
             </div>
 
-            {/* Income Modal */}
-            <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan Lab" footer={<button className="btn btn-primary" onClick={handleSaveIncome} disabled={submitting}>Simpan</button>}>
+            {/* Modal Start Rental */}
+            <Modal isOpen={isStartRentalOpen} onClose={() => setIsStartRentalOpen(false)} title={`Mulai Rental: ${selectedPcForRental}`} footer={<button className="btn btn-primary" onClick={confirmStartRental}>Mulai Timer</button>}>
+                <div style={{ marginBottom: '1rem' }}>
+                    <p>Mulai sesi baru untuk <strong>{selectedPcForRental}</strong>. Waktu akan berjalan mulai sekarang.</p>
+                </div>
+                <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 800 }}>Identitas Pengguna</label>
+                    <Autocomplete
+                        options={santriOptions}
+                        value={rentalForm.nama_santri}
+                        onChange={v => setRentalForm({ ...rentalForm, nama_santri: v })}
+                        onSelect={s => setRentalForm({ ...rentalForm, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok })}
+                        placeholder="Cari nama santri..."
+                        labelKey="nama_siswa"
+                        subLabelKey="kelas"
+                    />
+                </div>
+            </Modal>
+
+            {/* Modal Stop Rental */}
+            <Modal isOpen={isStopRentalOpen} onClose={() => setIsStopRentalOpen(false)} title="Selesaikan Sesi?" footer={<button className="btn btn-success" onClick={confirmStopRental}>Bayar & Simpan</button>}>
+                {stopSessionData && (
+                    <div style={{ textAlign: 'center', padding: '1rem' }}>
+                        <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Total Durasi</div>
+                        <div className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-dark)' }}>{stopSessionData.duration}</div>
+
+                        <div style={{ margin: '1.5rem 0', borderTop: '1px dashed #e2e8f0' }}></div>
+
+                        <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Total Tagihan</div>
+                        <div className="outfit" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--success)' }}>{formatCurrency(stopSessionData.cost)}</div>
+
+                        <div style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>
+                            Pengguna: <strong>{stopSessionData.userName}</strong>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Income Modal (Manual) */}
+            <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan (Manual)" footer={<button className="btn btn-primary" onClick={handleSaveIncome} disabled={submitting}>Simpan</button>}>
                 <TextInput label="Tanggal" type="date" value={incomeForm.tanggal} onChange={e => setIncomeForm({ ...incomeForm, tanggal: e.target.value })} />
 
                 <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
@@ -265,28 +385,6 @@ export default function LabPage() {
                         options={['Rental', 'Print', ...tarifList.map(t => t.nama_layanan).filter(n => !n.includes('Rental') && !n.includes('Print'))]}
                     />
                 </div>
-
-                {/* Conditional Fields Based on Service Type */}
-                {incomeForm.jenis_layanan.toLowerCase().includes('rental') && (
-                    <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
-                        <SelectInput
-                            label="Pilih PC / Unit"
-                            value={incomeForm.keterangan || ''}
-                            onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
-                            options={Array.from({ length: 20 }, (_, i) => `PC ${String(i + 1).padStart(2, '0')}`)}
-                        />
-                        <TextInput
-                            label="Durasi (Jam)"
-                            type="number"
-                            value={incomeForm.jumlah}
-                            onChange={e => {
-                                const hours = e.target.value;
-                                const rate = tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.harga || 0;
-                                setIncomeForm({ ...incomeForm, jumlah: hours, nominal: parseInt(hours || 0) * parseInt(rate) });
-                            }}
-                        />
-                    </div>
-                )}
 
                 {incomeForm.jenis_layanan.toLowerCase().includes('print') && (
                     <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
@@ -309,12 +407,9 @@ export default function LabPage() {
                     </div>
                 )}
 
-                {!incomeForm.jenis_layanan.toLowerCase().includes('rental') && !incomeForm.jenis_layanan.toLowerCase().includes('print') && (
-                    <TextInput label="Jumlah / Kuantitas" type="number" value={incomeForm.jumlah} onChange={e => {
-                        const qty = e.target.value;
-                        const basePrice = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
-                        setIncomeForm({ ...incomeForm, jumlah: qty, nominal: parseInt(qty || 0) * parseInt(basePrice) });
-                    }} />
+                {/* Manual form can be simpler if billing is automated */}
+                {!incomeForm.jenis_layanan.toLowerCase().includes('print') && (
+                    <TextInput label="Nominal Manual (Rp)" type="number" value={incomeForm.nominal} onChange={e => setIncomeForm({ ...incomeForm, nominal: e.target.value })} icon="fas fa-money-bill" />
                 )}
 
                 <div className="form-group" style={{ marginTop: '1rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1.5rem' }}>
@@ -328,11 +423,6 @@ export default function LabPage() {
                         labelKey="nama_siswa"
                         subLabelKey="kelas"
                     />
-                </div>
-
-                <div style={{ marginTop: '1.5rem', background: 'var(--primary-light)', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>Total Biaya:</span>
-                    <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary)' }}>{formatCurrency(incomeForm.nominal)}</span>
                 </div>
             </Modal>
 
