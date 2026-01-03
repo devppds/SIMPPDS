@@ -37,16 +37,25 @@ export default function LabPage() {
 
     // Load active sessions & PC count from local storage
     useEffect(() => {
-        const savedSessions = localStorage.getItem('lab_active_sessions');
-        const savedCount = localStorage.getItem('lab_pc_count');
-        if (savedSessions) setActiveSessions(JSON.parse(savedSessions));
-        if (savedCount) setPcCount(parseInt(savedCount));
+        try {
+            const savedSessions = localStorage.getItem('lab_active_sessions');
+            const savedCount = localStorage.getItem('lab_pc_count');
+            if (savedSessions) setActiveSessions(JSON.parse(savedSessions));
+            if (savedCount) setPcCount(parseInt(savedCount));
+        } catch (err) {
+            console.error("Failed to load lab session data:", err);
+            // Fallback is default state
+        }
     }, []);
 
     // Save to local storage whenever changed
     useEffect(() => {
-        localStorage.setItem('lab_active_sessions', JSON.stringify(activeSessions));
-        localStorage.setItem('lab_pc_count', pcCount.toString());
+        try {
+            localStorage.setItem('lab_active_sessions', JSON.stringify(activeSessions));
+            localStorage.setItem('lab_pc_count', pcCount.toString());
+        } catch (err) {
+            console.error("Failed to save lab session data:", err);
+        }
     }, [activeSessions, pcCount]);
 
     // 🔍 Filter Data strictly for Lab unit
@@ -95,7 +104,8 @@ export default function LabPage() {
         });
 
         // 2. Add "Percetakan" Station
-        const today = new Date().toISOString().split('T')[0];
+        // Fix: Use local date to avoid UTC gap in early morning
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
         const todayPrintIncome = labLayananData
             .filter(d => d.tanggal === today && d.kategori === 'Percetakan')
             .reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
