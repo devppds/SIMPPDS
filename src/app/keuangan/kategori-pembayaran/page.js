@@ -14,20 +14,11 @@ import Modal from '@/components/Modal';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
-const DEFAULT_CATEGORIES = [
-    { nama_kategori: 'Biasa Lama', kode: 'BL', keterangan: 'Santri reguler lama', urutan: 1, aktif: true },
-    { nama_kategori: 'Ndalem 50% Baru', kode: 'N50B', keterangan: 'Subsidi 50% untuk keluarga ndalem baru', urutan: 2, aktif: true },
-    { nama_kategori: 'Ndalem 100% Baru', kode: 'N100B', keterangan: 'Gratis untuk keluarga ndalem baru', urutan: 3, aktif: true },
-    { nama_kategori: 'PKJ', kode: 'PKJ', keterangan: 'Program Khusus Jawa', urutan: 4, aktif: true },
-    { nama_kategori: 'Nduduk', kode: 'ND', keterangan: 'Santri mondok tanpa sekolah formal', urutan: 5, aktif: true }
-];
-
 export default function KategoriPembayaranPage() {
     const { user } = useAuth();
     const { canEdit } = usePagePermission();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
-    const [isSeeding, setIsSeeding] = useState(false);
 
     // useDataManagement with Elegant Delete Support
     const {
@@ -41,32 +32,6 @@ export default function KategoriPembayaranPage() {
         urutan: 1,
         aktif: true
     });
-
-    // Auto-seed default categories if empty
-    useEffect(() => {
-        const seedDefaultCategories = async () => {
-            if (data.length === 0 && !loading && !isSeeding) {
-                setIsSeeding(true);
-                try {
-                    for (const category of DEFAULT_CATEGORIES) {
-                        await apiCall('saveData', 'POST', {
-                            type: 'master_kategori_pembayaran',
-                            data: category
-                        });
-                    }
-                    // Reload data
-                    const newData = await apiCall('getData', 'GET', { type: 'master_kategori_pembayaran' });
-                    setData(newData || []);
-                } catch (e) {
-                    console.error('Failed to seed categories:', e);
-                } finally {
-                    setIsSeeding(false);
-                }
-            }
-        };
-
-        seedDefaultCategories();
-    }, [data.length, loading, isSeeding, setData]);
 
     const openModal = (item = null) => {
         if (item) {
@@ -165,7 +130,7 @@ export default function KategoriPembayaranPage() {
 
             <DataViewContainer
                 title="Master Kategori Pembayaran"
-                subtitle={isSeeding ? "Membuat kategori default..." : `${data.length} kategori terdaftar`}
+                subtitle={`${data.length} kategori terdaftar`}
                 headerActions={
                     canEdit && (
                         <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
@@ -173,7 +138,7 @@ export default function KategoriPembayaranPage() {
                         </button>
                     )
                 }
-                tableProps={{ columns, data, loading: loading || isSeeding }}
+                tableProps={{ columns, data, loading }}
             />
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Edit Kategori" : "Tambah Kategori"} width="600px">
