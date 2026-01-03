@@ -95,7 +95,7 @@ export default function RiwayatAbsensiPengurusPage() {
         }).sort((a, b) => b.hadir - a.hadir);
     }, [absenData, pengurusList, targetData]);
 
-    if (!mounted) return null;
+
 
     const displayData = useMemo(() => {
         return processedData.filter(d => {
@@ -186,6 +186,8 @@ export default function RiwayatAbsensiPengurusPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">
