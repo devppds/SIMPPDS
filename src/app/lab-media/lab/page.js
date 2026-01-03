@@ -13,6 +13,7 @@ import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 import SortableTable from '@/components/SortableTable';
 import PremiumBanner from '@/components/PremiumBanner';
+import BillingGrid from '@/components/BillingGrid';
 
 export default function LabPage() {
     const { user } = useAuth();
@@ -22,6 +23,15 @@ export default function LabPage() {
     const [kasData, setKasData] = useState([]);
     const [loadingKas, setLoadingKas] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null, type: 'layanan' });
+
+    // PC Workstations Configuration (30 units as requested)
+    const pcStations = Array.from({ length: 30 }, (_, i) => ({
+        id: `PC ${String(i + 1).padStart(2, '0')}`,
+        active: false,
+        userName: '',
+        duration: '',
+        cost: 0
+    }));
 
     // 1. Incomes (layanan_admin)
     const {
@@ -67,6 +77,32 @@ export default function LabPage() {
             { title: 'Saldo Kas Lab', value: formatCurrency(income - expense), icon: 'fas fa-wallet', color: 'var(--primary)' }
         ];
     }, [layananData, kasData]);
+
+    // ✨ Compute Active PC Grid from Logs
+    const computedPcs = useMemo(() => {
+        const activeMap = {};
+        // Map recent rental logs to PC grid (only show today's activities as 'active' for simulation)
+        const today = new Date().toISOString().split('T')[0];
+        layananData.filter(d => d.tanggal === today && d.jenis_layanan.toLowerCase().includes('rental')).forEach(log => {
+            if (log.keterangan && log.keterangan.startsWith('PC')) {
+                activeMap[log.keterangan] = log;
+            }
+        });
+
+        return pcStations.map(pc => {
+            const activeLog = activeMap[pc.id];
+            if (activeLog) {
+                return {
+                    ...pc,
+                    active: true,
+                    userName: activeLog.nama_santri || 'Personal User',
+                    duration: `${activeLog.jumlah} Jam`,
+                    cost: activeLog.nominal
+                };
+            }
+            return pc;
+        });
+    }, [layananData, pcStations]);
 
     const handleSaveExpense = async (e) => {
         if (e) e.preventDefault();
@@ -155,16 +191,41 @@ export default function LabPage() {
                 }
             />
 
-            <div style={{ marginBottom: '2rem' }}>
+            <div style={{ marginBottom: '4rem' }}>
                 <StatsPanel items={stats} />
+            </div>
+
+            <div style={{ marginBottom: '4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                    <div className="welcome-section">
+                        <h2 className="outfit" style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', letterSpacing: '-0.5px' }}>
+                            Pusat Monitoring Billing
+                        </h2>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>Pantau status workstation dan durasi rental santri secara real-time.</p>
+                    </div>
+                </div>
+                <BillingGrid
+                    pcs={computedPcs}
+                    onPcClick={(pc) => {
+                        if (!pc.active) {
+                            openIncomeModal();
+                            setIncomeForm(prev => ({
+                                ...prev,
+                                jenis_layanan: tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.nama_layanan || 'Rental Komputer',
+                                keterangan: pc.id,
+                                nominal: tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.harga || '0'
+                            }));
+                        }
+                    }}
+                />
             </div>
 
             <div className="main-grid-layout">
                 <div className="primary-column">
                     <DataViewContainer
                         title="Daftar Layanan Masuk"
-                        subtitle="Rental & Print Santri"
-                        headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openIncomeModal()}><i className="fas fa-plus"></i> Input Layanan</button>}
+                        subtitle="Log aktivitas rental, print, dan jasa administratif hari ini."
+                        headerActions={canEdit && <button className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', fontSize: '0.9rem' }} onClick={() => openIncomeModal()}><i className="fas fa-plus"></i> Input Manual</button>}
                         tableProps={{ columns: incomeColumns, data: layananData, loading: loadingLayanan }}
                     />
                 </div>
