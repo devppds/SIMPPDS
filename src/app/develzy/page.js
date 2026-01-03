@@ -991,10 +991,7 @@ export default function DevelzyControlPage() {
                                             className="btn btn-secondary"
                                             style={{ padding: '8px 16px', fontSize: '0.8rem' }}
                                             disabled={logsPagination.page === 1}
-                                            onClick={() => {
-                                                setLogsPagination(prev => ({ ...prev, page: prev.page - 1 }));
-                                                setTimeout(loadData, 100);
-                                            }}
+                                            onClick={() => setLogsPagination(prev => ({ ...prev, page: prev.page - 1 }))}
                                         >
                                             <i className="fas fa-chevron-left" style={{ marginRight: '6px' }}></i>
                                             Sebelumnya
@@ -1016,7 +1013,7 @@ export default function DevelzyControlPage() {
                                             disabled={logsPagination.page >= logsPagination.totalPages}
                                             onClick={() => {
                                                 setLogsPagination(prev => ({ ...prev, page: prev.page + 1 }));
-                                                setTimeout(loadData, 100);
+
                                             }}
                                         >
                                             Selanjutnya

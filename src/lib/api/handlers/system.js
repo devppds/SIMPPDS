@@ -119,9 +119,9 @@ export async function handleGetConfigs(db) {
 }
 
 export async function handleGetAuditLogs(db, request) {
-    // Auto-delete logs older than 3 days
-    const threeDaysAgo = new Date(Date.now() - (3 * 24 * 60 * 60 * 1000)).toISOString();
-    await db.prepare(`DELETE FROM audit_logs WHERE timestamp < ?`).bind(threeDaysAgo).run();
+    // Auto-delete logs older than 24 hours
+    const oneDayAgo = new Date(Date.now() - (1 * 24 * 60 * 60 * 1000)).toISOString();
+    await db.prepare(`DELETE FROM audit_logs WHERE timestamp < ?`).bind(oneDayAgo).run();
 
     // Get pagination params from URL
     const url = new URL(request.url);

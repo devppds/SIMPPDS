@@ -14,10 +14,15 @@ export const formatDate = (dateStr) => {
 };
 
 export const apiCall = async (action, method = 'GET', options = {}) => {
-    const { type, id, data } = options;
+    const { data, ...params } = options;
     let url = `/api?action=${action}`;
-    if (type) url += `&type=${type}`;
-    if (id) url += `&id=${id}`;
+
+    // Convert params to query strings
+    Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null) {
+            url += `&${key}=${encodeURIComponent(val)}`;
+        }
+    });
 
     const config = {
         method,
