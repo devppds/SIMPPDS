@@ -19,20 +19,39 @@ export function StatsCard({ title, value, icon, color = 'var(--primary)', trend,
     return (
         <div className="stat-card" style={{ background: background || '#fff' }}>
             {icon && (
-                <div className="stat-icon-wrapper" style={{ color: color, background: `${color}15` }}>
+                <div className="stat-icon" style={{
+                    color: color,
+                    background: `${color}15`,
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.8rem',
+                    flexShrink: 0
+                }}>
                     <i className={icon}></i>
                 </div>
             )}
             <div className="stat-content">
-                <p className="stat-card-title">{title}</p>
-                <h3 className="stat-card-value">{displayValue}</h3>
+                <div className="stat-label">{title}</div>
+                <div className="stat-value" style={{ color: 'var(--text-main)' }}>{displayValue}</div>
                 {trend && (
-                    <div className="stat-trend" style={{ color: trend.startsWith('+') ? 'var(--success)' : 'var(--danger)' }}>
-                        {trend} dibandingkan bulan lalu
+                    <div style={{
+                        marginTop: '8px',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        color: trend.startsWith('+') ? 'var(--success)' : 'var(--danger)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}>
+                        <i className={`fas fa-caret-${trend.startsWith('+') ? 'up' : 'down'}`}></i>
+                        {trend} vs bln lalu
                     </div>
                 )}
             </div>
-
         </div>
     );
 }

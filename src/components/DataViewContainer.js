@@ -17,31 +17,33 @@ export default function DataViewContainer({
     tableProps
 }) {
     return (
-        <div className="card data-view-container animate-in">
+        <div className="card data-view-container animate-in" style={{ padding: '0', border: '1px solid rgba(226, 232, 240, 0.8)' }}>
             {/* Header Bagian Atas */}
-            <div className="card-header">
+            <div className="card-header" style={{ padding: '2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
                 <div style={{ flex: 1 }}>
-                    <h2 style={{
-                        fontSize: '1.25rem',
-                        fontWeight: 800,
+                    <h2 className="outfit" style={{
+                        fontSize: '1.5rem',
+                        fontWeight: 900,
                         color: 'var(--primary-dark)',
-                        margin: 0
+                        margin: 0,
+                        letterSpacing: '-0.5px'
                     }}>
                         {title}
                     </h2>
                     {subtitle && (
                         <p style={{
-                            fontSize: '0.8rem',
+                            fontSize: '1rem',
                             color: 'var(--text-muted)',
-                            margin: '4px 0 0 0',
-                            fontWeight: 500
+                            margin: '6px 0 0 0',
+                            fontWeight: 500,
+                            opacity: 0.8
                         }}>
                             {subtitle}
                         </p>
                     )}
                 </div>
                 {headerActions && (
-                    <div className="card-actions">
+                    <div className="card-actions" style={{ display: 'flex', gap: '1rem' }}>
                         {headerActions}
                     </div>
                 )}
@@ -49,19 +51,19 @@ export default function DataViewContainer({
 
             {/* Kontrol Tabel (Search & Filters) */}
             {(searchProps || filters) && (
-                <div className="table-controls-container">
+                <div className="table-controls-container" style={{ padding: '2rem 2.5rem', background: '#fcfdfe', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '2rem', alignItems: 'center' }}>
                     {searchProps && (
-                        <div className="search-box-wrapper">
+                        <div className="search-box-wrapper" style={{ flex: 1, maxWidth: '450px' }}>
                             <TextInput
                                 {...searchProps}
-                                style={{ marginBottom: 0 }}
+                                style={{ marginBottom: 0, borderRadius: '14px' }}
                                 icon="fas fa-search"
                                 placeholder={searchProps.placeholder || "Cari data..."}
                             />
                         </div>
                     )}
                     {filters && (
-                        <div className="filters-wrapper">
+                        <div className="filters-wrapper" style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'flex-end' }}>
                             {filters}
                         </div>
                     )}
@@ -69,7 +71,7 @@ export default function DataViewContainer({
             )}
 
             {/* Bagian Tabel Utuh */}
-            <div className="table-wrapper-inner">
+            <div className="table-wrapper-inner" style={{ padding: '1rem' }}>
                 <SortableTable {...tableProps} />
             </div>
 

@@ -74,118 +74,118 @@ export default function DashboardPage() {
         .slice(0, 8);
 
     return (
-        <div className="view-container laporan-view">
-            <div className="dashboard-header animate-in">
+        <div className="view-container animate-in">
+            <div className="dashboard-header" style={{ marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div className="welcome-section">
-                    <h1 className="dashboard-title outfit">
-                        Dashboard Pintar {displayRole}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                        <div style={{ padding: '8px 16px', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--accent)', borderRadius: '50px', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px' }}>
+                            <i className="fas fa-sparkles" style={{ marginRight: '6px' }}></i> SYSTEM ACTIVE
+                        </div>
+                    </div>
+                    <h1 className="outfit" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '8px', letterSpacing: '-1px' }}>
+                        Dashboard <span style={{ color: 'var(--accent)' }}>Pintar</span> {displayRole}
                     </h1>
-                    <p className="dashboard-subtitle">
-                        Ahlan wa Sahlan, <strong>{mounted ? (user?.fullname || 'User') : '...'}</strong>. Mendeteksi {dynamicStats.length} metrik aktif dari Develzy.
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontWeight: 500 }}>
+                        Selamat datang kembali, <span style={{ color: 'var(--text-main)', fontWeight: 800 }}>{mounted ? (user?.fullname || 'Admin') : '...'}</span>. Berikut ringkasan performa unit hari ini.
                     </p>
                 </div>
-                <div className="academic-badge card-glass">
-                    <div className="badge-label">Tahun Ajaran</div>
-                    <div className="badge-value">1447 H / 2025-2026 M</div>
+                <div className="academic-badge" style={{ padding: '1.5rem 2rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '24px', boxShadow: 'var(--shadow-premium)', textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Tahun Ajaran</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--accent)' }}>1447 H / 2025-2026 M</div>
                 </div>
             </div>
 
-            {/* Smart Stats Grid: Automatically adapts to access configuration */}
-            <div className="stats-grid" style={{ marginBottom: '3rem', gridTemplateColumns: `repeat(auto-fill, minmax(260px, 1fr))` }}>
+            {/* Smart Stats Grid */}
+            <div className="stats-grid" style={{ marginBottom: '4rem', gridTemplateColumns: `repeat(auto-fill, minmax(280px, 1fr))`, gap: '2rem' }}>
                 {dynamicStats.length > 0 ? dynamicStats.map((s, i) => (
                     <StatCard key={i} label={s.label} value={loading ? '...' : s.value} icon={s.icon} colorClass={s.color} />
                 )) : (
-                    <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>
-                        <p style={{ color: 'var(--text-muted)' }}>Belum ada metrik yang diizinkan untuk dashboard ini.</p>
+                    <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', background: '#f8fafc', border: '2px dashed #e2e8f0' }}>
+                        <i className="fas fa-lock" style={{ fontSize: '2rem', color: '#94a3b8', marginBottom: '1rem' }}></i>
+                        <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Akses terbatas. Gunakan menu samping untuk navigasi.</p>
                     </div>
                 )}
             </div>
 
-
-            <div className="main-grid-layout">
+            <div className="main-grid-layout" style={{ gap: '3rem' }}>
                 {mounted ? (
                     <>
-                        <div className="primary-column">
+                        <div className="primary-column" style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
                             {hasAccess('Arus Kas Pondok') && <RecentActivityCard activities={lastActivities} loading={loading} mounted={mounted} />}
                             {hasAccess('Data Santri') && <SantriDistributionCard stats={stats} loading={loading} />}
-                            {!hasAccess('Data Santri') && !hasAccess('Arus Kas Pondok') && (
-                                <div className="card access-limited-card">
-                                    <i className="fas fa-shield-alt icon-limited"></i>
-                                    <h3 style={{ fontWeight: 800 }}>Akses Terenkripsi</h3>
-                                    <p style={{ color: 'var(--text-muted)' }}>Anda memiliki akses terbatas. Gunakan sidebar untuk navigasi menu yang diizinkan.</p>
-                                </div>
-                            )}
                         </div>
 
-                        <div className="secondary-column">
-                            {/* Dynamic Banners Contextual to User Menus */}
-                            {hasAccess('Pelanggaran') ? (
-                                <WelcomeBanner title="Bagian Keamanan" desc="Pantau ketertiban dan perizinan santri secara real-time." link="/keamanan/pelanggaran" linkText="Menu Keamanan" />
-                            ) : (hasAccess('Arus Kas Pondok') || hasAccess('Pembayaran Santri')) ? (
-                                <WelcomeBanner title="Manajemen Keuangan" desc="Pantau sirkulasi kas dan tagihan santri dari satu panel." link="/bendahara/arus-kas" linkText="Buku Besar" />
-                            ) : hasAccess('Data Santri') ? (
-                                <WelcomeBanner title="Administrasi Santri" desc="Kelola database pusat santri dan asrama." link="/sekretariat/santri" linkText="Buka Database" />
-                            ) : (
-                                <WelcomeBanner title="Selamat Datang" desc="SIM-PPDS siap membantu mempermudah manajemen unit Anda." />
-                            )}
-
+                        <div className="secondary-column" style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+                            <WelcomeBanner
+                                title={hasAccess('Pelanggaran') ? "Bagian Keamanan" : hasAccess('Arus Kas Pondok') ? "Manajemen Keuangan" : "Pusat Informasi"}
+                                desc={hasAccess('Pelanggaran') ? "Pantau ketertiban dan perizinan santri secara real-time." : "Kelola operasional dan sirkulasi dana dari satu pintu."}
+                                link={hasAccess('Pelanggaran') ? "/keamanan/pelanggaran" : "/bendahara/arus-kas"}
+                                linkText="Buka Modul"
+                                icon={hasAccess('Pelanggaran') ? "fa-shield-alt" : "fa-university"}
+                            />
                             <ActiveSessionCard user={user} mounted={mounted} />
                         </div>
                     </>
-                ) : (
-                    <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem', width: '100%' }}>
-                        <i className="fas fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: 'var(--primary)', marginBottom: '1rem' }}></i>
-                        <p style={{ color: 'var(--text-muted)' }}>Mempersiapkan Dashboard...</p>
-                    </div>
-                )}
+                ) : null}
             </div>
-
-
         </div>
     );
 }
-// ✨ Dashboard Sub-Components
+
 function RecentActivityCard({ activities, loading, mounted }) {
     return (
-        <div className="card" style={{ padding: '0' }}>
-            <div className="card-header" style={{ padding: '2rem', borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Aktivitas Arus Kas Terakhir</h2>
-                <Link href="/keuangan/arus-kas" className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>Detail</Link>
+        <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+            <div style={{ padding: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-main)' }}>Arus Kas Terakhir</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Ringkasan 5 transaksi masuk & keluar pondok.</p>
+                </div>
+                <Link href="/keuangan/arus-kas" className="btn btn-primary" style={{ borderRadius: '14px', fontSize: '0.8rem' }}>Lihat Semua</Link>
             </div>
-            <SortableTable
-                columns={[
-                    { key: 'kategori', label: 'Kategori', render: (row) => (<div style={{ paddingLeft: '1.25rem' }}><div style={{ fontWeight: 700 }}>{row.kategori}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.keterangan || '-'}</div></div>) },
-                    { key: 'nominal', label: 'Nominal', render: (row) => (<div style={{ fontWeight: 800, color: row.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)' }}>{row.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(row.nominal)}</div>) },
-                    { key: 'tanggal', label: 'Tanggal', render: (row) => <span style={{ fontSize: '0.8rem' }}>{mounted && formatDate(row.tanggal)}</span> }
-                ]}
-                data={activities} loading={loading} emptyMessage="Belum ada transaksi."
-            />
+            <div style={{ padding: '0 1rem 1rem 1rem' }}>
+                <SortableTable
+                    columns={[
+                        {
+                            key: 'kategori', label: 'Item Transaksi', render: (row) => (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: row.tipe === 'Masuk' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: row.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <i className={`fas fa-arrow-${row.tipe === 'Masuk' ? 'down' : 'up'}`}></i>
+                                    </div>
+                                    <div><div style={{ fontWeight: 800, fontSize: '0.95rem' }}>{row.kategori}</div><small style={{ color: 'var(--text-muted)' }}>{row.keterangan || '-'}</small></div>
+                                </div>
+                            )
+                        },
+                        { key: 'nominal', label: 'Nominal', render: (row) => <div style={{ fontWeight: 900, fontSize: '1rem', color: row.tipe === 'Masuk' ? 'var(--success)' : 'var(--danger)' }}>{row.tipe === 'Masuk' ? '+' : '-'} {formatCurrency(row.nominal)}</div> },
+                        { key: 'tanggal', label: 'Waktu', render: (row) => <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{mounted && formatDate(row.tanggal)}</span> }
+                    ]}
+                    data={activities} loading={loading} emptyMessage="Belum ada transaksi hari ini."
+                />
+            </div>
         </div>
     );
 }
 
 function SantriDistributionCard({ stats, loading }) {
     return (
-        <div className="card">
-            <div className="card-header" style={{ marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Kepadatan Santri per Unit</h2>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="card" style={{ padding: '2.5rem' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '2rem' }}>Kepadatan Santri</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2.5rem' }}>
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Menganalisis data...</div>
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem' }}>Menganalisis data...</div>
                 ) : (stats.santriChart || []).length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Data tidak ditemukan.</div>
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem' }}>Data tidak tersedia.</div>
                 ) : (
                     stats.santriChart.slice(0, 6).map((c, i) => {
+                        const colors = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
                         const percentage = (c.count / stats.santriTotal) * 100;
                         return (
-                            <div key={i} style={{ marginBottom: '0.5rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
-                                    <span style={{ fontWeight: 700 }}>{c.kelas || 'N/A'}</span>
-                                    <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{c.count} Santri</span>
+                            <div key={i}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                    <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>{c.kelas}</span>
+                                    <span style={{ fontWeight: 900, color: colors[i % colors.length] }}>{c.count}</span>
                                 </div>
-                                <div style={{ height: '10px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
-                                    <div style={{ width: `${percentage}%`, height: '100%', background: `linear-gradient(to right, var(--primary), ${['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'][i % 4]})`, transition: 'width 1s ease-out' }}></div>
+                                <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${percentage}%`, height: '100%', borderRadius: '10px', background: colors[i % colors.length], transition: 'width 1.5s ease' }}></div>
                                 </div>
                             </div>
                         );
@@ -196,35 +196,48 @@ function SantriDistributionCard({ stats, loading }) {
     );
 }
 
-function WelcomeBanner({ title, desc, link, linkText }) {
+function WelcomeBanner({ title, desc, link, linkText, icon = 'fa-rocket' }) {
     return (
-        <div style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #1e40af 100%)', padding: '2.5rem', borderRadius: '24px', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(30, 58, 138, 0.2)' }}>
+        <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', padding: '3rem', borderRadius: '32px', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 30px 60px -15px rgba(15, 23, 42, 0.3)' }}>
             <div style={{ position: 'relative', zIndex: 2 }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1rem' }}>{title}</h3>
-                <p style={{ opacity: 0.85, fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>{desc}</p>
+                <div style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', marginBottom: '1.5rem' }}>
+                    <i className={`fas ${icon}`}></i>
+                </div>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.5px' }}>{title}</h3>
+                <p style={{ opacity: 0.7, fontSize: '1rem', lineHeight: '1.7', marginBottom: '2.5rem', fontWeight: 500 }}>{desc}</p>
                 {link && (
-                    <Link href={link} className="btn" style={{ background: 'white', color: 'var(--primary)', padding: '12px 24px', fontWeight: 800 }}>
-                        {linkText} <i className="fas fa-arrow-right" style={{ marginLeft: '8px' }}></i>
+                    <Link href={link} className="btn" style={{ background: 'white', color: '#0f172a', padding: '14px 28px', fontWeight: 900, borderRadius: '16px', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
+                        {linkText} <i className="fas fa-arrow-right" style={{ marginLeft: '10px' }}></i>
                     </Link>
                 )}
             </div>
-            <i className="fas fa-mosque" style={{ position: 'absolute', bottom: '-20px', right: '-10px', fontSize: '120px', opacity: 0.1, transform: 'rotate(-20deg)' }}></i>
+            <i className={`fas ${icon}`} style={{ position: 'absolute', bottom: '-40px', right: '-40px', fontSize: '240px', color: 'white', opacity: 0.03, transform: 'rotate(-15deg)' }}></i>
         </div>
     );
 }
 
 function ActiveSessionCard({ user, mounted }) {
     return (
-        <div className="card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--primary-dark)' }}>Ringkasan Sesi</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Hak Akses</div>
-                    <div style={{ fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>{user?.role || 'User'}</div>
+        <div className="card" style={{ padding: '2.5rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: '2rem' }}>Detail Sesi SAA</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '20px', border: '1px solid #f1f5f9' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'var(--accent)', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                        <i className="fas fa-shield-check"></i>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Otoritas User</div>
+                        <div style={{ fontWeight: 900, color: 'var(--primary-dark)', fontSize: '1.1rem' }}>{user?.role?.toUpperCase() || 'PENGGUNA'}</div>
+                    </div>
                 </div>
-                <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Jam Login</div>
-                    <div style={{ fontWeight: 700 }}>{mounted && new Date().toLocaleTimeString('id-ID')}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '20px', border: '1px solid #f1f5f9' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: '#10b981', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                        <i className="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Waktu Login</div>
+                        <div style={{ fontWeight: 900, color: 'var(--primary-dark)', fontSize: '1.1rem' }}>{mounted && new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</div>
+                    </div>
                 </div>
             </div>
         </div>
