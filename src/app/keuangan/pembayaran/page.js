@@ -218,38 +218,77 @@ export default function PembayaranSantriPage() {
                             {formData.jenis_pembayaran === 'Syahriah' && <TextInput label="Bulan Tagihan" type="month" value={formData.bulan_tagihan} onChange={e => setFormData({ ...formData, bulan_tagihan: e.target.value })} />}
                         </div>
 
-                        {/* Auto-Calculated Tariff Info */}
-                        <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #bae6fd' }}>
-                            <div className="form-grid" style={{ marginBottom: 0 }}>
-                                <TextInput
-                                    label="Tarif Dasar (Sesuai Kategori)"
-                                    value={formatCurrency(formData.nominal_tagihan)}
-                                    readOnly
-                                    style={{ background: 'transparent', border: 'none', fontWeight: 'bold', color: '#0369a1' }}
-                                />
-                                <TextInput
-                                    label="Potongan / Diskon (Rp)"
+                        {/* ✨ Premium Billing Summary Card */}
+                        <div style={{
+                            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                            padding: '1.5rem',
+                            borderRadius: '16px',
+                            marginBottom: '1.5rem',
+                            border: '1px solid #bae6fd',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px dashed #7dd3fc', paddingBottom: '0.75rem' }}>
+                                <span style={{ color: '#0369a1', fontWeight: 600, fontSize: '0.9rem' }}>Tarif Dasar</span>
+                                <span style={{ color: '#0369a1', fontWeight: 800, fontSize: '1.1rem' }}>{formatCurrency(formData.nominal_tagihan)}</span>
+                            </div>
+
+                            <div className="form-group" style={{ marginBottom: '1rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <label style={{ color: '#b45309', fontWeight: 600, fontSize: '0.9rem' }}>Potongan / Diskon (Rp)</label>
+                                    {formData.diskon > 0 && <span style={{ color: '#d97706', fontSize: '0.8rem', fontWeight: 700 }}>(- {formatCurrency(formData.diskon)})</span>}
+                                </div>
+                                <input
                                     type="number"
+                                    className="form-control"
                                     value={formData.diskon}
                                     onChange={e => {
                                         const disc = parseInt(e.target.value) || 0;
                                         setFormData(prev => ({
                                             ...prev,
                                             diskon: disc,
-                                            nominal: (prev.nominal_tagihan || 0) - disc
+                                            nominal: Math.max(0, (prev.nominal_tagihan || 0) - disc)
                                         }));
                                     }}
-                                    style={{ borderColor: '#fcd34d' }}
-                                    placeholder="Input potongan..."
+                                    style={{ background: '#fff', borderColor: '#fcd34d', fontWeight: 700 }}
+                                    placeholder="0"
                                 />
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', background: 'rgba(255,255,255,0.5)', padding: '10px', borderRadius: '10px' }}>
+                                <span style={{ color: 'var(--primary-dark)', fontWeight: 800, fontSize: '0.9rem' }}>Total Tagihan</span>
+                                <span style={{ color: 'var(--success)', fontWeight: 900, fontSize: '1.4rem' }}>{formatCurrency(formData.nominal_tagihan - (formData.diskon || 0))}</span>
                             </div>
                         </div>
 
-                        <TextInput label="Nominal Yang Dibayar (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required icon="fas fa-wallet" style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--success)' }} />
-                        <TextInput label="Memo / Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
-                        {canEdit && <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem', fontSize: '1rem' }} disabled={submitting}>
-                            {submitting ? <><i className="fas fa-spinner fa-spin"></i> Memproses...</> : 'Proses Simpan Pembayaran'}
-                        </button>}
+                        <TextInput
+                            label="Nominal Yang Dibayar (Rp)"
+                            type="number"
+                            value={formData.nominal}
+                            onChange={e => setFormData({ ...formData, nominal: e.target.value })}
+                            required
+                            icon="fas fa-wallet"
+                            style={{ fontWeight: 900, fontSize: '1.4rem', color: 'var(--primary)', height: '60px' }}
+                            helperText="Masukkan jumlah yang diterima dari santri"
+                        />
+                        <TextInput label="Memo / Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} placeholder="Catatan opsional..." />
+
+                        {canEdit && (
+                            <button type="submit" className="btn btn-primary" style={{
+                                width: '100%',
+                                marginTop: '1.5rem',
+                                padding: '1.25rem',
+                                fontSize: '1.1rem',
+                                fontWeight: 800,
+                                borderRadius: '15px',
+                                boxShadow: '0 10px 20px rgba(var(--primary-rgb), 0.2)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px'
+                            }} disabled={submitting}>
+                                {submitting ? <><i className="fas fa-spinner fa-spin"></i> Memproses...</> : <><i className="fas fa-check-circle"></i> Proses Simpan Pembayaran</>}
+                            </button>
+                        )}
                     </form>
                 </div>
 
