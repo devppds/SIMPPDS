@@ -25,18 +25,16 @@ export default function LabPage() {
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null, type: 'layanan' });
 
     // Real-time Active Sessions Logic
-    const [activeSessions, setActiveSessions] = useState({}); // { "PC 01": { startTime: timestamp, user: "Nama" } }
-    const [pcCount, setPcCount] = useState(20); // Default dynamic PC count
-    const [now, setNow] = useState(Date.now());
+    const [activeSessions, setActiveSessions] = useState({});
+    const [pcCount, setPcCount] = useState(20);
+    const [now, setNow] = useState(null); // Initialize as null to prevent hydration mismatch
+    const [mounted, setMounted] = useState(false); // Track client-side mounting
 
-    // Update timer every minute for UI duration
+    // Initialize Client-Side Data
     useEffect(() => {
-        const interval = setInterval(() => setNow(Date.now()), 10000); // UI update tick
-        return () => clearInterval(interval);
-    }, []);
+        setMounted(true);
+        setNow(Date.now());
 
-    // Load active sessions & PC count from local storage
-    useEffect(() => {
         try {
             const savedSessions = localStorage.getItem('lab_active_sessions');
             const savedCount = localStorage.getItem('lab_pc_count');
@@ -44,48 +42,51 @@ export default function LabPage() {
             if (savedCount) setPcCount(parseInt(savedCount));
         } catch (err) {
             console.error("Failed to load lab session data:", err);
-            // Fallback is default state
         }
+
+        const interval = setInterval(() => setNow(Date.now()), 10000);
+        return () => clearInterval(interval);
     }, []);
 
-    // Save to local storage whenever changed
+    // Save to local storage
     useEffect(() => {
+        if (!mounted) return;
         try {
             localStorage.setItem('lab_active_sessions', JSON.stringify(activeSessions));
             localStorage.setItem('lab_pc_count', pcCount.toString());
         } catch (err) {
             console.error("Failed to save lab session data:", err);
         }
-    }, [activeSessions, pcCount]);
+    }, [activeSessions, pcCount, mounted]);
 
     // 🔍 Filter Data strictly for Lab unit
     const labLayananData = useMemo(() => layananData.filter(d => d.unit === 'Lab'), [layananData]);
 
-    // 📋 Organize tariffs by category for easy access
+    // 📋 Organize tariffs by category
     const categorizedTariffs = useMemo(() => {
         const rental = tarifList.filter(t => t.kategori === 'Rental');
         const print = tarifList.filter(t => t.kategori === 'Percetakan');
         const media = tarifList.filter(t => t.kategori === 'Dokumentasi' || t.kategori === 'Media');
-
         return { rental, print, media };
     }, [tarifList]);
 
-    // PC Workstations & Service Stations Configuration
+    // PC Workstations - ONLY generated after mount to avoid hydration errors
     const pcStations = useMemo(() => {
+        if (!mounted || !now) return []; // Return empty or skeleton during server render
+
         // 1. Generate PC Cards based on dynamic count
         const computers = Array.from({ length: pcCount }, (_, i) => {
             const id = `PC ${String(i + 1).padStart(2, '0')}`;
             const session = activeSessions[id];
-            let durationStr = '';
+            let durationStr = '0j 0m';
             let currentCost = 0;
 
-            if (session) {
+            if (session && session.startTime) {
                 const diffMinutes = Math.floor((now - session.startTime) / 60000);
                 const hours = Math.floor(diffMinutes / 60);
                 const mins = diffMinutes % 60;
                 durationStr = `${hours}j ${mins}m`;
 
-                // Get rental rate from tariff (default to first rental tariff)
                 const rentalRate = parseInt(categorizedTariffs.rental[0]?.harga || 3000);
                 currentCost = Math.ceil((diffMinutes / 60) * rentalRate);
                 if (currentCost < 1000) currentCost = 1000;
@@ -104,8 +105,7 @@ export default function LabPage() {
         });
 
         // 2. Add "Percetakan" Station
-        // Fix: Use local date to avoid UTC gap in early morning
-        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        const today = new Date().toLocaleDateString('en-CA');
         const todayPrintIncome = labLayananData
             .filter(d => d.tanggal === today && d.kategori === 'Percetakan')
             .reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
@@ -138,7 +138,7 @@ export default function LabPage() {
         };
 
         return [printStation, mediaStation, ...computers];
-    }, [activeSessions, pcCount, now, categorizedTariffs, labLayananData]);
+    }, [activeSessions, pcCount, now, categorizedTariffs, labLayananData, mounted]);
 
     // 1. Incomes (layanan_admin)
     const {
