@@ -9,7 +9,7 @@ import SortableTable from '@/components/SortableTable';
 import ArsipFileUpload from '@/components/ArsipFileUpload';
 
 export default function KalenderKerjaPage() {
-    const { isAdmin } = useAuth(); // Keep for legacy or internal checks if any, but UI should use permissions
+    const { isAdmin, config } = useAuth();
     const { canEdit, canDelete } = usePagePermission();
     const { showToast } = useToast();
     const [data, setData] = useState([]);
@@ -160,7 +160,7 @@ export default function KalenderKerjaPage() {
             <div className="print-header-corporate">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '1.5rem' }}>
                     <img
-                        src={useAuth().config?.logo_url || "https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"}
+                        src={config?.logo_url || "https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"}
                         style={{ width: '80px', height: '80px', objectFit: 'contain' }}
                         alt="Logo"
                         onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"; }}

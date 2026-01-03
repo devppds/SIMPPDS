@@ -5,6 +5,7 @@ import { apiCall, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function LaporanPimpinan() {
+    const { config } = useAuth();
     const [stats, setStats] = useState({
         santriTotal: 0,
         ustadzTotal: 0,
@@ -137,7 +138,7 @@ export default function LaporanPimpinan() {
             <div className="print-header-corporate" style={{ display: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '3px solid #1e3a8a', paddingBottom: '15px', marginBottom: '25px' }}>
                     <img
-                        src={useAuth().config?.logo_url || "https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"}
+                        src={config?.logo_url || "https://res.cloudinary.com/dceamfy3n/image/upload/v1766596001/logo_zdenyr.png"}
                         style={{ width: '80px', height: '80px', objectFit: 'contain' }}
                         alt="Logo"
                         onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true"; }}
