@@ -30,7 +30,10 @@ export default function PembayaranSantriPage() {
         tanggal: '',
         jenis_pembayaran: 'Syahriah',
         bulan_tagihan: '',
-        nominal: 0, keterangan: ''
+        nominal: 0,
+        diskon: 0,
+        nominal_tagihan: 0,
+        keterangan: ''
     });
 
     const loadInitialData = useCallback(async () => {
@@ -76,7 +79,20 @@ export default function PembayaranSantriPage() {
         // Fallback ke tarif "Semua" jika tidak ada tarif spesifik
         if (!rule) rule = tarifList.find(t => t.kategori_status === kategori && t.kelas === 'Semua');
 
-        if (rule) setFormData(prev => ({ ...prev, nominal: rule.nominal }));
+        if (rule) {
+            setFormData(prev => ({
+                ...prev,
+                nominal_tagihan: rule.nominal,
+                nominal: rule.nominal - (prev.diskon || 0)
+            }));
+        } else {
+            // Reset jika tidak ada rule
+            setFormData(prev => ({
+                ...prev,
+                nominal_tagihan: 0,
+                nominal: 0
+            }));
+        }
     }, [selectedSantri, formData.jenis_pembayaran, tarifList, statusList, setFormData]);
 
     const handleReset = () => {
@@ -86,7 +102,7 @@ export default function PembayaranSantriPage() {
             tanggal: new Date().toISOString().split('T')[0],
             jenis_pembayaran: 'Syahriah',
             bulan_tagihan: new Date().toISOString().slice(0, 7),
-            nominal: 0, keterangan: ''
+            nominal: 0, diskon: 0, nominal_tagihan: 0, keterangan: ''
         });
     };
 
@@ -98,7 +114,9 @@ export default function PembayaranSantriPage() {
             const payload = {
                 santri_id: selectedSantri.id, nama_santri: selectedSantri.nama_siswa, tanggal: formData.tanggal,
                 jenis_pembayaran: formData.jenis_pembayaran, bulan_tagihan: formData.jenis_pembayaran === 'Syahriah' ? formData.bulan_tagihan : null,
-                nominal: parseInt(formData.nominal), keterangan: formData.keterangan || '-', petugas: user?.fullname || 'Admin'
+                nominal: parseInt(formData.nominal),
+                diskon: parseInt(formData.diskon || 0),
+                keterangan: formData.keterangan || '-', petugas: user?.fullname || 'Admin'
             };
             const res = await apiCall('saveData', 'POST', { type: 'keuangan_pembayaran', data: payload });
             await apiCall('saveData', 'POST', {
@@ -199,7 +217,35 @@ export default function PembayaranSantriPage() {
                             <SelectInput label="Tipe Pembayaran" value={formData.jenis_pembayaran} onChange={e => setFormData({ ...formData, jenis_pembayaran: e.target.value })} options={['Syahriah', 'Tabungan']} />
                             {formData.jenis_pembayaran === 'Syahriah' && <TextInput label="Bulan Tagihan" type="month" value={formData.bulan_tagihan} onChange={e => setFormData({ ...formData, bulan_tagihan: e.target.value })} />}
                         </div>
-                        <TextInput label="Nominal Rupiah (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required icon="fas fa-wallet" style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--primary)' }} />
+
+                        {/* Auto-Calculated Tariff Info */}
+                        <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #bae6fd' }}>
+                            <div className="form-grid" style={{ marginBottom: 0 }}>
+                                <TextInput
+                                    label="Tarif Dasar (Sesuai Kategori)"
+                                    value={formatCurrency(formData.nominal_tagihan)}
+                                    readOnly
+                                    style={{ background: 'transparent', border: 'none', fontWeight: 'bold', color: '#0369a1' }}
+                                />
+                                <TextInput
+                                    label="Potongan / Diskon (Rp)"
+                                    type="number"
+                                    value={formData.diskon}
+                                    onChange={e => {
+                                        const disc = parseInt(e.target.value) || 0;
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            diskon: disc,
+                                            nominal: (prev.nominal_tagihan || 0) - disc
+                                        }));
+                                    }}
+                                    style={{ borderColor: '#fcd34d' }}
+                                    placeholder="Input potongan..."
+                                />
+                            </div>
+                        </div>
+
+                        <TextInput label="Nominal Yang Dibayar (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} required icon="fas fa-wallet" style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--success)' }} />
                         <TextInput label="Memo / Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
                         {canEdit && <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem', fontSize: '1rem' }} disabled={submitting}>
                             {submitting ? <><i className="fas fa-spinner fa-spin"></i> Memproses...</> : 'Proses Simpan Pembayaran'}

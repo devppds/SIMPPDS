@@ -113,17 +113,24 @@ export default function StatusKeuanganSantriPage() {
 
         setSubmitting(true);
         try {
-            // Jika ada status lama, tutup dulu
+            // Logic Baru:
+            // 1. Cek apakan santri punya status aktif custom saat ini (status_id tidak null)
+            // 2. Jika ada, tutup status tersebut (set tanggal_selesai)
+            // 3. Jika status baru yang dipilih BUKAN 'Biasa Lama', buat status baru
+
+            const currentDate = new Date().toISOString().split('T')[0];
+
+            // 1. Tutup status lama jika ada
             if (selectedSantri.status_id) {
                 await apiCall('updateData', 'PUT', {
                     type: 'keuangan_status_santri',
                     id: selectedSantri.status_id,
-                    data: { tanggal_selesai: new Date().toISOString().split('T')[0] }
+                    data: { tanggal_selesai: currentDate }
                 });
             }
 
-            // Simpan status baru (kecuali jika pilih "Biasa Lama" dan tidak ada status sebelumnya)
-            if (formData.kategori_pembayaran !== 'Biasa Lama' || selectedSantri.has_custom_status) {
+            // 2. Buat status baru jika bukan default 'Biasa Lama'
+            if (formData.kategori_pembayaran !== 'Biasa Lama') {
                 await apiCall('saveData', 'POST', {
                     type: 'keuangan_status_santri',
                     data: {
