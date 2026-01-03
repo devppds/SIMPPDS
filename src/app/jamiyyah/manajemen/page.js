@@ -32,37 +32,27 @@ export default function JamiyyahManajemenPage() {
 
     const stats = useMemo(() => [
         { title: 'Total Kelompok', value: data.length, icon: 'fas fa-users-cog', color: 'var(--primary)' },
-        { title: 'Total Santri Jamiyyah', value: data.reduce((acc, curr) => acc + (parseInt(curr.jumlah_santri) || 0), 0), icon: 'fas fa-user-friends', color: 'var(--success)' },
-        { title: 'Wilayah Aktif', value: [...new Set(data.map(d => d.wilayah))].length, icon: 'fas fa-map-marked-alt', color: 'var(--warning)' }
+        { title: 'Total Santri Jamiyyah', value: data.reduce((acc, curr) => acc + (parseInt(curr.jumlah_santri) || 0), 0), icon: 'fas fa-user-friends', color: 'var(--success)' }
     ], [data]);
 
     const displayData = data.filter(d =>
-        (d.nama_kelompok || d.kelompok || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.nama_kelompok || '').toLowerCase().includes(search.toLowerCase()) ||
         (d.wilayah || '').toLowerCase().includes(search.toLowerCase())
     );
 
     const columns = [
         {
             key: 'kelompok',
-            label: 'Kelompok / Organisasi',
+            label: 'Kelompok (Wilayah)',
             render: (row) => (
-                <div style={{ fontWeight: 800, color: 'var(--primary-dark)' }}>{row.nama_kelompok || row.kelompok}</div>
-            )
-        },
-        {
-            key: 'wilayah',
-            label: 'Wilayah',
-            render: (row) => (
-                <span className="th-badge" style={{
-                    background: row.wilayah === WILAYAH_OPTIONS[0] ? 'var(--primary-light)' : '#f1f5f9',
-                    color: row.wilayah === WILAYAH_OPTIONS[0] ? 'var(--primary)' : 'var(--text-main)'
-                }}>
-                    {row.wilayah}
-                </span>
+                <div>
+                    <div style={{ fontWeight: 800, color: 'var(--primary-dark)' }}>{row.nama_kelompok}</div>
+                    <small style={{ color: 'var(--text-muted)' }}>{row.wilayah}</small>
+                </div>
             )
         },
         { key: 'jumlah_santri', label: 'Jml Santri', align: 'center', render: (row) => <span style={{ fontWeight: 700 }}>{row.jumlah_santri || 0}</span> },
-        { key: 'ketua', label: 'Ketua / PJ', render: (row) => <div>{row.ketua || '-'}</div> },
+        { key: 'ketua', label: 'Ketua', render: (row) => <div style={{ fontWeight: 600 }}>{row.ketua || '-'}</div> },
         {
             key: 'actions', label: 'Opsi', width: '100px', render: (row) => (
                 <div className="table-actions">
@@ -81,27 +71,27 @@ export default function JamiyyahManajemenPage() {
                 <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
                     Manajemen Jam’iyyah
                 </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Pengelolaan struktur kelompok dan wilayah organisasi jam'iyyah santri.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Pengelolaan struktur organisasi ke-jam'iyyahan pusat dan wilayah.</p>
             </div>
 
             <StatsPanel items={stats} />
 
             <DataViewContainer
-                title="Kelola Struktur Jamiyyah"
-                subtitle="Daftar wilayah dan kelompok jam'iyyah yang aktif dalam organisasi pondok."
-                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Kelompok</button>}
+                title="Struktur Jamiyyah"
+                subtitle="Daftar wilayah dan kelompok yang terdaftar dalam koordinasi jam'iyyah."
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Struktur</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari kelompok atau wilayah..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Jam'iyyah" : "Tambah Struktur Jam'iyyah Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
                 <div className="form-grid">
-                    <TextInput label="Nama Kelompok / Organisasi" value={formData.nama_kelompok} onChange={e => setFormData({ ...formData, nama_kelompok: e.target.value })} required placeholder="Contoh: JSPD Pusat / Kelompok Sholawat" />
+                    <TextInput label="Kelompok / Organisasi" value={formData.nama_kelompok} onChange={e => setFormData({ ...formData, nama_kelompok: e.target.value })} required placeholder="Contoh: JSPD / Tahiyatan Wasalaman" />
                     <SelectInput label="Wilayah / Afiliasi" value={formData.wilayah} onChange={e => setFormData({ ...formData, wilayah: e.target.value })} options={WILAYAH_OPTIONS} />
                 </div>
                 <div className="form-grid">
                     <TextInput label="Jumlah Santri" type="number" value={formData.jumlah_santri} onChange={e => setFormData({ ...formData, jumlah_santri: e.target.value })} placeholder="0" />
-                    <TextInput label="Ketua / Penanggung Jawab" value={formData.ketua} onChange={e => setFormData({ ...formData, ketua: e.target.value })} placeholder="Nama Ketua" />
+                    <TextInput label="Ketua" value={formData.ketua} onChange={e => setFormData({ ...formData, ketua: e.target.value })} placeholder="Nama Ketua" />
                 </div>
                 <TextInput label="Pembimbing" value={formData.pembimbing} onChange={e => setFormData({ ...formData, pembimbing: e.target.value })} placeholder="Nama Pembimbing" />
                 <TextAreaInput label="Keterangan Lanjutan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
@@ -111,8 +101,8 @@ export default function JamiyyahManajemenPage() {
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
                 onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
-                title="Hapus Struktur Jam'iyyah?"
-                message="Data kelompok/wilayah ini akan dihapus permanen dari manajemen."
+                title="Hapus Data Struktur?"
+                message="Data ini akan dihapus secara permanen."
             />
         </div>
     );
