@@ -17,7 +17,6 @@ export default function JamiyyahPenasihatPage() {
     const { isAdmin } = useAuth();
     const { canEdit, canDelete } = usePagePermission();
     const [rooms, setRooms] = useState([]);
-    const [pengurusList, setPengurusList] = useState([]);
     const [mounted, setMounted] = useState(false);
     const [selectedAsrama, setSelectedAsrama] = useState('');
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
@@ -32,18 +31,14 @@ export default function JamiyyahPenasihatPage() {
 
     useEffect(() => { setMounted(true); }, []);
 
-    const loadInitialData = useCallback(async () => {
+    const loadRooms = useCallback(async () => {
         try {
-            const [roomsRes, pengurusRes] = await Promise.all([
-                apiCall('getData', 'GET', { type: 'kamar' }),
-                apiCall('getData', 'GET', { type: 'pengurus' })
-            ]);
-            setRooms(roomsRes || []);
-            setPengurusList(pengurusRes || []);
+            const res = await apiCall('getData', 'GET', { type: 'kamar' });
+            setRooms(res || []);
         } catch (e) { console.error(e); }
     }, []);
 
-    useEffect(() => { loadInitialData(); }, [loadInitialData]);
+    useEffect(() => { loadRooms(); }, [loadRooms]);
 
     const openModal = (row = null) => {
         if (row) {
@@ -66,7 +61,7 @@ export default function JamiyyahPenasihatPage() {
 
     const stats = useMemo(() => [
         { title: 'Kamar Terdata', value: data.length, icon: 'fas fa-door-open', color: 'var(--primary)' },
-        { title: 'Total Penasihat', value: [...new Set(data.flatMap(d => (d.nama_penasihat || '').split(', ').filter(Boolean)))].length, icon: 'fas fa-user-shield', color: 'var(--success)' }
+        { title: 'Penasihat Aktif', value: [...new Set(data.map(d => d.nama_penasihat))].filter(Boolean).length, icon: 'fas fa-user-check', color: 'var(--success)' }
     ], [data]);
 
     const displayData = data.filter(d =>
@@ -75,48 +70,19 @@ export default function JamiyyahPenasihatPage() {
         (d.asrama || '').toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleSelectPenasihat = (p) => {
-        const current = formData.nama_penasihat ? formData.nama_penasihat.split(', ') : [];
-        if (!current.includes(p.nama)) {
-            const updated = [...current, p.nama].join(', ');
-            setFormData(prev => ({ ...prev, nama_penasihat: updated }));
-        }
-    };
-
-    const removePenasihat = (name) => {
-        const current = formData.nama_penasihat ? formData.nama_penasihat.split(', ') : [];
-        const updated = current.filter(n => n !== name).join(', ');
-        setFormData(prev => ({ ...prev, nama_penasihat: updated }));
-    };
-
     const columns = [
         {
             key: 'kamar',
             label: 'Kamar',
             render: (row) => (
                 <div>
-                    <div style={{ fontWeight: 800 }}>{row.kamar || row.nama_kamar}</div>
+                    <div style={{ fontWeight: 800 }}>{row.kamar}</div>
                     <small className="th-badge" style={{ background: '#f1f5f9', fontSize: '0.7rem' }}>{row.asrama}</small>
                 </div>
             )
         },
-        {
-            key: 'nama_penasihat',
-            label: 'Penasihat Kamar',
-            render: (row) => (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {(row.nama_penasihat || '').split(', ').filter(Boolean).map((n, i) => (
-                        <span key={i} className="th-badge" style={{
-                            background: 'var(--primary-light)',
-                            color: 'var(--primary)',
-                            fontSize: '0.75rem',
-                            fontWeight: 700
-                        }}>{n}</span>
-                    ))}
-                    {!(row.nama_penasihat) && <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Belum diatur</span>}
-                </div>
-            )
-        },
+        { key: 'nama_penasihat', label: 'Nama Penasihat', render: (row) => <div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>{row.nama_penasihat}</div> },
+        { key: 'keterangan', label: 'Keterangan' },
         {
             key: 'actions', label: 'Opsi', width: '100px', render: (row) => (
                 <div className="table-actions">
@@ -135,68 +101,34 @@ export default function JamiyyahPenasihatPage() {
                 <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
                     Penasihat Kamar
                 </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Pengelolaan beberapa penasihat (diambil dari database pengurus) per kamar asrama.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Pengelolaan nama penasihat santri per kamar asrama.</p>
             </div>
 
             <StatsPanel items={stats} />
 
             <DataViewContainer
                 title="Daftar Penasihat Per-Kamar"
-                subtitle="Data pengurus yang ditunjuk sebagai tim penasihat di asrama santri."
-                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Penasihat</button>}
-                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari kamar, asrama, atau nama penasihat..." }}
+                subtitle="Data penghubung asrama santri."
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Atur Penasihat</button>}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari kamar atau penasihat..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Penasihat" : "Atur Penasihat Baru"} width="750px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Perubahan'}</button>}>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Penasihat" : "Atur Penasihat Baru"} width="600px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
                 <div className="form-grid">
                     <SelectInput label="Pilih Asrama" value={selectedAsrama} onChange={e => { setSelectedAsrama(e.target.value); setFormData(prev => ({ ...prev, asrama: e.target.value, kamar: '' })); }} options={['-- Pilih Asrama --', ...asramaOptions]} />
                     <SelectInput label="Pilih Kamar" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} options={['-- Pilih Kamar --', ...filteredRooms.map(r => r.nama_kamar || r.kamar)]} disabled={!selectedAsrama} />
                 </div>
-
-                <div className="form-group" style={{ marginTop: '1rem' }}>
-                    <label className="form-label" style={{ fontWeight: 800 }}>Pilih Penasihat (Dari Database Pengurus)</label>
-                    <Autocomplete
-                        options={pengurusList}
-                        value=""
-                        onChange={() => { }}
-                        onSelect={handleSelectPenasihat}
-                        placeholder="Ketik nama pengurus..."
-                        labelKey="nama"
-                        subLabelKey="jabatan"
-                    />
-
-                    <div style={{ marginTop: '1rem' }}>
-                        <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>Tim Penasihat Terpilih:</label>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', minHeight: '40px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-                            {(formData.nama_penasihat || '').split(', ').filter(Boolean).map((n, i) => (
-                                <div key={i} className="th-badge" style={{
-                                    background: 'var(--primary)',
-                                    color: 'white',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '6px 12px',
-                                    borderRadius: '10px'
-                                }}>
-                                    {n}
-                                    <i className="fas fa-times-circle" style={{ cursor: 'pointer', opacity: 0.8 }} onClick={() => removePenasihat(n)}></i>
-                                </div>
-                            ))}
-                            {!(formData.nama_penasihat) && <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>Belum ada penasihat yang dipilih</span>}
-                        </div>
-                    </div>
-                </div>
-
-                <TextAreaInput label="Keterangan / Tugas Khusus" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
+                <TextInput label="Nama Penasihat" value={formData.nama_penasihat} onChange={e => setFormData({ ...formData, nama_penasihat: e.target.value })} required />
+                <TextAreaInput label="Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
             </Modal>
 
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
                 onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
-                title="Hapus Data Penasihat?"
-                message="Data penunjukan tim penasihat untuk kamar ini akan dihapus permanen."
+                title="Hapus Data?"
+                message="Data penasihat kamar ini akan dihapus."
             />
         </div>
     );
