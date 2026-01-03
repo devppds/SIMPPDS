@@ -11,52 +11,107 @@ import DataViewContainer from '@/components/DataViewContainer';
 import StatsPanel from '@/components/StatsPanel';
 import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
+import SortableTable from '@/components/SortableTable';
 
-export default function KasUnitPage() {
+const UNITS = ['Sekretariat', 'Keamanan', 'Pendidikan', 'Kesehatan', "Jam'iyyah"];
+
+export default function SetoranUnitPage() {
     const { canEdit, canDelete } = usePagePermission();
-    const [units, setUnits] = useState(['Keamanan', 'Pendidikan', 'Kesehatan', 'Sekretariat', 'Jamiyyah']);
+    const [servicesData, setServicesData] = useState([]);
+    const [statsLoading, setStatsLoading] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
+    // useDataManagement for kas_unit (The right side & the main focus for Bendahara)
     const {
-        data, setData, loading, setLoading, search, setSearch, submitting,
+        data: depositData, setData: setDepositData, loading: depositLoading,
+        search: depositSearch, setSearch: setDepositSearch, submitting,
         isModalOpen, setIsModalOpen, formData, setFormData, editId,
-        handleSave, handleDelete, openModal
+        handleSave, handleDelete, openModal, user
     } = useDataManagement('kas_unit', {
         tanggal: '',
-        tipe: 'Masuk', nominal: '', kategori: 'Setoran Unit',
-        keterangan: '', petugas: ''
+        tipe: 'Masuk',
+        nominal: '',
+        kategori: 'Setoran Unit Sekretariat',
+        keterangan: '',
+        petugas: ''
     });
 
-    const loadData = useCallback(async () => {
-        setLoading(true);
+    const loadAllData = useCallback(async () => {
+        setStatsLoading(true);
         try {
-            const res = await apiCall('getData', 'GET', { type: 'kas_unit' });
-            const services = await apiCall('getData', 'GET', { type: 'layanan_admin' });
+            const [services, deposits] = await Promise.all([
+                apiCall('getData', 'GET', { type: 'layanan_admin' }),
+                apiCall('getData', 'GET', { type: 'kas_unit' })
+            ]);
 
-            // Merge or handle data as needed
-            setData(res?.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)) || []);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
-    }, [setData, setLoading]);
+            setServicesData(services || []);
+            setDepositData(deposits || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setStatsLoading(false);
+        }
+    }, [setDepositData]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadAllData();
+    }, [loadAllData]);
 
-    const stats = useMemo(() => {
-        const total = data.reduce((acc, d) => acc + parseInt(d.nominal || 0), 0);
+    // Calculate Summaries for Stats & Units
+    const unitSummaries = useMemo(() => {
+        return UNITS.map(unit => {
+            const income = servicesData
+                .filter(s => s.unit === unit)
+                .reduce((acc, curr) => acc + (parseInt(curr.nominal) || 0), 0);
+
+            const deposited = depositData
+                .filter(d => d.kategori === `Setoran Unit ${unit}`)
+                .reduce((acc, curr) => acc + (parseInt(curr.nominal) || 0), 0);
+
+            return {
+                unit,
+                income,
+                deposited,
+                balance: income - deposited
+            };
+        });
+    }, [servicesData, depositData]);
+
+    const globalStats = useMemo(() => {
+        const totalIncome = unitSummaries.reduce((acc, s) => acc + s.income, 0);
+        const totalDeposited = unitSummaries.reduce((acc, s) => acc + s.deposited, 0);
         return [
-            { title: 'Total Setoran Unit', value: formatCurrency(total), icon: 'fas fa-file-invoice-dollar', color: 'var(--primary)' }
+            { title: 'Total Pendapatan Unit', value: formatCurrency(totalIncome), icon: 'fas fa-hand-holding-usd', color: 'var(--success)' },
+            { title: 'Total Disetorkan', value: formatCurrency(totalDeposited), icon: 'fas fa-file-invoice-dollar', color: 'var(--primary)' },
+            { title: 'Sisa di Unit (Total)', value: formatCurrency(totalIncome - totalDeposited), icon: 'fas fa-wallet', color: 'var(--warning)' },
         ];
-    }, [data]);
+    }, [unitSummaries]);
 
-    const columns = [
+    const serviceColumns = [
         { key: 'tanggal', label: 'Tanggal', render: (row) => formatDate(row.tanggal) },
-        { key: 'kategori', label: 'Unit/Kategori', render: (row) => <strong>{row.kategori}</strong> },
-        { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800 }}>{formatCurrency(row.nominal)}</span> },
-        { key: 'petugas', label: 'Petugas' },
+        { key: 'unit', label: 'Unit', render: (row) => <span className="th-badge">{row.unit}</span> },
         {
-            key: 'actions', label: 'Aksi', width: '100px', render: (row) => (
+            key: 'jenis_layanan',
+            label: 'Layanan',
+            render: (row) => (
+                <div>
+                    <div style={{ fontWeight: 700 }}>{row.jenis_layanan}</div>
+                    <small style={{ color: 'var(--text-muted)' }}>{row.nama_santri}</small>
+                </div>
+            )
+        },
+        { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800 }}>{formatCurrency(row.nominal)}</span> },
+    ];
+
+    const depositColumns = [
+        { key: 'tanggal', label: 'Tanggal', render: (row) => formatDate(row.tanggal) },
+        { key: 'kategori', label: 'Unit', render: (row) => <strong>{row.kategori.replace('Setoran Unit ', '')}</strong> },
+        { key: 'nominal', label: 'Nominal', render: (row) => <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{formatCurrency(row.nominal)}</span> },
+        {
+            key: 'actions', label: 'Aksi', width: '80px', render: (row) => (
                 <div className="table-actions">
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => openModal(row)}><i className="fas fa-edit"></i></button>}
-                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: false, id: row.id })}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -64,31 +119,141 @@ export default function KasUnitPage() {
 
     return (
         <div className="view-container animate-in">
-            <StatsPanel items={stats} />
-
-            <DataViewContainer
-                title="Log Setoran Kas Unit"
-                subtitle="Pantau dana yang masuk dari berbagai unit pelayanan pondok."
-                headerActions={canEdit && (
-                    <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Input Setoran</button>
+            <div className="dashboard-header" style={{ marginBottom: '2rem' }}>
+                <div>
+                    <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)' }}>
+                        Setoran Kas Unit
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
+                        Monitoring pendapatan layanan unit dan sinkronisasi kas bendahara.
+                    </p>
+                </div>
+                {canEdit && (
+                    <button className="btn btn-primary" onClick={() => openModal()}>
+                        <i className="fas fa-plus"></i> Input Setoran Baru
+                    </button>
                 )}
-                searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
-                tableProps={{ columns, data, loading }}
-            />
+            </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Setoran" : "Input Setoran Unit"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}>
-                <TextInput label="Tanggal" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
-                <SelectInput label="Pilih Unit" value={formData.kategori} onChange={e => setFormData({ ...formData, kategori: e.target.value })} options={units.map(u => `Setoran Unit ${u}`)} />
+            <StatsPanel items={globalStats} />
+
+            <div className="main-grid-layout" style={{ marginTop: '2.5rem' }}>
+                {/* Left Side: Activity of Unit Services */}
+                <div className="primary-column">
+                    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div className="card-header" style={{ padding: '2rem', marginBottom: 0, borderBottom: '1px solid #f1f5f9' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Aktivitas Layanan Unit</h2>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Log transaksi layanan santri dari seluruh unit seksi.</p>
+                            </div>
+                        </div>
+                        <div style={{ padding: '1rem' }}>
+                            <SortableTable
+                                columns={serviceColumns}
+                                data={servicesData.slice(0, 50)}
+                                loading={statsLoading}
+                                emptyMessage="Belum ada aktivitas layanan unit."
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side: Units Deposit Status */}
+                <div className="secondary-column">
+                    <div className="card">
+                        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)', marginBottom: '1.5rem' }}>Status Kas Per-Unit</h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            {unitSummaries.map((s, i) => (
+                                <div key={i} style={{
+                                    background: '#f8fafc',
+                                    padding: '1.5rem',
+                                    borderRadius: '18px',
+                                    border: '1px solid #e2e8f0'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{s.unit}</div>
+                                        <div className="th-badge" style={{
+                                            background: s.balance <= 0 ? '#dcfce7' : '#fee2e2',
+                                            color: s.balance <= 0 ? '#166534' : '#991b1b'
+                                        }}>
+                                            {s.balance <= 0 ? 'Lunas / Nihil' : `Sisa Rp ${formatCurrency(s.balance).replace('Rp', '')}`}
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <div>
+                                            <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Total Income</small>
+                                            <div style={{ fontWeight: 700, color: 'var(--success)' }}>{formatCurrency(s.income)}</div>
+                                        </div>
+                                        <div>
+                                            <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Sudah Setor</small>
+                                            <div style={{ fontWeight: 700, color: 'var(--primary)' }}>{formatCurrency(s.deposited)}</div>
+                                        </div>
+                                    </div>
+                                    {s.balance > 0 && (
+                                        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed #cbd5e1' }}>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ width: '100%', justifyContent: 'center' }}
+                                                onClick={() => {
+                                                    openModal();
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        kategori: `Setoran Unit ${s.unit}`,
+                                                        nominal: s.balance.toString(),
+                                                        keterangan: `Penyetoran sisa kas unit ${s.unit.toLowerCase()}`
+                                                    }));
+                                                }}
+                                            >
+                                                Input Setoran Sisa
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div className="card-header" style={{ padding: '2rem', marginBottom: 0, borderBottom: '1px solid #f1f5f9' }}>
+                            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Riwayat Setoran</h2>
+                        </div>
+                        <div style={{ padding: '1rem' }}>
+                            <SortableTable
+                                columns={depositColumns}
+                                data={depositData.filter(d => d.kategori.startsWith('Setoran Unit'))}
+                                loading={depositLoading}
+                                emptyMessage="Belum ada riwayat setoran."
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modal Input Setoran */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={editId ? "Update Data Setoran" : "Input Setoran Unit"}
+                footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}
+            >
+                <TextInput label="Tanggal Setoran" type="date" value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} />
+                <SelectInput
+                    label="Pilih Unit"
+                    value={formData.kategori}
+                    onChange={e => setFormData({ ...formData, kategori: e.target.value })}
+                    options={UNITS.map(u => `Setoran Unit ${u}`)}
+                />
                 <TextInput label="Nominal (Rp)" type="number" value={formData.nominal} onChange={e => setFormData({ ...formData, nominal: e.target.value })} />
-                <TextInput label="Nama Petugas" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} />
+                <TextInput label="Nama Petugas / Bendahara" value={formData.petugas} onChange={e => setFormData({ ...formData, petugas: e.target.value })} />
+                <TextInput label="Keterangan Lanjutan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
             </Modal>
 
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); loadData(); }}
-                title="Hapus Data Setoran?"
-                message="Data ini akan dihapus dari log bendahara."
+                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); loadAllData(); }}
+                title="Hapus Riwayat Setoran?"
+                message="Data ini akan dihapus dari log bendahara dan mempengaruhi saldo unit."
             />
         </div>
     );
