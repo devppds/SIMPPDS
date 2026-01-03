@@ -184,11 +184,6 @@ export default function LabPage() {
                 icon="fas fa-microchip"
                 floatingIcon="fas fa-desktop"
                 bgGradient="linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)"
-                actionButton={
-                    <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1.25rem 2.5rem', borderRadius: '18px', fontSize: '1rem', fontWeight: 800 }} onClick={handleSetoran}>
-                        <i className="fas fa-university"></i> Setor ke Bendahara
-                    </button>
-                }
             />
 
             <div style={{ marginBottom: '4rem' }}>
@@ -223,9 +218,18 @@ export default function LabPage() {
             <div className="main-grid-layout">
                 <div className="primary-column">
                     <DataViewContainer
-                        title="Daftar Layanan Masuk"
-                        subtitle="Log aktivitas rental, print, dan jasa administratif hari ini."
-                        headerActions={canEdit && <button className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', fontSize: '0.9rem' }} onClick={() => openIncomeModal()}><i className="fas fa-plus"></i> Input Manual</button>}
+                        title="Log Pendapatan Lab"
+                        subtitle="Catatan pendapatan dari rental PC dan jasa print."
+                        headerActions={(
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button className="btn btn-outline" style={{ borderStyle: 'dashed' }} onClick={handleSetoran}>
+                                    <i className="fas fa-university"></i> Setor ke Bendahara
+                                </button>
+                                <button className="btn btn-primary" onClick={() => openIncomeModal()}>
+                                    <i className="fas fa-plus"></i> Input Layanan Baru
+                                </button>
+                            </div>
+                        )}
                         tableProps={{ columns: incomeColumns, data: layananData, loading: loadingLayanan }}
                     />
                 </div>

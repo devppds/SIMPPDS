@@ -10,6 +10,8 @@ import Modal from '@/components/Modal';
 import DataViewContainer from '@/components/DataViewContainer';
 import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
+import SortableTable from '@/components/SortableTable';
+import PremiumBanner from '@/components/PremiumBanner';
 import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -101,14 +103,20 @@ export default function KamarPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Monitoring Hunian & Asrama" subJudul="Manajemen distribusi santri dan kapasitas kamar gending." hideOnScreen={true} />
+            <PremiumBanner
+                title="Monitoring Hunian & Asrama"
+                subtitle="Manajemen distribusi santri, monitoring kapasitas, dan kontrol fasilitas blok asrama."
+                icon="fas fa-bed"
+                floatingIcon="fas fa-mosque"
+                bgGradient="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
+            />
 
             <StatsPanel items={stats} />
 
             <DataViewContainer
                 title="Management Kamar"
-                subtitle="Daftar blok asrama dan status hunian santri."
-                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Kamar</button>}
+                subtitle="Daftar blok asrama dan status hunian santri saat ini."
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Kamar Baru</button>}
                 tableProps={{ columns, data: data, loading }}
             />
 

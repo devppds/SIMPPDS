@@ -115,11 +115,6 @@ export default function PelanggaranPage() {
                 icon="fas fa-shield-alt"
                 floatingIcon="fas fa-gavel"
                 bgGradient="linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"
-                actionButton={canEdit && (
-                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Catat Pelanggaran
-                    </button>
-                )}
             />
 
             <StatsPanel items={stats} />

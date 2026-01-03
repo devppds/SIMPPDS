@@ -102,24 +102,15 @@ export default function KesehatanPage() {
                 icon="fas fa-hand-holding-medical"
                 floatingIcon="fas fa-heartbeat"
                 bgGradient="linear-gradient(135deg, #be123c 0%, #881337 100%)"
-                actionButton={canEdit && (
-                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Input Rekam Medis
-                    </button>
-                )}
             />
-            <div className="card">
 
-
-                <div className="table-controls">
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari nama santri, kelas atau gejala..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                    </div>
-                </div>
-
-                <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada data kesehatan." />
-            </div>
+            <DataViewContainer
+                title="Data Rekam Medis"
+                subtitle="Manajemen riwayat kesehatan dan pengobatan santri."
+                headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Input Rekam Medis</button>}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama santri, kelas atau gejala..." }}
+                tableProps={{ columns, data: displayData, loading }}
+            />
 
             {/* Modal Input/Edit */}
             <Modal

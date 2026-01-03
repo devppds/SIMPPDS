@@ -98,11 +98,6 @@ export default function IzinPage() {
                 icon="fas fa-passport"
                 floatingIcon="fas fa-id-card"
                 bgGradient="linear-gradient(135deg, #92400e 0%, #713f12 100%)"
-                actionButton={canEdit && (
-                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Buat Surat Izin
-                    </button>
-                )}
             />
 
             <StatsPanel items={stats} />

@@ -72,28 +72,25 @@ export default function PendidikanPage() {
 
     return (
         <div className="view-container animate-in">
-            <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Agenda & Data Pendidikan</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} agenda kegiatan pendidikan.</p>
-                    </div>
-                    <div className="card-actions">
-                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                            <i className="fas fa-plus"></i> Input Nilai / Agenda
-                        </button>}
-                    </div>
-                </div>
+            <PremiumBanner
+                title="Agenda & Monitoring Pendidikan"
+                subtitle="Pusat pencatatan agenda akademik, monitoring kurikulum, dan distribusi nilai santri."
+                icon="fas fa-graduation-cap"
+                floatingIcon="fas fa-book-reader"
+                bgGradient="linear-gradient(135deg, #0f172a 0%, #334155 100%)"
+            />
 
-                <div className="table-controls">
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari nama santri atau kegiatan..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                    </div>
-                </div>
-
-                <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada data pendidikan." />
-            </div>
+            <DataViewContainer
+                title="Log Data Pendidikan"
+                subtitle={`Mencatat ${displayData.length} agenda kegiatan pendidikan.`}
+                headerActions={canEdit && (
+                    <button className="btn btn-primary" onClick={() => openModal()}>
+                        <i className="fas fa-plus"></i> Input Nilai / Agenda
+                    </button>
+                )}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama santri atau kegiatan..." }}
+                tableProps={{ columns: columns, data: displayData, loading }}
+            />
 
             {/* Modal Input/Edit */}
             <Modal

@@ -11,6 +11,7 @@ import Autocomplete from '@/components/Autocomplete';
 import DataViewContainer from '@/components/DataViewContainer';
 import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
+import PremiumBanner from '@/components/PremiumBanner';
 import { TextInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -88,14 +89,13 @@ export default function PengajianKitabPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Agenda Pengajian Kitab" subJudul="Manajemen jadwal dan realisasi pengajian kitab kuning." hideOnScreen={true} />
-
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
-                    Pengajian Kitab
-                </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Data jadwal qari’, kitab, waktu, dan tempat pengajian.</p>
-            </div>
+            <PremiumBanner
+                title="Agenda Pengajian Kitab"
+                subtitle="Manajemen jadwal qari’, kitab, waktu, dan realisasi pengajian kitab kuning secara rutin."
+                icon="fas fa-book-open"
+                floatingIcon="fas fa-quran"
+                bgGradient="linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%)"
+            />
 
             <StatsPanel items={stats} />
 

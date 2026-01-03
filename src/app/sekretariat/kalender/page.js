@@ -8,6 +8,8 @@ import Modal from '@/components/Modal';
 import ConfirmModal from '@/components/ConfirmModal';
 import SortableTable from '@/components/SortableTable';
 import ArsipFileUpload from '@/components/ArsipFileUpload';
+import PremiumBanner from '@/components/PremiumBanner';
+import DataViewContainer from '@/components/DataViewContainer';
 
 export default function KalenderKerjaPage() {
     const { isAdmin, config } = useAuth();
@@ -192,30 +194,26 @@ export default function KalenderKerjaPage() {
                 </div>
             </div>
 
-            <div className="card no-print">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Kalender Kerja & Agenda</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Manajemen agenda kegiatan sesuai format kalender resmi.</p>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <button className="btn btn-outline" onClick={() => window.print()}><i className="fas fa-print"></i> Cetak</button>
+            <PremiumBanner
+                title="Kalender Kerja & Agenda"
+                subtitle="Manajemen agenda kegiatan sesuai format kalender resmi."
+                icon="fas fa-calendar-alt"
+                floatingIcon="fas fa-calendar-day"
+                bgGradient="linear-gradient(135deg, #1e3a8a 0%, #172554 100%)"
+            />
+
+            <DataViewContainer
+                title="Agenda Kegiatan"
+                subtitle={`Menampilkan ${displayData.length} agenda periode ${data[0]?.periode || '-'}.`}
+                headerActions={(
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button className="btn btn-outline" style={{ borderStyle: 'dashed' }} onClick={() => window.print()}><i className="fas fa-print"></i> Cetak</button>
                         {canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Tambah Agenda</button>}
                     </div>
-                </div>
-
-                <div className="table-controls">
-                    <div className="search-wrapper">
-                        <i className="fas fa-search"></i>
-                        <input type="text" className="search-input" placeholder="Cari kegiatan, hari, atau tanggal..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                    </div>
-                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>Total: {displayData.length} Agenda</span>
-                    </div>
-                </div>
-
-                <SortableTable columns={columns} data={displayData} loading={loading} emptyMessage="Belum ada agenda kalender." />
-            </div>
+                )}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari kegiatan, hari, atau tanggal..." }}
+                tableProps={{ columns, data: displayData, loading }}
+            />
 
             {/* Custom Print Table (Matches Image) */}
             <div className="only-print">

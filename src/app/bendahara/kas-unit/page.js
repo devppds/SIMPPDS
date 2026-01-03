@@ -9,6 +9,7 @@ import Modal from '@/components/Modal';
 // ✨ Unified Components
 import DataViewContainer from '@/components/DataViewContainer';
 import StatsPanel from '@/components/StatsPanel';
+import PremiumBanner from '@/components/PremiumBanner';
 import { TextInput, SelectInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 import SortableTable from '@/components/SortableTable';
@@ -126,76 +127,69 @@ export default function SetoranUnitPage() {
 
     return (
         <div className="view-container animate-in">
-            <div className="dashboard-header" style={{ marginBottom: '2rem' }}>
-                <div>
-                    <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)' }}>
-                        Setoran Kas Unit
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
-                        Monitoring pendapatan layanan unit dan sinkronisasi kas bendahara.
-                    </p>
-                </div>
-                {canEdit && (
-                    <button className="btn btn-primary" onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Input Setoran Baru
-                    </button>
-                )}
-            </div>
+            <PremiumBanner
+                title="Setoran Kas & Monitor Unit"
+                subtitle="Sinkronisasi pendapatan harian unit layanan dengan kas pusat bendahara."
+                icon="fas fa-file-invoice-dollar"
+                bgGradient="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
+            />
 
             <StatsPanel items={globalStats} />
 
             {/* Top Section: Unit Status Overview */}
-            <div style={{ marginTop: '2.5rem', marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Status Kas Per-Unit</h2>
-                    <div className="th-badge" style={{ background: '#e0f2fe', color: '#0369a1' }}><i className="fas fa-info-circle"></i> Monitoring Kewajiban Setor</div>
+            <div style={{ marginTop: '3.5rem', marginBottom: '3.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-dark)', margin: 0 }}>Status Kas Per-Unit</h2>
+                    <div className="th-badge" style={{ background: 'rgba(37, 99, 235, 0.08)', color: 'var(--primary)', padding: '8px 16px', borderRadius: '12px' }}>
+                        <i className="fas fa-info-circle"></i> Monitoring Kewajiban Setor
+                    </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
                     {unitSummaries.map((s, i) => (
-                        <div key={i} className="card-hover" style={{
-                            background: '#fff',
-                            padding: '1.5rem',
-                            borderRadius: '16px',
-                            border: '1px solid #e2e8f0',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                        <div key={i} className="card" style={{
+                            padding: '2rem',
                             position: 'relative',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            border: '1px solid rgba(226, 232, 240, 0.8)'
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>UNIT</div>
-                                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary-dark)' }}>{s.unit}</div>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>Unit Kerja</div>
+                                    <div style={{ fontWeight: 900, fontSize: '1.4rem', color: 'var(--text-main)' }}>{s.unit}</div>
                                 </div>
                                 <div className="th-badge" style={{
-                                    background: s.balance <= 0 ? '#dcfce7' : '#fee2e2',
-                                    color: s.balance <= 0 ? '#166534' : '#991b1b',
-                                    fontSize: '0.7rem'
+                                    background: s.balance <= 0 ? '#f0fdf4' : '#fef2f2',
+                                    color: s.balance <= 0 ? '#10b981' : '#ef4444',
+                                    border: `1px solid ${s.balance <= 0 ? '#dcfce7' : '#fee2e2'}`,
+                                    padding: '6px 14px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 800
                                 }}>
-                                    {s.balance <= 0 ? 'LUNAS' : 'BELUM SETOR'}
+                                    <i className={`fas fa-${s.balance <= 0 ? 'check-circle' : 'exclamation-circle'}`}></i> {s.balance <= 0 ? 'E-LUNAS' : 'SIAGA SETOR'}
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1rem' }}>
-                                <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px' }}>
-                                    <small style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Pendapatan</small>
-                                    <div style={{ fontWeight: 700, color: 'var(--success)', fontSize: '0.9rem' }}>{formatCurrency(s.income)}</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+                                <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '18px', border: '1px solid #f1f5f9' }}>
+                                    <small style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Pendapatan</small>
+                                    <div style={{ fontWeight: 800, color: '#10b981', fontSize: '1.1rem' }}>{formatCurrency(s.income)}</div>
                                 </div>
-                                <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px' }}>
-                                    <small style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Disetor</small>
-                                    <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>{formatCurrency(s.deposited)}</div>
+                                <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '18px', border: '1px solid #f1f5f9' }}>
+                                    <small style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Disetor</small>
+                                    <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.1rem' }}>{formatCurrency(s.deposited)}</div>
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px dashed #e2e8f0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
                                 <div>
-                                    <small style={{ fontSize: '0.7rem', color: '#64748b' }}>Sisa (Saldo Unit)</small>
-                                    <div style={{ fontWeight: 800, color: s.balance > 0 ? '#dc2626' : '#64748b' }}>{formatCurrency(s.balance)}</div>
+                                    <small style={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Sisa Saldo Unit</small>
+                                    <div style={{ fontWeight: 900, fontSize: '1.2rem', color: s.balance > 0 ? '#ef4444' : '#1e293b' }}>{formatCurrency(s.balance)}</div>
                                 </div>
                                 {s.balance > 0 && (
                                     <button
-                                        className="btn-vibrant btn-vibrant-blue"
-                                        style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                                        className="btn btn-primary"
+                                        style={{ padding: '8px 16px', fontSize: '0.8rem', borderRadius: '12px' }}
                                         onClick={() => {
                                             openModal();
                                             setFormData(prev => ({

@@ -10,6 +10,7 @@ import Autocomplete from '@/components/Autocomplete';
 // ✨ Unified Components
 import DataViewContainer from '@/components/DataViewContainer';
 import StatsPanel from '@/components/StatsPanel';
+import PremiumBanner from '@/components/PremiumBanner';
 import { TextInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -97,12 +98,13 @@ export default function TakhosusSeminarPage() {
 
     return (
         <div className="view-container animate-in">
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
-                    Takhōṣus & Seminar
-                </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Manajemen program khusus takhosus dan agenda seminar ilmiah santri.</p>
-            </div>
+            <PremiumBanner
+                title="Takhōṣus & Seminar Ilmiah"
+                subtitle="Manajemen program khusus takhosus, kitab rujukan, dan agenda seminar ilmiah santri."
+                icon="fas fa-brain"
+                floatingIcon="fas fa-certificate"
+                bgGradient="linear-gradient(135deg, #1e3a8a 0%, #030617 100%)"
+            />
 
             <StatsPanel items={stats} />
 

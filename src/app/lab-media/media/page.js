@@ -134,11 +134,6 @@ export default function MediaPage() {
                 icon="fas fa-photo-video"
                 floatingIcon="fas fa-camera"
                 bgGradient="linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)"
-                actionButton={
-                    <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1.25rem 2.5rem', borderRadius: '18px', fontSize: '1rem', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={handleSetoran}>
-                        <i className="fas fa-university"></i> Setor ke Bendahara
-                    </button>
-                }
             />
 
             <div style={{ marginBottom: '2rem' }}>
@@ -150,7 +145,16 @@ export default function MediaPage() {
                     <DataViewContainer
                         title="Daftar Penyewaan Alat"
                         subtitle="Peminjaman Fasilitas Media"
-                        headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openIncomeModal()}><i className="fas fa-plus"></i> Input Sewa Baru</button>}
+                        headerActions={canEdit && (
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button className="btn btn-outline" style={{ borderStyle: 'dashed' }} onClick={handleSetoran}>
+                                    <i className="fas fa-university"></i> Setor ke Bendahara
+                                </button>
+                                <button className="btn btn-primary" onClick={() => openIncomeModal()}>
+                                    <i className="fas fa-plus"></i> Input Sewa Baru
+                                </button>
+                            </div>
+                        )}
                         tableProps={{ columns: incomeColumns, data: layananData, loading: loadingLayanan }}
                     />
                 </div>

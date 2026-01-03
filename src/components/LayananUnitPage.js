@@ -118,11 +118,6 @@ export default function LayananUnitPage({ unit: forceUnit }) {
                 icon={theme.icon}
                 floatingIcon={theme.floating}
                 bgGradient={theme.gradient}
-                actionButton={canEdit && (
-                    <button className="btn btn-primary" style={{ padding: '1.2rem 2rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
-                        <i className="fas fa-plus"></i> Input Layanan Baru
-                    </button>
-                )}
             />
 
             <StatsPanel items={stats} />
