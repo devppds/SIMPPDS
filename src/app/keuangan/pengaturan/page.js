@@ -17,12 +17,11 @@ export default function PengaturanKeuanganPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [listKelas, setListKelas] = useState([]);
     const [kategoriList, setKategoriList] = useState([]);
-    const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
         data, setData, loading, setLoading, submitting,
         isModalOpen, setIsModalOpen, formData, setFormData, editId,
-        handleSave, handleDelete
+        handleSave, deleteState, setDeleteState, promptDelete, confirmDelete
     } = useDataManagement('keuangan_tarif', {
         kategori_status: 'Biasa Lama', kelas: 'Semua', nominal: ''
     });
@@ -73,7 +72,7 @@ export default function PengaturanKeuanganPage() {
             key: 'actions', label: 'Aksi', width: '120px', render: (row) => (
                 <div className="table-actions">
                     {canEdit && <button className="btn-vibrant btn-vibrant-blue" onClick={() => { setFormData(row); setIsModalOpen(true); }}><i className="fas fa-edit"></i></button>}
-                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => setConfirmDelete({ open: true, id: row.id })}><i className="fas fa-trash"></i></button>}
+                    {canDelete && <button className="btn-vibrant btn-vibrant-red" onClick={() => promptDelete(row.id)}><i className="fas fa-trash"></i></button>}
                 </div>
             )
         }
@@ -86,7 +85,7 @@ export default function PengaturanKeuanganPage() {
             <StatsPanel items={stats} />
 
             <DataViewContainer
-                title="Management Tarif Pembayaran"
+                title="Manajemen Tarif Pembayaran"
                 subtitle={`${data.length} tarif terdaftar`}
                 headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => { setFormData({ kategori_status: 'Biasa Lama', kelas: 'Semua', nominal: '' }); setIsModalOpen(true); }}><i className="fas fa-plus"></i> Tambah Tarif</button>}
                 tableProps={{ columns, data: data, loading }}
@@ -104,11 +103,12 @@ export default function PengaturanKeuanganPage() {
             </Modal>
 
             <ConfirmModal
-                isOpen={confirmDelete.open}
-                onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => { await handleDelete(confirmDelete.id); setConfirmDelete({ open: false, id: null }); }}
-                title="Hapus Tarif?"
-                message="Data tarif ini akan dihapus dan mungkin mempengaruhi perhitungan tagihan kedepannya."
+                isOpen={deleteState.isOpen}
+                onClose={() => setDeleteState(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmDelete}
+                title={deleteState.title}
+                message={deleteState.message}
+                loading={submitting}
             />
         </div>
     );
