@@ -472,199 +472,199 @@ export default function LabPage() {
                             />
                         </div>
                     </div>
+
+                    {/* Modal Start Rental */}
+                    <Modal isOpen={isStartRentalOpen} onClose={() => setIsStartRentalOpen(false)} title={`Mulai Rental: ${selectedPcForRental}`} footer={<button className="btn btn-primary" onClick={confirmStartRental}>Mulai Timer</button>}>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <p>Mulai sesi baru untuk <strong>{selectedPcForRental}</strong>. Waktu akan berjalan mulai sekarang.</p>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label" style={{ fontWeight: 800 }}>Identitas Pengguna</label>
+                            <Autocomplete
+                                options={santriOptions}
+                                value={rentalForm.nama_santri}
+                                onChange={v => setRentalForm({ ...rentalForm, nama_santri: v })}
+                                onSelect={s => setRentalForm({ ...rentalForm, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok })}
+                                placeholder="Cari nama santri..."
+                                labelKey="nama_siswa"
+                                subLabelKey="kelas"
+                            />
+                        </div>
+                    </Modal>
+
+                    {/* Modal Stop Rental */}
+                    <Modal isOpen={isStopRentalOpen} onClose={() => setIsStopRentalOpen(false)} title="Selesaikan Sesi?" footer={<button className="btn btn-success" onClick={confirmStopRental}>Bayar & Simpan</button>}>
+                        {stopSessionData && (
+                            <div style={{ textAlign: 'center', padding: '1rem' }}>
+                                <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Total Durasi</div>
+                                <div className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-dark)' }}>{stopSessionData.duration}</div>
+
+                                <div style={{ margin: '1.5rem 0', borderTop: '1px dashed #e2e8f0' }}></div>
+
+                                <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Total Tagihan</div>
+                                <div className="outfit" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--success)' }}>{formatCurrency(stopSessionData.cost)}</div>
+
+                                <div style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>
+                                    Pengguna: <strong>{stopSessionData.userName}</strong>
+                                </div>
+                            </div>
+                        )}
+                    </Modal>
+
+                    {/* Income Modal (Manual Entry) */}
+                    <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan Lab & Media" footer={<button className="btn btn-primary" onClick={handleSaveIncome} disabled={submitting}>Simpan</button>}>
+                        <TextInput label="Tanggal" type="date" value={incomeForm.tanggal} onChange={e => setIncomeForm({ ...incomeForm, tanggal: e.target.value })} />
+
+                        {/* Category Selector */}
+                        <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+                            <SelectInput
+                                label="Pilih Kategori Layanan"
+                                value={incomeForm.kategori || 'Rental'}
+                                onChange={e => {
+                                    const selectedCategory = e.target.value;
+                                    let defaultService = '';
+                                    let defaultPrice = '0';
+
+                                    if (selectedCategory === 'Rental' && categorizedTariffs.rental.length > 0) {
+                                        defaultService = categorizedTariffs.rental[0].nama_layanan;
+                                        defaultPrice = categorizedTariffs.rental[0].harga;
+                                    } else if (selectedCategory === 'Percetakan' && categorizedTariffs.print.length > 0) {
+                                        defaultService = categorizedTariffs.print[0].nama_layanan;
+                                        defaultPrice = categorizedTariffs.print[0].harga;
+                                    } else if (selectedCategory === 'Media' && categorizedTariffs.media.length > 0) {
+                                        defaultService = categorizedTariffs.media[0].nama_layanan;
+                                        defaultPrice = categorizedTariffs.media[0].harga;
+                                    }
+
+                                    setIncomeForm({
+                                        ...incomeForm,
+                                        kategori: selectedCategory,
+                                        jenis_layanan: defaultService,
+                                        nominal: defaultPrice,
+                                        jumlah: '1',
+                                        keterangan: ''
+                                    });
+                                }}
+                                options={['Rental', 'Percetakan', 'Media']}
+                            />
+                        </div>
+
+                        {/* Service Type Selector based on Category */}
+                        {incomeForm.kategori && (
+                            <SelectInput
+                                label="Jenis Layanan"
+                                value={incomeForm.jenis_layanan}
+                                onChange={e => {
+                                    const selectedService = e.target.value;
+                                    const tariff = tarifList.find(t => t.nama_layanan === selectedService);
+                                    setIncomeForm({
+                                        ...incomeForm,
+                                        jenis_layanan: selectedService,
+                                        nominal: tariff?.harga || '0'
+                                    });
+                                }}
+                                options={
+                                    incomeForm.kategori === 'Rental' ? categorizedTariffs.rental.map(t => t.nama_layanan) :
+                                        incomeForm.kategori === 'Percetakan' ? categorizedTariffs.print.map(t => t.nama_layanan) :
+                                            categorizedTariffs.media.map(t => t.nama_layanan)
+                                }
+                            />
+                        )}
+
+                        {/* Dynamic Fields based on Category */}
+                        {incomeForm.kategori === 'Percetakan' && (
+                            <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
+                                <TextInput
+                                    label="Jumlah Lembar"
+                                    type="number"
+                                    value={incomeForm.jumlah}
+                                    onChange={e => {
+                                        const pages = e.target.value;
+                                        const rate = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
+                                        setIncomeForm({ ...incomeForm, jumlah: pages, nominal: parseInt(pages || 0) * parseInt(rate) });
+                                    }}
+                                />
+                                <TextInput
+                                    label="Keterangan"
+                                    value={incomeForm.keterangan}
+                                    onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
+                                    placeholder="Contoh: A4, Warna"
+                                />
+                            </div>
+                        )}
+
+                        {incomeForm.kategori === 'Rental' && (
+                            <TextInput
+                                label="Keterangan (Opsional)"
+                                value={incomeForm.keterangan}
+                                onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
+                                placeholder="Contoh: PC 05, Dengan Internet"
+                            />
+                        )}
+
+                        {incomeForm.kategori === 'Media' && (
+                            <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
+                                <TextInput
+                                    label="Durasi/Jumlah"
+                                    type="number"
+                                    value={incomeForm.jumlah}
+                                    onChange={e => {
+                                        const qty = e.target.value;
+                                        const rate = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
+                                        setIncomeForm({ ...incomeForm, jumlah: qty, nominal: parseInt(qty || 0) * parseInt(rate) });
+                                    }}
+                                />
+                                <TextInput
+                                    label="Keterangan"
+                                    value={incomeForm.keterangan}
+                                    onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
+                                    placeholder="Detail acara/kegiatan"
+                                />
+                            </div>
+                        )}
+
+                        <div className="form-group" style={{ marginTop: '1rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1.5rem' }}>
+                            <label className="form-label" style={{ fontWeight: 800 }}>Identitas Pemohon (Opsional)</label>
+                            <Autocomplete
+                                options={santriOptions}
+                                value={incomeForm.nama_santri}
+                                onChange={v => setIncomeForm({ ...incomeForm, nama_santri: v })}
+                                onSelect={s => setIncomeForm({ ...incomeForm, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok })}
+                                placeholder="Ketik nama santri jika ada..."
+                                labelKey="nama_siswa"
+                                subLabelKey="kelas"
+                            />
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem', background: 'var(--primary-light)', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>Total Biaya:</span>
+                            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary)' }}>{formatCurrency(incomeForm.nominal)}</span>
+                        </div>
+                    </Modal>
+
+                    {/* Expense Modal */}
+                    <Modal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} title="Pencatatan Biaya Lab" footer={<button className="btn btn-primary" onClick={handleSaveExpense}>Simpan Biaya</button>}>
+                        <TextInput label="Nominal (Rp)" type="number" value={expenseForm.nominal} onChange={e => setExpenseForm({ ...expenseForm, nominal: e.target.value })} />
+                        <TextAreaInput label="Keterangan" value={expenseForm.keterangan} onChange={e => setExpenseForm({ ...expenseForm, keterangan: e.target.value })} />
+                    </Modal>
+
+                    <ConfirmModal
+                        isOpen={confirmDelete.open}
+                        onClose={() => setConfirmDelete({ open: false, id: null })}
+                        onConfirm={async () => {
+                            if (confirmDelete.type === 'kas') {
+                                await apiCall('deleteData', 'POST', { type: 'unit_lab_media_kas', id: confirmDelete.id });
+                            } else {
+                                await handleDeleteIncome(confirmDelete.id);
+                            }
+                            setConfirmDelete({ open: false, id: null });
+                            loadData();
+                        }}
+                        title="Hapus Data?"
+                        message="Data ini akan dihapus permanen."
+                    />
                 </>
             )}
-
-            {/* Modal Start Rental */}
-            <Modal isOpen={isStartRentalOpen} onClose={() => setIsStartRentalOpen(false)} title={`Mulai Rental: ${selectedPcForRental}`} footer={<button className="btn btn-primary" onClick={confirmStartRental}>Mulai Timer</button>}>
-                <div style={{ marginBottom: '1rem' }}>
-                    <p>Mulai sesi baru untuk <strong>{selectedPcForRental}</strong>. Waktu akan berjalan mulai sekarang.</p>
-                </div>
-                <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 800 }}>Identitas Pengguna</label>
-                    <Autocomplete
-                        options={santriOptions}
-                        value={rentalForm.nama_santri}
-                        onChange={v => setRentalForm({ ...rentalForm, nama_santri: v })}
-                        onSelect={s => setRentalForm({ ...rentalForm, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok })}
-                        placeholder="Cari nama santri..."
-                        labelKey="nama_siswa"
-                        subLabelKey="kelas"
-                    />
-                </div>
-            </Modal>
-
-            {/* Modal Stop Rental */}
-            <Modal isOpen={isStopRentalOpen} onClose={() => setIsStopRentalOpen(false)} title="Selesaikan Sesi?" footer={<button className="btn btn-success" onClick={confirmStopRental}>Bayar & Simpan</button>}>
-                {stopSessionData && (
-                    <div style={{ textAlign: 'center', padding: '1rem' }}>
-                        <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Total Durasi</div>
-                        <div className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-dark)' }}>{stopSessionData.duration}</div>
-
-                        <div style={{ margin: '1.5rem 0', borderTop: '1px dashed #e2e8f0' }}></div>
-
-                        <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Total Tagihan</div>
-                        <div className="outfit" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--success)' }}>{formatCurrency(stopSessionData.cost)}</div>
-
-                        <div style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>
-                            Pengguna: <strong>{stopSessionData.userName}</strong>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            {/* Income Modal (Manual Entry) */}
-            <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan Lab & Media" footer={<button className="btn btn-primary" onClick={handleSaveIncome} disabled={submitting}>Simpan</button>}>
-                <TextInput label="Tanggal" type="date" value={incomeForm.tanggal} onChange={e => setIncomeForm({ ...incomeForm, tanggal: e.target.value })} />
-
-                {/* Category Selector */}
-                <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
-                    <SelectInput
-                        label="Pilih Kategori Layanan"
-                        value={incomeForm.kategori || 'Rental'}
-                        onChange={e => {
-                            const selectedCategory = e.target.value;
-                            let defaultService = '';
-                            let defaultPrice = '0';
-
-                            if (selectedCategory === 'Rental' && categorizedTariffs.rental.length > 0) {
-                                defaultService = categorizedTariffs.rental[0].nama_layanan;
-                                defaultPrice = categorizedTariffs.rental[0].harga;
-                            } else if (selectedCategory === 'Percetakan' && categorizedTariffs.print.length > 0) {
-                                defaultService = categorizedTariffs.print[0].nama_layanan;
-                                defaultPrice = categorizedTariffs.print[0].harga;
-                            } else if (selectedCategory === 'Media' && categorizedTariffs.media.length > 0) {
-                                defaultService = categorizedTariffs.media[0].nama_layanan;
-                                defaultPrice = categorizedTariffs.media[0].harga;
-                            }
-
-                            setIncomeForm({
-                                ...incomeForm,
-                                kategori: selectedCategory,
-                                jenis_layanan: defaultService,
-                                nominal: defaultPrice,
-                                jumlah: '1',
-                                keterangan: ''
-                            });
-                        }}
-                        options={['Rental', 'Percetakan', 'Media']}
-                    />
-                </div>
-
-                {/* Service Type Selector based on Category */}
-                {incomeForm.kategori && (
-                    <SelectInput
-                        label="Jenis Layanan"
-                        value={incomeForm.jenis_layanan}
-                        onChange={e => {
-                            const selectedService = e.target.value;
-                            const tariff = tarifList.find(t => t.nama_layanan === selectedService);
-                            setIncomeForm({
-                                ...incomeForm,
-                                jenis_layanan: selectedService,
-                                nominal: tariff?.harga || '0'
-                            });
-                        }}
-                        options={
-                            incomeForm.kategori === 'Rental' ? categorizedTariffs.rental.map(t => t.nama_layanan) :
-                                incomeForm.kategori === 'Percetakan' ? categorizedTariffs.print.map(t => t.nama_layanan) :
-                                    categorizedTariffs.media.map(t => t.nama_layanan)
-                        }
-                    />
-                )}
-
-                {/* Dynamic Fields based on Category */}
-                {incomeForm.kategori === 'Percetakan' && (
-                    <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
-                        <TextInput
-                            label="Jumlah Lembar"
-                            type="number"
-                            value={incomeForm.jumlah}
-                            onChange={e => {
-                                const pages = e.target.value;
-                                const rate = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
-                                setIncomeForm({ ...incomeForm, jumlah: pages, nominal: parseInt(pages || 0) * parseInt(rate) });
-                            }}
-                        />
-                        <TextInput
-                            label="Keterangan"
-                            value={incomeForm.keterangan}
-                            onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
-                            placeholder="Contoh: A4, Warna"
-                        />
-                    </div>
-                )}
-
-                {incomeForm.kategori === 'Rental' && (
-                    <TextInput
-                        label="Keterangan (Opsional)"
-                        value={incomeForm.keterangan}
-                        onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
-                        placeholder="Contoh: PC 05, Dengan Internet"
-                    />
-                )}
-
-                {incomeForm.kategori === 'Media' && (
-                    <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
-                        <TextInput
-                            label="Durasi/Jumlah"
-                            type="number"
-                            value={incomeForm.jumlah}
-                            onChange={e => {
-                                const qty = e.target.value;
-                                const rate = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
-                                setIncomeForm({ ...incomeForm, jumlah: qty, nominal: parseInt(qty || 0) * parseInt(rate) });
-                            }}
-                        />
-                        <TextInput
-                            label="Keterangan"
-                            value={incomeForm.keterangan}
-                            onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
-                            placeholder="Detail acara/kegiatan"
-                        />
-                    </div>
-                )}
-
-                <div className="form-group" style={{ marginTop: '1rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1.5rem' }}>
-                    <label className="form-label" style={{ fontWeight: 800 }}>Identitas Pemohon (Opsional)</label>
-                    <Autocomplete
-                        options={santriOptions}
-                        value={incomeForm.nama_santri}
-                        onChange={v => setIncomeForm({ ...incomeForm, nama_santri: v })}
-                        onSelect={s => setIncomeForm({ ...incomeForm, nama_santri: s.nama_siswa, stambuk: s.stambuk_pondok })}
-                        placeholder="Ketik nama santri jika ada..."
-                        labelKey="nama_siswa"
-                        subLabelKey="kelas"
-                    />
-                </div>
-
-                <div style={{ marginTop: '1.5rem', background: 'var(--primary-light)', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>Total Biaya:</span>
-                    <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary)' }}>{formatCurrency(incomeForm.nominal)}</span>
-                </div>
-            </Modal>
-
-            {/* Expense Modal */}
-            <Modal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} title="Pencatatan Biaya Lab" footer={<button className="btn btn-primary" onClick={handleSaveExpense}>Simpan Biaya</button>}>
-                <TextInput label="Nominal (Rp)" type="number" value={expenseForm.nominal} onChange={e => setExpenseForm({ ...expenseForm, nominal: e.target.value })} />
-                <TextAreaInput label="Keterangan" value={expenseForm.keterangan} onChange={e => setExpenseForm({ ...expenseForm, keterangan: e.target.value })} />
-            </Modal>
-
-            <ConfirmModal
-                isOpen={confirmDelete.open}
-                onClose={() => setConfirmDelete({ open: false, id: null })}
-                onConfirm={async () => {
-                    if (confirmDelete.type === 'kas') {
-                        await apiCall('deleteData', 'POST', { type: 'unit_lab_media_kas', id: confirmDelete.id });
-                    } else {
-                        await handleDeleteIncome(confirmDelete.id);
-                    }
-                    setConfirmDelete({ open: false, id: null });
-                    loadData();
-                }}
-                title="Hapus Data?"
-                message="Data ini akan dihapus permanen."
-            />
         </div>
     );
 }
