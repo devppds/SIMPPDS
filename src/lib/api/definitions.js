@@ -41,6 +41,7 @@ export const HEADERS_CONFIG = {
     'edu_pengajian': ["tanggal", "qari", "kitab", "waktu", "tempat", "keterangan", "petugas"],
     'edu_lbm_peserta': ["nama_santri", "kelas", "tipe_lbm", "keterangan"],
     'edu_lbm_delegasi': ["tanggal", "nama_santri", "kelas", "acara", "tempat", "hasil", "petugas"],
+    'edu_lbm_absen': ["tanggal", "nama_santri", "kelas", "tipe_lbm", "status", "keterangan", "petugas"],
     'edu_sorogan_absen': ["tanggal", "nama_santri", "kelas", "kelompok", "status", "keterangan", "petugas"],
     'edu_sorogan_kelompok': ["nama_santri", "kelas", "kelompok", "pembimbing", "keterangan"],
     'edu_takhosus_seminar': ["tanggal", "materi", "pembimbing", "waktu", "tempat", "peserta", "petugas"],
