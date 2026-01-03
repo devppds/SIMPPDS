@@ -18,6 +18,8 @@ export default function KamarPage() {
     const [allSantri, setAllSantri] = useState([]);
     const [penasihatList, setPenasihatList] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
 
     const {
         data, setData, loading, setLoading, submitting,
@@ -94,6 +96,8 @@ export default function KamarPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">

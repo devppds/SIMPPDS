@@ -36,6 +36,9 @@ export default function SantriPage() {
     // Confirm States
     const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null });
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
     const [provinces, setProvinces] = useState([]);
     const [cities, setCities] = useState([]);
 
@@ -186,6 +189,8 @@ export default function SantriPage() {
         };
         reader.readAsText(file);
     };
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">

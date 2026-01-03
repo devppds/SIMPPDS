@@ -92,21 +92,35 @@ export default function AbsensiPengurusPage() {
     }, [filterMonth, filterYear]);
 
     useEffect(() => {
-        if (!mounted) {
-            const nowHijri = moment();
-            const currentHijriMonthIdx = nowHijri.iMonth();
-            const currentHijriYear = nowHijri.iYear();
-            setFilterMonth(MONTHS[currentHijriMonthIdx]);
-            setFilterYear(currentHijriYear.toString());
+        try {
+            if (!mounted) {
+                // Safe initialization
+                let m = moment();
+                // Check if iMonth exists (moment-hijri loaded correctly)
+                if (typeof m.iMonth !== 'function') {
+                    console.warn("moment-hijri not loaded correctly, falling back to standard date");
+                    // Fallback to Masehi mapped to Hijri index approximation or just 0
+                    setFilterMonth(MONTHS[0]);
+                    setFilterYear('1446');
+                } else {
+                    const currentHijriMonthIdx = m.iMonth();
+                    const currentHijriYear = m.iYear();
+                    setFilterMonth(MONTHS[currentHijriMonthIdx] || MONTHS[0]);
+                    setFilterYear(currentHijriYear ? currentHijriYear.toString() : '1446');
+                }
+                setMounted(true);
+            }
+        } catch (e) {
+            console.error("Date initialization error:", e);
+            setFilterMonth(MONTHS[0]);
+            setFilterYear('1446');
             setMounted(true);
         }
     }, [mounted]);
 
     useEffect(() => {
         if (mounted && filterMonth && filterYear) {
-            isMounted.current = true;
             loadData();
-            return () => { isMounted.current = false; };
         }
     }, [mounted, filterMonth, filterYear, loadData]);
 
