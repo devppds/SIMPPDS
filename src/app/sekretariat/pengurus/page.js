@@ -19,6 +19,11 @@ export default function PengurusPage() {
     const [listJabatan, setListJabatan] = useState([]);
     const [listDivisi, setListDivisi] = useState([]);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const getAcademicYear = useCallback(() => {
         try {
@@ -45,13 +50,13 @@ export default function PengurusPage() {
     });
 
     const [isMutasiModalOpen, setIsMutasiModalOpen] = useState(false);
-    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Demisioner', tanggal: new Date().toISOString().split('T')[0] });
+    const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Non-Aktif', tanggal: new Date().toISOString().split('T')[0] });
 
     const openMutasi = (row) => {
         setMutasiData({
             id: row.id,
             nama: row.nama,
-            status: 'Demisioner',
+            status: 'Non-Aktif',
             tanggal: new Date().toISOString().split('T')[0]
         });
         setIsMutasiModalOpen(true);
@@ -98,12 +103,17 @@ export default function PengurusPage() {
     useEffect(() => { loadEnrichedData(); }, [loadEnrichedData]);
 
     const stats = useMemo(() => [
-        { title: 'Total Pengurus', value: data.length, icon: 'fas fa-id-card', color: 'var(--primary)' },
-        { title: 'Aktif', value: data.filter(d => d.status === 'Aktif').length, icon: 'fas fa-user-check', color: 'var(--success)' },
-        { title: 'Demisioner', value: data.filter(d => d.status !== 'Aktif').length, icon: 'fas fa-user-minus', color: 'var(--warning)' }
+        { title: 'Total Pengurus Aktif', value: data.filter(d => d.status === 'Aktif' || !d.status).length, icon: 'fas fa-id-card', color: 'var(--primary)' },
+        { title: 'Terbagi di Divisi', value: [...new Set(data.filter(d => d.status === 'Aktif' || !d.status).map(d => d.divisi))].filter(Boolean).length, icon: 'fas fa-sitemap', color: 'var(--success)' },
+        { title: 'Total Non-Aktif', value: data.filter(d => d.status !== 'Aktif' && d.status).length, icon: 'fas fa-user-minus', color: 'var(--warning)' }
     ], [data]);
 
-    const displayData = data.filter(d => (d.nama || '').toLowerCase().includes(search.toLowerCase()) || (d.jabatan || '').toLowerCase().includes(search.toLowerCase()) || (d.divisi || '').toLowerCase().includes(search.toLowerCase()));
+    const displayData = data.filter(d =>
+        (d.status === 'Aktif' || !d.status) && (
+            (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
+            (d.jabatan || '').toLowerCase().includes(search.toLowerCase()) ||
+            (d.divisi || '').toLowerCase().includes(search.toLowerCase())
+        ));
 
     const columns = [
         { key: 'foto_pengurus', label: 'Profil', width: '80px', render: (row) => <img src={row.foto_pengurus || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama)}&background=1e3a8a&color=fff&bold=true`} style={{ width: '45px', height: '45px', borderRadius: '12px', objectFit: 'cover' }} alt="" /> },
@@ -122,6 +132,8 @@ export default function PengurusPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">
@@ -196,12 +208,12 @@ export default function PengurusPage() {
                 footer={<button className="btn btn-primary" onClick={handleMutasi} disabled={loading}>{loading ? 'Memproses...' : 'Simpan Mutasi'}</button>}
             >
                 <div style={{ padding: '10px' }}>
-                    <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>Pindahkan pengurus ini ke status non-aktif atau demisioner.</p>
+                    <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>Pindahkan pengurus ini ke status non-aktif.</p>
                     <SelectInput
                         label="Pilih Status Baru"
                         value={mutasiData.status}
                         onChange={e => setMutasiData({ ...mutasiData, status: e.target.value })}
-                        options={['Demisioner', 'Non-Aktif', 'Cuti']}
+                        options={['Non-Aktif']}
                     />
                     <TextInput
                         label="Tanggal Mutasi"

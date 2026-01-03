@@ -16,6 +16,11 @@ import ConfirmModal from '@/components/ConfirmModal';
 export default function PengurusPeriodePage() {
     const { canEdit, canDelete } = usePagePermission();
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+    const [mounted, setMounted] = useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const {
         data: archiveData, setData: setArchiveData, loading, setLoading, search, setSearch, submitting,
@@ -95,6 +100,8 @@ export default function PengurusPeriodePage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">

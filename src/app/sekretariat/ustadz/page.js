@@ -16,6 +16,11 @@ import DataViewContainer from '@/components/DataViewContainer';
 
 export default function PengajarPage() {
     const { canEdit, canDelete } = usePagePermission();
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const {
         data, setData, loading, setLoading, search, setSearch, submitting,
@@ -62,16 +67,17 @@ export default function PengajarPage() {
     };
 
     const stats = useMemo(() => [
-        { title: 'Total Pengajar', value: data.length, icon: 'fas fa-chalkboard-teacher', color: 'var(--primary)' },
-        { title: 'Status Aktif', value: data.filter(d => d.status === 'Aktif').length, icon: 'fas fa-user-check', color: 'var(--success)' },
-        { title: 'Cuti / Non-Aktif', value: data.filter(d => d.status !== 'Aktif').length, icon: 'fas fa-user-clock', color: 'var(--danger)' }
+        { title: 'Total Pengajar Aktif', value: data.filter(d => d.status === 'Aktif' || !d.status).length, icon: 'fas fa-chalkboard-teacher', color: 'var(--primary)' },
+        { title: 'Status Aktif', value: data.filter(d => d.status === 'Aktif' || !d.status).length, icon: 'fas fa-user-check', color: 'var(--success)' },
+        { title: 'Riwayat Non-Aktif', value: data.filter(d => d.status !== 'Aktif' && d.status).length, icon: 'fas fa-user-clock', color: 'var(--danger)' }
     ], [data]);
 
     const displayData = useMemo(() => {
         return data.filter(d =>
-            (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
-            (d.kelas || '').toLowerCase().includes(search.toLowerCase())
-        );
+            (d.status === 'Aktif' || !d.status) && (
+                (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
+                (d.kelas || '').toLowerCase().includes(search.toLowerCase())
+            ));
     }, [data, search]);
 
     const columns = [
@@ -94,6 +100,8 @@ export default function PengajarPage() {
             )
         }
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="view-container animate-in">
@@ -149,12 +157,12 @@ export default function PengajarPage() {
                 footer={<button className="btn btn-primary" onClick={handleMutasi} disabled={loading}>{loading ? 'Memproses...' : 'Simpan Mutasi'}</button>}
             >
                 <div style={{ padding: '10px' }}>
-                    <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>Atur status non-aktif atau cuti untuk pengajar ini.</p>
+                    <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>Atur status non-aktif untuk pengajar ini.</p>
                     <SelectInput
                         label="Status Baru"
                         value={mutasiData.status}
                         onChange={e => setMutasiData({ ...mutasiData, status: e.target.value })}
-                        options={['Non-Aktif', 'Cuti', 'Pensiun', 'Lainnya']}
+                        options={['Non-Aktif']}
                     />
                     <TextInput
                         label="Tanggal Mutasi"
