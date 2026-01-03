@@ -116,8 +116,21 @@ export default function JamiyyahPenasihatPage() {
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Penasihat" : "Atur Penasihat Baru"} width="600px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
                 <div className="form-grid">
-                    <SelectInput label="Pilih Asrama" value={selectedAsrama} onChange={e => { setSelectedAsrama(e.target.value); setFormData(prev => ({ ...prev, asrama: e.target.value, kamar: '' })); }} options={['-- Pilih Asrama --', ...asramaOptions]} />
-                    <SelectInput label="Pilih Kamar" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} options={['-- Pilih Kamar --', ...filteredRooms.map(r => r.nama_kamar || r.kamar)]} disabled={!selectedAsrama} />
+                    <SelectInput
+                        label="Pilih Asrama"
+                        value={selectedAsrama}
+                        onChange={e => { setSelectedAsrama(e.target.value); setFormData(prev => ({ ...prev, asrama: e.target.value, kamar: '' })); }}
+                        options={asramaOptions}
+                        placeholder="-- Pilih Asrama --"
+                    />
+                    <SelectInput
+                        label="Pilih Kamar"
+                        value={formData.kamar}
+                        onChange={e => setFormData({ ...formData, kamar: e.target.value })}
+                        options={filteredRooms.map(r => r.nama_kamar || r.kamar)}
+                        placeholder="-- Pilih Kamar --"
+                        disabled={!selectedAsrama}
+                    />
                 </div>
                 <TextInput label="Nama Penasihat" value={formData.nama_penasihat} onChange={e => setFormData({ ...formData, nama_penasihat: e.target.value })} required />
                 <TextAreaInput label="Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
