@@ -17,12 +17,13 @@ export default function JamiyyahPenasihatPage() {
     const { canEdit, canDelete } = usePagePermission();
     const [rooms, setRooms] = useState([]);
     const [mounted, setMounted] = useState(false);
+    const [selectedAsrama, setSelectedAsrama] = useState('');
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
     const {
         data, loading, search, setSearch, submitting,
         isModalOpen, setIsModalOpen, formData, setFormData, editId,
-        handleSave, handleDelete, openModal
+        handleSave, handleDelete, openModal: baseOpenModal
     } = useDataManagement('jamiyyah_penasihat', {
         kamar: '', asrama: '', nama_penasihat: '', keterangan: ''
     });
@@ -38,6 +39,26 @@ export default function JamiyyahPenasihatPage() {
 
     useEffect(() => { loadRooms(); }, [loadRooms]);
 
+    // Update selectedAsrama when editing
+    const openModal = (row = null) => {
+        if (row) {
+            setSelectedAsrama(row.asrama || '');
+        } else {
+            setSelectedAsrama('');
+        }
+        baseOpenModal(row);
+    };
+
+    const asramaOptions = useMemo(() => {
+        const unique = [...new Set(rooms.map(r => r.asrama))].filter(Boolean).sort();
+        return unique;
+    }, [rooms]);
+
+    const filteredRooms = useMemo(() => {
+        if (!selectedAsrama) return [];
+        return rooms.filter(r => r.asrama === selectedAsrama).sort((a, b) => a.nama_kamar.localeCompare(b.nama_kamar, undefined, { numeric: true }));
+    }, [rooms, selectedAsrama]);
+
     const stats = useMemo(() => [
         { title: 'Total Kamar Terdata', value: data.length, icon: 'fas fa-door-open', color: 'var(--primary)' },
         { title: 'Penasihat Aktif', value: [...new Set(data.map(d => d.nama_penasihat))].filter(Boolean).length, icon: 'fas fa-user-check', color: 'var(--success)' }
@@ -45,7 +66,8 @@ export default function JamiyyahPenasihatPage() {
 
     const displayData = data.filter(d =>
         (d.kamar || d.nama_kamar || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.nama_penasihat || '').toLowerCase().includes(search.toLowerCase())
+        (d.nama_penasihat || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.asrama || '').toLowerCase().includes(search.toLowerCase())
     );
 
     const columns = [
@@ -55,7 +77,7 @@ export default function JamiyyahPenasihatPage() {
             render: (row) => (
                 <div>
                     <div style={{ fontWeight: 800 }}>{row.kamar || row.nama_kamar}</div>
-                    <small style={{ color: 'var(--text-muted)' }}>{row.asrama}</small>
+                    <small className="th-badge" style={{ background: '#f1f5f9', fontSize: '0.7rem' }}>{row.asrama}</small>
                 </div>
             )
         },
@@ -88,22 +110,29 @@ export default function JamiyyahPenasihatPage() {
                 title="Daftar Penasihat Per-Kamar"
                 subtitle="Data penghubung antara pengurus jam'iyyah dengan santri di asrama."
                 headerActions={canEdit && <button className="btn btn-primary" onClick={() => openModal()}><i className="fas fa-plus"></i> Atur Penasihat</button>}
-                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari kamar atau nama penasihat..." }}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari kamar, asrama, atau nama penasihat..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Penasihat" : "Atur Penasihat Baru"} footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Data'}</button>}>
                 <div className="form-grid">
                     <SelectInput
-                        label="Pilih Kamar"
-                        value={formData.kamar}
+                        label="Pilih Blok / Asrama"
+                        value={selectedAsrama}
                         onChange={e => {
-                            const found = rooms.find(r => r.nama_kamar === e.target.value);
-                            setFormData({ ...formData, kamar: e.target.value, asrama: found?.asrama || '' });
+                            const val = e.target.value;
+                            setSelectedAsrama(val);
+                            setFormData(prev => ({ ...prev, asrama: val, kamar: '' })); // Reset kamar if asrama changes
                         }}
-                        options={['-- Pilih Kamar --', ...rooms.map(r => r.nama_kamar)]}
+                        options={['-- Pilih Asrama --', ...asramaOptions]}
                     />
-                    <TextInput label="Asrama" value={formData.asrama} readOnly style={{ background: '#f8fafc' }} />
+                    <SelectInput
+                        label="Nomor Kamar"
+                        value={formData.kamar}
+                        onChange={e => setFormData({ ...formData, kamar: e.target.value })}
+                        options={['-- Pilih Kamar --', ...filteredRooms.map(r => r.nama_kamar || r.kamar)]}
+                        disabled={!selectedAsrama}
+                    />
                 </div>
                 <TextInput label="Nama Penasihat" value={formData.nama_penasihat} onChange={e => setFormData({ ...formData, nama_penasihat: e.target.value })} required placeholder="Contoh: Ust. M. Ilyas" />
                 <TextAreaInput label="Keterangan / Catatan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} />
