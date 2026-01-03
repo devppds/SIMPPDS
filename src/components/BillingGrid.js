@@ -20,24 +20,34 @@ export default function BillingGrid({ pcs, onPcClick, onStopClick }) {
                 <div
                     key={pc.id}
                     className={`billing-card ${pc.active ? 'active-grid-item' : ''}`}
+                    onClick={(e) => {
+                        if (!pc.active || pc.type === 'SERVICE') onPcClick(pc);
+                    }}
                     style={{
-                        background: pc.active ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : '#fff',
+                        background: pc.type === 'SERVICE'
+                            ? (pc.category === 'Percetakan'
+                                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' // Amber for Percetakan
+                                : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)') // Purple for Media
+                            : pc.active
+                                ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' // Navy for Active PC
+                                : '#fff', // White for Inactive
                         borderRadius: '28px',
                         padding: '1.8rem',
                         position: 'relative',
                         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                         border: '1px solid rgba(226, 232, 240, 0.8)',
-                        boxShadow: pc.active ? '0 25px 30px -10px rgba(0, 0, 0, 0.3)' : 'var(--shadow-sm)',
-                        color: pc.active ? '#fff' : 'var(--text-main)',
+                        boxShadow: (pc.active || pc.type === 'SERVICE') ? '0 25px 30px -10px rgba(0, 0, 0, 0.3)' : 'var(--shadow-sm)',
+                        color: (pc.active || pc.type === 'SERVICE') ? '#fff' : 'var(--text-main)',
                         minHeight: '220px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        cursor: 'pointer'
                     }}
                 >
                     {/* Status Pulse for Active */}
-                    {pc.active && (
+                    {pc.active && pc.type !== 'SERVICE' && (
                         <div className="status-pulse" style={{
                             position: 'absolute',
                             top: '20px',
@@ -53,7 +63,7 @@ export default function BillingGrid({ pcs, onPcClick, onStopClick }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <div style={{ fontSize: '0.8rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>
-                                Workstation
+                                {pc.type === 'SERVICE' ? 'Service Station' : 'Workstation'}
                             </div>
                             <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '2px', fontFamily: 'Outfit' }}>{pc.id}</h3>
                         </div>
@@ -61,15 +71,18 @@ export default function BillingGrid({ pcs, onPcClick, onStopClick }) {
                             width: '56px',
                             height: '56px',
                             borderRadius: '18px',
-                            background: pc.active ? 'rgba(37, 99, 235, 0.15)' : '#f8fafc',
+                            background: pc.type === 'SERVICE' ? 'rgba(255,255,255,0.2)' : (pc.active ? 'rgba(37, 99, 235, 0.15)' : '#f8fafc'),
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: pc.active ? '#3b82f6' : '#cbd5e1',
+                            color: pc.type === 'SERVICE' ? '#fff' : (pc.active ? '#3b82f6' : '#cbd5e1'),
                             fontSize: '1.5rem',
                             border: `1px solid ${pc.active ? 'rgba(37,99,235,0.2)' : '#e2e8f0'}`
                         }}>
-                            <i className={`fas ${pc.active ? 'fa-desktop' : 'fa-power-off'}`}></i>
+                            <i className={`fas ${pc.type === 'SERVICE'
+                                    ? (pc.category === 'Percetakan' ? 'fa-print' : 'fa-camera')
+                                    : (pc.active ? 'fa-desktop' : 'fa-power-off')
+                                }`}></i>
                         </div>
                     </div>
 

@@ -26,56 +26,109 @@ export default function LabPage() {
 
     // Real-time Active Sessions Logic
     const [activeSessions, setActiveSessions] = useState({}); // { "PC 01": { startTime: timestamp, user: "Nama" } }
+    const [pcCount, setPcCount] = useState(20); // Default dynamic PC count
     const [now, setNow] = useState(Date.now());
 
     // Update timer every minute for UI duration
     useEffect(() => {
-        const interval = setInterval(() => setNow(Date.now()), 10000); // Update every 10s is enough for UI
+        const interval = setInterval(() => setNow(Date.now()), 10000); // UI update tick
         return () => clearInterval(interval);
     }, []);
 
-    // Load active sessions from local storage on mount (Simulation of persistence)
+    // Load active sessions & PC count from local storage
     useEffect(() => {
-        const saved = localStorage.getItem('lab_active_sessions');
-        if (saved) setActiveSessions(JSON.parse(saved));
+        const savedSessions = localStorage.getItem('lab_active_sessions');
+        const savedCount = localStorage.getItem('lab_pc_count');
+        if (savedSessions) setActiveSessions(JSON.parse(savedSessions));
+        if (savedCount) setPcCount(parseInt(savedCount));
     }, []);
 
     // Save to local storage whenever changed
     useEffect(() => {
         localStorage.setItem('lab_active_sessions', JSON.stringify(activeSessions));
-    }, [activeSessions]);
+        localStorage.setItem('lab_pc_count', pcCount.toString());
+    }, [activeSessions, pcCount]);
 
-    // PC Workstations Configuration (30 units)
-    const pcStations = useMemo(() => Array.from({ length: 30 }, (_, i) => {
-        const id = `PC ${String(i + 1).padStart(2, '0')}`;
-        const session = activeSessions[id];
-        let durationStr = '';
-        let currentCost = 0;
+    // 🔍 Filter Data strictly for Lab unit
+    const labLayananData = useMemo(() => layananData.filter(d => d.unit === 'Lab'), [layananData]);
 
-        if (session) {
-            const diffMinutes = Math.floor((now - session.startTime) / 60000);
-            const hours = Math.floor(diffMinutes / 60);
-            const mins = diffMinutes % 60;
-            durationStr = `${hours}j ${mins}m`;
+    // 📋 Organize tariffs by category for easy access
+    const categorizedTariffs = useMemo(() => {
+        const rental = tarifList.filter(t => t.kategori === 'Rental');
+        const print = tarifList.filter(t => t.kategori === 'Percetakan');
+        const media = tarifList.filter(t => t.kategori === 'Dokumentasi' || t.kategori === 'Media');
 
-            // Calculate cost based on tariff
-            const ratePerHour = parseInt(tarifList.find(t => t.nama_layanan.toLowerCase().includes('rental'))?.harga || 3000);
-            // Cost = (minutes / 60) * rate. Round up to nearest 500 maybe? or just raw.
-            // Let's do raw calculation first, maybe integer.
-            currentCost = Math.ceil((diffMinutes / 60) * ratePerHour);
-            // Minimum 1000 maybe?
-            if (currentCost < 1000) currentCost = 1000;
-        }
+        return { rental, print, media };
+    }, [tarifList]);
 
-        return {
-            id,
-            active: !!session,
-            userName: session?.user || '',
-            duration: durationStr,
-            cost: currentCost,
-            startTime: session?.startTime
+    // PC Workstations & Service Stations Configuration
+    const pcStations = useMemo(() => {
+        // 1. Generate PC Cards based on dynamic count
+        const computers = Array.from({ length: pcCount }, (_, i) => {
+            const id = `PC ${String(i + 1).padStart(2, '0')}`;
+            const session = activeSessions[id];
+            let durationStr = '';
+            let currentCost = 0;
+
+            if (session) {
+                const diffMinutes = Math.floor((now - session.startTime) / 60000);
+                const hours = Math.floor(diffMinutes / 60);
+                const mins = diffMinutes % 60;
+                durationStr = `${hours}j ${mins}m`;
+
+                // Get rental rate from tariff (default to first rental tariff)
+                const rentalRate = parseInt(categorizedTariffs.rental[0]?.harga || 3000);
+                currentCost = Math.ceil((diffMinutes / 60) * rentalRate);
+                if (currentCost < 1000) currentCost = 1000;
+            }
+
+            return {
+                id,
+                type: 'PC',
+                category: 'Rental',
+                active: !!session,
+                userName: session?.user || '',
+                duration: durationStr,
+                cost: currentCost,
+                startTime: session?.startTime
+            };
+        });
+
+        // 2. Add "Percetakan" Station
+        const today = new Date().toISOString().split('T')[0];
+        const todayPrintIncome = labLayananData
+            .filter(d => d.tanggal === today && d.kategori === 'Percetakan')
+            .reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
+
+        const printStation = {
+            id: 'PERCETAKAN',
+            type: 'SERVICE',
+            category: 'Percetakan',
+            active: todayPrintIncome > 0,
+            userName: 'Jasa Cetak',
+            duration: 'Hari Ini',
+            cost: todayPrintIncome,
+            isSpecial: true
         };
-    }), [activeSessions, now, tarifList]);
+
+        // 3. Add "Media" Station
+        const todayMediaIncome = labLayananData
+            .filter(d => d.tanggal === today && d.kategori === 'Media')
+            .reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
+
+        const mediaStation = {
+            id: 'MEDIA',
+            type: 'SERVICE',
+            category: 'Media',
+            active: todayMediaIncome > 0,
+            userName: 'Dokumentasi',
+            duration: 'Hari Ini',
+            cost: todayMediaIncome,
+            isSpecial: true
+        };
+
+        return [printStation, mediaStation, ...computers];
+    }, [activeSessions, pcCount, now, categorizedTariffs, labLayananData]);
 
     // 1. Incomes (layanan_admin)
     const {
@@ -85,8 +138,16 @@ export default function LabPage() {
         handleSave: handleSaveIncome, handleDelete: handleDeleteIncome, openModal: openIncomeModal
     } = useDataManagement('layanan_admin', {
         tanggal: new Date().toISOString().split('T')[0],
-        unit: 'Lab', nama_santri: '', stambuk: '', jenis_layanan: '',
-        nominal: '0', jumlah: '1', keterangan: '', pj: user?.fullname || '', pemohon_tipe: 'Santri'
+        unit: 'Lab',
+        nama_santri: '',
+        stambuk: '',
+        kategori: 'Rental',  // New: Category field
+        jenis_layanan: '',
+        nominal: '0',
+        jumlah: '1',
+        keterangan: '',
+        pj: user?.fullname || '',
+        pemohon_tipe: 'Santri'
     });
 
     // 2. Expenses & Setoran (unit_lab_media_kas)
@@ -120,14 +181,24 @@ export default function LabPage() {
     useEffect(() => { loadData(); }, [loadData]);
 
     const stats = useMemo(() => {
-        const income = layananData.reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
+        const income = labLayananData.reduce((acc, d) => acc + (parseInt(d.nominal) || 0), 0);
         const expense = kasData.filter(k => k.tipe === 'Keluar').reduce((acc, k) => acc + (parseInt(k.nominal) || 0), 0);
         return [
             { title: 'Total Pendapatan (Masuk)', value: formatCurrency(income), icon: 'fas fa-arrow-down', color: 'var(--success)' },
             { title: 'Total Pengeluaran (Keluar)', value: formatCurrency(expense), icon: 'fas fa-arrow-up', color: 'var(--danger)' },
             { title: 'Saldo Kas Lab', value: formatCurrency(income - expense), icon: 'fas fa-wallet', color: 'var(--primary)' }
         ];
-    }, [layananData, kasData]);
+    }, [labLayananData, kasData]);
+
+    // ✨ Compute Active PC Grid from Logs
+    const computedPcs = useMemo(() => {
+        // ... (existing computedPcs logic but using labLayananData if needed for initializing stations based on logs)
+        // Note: The new real-time system uses 'pcStations' derived from 'activeSessions', 
+        // but if we want to show historical occupancy or sync, we might need this.
+        // However, the current real-time implementation relies on 'pcStations' state.
+        // We will keep 'pcStations' in use for the grid as per the previous successful real-time update.
+        return pcStations;
+    }, [pcStations]);
 
     // --- Actions ---
 
@@ -287,12 +358,64 @@ export default function LabPage() {
                         <h2 className="outfit" style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-dark)', letterSpacing: '-0.5px' }}>
                             Pusat Monitoring Billing
                         </h2>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>Pantau status workstation dan durasi rental santri secara real-time.</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>
+                            Pantau status <strong style={{ color: 'var(--primary)' }}>{pcCount} Workstation</strong> & Printer.
+                        </p>
+                    </div>
+
+                    {/* PC Management Controls */}
+                    <div className="flex gap-3">
+                        <button
+                            className="btn btn-outline btn-sm"
+                            onClick={() => { if (pcCount > 5) setPcCount(c => c - 1); }}
+                            title="Kurangi Unit PC"
+                        >
+                            <i className="fas fa-minus"></i>
+                        </button>
+                        <button
+                            className="btn btn-outline btn-sm"
+                            onClick={() => setPcCount(c => c + 1)}
+                            title="Tambah Unit PC"
+                        >
+                            <i className="fas fa-plus"></i> Tambah PC
+                        </button>
                     </div>
                 </div>
+
                 <BillingGrid
                     pcs={pcStations}
-                    onPcClick={handleStartRentalClick}
+                    onPcClick={(pc) => {
+                        // Special handling for Service Stations (Percetakan & Media)
+                        if (pc.type === 'SERVICE') {
+                            openIncomeModal();
+
+                            let defaultService = '';
+                            let defaultPrice = '0';
+
+                            if (pc.category === 'Percetakan' && categorizedTariffs.print.length > 0) {
+                                defaultService = categorizedTariffs.print[0].nama_layanan;
+                                defaultPrice = categorizedTariffs.print[0].harga;
+                            } else if (pc.category === 'Media' && categorizedTariffs.media.length > 0) {
+                                defaultService = categorizedTariffs.media[0].nama_layanan;
+                                defaultPrice = categorizedTariffs.media[0].harga;
+                            }
+
+                            setIncomeForm(prev => ({
+                                ...prev,
+                                kategori: pc.category,
+                                jenis_layanan: defaultService,
+                                keterangan: '',
+                                nominal: defaultPrice,
+                                jumlah: '1'
+                            }));
+                            return;
+                        }
+
+                        // Normal PC Rental Logic
+                        if (!pc.active) {
+                            handleStartRentalClick(pc);
+                        }
+                    }}
                     onStopClick={handleStopRentalClick}
                 />
             </div>
@@ -312,7 +435,7 @@ export default function LabPage() {
                                 </button>
                             </div>
                         )}
-                        tableProps={{ columns: incomeColumns, data: layananData, loading: loadingLayanan }}
+                        tableProps={{ columns: incomeColumns, data: labLayananData, loading: loadingLayanan }}
                     />
                 </div>
                 <div className="secondary-column">
@@ -363,30 +486,68 @@ export default function LabPage() {
                 )}
             </Modal>
 
-            {/* Income Modal (Manual) */}
-            <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan (Manual)" footer={<button className="btn btn-primary" onClick={handleSaveIncome} disabled={submitting}>Simpan</button>}>
+            {/* Income Modal (Manual Entry) */}
+            <Modal isOpen={isIncomeModalOpen} onClose={() => setIsIncomeModalOpen(false)} title="Input Layanan Lab & Media" footer={<button className="btn btn-primary" onClick={handleSaveIncome} disabled={submitting}>Simpan</button>}>
                 <TextInput label="Tanggal" type="date" value={incomeForm.tanggal} onChange={e => setIncomeForm({ ...incomeForm, tanggal: e.target.value })} />
 
+                {/* Category Selector */}
                 <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
                     <SelectInput
                         label="Pilih Kategori Layanan"
-                        value={incomeForm.jenis_layanan.includes('Rental') ? 'Rental' : incomeForm.jenis_layanan.includes('Print') ? 'Print' : incomeForm.jenis_layanan}
+                        value={incomeForm.kategori || 'Rental'}
                         onChange={e => {
-                            const val = e.target.value;
-                            const t = tarifList.find(tarif => tarif.nama_layanan.toLowerCase().includes(val.toLowerCase()));
+                            const selectedCategory = e.target.value;
+                            let defaultService = '';
+                            let defaultPrice = '0';
+
+                            if (selectedCategory === 'Rental' && categorizedTariffs.rental.length > 0) {
+                                defaultService = categorizedTariffs.rental[0].nama_layanan;
+                                defaultPrice = categorizedTariffs.rental[0].harga;
+                            } else if (selectedCategory === 'Percetakan' && categorizedTariffs.print.length > 0) {
+                                defaultService = categorizedTariffs.print[0].nama_layanan;
+                                defaultPrice = categorizedTariffs.print[0].harga;
+                            } else if (selectedCategory === 'Media' && categorizedTariffs.media.length > 0) {
+                                defaultService = categorizedTariffs.media[0].nama_layanan;
+                                defaultPrice = categorizedTariffs.media[0].harga;
+                            }
+
                             setIncomeForm({
                                 ...incomeForm,
-                                jenis_layanan: t ? t.nama_layanan : val,
-                                nominal: t ? t.harga : '0',
+                                kategori: selectedCategory,
+                                jenis_layanan: defaultService,
+                                nominal: defaultPrice,
                                 jumlah: '1',
                                 keterangan: ''
                             });
                         }}
-                        options={['Rental', 'Print', ...tarifList.map(t => t.nama_layanan).filter(n => !n.includes('Rental') && !n.includes('Print'))]}
+                        options={['Rental', 'Percetakan', 'Media']}
                     />
                 </div>
 
-                {incomeForm.jenis_layanan.toLowerCase().includes('print') && (
+                {/* Service Type Selector based on Category */}
+                {incomeForm.kategori && (
+                    <SelectInput
+                        label="Jenis Layanan"
+                        value={incomeForm.jenis_layanan}
+                        onChange={e => {
+                            const selectedService = e.target.value;
+                            const tariff = tarifList.find(t => t.nama_layanan === selectedService);
+                            setIncomeForm({
+                                ...incomeForm,
+                                jenis_layanan: selectedService,
+                                nominal: tariff?.harga || '0'
+                            });
+                        }}
+                        options={
+                            incomeForm.kategori === 'Rental' ? categorizedTariffs.rental.map(t => t.nama_layanan) :
+                                incomeForm.kategori === 'Percetakan' ? categorizedTariffs.print.map(t => t.nama_layanan) :
+                                    categorizedTariffs.media.map(t => t.nama_layanan)
+                        }
+                    />
+                )}
+
+                {/* Dynamic Fields based on Category */}
+                {incomeForm.kategori === 'Percetakan' && (
                     <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
                         <TextInput
                             label="Jumlah Lembar"
@@ -394,22 +555,47 @@ export default function LabPage() {
                             value={incomeForm.jumlah}
                             onChange={e => {
                                 const pages = e.target.value;
-                                const rate = tarifList.find(t => t.nama_layanan.toLowerCase().includes('print'))?.harga || 0;
+                                const rate = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
                                 setIncomeForm({ ...incomeForm, jumlah: pages, nominal: parseInt(pages || 0) * parseInt(rate) });
                             }}
                         />
                         <TextInput
-                            label="Keterangan (Warna/BW)"
+                            label="Keterangan"
                             value={incomeForm.keterangan}
                             onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
-                            placeholder="Contoh: Print Warna"
+                            placeholder="Contoh: A4, Warna"
                         />
                     </div>
                 )}
 
-                {/* Manual form can be simpler if billing is automated */}
-                {!incomeForm.jenis_layanan.toLowerCase().includes('print') && (
-                    <TextInput label="Nominal Manual (Rp)" type="number" value={incomeForm.nominal} onChange={e => setIncomeForm({ ...incomeForm, nominal: e.target.value })} icon="fas fa-money-bill" />
+                {incomeForm.kategori === 'Rental' && (
+                    <TextInput
+                        label="Keterangan (Opsional)"
+                        value={incomeForm.keterangan}
+                        onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
+                        placeholder="Contoh: PC 05, Dengan Internet"
+                    />
+                )}
+
+                {incomeForm.kategori === 'Media' && (
+                    <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
+                        <TextInput
+                            label="Durasi/Jumlah"
+                            type="number"
+                            value={incomeForm.jumlah}
+                            onChange={e => {
+                                const qty = e.target.value;
+                                const rate = tarifList.find(t => t.nama_layanan === incomeForm.jenis_layanan)?.harga || 0;
+                                setIncomeForm({ ...incomeForm, jumlah: qty, nominal: parseInt(qty || 0) * parseInt(rate) });
+                            }}
+                        />
+                        <TextInput
+                            label="Keterangan"
+                            value={incomeForm.keterangan}
+                            onChange={e => setIncomeForm({ ...incomeForm, keterangan: e.target.value })}
+                            placeholder="Detail acara/kegiatan"
+                        />
+                    </div>
                 )}
 
                 <div className="form-group" style={{ marginTop: '1rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1.5rem' }}>
@@ -424,12 +610,15 @@ export default function LabPage() {
                         subLabelKey="kelas"
                     />
                 </div>
+
+                <div style={{ marginTop: '1.5rem', background: 'var(--primary-light)', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>Total Biaya:</span>
+                    <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary)' }}>{formatCurrency(incomeForm.nominal)}</span>
+                </div>
             </Modal>
 
             {/* Expense Modal */}
             <Modal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} title="Pencatatan Biaya Lab" footer={<button className="btn btn-primary" onClick={handleSaveExpense}>Simpan Biaya</button>}>
-                <TextInput label="Tanggal" type="date" value={expenseForm.tanggal} onChange={e => setExpenseForm({ ...expenseForm, tanggal: e.target.value })} />
-                <SelectInput label="Kategori" value={expenseForm.kategori} onChange={e => setExpenseForm({ ...expenseForm, kategori: e.target.value })} options={['Belanja Alat', 'Tinta / Kertas', 'Listrik / Internet', 'Lainnya']} />
                 <TextInput label="Nominal (Rp)" type="number" value={expenseForm.nominal} onChange={e => setExpenseForm({ ...expenseForm, nominal: e.target.value })} />
                 <TextAreaInput label="Keterangan" value={expenseForm.keterangan} onChange={e => setExpenseForm({ ...expenseForm, keterangan: e.target.value })} />
             </Modal>
