@@ -37,7 +37,13 @@ export const HEADERS_CONFIG = {
     'keamanan_formal_mapping': ["santri_id", "nama_santri", "kelompok_formal", "kelas_miu", "jenjang", "semester"],
     'absen_sekolah': ["santri_id", "nama_santri", "kelas", "tanggal", "kelompok_formal", "status", "keterangan", "petugas"],
     'pengurus_target': ["pengurus_id", "nama_pengurus", "bulan", "tahun", "target_tugas", "keterangan"],
-    'pengurus_absen': ["pengurus_id", "nama_pengurus", "bulan", "tahun", "tugas", "izin", "alfa", "alasan_izin", "petugas"]
+    'pengurus_absen': ["pengurus_id", "nama_pengurus", "bulan", "tahun", "tugas", "izin", "alfa", "alasan_izin", "petugas"],
+    'edu_pengajian': ["tanggal", "qari", "kitab", "waktu", "tempat", "keterangan", "petugas"],
+    'edu_lbm_peserta': ["nama_santri", "kelas", "tipe_lbm", "keterangan"],
+    'edu_lbm_delegasi': ["tanggal", "nama_santri", "kelas", "acara", "tempat", "hasil", "petugas"],
+    'edu_sorogan_absen': ["tanggal", "nama_santri", "kelas", "kelompok", "status", "keterangan", "petugas"],
+    'edu_sorogan_kelompok': ["nama_santri", "kelas", "kelompok", "pembimbing", "keterangan"],
+    'edu_takhosus_seminar': ["tanggal", "materi", "pembimbing", "waktu", "tempat", "peserta", "petugas"]
 };
 
 export const FILE_COLUMNS = {

@@ -66,6 +66,25 @@ export const NAV_ITEMS = [
         roles: ['admin', 'pendidikan'],
         submenu: [
             { label: 'Agenda & Nilai', path: '/pendidikan', icon: 'fas fa-book' },
+            { label: 'Pengajian Kitab', path: '/pendidikan/pengajian', icon: 'fas fa-book-open' },
+            {
+                label: 'LBM',
+                icon: 'fas fa-university',
+                submenu: [
+                    { label: 'Siswa Pagi', path: '/pendidikan/lbm/pagi', icon: 'fas fa-sun' },
+                    { label: 'Siswa Malam', path: '/pendidikan/lbm/malam', icon: 'fas fa-moon' },
+                    { label: 'Delegasi', path: '/pendidikan/lbm/delegasi', icon: 'fas fa-bullhorn' }
+                ]
+            },
+            {
+                label: 'Sorogan',
+                icon: 'fas fa-chalkboard-teacher',
+                submenu: [
+                    { label: 'Absensi', path: '/pendidikan/sorogan/absen', icon: 'fas fa-clipboard-check' },
+                    { label: 'Kelola Kelompok', path: '/pendidikan/sorogan/kelompok', icon: 'fas fa-users-cog' }
+                ]
+            },
+            { label: 'Takhōṣus & Seminar', path: '/pendidikan/takhosus', icon: 'fas fa-graduation-cap' },
             { label: 'Layanan Pendidikan', path: '/pendidikan/layanan', icon: 'fas fa-concierge-bell' }
         ]
     },
