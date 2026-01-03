@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiCall, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import PremiumBanner from '@/components/PremiumBanner';
+import StatsPanel from '@/components/StatsPanel';
 
 export default function LaporanPimpinan() {
     const { config } = useAuth();
@@ -67,21 +69,30 @@ export default function LaporanPimpinan() {
         return items.slice(0, 2).join(" Serta "); // Limit to 2 highlights
     };
 
+    const statsItems = useMemo(() => [
+        { title: 'Total Santri', value: stats.santriTotal, icon: 'fas fa-user-graduate', color: '#6366f1' },
+        { title: 'Pemasukan (Bln Ini)', value: formatCurrency(stats.pemasukanBulanIni), icon: 'fas fa-wallet', color: '#10b981' },
+        { title: 'Pelanggaran', value: stats.pelanggaranTotal, icon: 'fas fa-exclamation-triangle', color: '#f59e0b' },
+        { title: 'Santri Sakit', value: stats.kesehatanTotal, icon: 'fas fa-heartbeat', color: '#ef4444' }
+    ], [stats]);
+
     useEffect(() => {
         setMounted(true);
-        const isMounted = { current: true }; // Local ref for this effect cleanup
+        const isMountedRef = { current: true };
 
         const fetchStats = async () => {
             try {
                 const data = await apiCall('getQuickStats');
-                const santri = await apiCall('getData', 'GET', { type: 'santri' });
-                const ustadz = await apiCall('getData', 'GET', { type: 'ustadz' });
-                const pelanggaran = await apiCall('getData', 'GET', { type: 'keamanan' });
-                const kesehatan = await apiCall('getData', 'GET', { type: 'kesehatan' });
-                const arusKas = await apiCall('getData', 'GET', { type: 'arus_kas' });
-                const kamarData = await apiCall('getData', 'GET', { type: 'kamar' });
+                const [santri, ustadz, pelanggaran, kesehatan, arusKas, kamarData] = await Promise.all([
+                    apiCall('getData', 'GET', { type: 'santri' }),
+                    apiCall('getData', 'GET', { type: 'ustadz' }),
+                    apiCall('getData', 'GET', { type: 'keamanan' }),
+                    apiCall('getData', 'GET', { type: 'kesehatan' }),
+                    apiCall('getData', 'GET', { type: 'arus_kas' }),
+                    apiCall('getData', 'GET', { type: 'kamar' })
+                ]);
 
-                if (!isMounted.current) return;
+                if (!isMountedRef.current) return;
 
                 const now = new Date();
                 const currentMonth = now.getMonth();
@@ -115,13 +126,13 @@ export default function LaporanPimpinan() {
             } catch (error) {
                 console.error("Failed to fetch report data:", error);
             } finally {
-                if (isMounted.current) setLoading(false);
+                if (isMountedRef.current) setLoading(false);
             }
         };
 
         fetchStats();
 
-        return () => { isMounted.current = false; };
+        return () => { isMountedRef.current = false; };
     }, []);
 
     if (loading) return (
@@ -151,133 +162,116 @@ export default function LaporanPimpinan() {
                 </div>
             </div>
 
-            <div className="card-header">
-                <div>
-                    <h1 className="view-title">Laporan Pimpinan & Eksekutif</h1>
-                    <p className="view-subtitle">Ringkasan operasional dan keuangan Pondok Pesantren</p>
-                </div>
-                <div className="card-actions">
-                    <button className="btn btn-secondary" onClick={() => window.print()}>
+            <PremiumBanner
+                title="Laporan Pimpinan & Eksekutif"
+                subtitle="Analisis data cerdas untuk monitoring performa operasional pondok pesantren."
+                icon="fas fa-chart-line"
+                bgGradient="linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)"
+                actionButton={(
+                    <button className="btn btn-primary" style={{ padding: '12px 24px', borderRadius: '16px', fontWeight: 800 }} onClick={() => window.print()}>
                         <i className="fas fa-print"></i> Cetak Laporan
                     </button>
-                </div>
-            </div>
+                )}
+            />
 
-            {/* Summary Grid */}
-            <div className="stats-grid">
-                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', color: 'white' }}>
-                    <div className="stat-icon"><i className="fas fa-user-graduate"></i></div>
-                    <div className="stat-info">
-                        <h3>Total Santri</h3>
-                        <div className="value">{stats.santriTotal}</div>
-                        <p>Santri Aktif Terdaftar</p>
-                    </div>
-                </div>
-                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
-                    <div className="stat-icon"><i className="fas fa-wallet"></i></div>
-                    <div className="stat-info">
-                        <h3>Pemasukan (Bln Ini)</h3>
-                        <div className="value">{formatCurrency(stats.pemasukanBulanIni)}</div>
-                        <p>Total Arus Kas Masuk</p>
-                    </div>
-                </div>
-                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}>
-                    <div className="stat-icon"><i className="fas fa-exclamation-triangle"></i></div>
-                    <div className="stat-info">
-                        <h3>Pelanggaran</h3>
-                        <div className="value">{stats.pelanggaranTotal}</div>
-                        <p>Total Catatan Keamanan</p>
-                    </div>
-                </div>
-                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white' }}>
-                    <div className="stat-icon"><i className="fas fa-heartbeat"></i></div>
-                    <div className="stat-info">
-                        <h3>Santri Sakit</h3>
-                        <div className="value">{stats.kesehatanTotal}</div>
-                        <p>Izin Istirahat / Berobat</p>
-                    </div>
-                </div>
-            </div>
+            <StatsPanel items={statsItems} />
 
-            <div className="report-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginTop: '2rem' }}>
-                {/* Financial Overview Card */}
-                <div className="card report-card">
-                    <div className="card-header">
-                        <h2 className="card-title">Ikhtisar Keuangan Bulanan</h2>
+            <div className="report-row" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '3rem', marginTop: '3rem' }}>
+                <div className="card" style={{ padding: '2.5rem' }}>
+                    <div className="card-header" style={{ marginBottom: '2.5rem' }}>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: 900 }}>Ikhtisar Keuangan Bulanan</h2>
                     </div>
-                    <div className="financial-chart-view">
-                        <div className="chart-bar-container">
-                            <div className="label-row">
-                                <span>Pemasukan</span>
-                                <span>{formatCurrency(stats.pemasukanBulanIni)}</span>
+
+                    <div className="financial-analysis">
+                        <div style={{ marginBottom: '2.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontWeight: 800 }}>
+                                <span>Pemasukan Terhitung</span>
+                                <span style={{ color: '#10b981' }}>{formatCurrency(stats.pemasukanBulanIni)}</span>
                             </div>
-                            <div className="bar-bg">
-                                <div className="bar-fill" style={{ width: '100%', backgroundColor: '#10b981' }}></div>
+                            <div style={{ height: '14px', background: '#f1f5f9', borderRadius: '20px', overflow: 'hidden' }}>
+                                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', borderRadius: '20px' }}></div>
                             </div>
                         </div>
-                        <div className="chart-bar-container" style={{ marginTop: '1.5rem' }}>
-                            <div className="label-row">
-                                <span>Pengeluaran</span>
-                                <span>{formatCurrency(stats.pengeluaranBulanIni)}</span>
+
+                        <div style={{ marginBottom: '3rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontWeight: 800 }}>
+                                <span>Estimasi Pengeluaran</span>
+                                <span style={{ color: stats.pengeluaranBulanIni > stats.pemasukanBulanIni ? '#ef4444' : '#64748b' }}>
+                                    {formatCurrency(stats.pengeluaranBulanIni)}
+                                </span>
                             </div>
-                            <div className="bar-bg">
-                                <div className="bar-fill" style={{
+                            <div style={{ height: '14px', background: '#f1f5f9', borderRadius: '20px', overflow: 'hidden' }}>
+                                <div style={{
                                     width: stats.pemasukanBulanIni > 0 ? `${Math.min((stats.pengeluaranBulanIni / stats.pemasukanBulanIni) * 100, 100)}%` : '0%',
-                                    backgroundColor: stats.pengeluaranBulanIni > stats.pemasukanBulanIni ? '#dc2626' : '#ef4444'
+                                    height: '100%',
+                                    background: stats.pengeluaranBulanIni > stats.pemasukanBulanIni ? '#ef4444' : '#fbbf24',
+                                    borderRadius: '20px',
+                                    transition: 'width 1s ease'
                                 }}></div>
                             </div>
                         </div>
-                        <div className="balance-info" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #eee' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <strong>Saldo Surplus/Defisit:</strong>
-                                <span style={{
-                                    fontSize: '1.5rem',
-                                    fontWeight: '700',
-                                    color: (stats.pemasukanBulanIni - stats.pengeluaranBulanIni) >= 0 ? '#10b981' : '#ef4444'
-                                }}>
+
+                        <div style={{ padding: '2rem', background: '#f8fafc', borderRadius: '24px', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Proyeksi Saldo Bersih</div>
+                                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: (stats.pemasukanBulanIni - stats.pengeluaranBulanIni) >= 0 ? '#10b981' : '#ef4444' }}>
                                     {formatCurrency(stats.pemasukanBulanIni - stats.pengeluaranBulanIni)}
-                                </span>
+                                </div>
+                            </div>
+                            <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', color: (stats.pemasukanBulanIni - stats.pengeluaranBulanIni) >= 0 ? '#10b981' : '#ef4444', boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }}>
+                                <i className={`fas fa-chart-${(stats.pemasukanBulanIni - stats.pengeluaranBulanIni) >= 0 ? 'line' : 'bar'}`}></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Quick Info Card */}
-                <div className="card report-card">
-                    <div className="card-header">
-                        <h2 className="card-title">Status Real-time</h2>
-                    </div>
-                    <div className="status-list">
-                        <div className="status-item">
-                            <span className="dot" style={{ backgroundColor: '#10b981' }}></span>
-                            <div className="status-text">
-                                <strong>SDM Pondok</strong>
-                                <p>{stats.ustadzTotal} Tenaga Pengajar Aktif</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+                    <div className="card" style={{ padding: '2.5rem' }}>
+                        <h2 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '2rem' }}>Status Real-time</h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.25rem', background: '#f8fafc', borderRadius: '18px' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#dcfce7', color: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <i className="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>SDM Pengajar</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{stats.ustadzTotal} Tenaga Aktif</div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.25rem', background: '#f8fafc', borderRadius: '18px' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <i className="fas fa-bed"></i>
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Okupansi Kamar</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Terisi {occupancy}%</div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.25rem', background: '#f8fafc', borderRadius: '18px' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: stats.pelanggaranTotal > 10 ? '#fef2f2' : '#f0fdf4', color: stats.pelanggaranTotal > 10 ? '#dc2626' : '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <i className={`fas fa-${stats.pelanggaranTotal > 10 ? 'shield-exclamation' : 'shield-check'}`}></i>
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Situasi Keamanan</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{stats.pelanggaranTotal > 10 ? 'Perlu Perhatian' : 'Kondusif'}</div>
+                                </div>
                             </div>
                         </div>
-                        <div className="status-item" style={{ marginTop: '1.2rem' }}>
-                            <span className="dot" style={{ backgroundColor: occupancy > 90 ? '#ef4444' : '#6366f1' }}></span>
-                            <div className="status-text">
-                                <strong>Hunian Kamar</strong>
-                                <p>{occupancy > 0 ? `Terisi ${occupancy}%` : 'Data Kamar Kosong'}</p>
+
+                        <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)', borderRadius: '24px', color: 'white', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'relative', zIndex: 2 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                    <div style={{ width: '32px', height: '32px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <i className="fas fa-robot"></i>
+                                    </div>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>AI Smart Insight</span>
+                                </div>
+                                <p style={{ fontSize: '0.85rem', lineHeight: '1.6', fontStyle: 'italic', opacity: 0.9 }}>
+                                    "{aiSuggestion}"
+                                </p>
                             </div>
+                            <i className="fas fa-brain" style={{ position: 'absolute', right: '-20px', bottom: '-20px', fontSize: '100px', opacity: 0.1, color: 'white' }}></i>
                         </div>
-                        <div className="status-item" style={{ marginTop: '1.2rem' }}>
-                            <span className="dot" style={{ backgroundColor: stats.pelanggaranTotal > 10 ? '#f59e0b' : '#10b981' }}></span>
-                            <div className="status-text">
-                                <strong>Ketertiban</strong>
-                                <p>{stats.pelanggaranTotal > 10 ? 'Perlu Perhatian' : 'Kondusif & Aman'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="ai-report-box" style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f4ff', borderRadius: '12px', borderLeft: '4px solid #6366f1' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <i className="fas fa-robot" style={{ color: '#6366f1' }}></i>
-                            <strong style={{ fontSize: '0.8rem', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px' }}>Saran Sistem (AI Analisis)</strong>
-                        </div>
-                        <p style={{ fontSize: '0.85rem', color: '#1e293b', fontStyle: 'italic', lineHeight: '1.4' }}>
-                            "{aiSuggestion}"
-                        </p>
                     </div>
                 </div>
             </div>

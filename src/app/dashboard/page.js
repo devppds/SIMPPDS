@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import StatCard from '@/components/StatCard';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { formatCurrency, formatDate, apiCall } from '@/lib/utils';
 import Link from 'next/link';
 import SortableTable from '@/components/SortableTable';
+import StatsPanel from '@/components/StatsPanel';
 
 export default function DashboardPage() {
     const { user, isDevelzy } = useAuth();
@@ -55,23 +55,25 @@ export default function DashboardPage() {
 
     // ✨ Optimized Smart Stat Cards Logic (Detects Develzy Access)
     // We list all potential 8 cards and rank them by importance for the user's specific context.
-    const potentialStats = [
-        { label: 'Total Santri', value: stats.santriTotal, icon: 'fas fa-users', color: 'stat-blue', show: hasAccess('Data Santri'), priority: 1 },
-        { label: 'Pemasukan/Bln', value: formatCurrency(stats.keuanganTotal), icon: 'fas fa-arrow-down', color: 'stat-green', show: hasAccess('Arus Kas Pondok') || hasAccess('Pembayaran Santri'), priority: 2 },
-        { label: 'Pelanggaran', value: stats.violationsMonth, icon: 'fas fa-exclamation-triangle', color: 'stat-red', show: hasAccess('Pelanggaran'), priority: 3 },
-        { label: 'Saldo Kas', value: formatCurrency(stats.kasTotal), icon: 'fas fa-wallet', color: 'stat-indigo', show: hasAccess('Arus Kas Pondok') || hasAccess('Setoran Unit'), priority: 4 },
-        { label: 'Izin Aktif', value: stats.activeIzin, icon: 'fas fa-id-card', color: 'stat-yellow', show: hasAccess('Perizinan Santri'), priority: 5 },
-        { label: 'Pengajar/Kader', value: stats.ustadzTotal, icon: 'fas fa-mosque', color: 'stat-purple', show: hasAccess('Data Pengajar'), priority: 6 },
-        { label: 'Santri Sakit', value: stats.activeSakit, icon: 'fas fa-notes-medical', color: 'stat-red', show: hasAccess('Data Kesehatan'), priority: 7 },
-        { label: 'Total Pengurus', value: stats.pengurusTotal, icon: 'fas fa-user-tie', color: 'stat-cyan', show: hasAccess('Data Pengurus'), priority: 8 },
-        { label: 'Kapasitas Kamar', value: stats.kamarKapasitas, icon: 'fas fa-bed', color: 'stat-indigo', show: hasAccess('Asrama & Kamar'), priority: 9 }
-    ];
+    // List all potential cards with their access requirements
+    const statsItems = useMemo(() => {
+        const items = [
+            { title: 'Total Santri', value: stats.santriTotal, icon: 'fas fa-users', color: '#2563eb', show: hasAccess('Data Santri'), priority: 1 },
+            { title: 'Pemasukan/Bln', value: formatCurrency(stats.keuanganTotal), icon: 'fas fa-arrow-down', color: '#10b981', show: hasAccess('Arus Kas Pondok') || hasAccess('Pembayaran Santri'), priority: 2 },
+            { title: 'Pelanggaran', value: stats.violationsMonth, icon: 'fas fa-exclamation-triangle', color: '#ef4444', show: hasAccess('Pelanggaran'), priority: 3 },
+            { title: 'Saldo Kas', value: formatCurrency(stats.kasTotal), icon: 'fas fa-wallet', color: '#6366f1', show: hasAccess('Arus Kas Pondok') || hasAccess('Setoran Unit'), priority: 4 },
+            { title: 'Izin Aktif', value: stats.activeIzin, icon: 'fas fa-id-card', color: '#f59e0b', show: hasAccess('Perizinan Santri'), priority: 5 },
+            { title: 'Pengajar/Kader', value: stats.ustadzTotal, icon: 'fas fa-mosque', color: '#8b5cf6', show: hasAccess('Data Pengajar'), priority: 6 },
+            { title: 'Santri Sakit', value: stats.activeSakit, icon: 'fas fa-notes-medical', color: '#dc2626', show: hasAccess('Data Kesehatan'), priority: 7 },
+            { title: 'Total Pengurus', value: stats.pengurusTotal, icon: 'fas fa-user-tie', color: '#06b6d4', show: hasAccess('Data Pengurus'), priority: 8 },
+            { title: 'Kapasitas Kamar', value: stats.kamarKapasitas, icon: 'fas fa-bed', color: '#1e1b4b', show: hasAccess('Asrama & Kamar'), priority: 9 }
+        ];
 
-    // Filter by access and limit to top 8
-    const dynamicStats = potentialStats
-        .filter(s => s.show)
-        .sort((a, b) => a.priority - b.priority)
-        .slice(0, 8);
+        return items
+            .filter(s => s.show)
+            .sort((a, b) => a.priority - b.priority)
+            .slice(0, 8);
+    }, [stats, userMenus, isDevelzy, role]);
 
     return (
         <div className="view-container animate-in">
@@ -95,17 +97,14 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Smart Stats Grid */}
-            <div className="stats-grid" style={{ marginBottom: '4rem', gridTemplateColumns: `repeat(auto-fill, minmax(280px, 1fr))`, gap: '2rem' }}>
-                {dynamicStats.length > 0 ? dynamicStats.map((s, i) => (
-                    <StatCard key={i} label={s.label} value={loading ? '...' : s.value} icon={s.icon} colorClass={s.color} />
-                )) : (
-                    <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', background: '#f8fafc', border: '2px dashed #e2e8f0' }}>
-                        <i className="fas fa-lock" style={{ fontSize: '2rem', color: '#94a3b8', marginBottom: '1rem' }}></i>
-                        <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Akses terbatas. Gunakan menu samping untuk navigasi.</p>
-                    </div>
-                )}
-            </div>
+            {statsItems.length > 0 ? (
+                <StatsPanel items={statsItems} />
+            ) : (
+                <div className="card" style={{ textAlign: 'center', padding: '4rem', background: '#f8fafc', border: '2px dashed #e2e8f0', marginBottom: '4rem' }}>
+                    <i className="fas fa-lock" style={{ fontSize: '2rem', color: '#94a3b8', marginBottom: '1rem' }}></i>
+                    <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Akses terbatas. Gunakan menu samping untuk navigasi.</p>
+                </div>
+            )}
 
             <div className="main-grid-layout" style={{ gap: '3rem' }}>
                 {mounted ? (
