@@ -15,6 +15,7 @@ import { TextInput, SelectInput } from '@/components/FormInput';
 import DataViewContainer from '@/components/DataViewContainer';
 import ConfirmModal from '@/components/ConfirmModal';
 import ModalTabs from '@/components/ModalTabs';
+import PremiumBanner from '@/components/PremiumBanner';
 
 export default function SantriPage() {
     const { canEdit, canDelete } = usePagePermission();
@@ -194,7 +195,18 @@ export default function SantriPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul={`Database Santri - ${filterStatus}`} subJudul={`Tiga Unit: MHM, MIU, Madin`} hideOnScreen={true} />
+            <PremiumBanner
+                title={`Database Santri - ${filterStatus}`}
+                subtitle="Pusat data informasi santri dari Unit MHM, MIU, dan Madrasah Diniyyah."
+                icon="fas fa-user-graduate"
+                floatingIcon="fas fa-mosque"
+                bgGradient="linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)"
+                actionButton={canEdit && (
+                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => { setActiveTab('umum'); openModal(); }}>
+                        <i className="fas fa-user-plus"></i> Tambah Santri
+                    </button>
+                )}
+            />
             <StatsPanel items={stats} />
 
             <input type="file" ref={fileInputRef} onChange={handleImport} accept=".csv" style={{ display: 'none' }} />

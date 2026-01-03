@@ -12,6 +12,7 @@ import StatsPanel from '@/components/StatsPanel';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 import SortableTable from '@/components/SortableTable';
+import PremiumBanner from '@/components/PremiumBanner';
 
 export default function LabPage() {
     const { user } = useAuth();
@@ -141,58 +142,18 @@ export default function LabPage() {
 
     return (
         <div className="view-container animate-in">
-            <div style={{
-                marginBottom: '3.5rem',
-                padding: '2.5rem',
-                background: 'linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)',
-                borderRadius: 'var(--radius-lg)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '2.5rem',
-                boxShadow: 'var(--shadow-premium)',
-                color: '#fff',
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
-                <div style={{
-                    position: 'absolute',
-                    top: '-20%',
-                    right: '-10%',
-                    fontSize: '15rem',
-                    color: 'rgba(255,255,255,0.03)',
-                    transform: 'rotate(-15deg)',
-                    pointerEvents: 'none'
-                }}>
-                    <i className="fas fa-desktop"></i>
-                </div>
-
-                <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '24px',
-                    background: 'rgba(255,255,255,0.1)',
-                    backdropFilter: 'blur(10px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '2.5rem',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(255,255,255,0.2)'
-                }}>
-                    <i className="fas fa-microchip"></i>
-                </div>
-                <div style={{ flex: 1 }}>
-                    <h1 className="outfit" style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '6px', letterSpacing: '-0.5px' }}>
-                        Layanan Lab Komputer
-                    </h1>
-                    <p style={{ opacity: 0.8, margin: 0, fontSize: '1.1rem', fontWeight: 500 }}>
-                        Manajemen operasional rental PC, jasa pengetikan, dan percetakan dokumen.
-                    </p>
-                </div>
-                <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1.25rem 2.5rem', borderRadius: '18px', fontSize: '1rem', fontWeight: 800 }} onClick={handleSetoran}>
-                    <i className="fas fa-university"></i> Setor ke Bendahara
-                </button>
-            </div>
+            <PremiumBanner
+                title="Layanan Lab Komputer"
+                subtitle="Manajemen operasional rental PC, jasa pengetikan, dan percetakan dokumen."
+                icon="fas fa-microchip"
+                floatingIcon="fas fa-desktop"
+                bgGradient="linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)"
+                actionButton={
+                    <button className="btn-vibrant btn-vibrant-purple" style={{ height: 'fit-content', padding: '1.25rem 2.5rem', borderRadius: '18px', fontSize: '1rem', fontWeight: 800 }} onClick={handleSetoran}>
+                        <i className="fas fa-university"></i> Setor ke Bendahara
+                    </button>
+                }
+            />
 
             <div style={{ marginBottom: '2rem' }}>
                 <StatsPanel items={stats} />

@@ -13,6 +13,7 @@ import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
+import PremiumBanner from '@/components/PremiumBanner';
 
 export default function IzinPage() {
     const { user, isAdmin } = useAuth();
@@ -91,14 +92,18 @@ export default function IzinPage() {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul="Sistem Perizinan Santri" subJudul="Pusat Keamanan & Ketertiban Pondok." hideOnScreen={true} />
-
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
-                    Perizinan Santri
-                </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Kelola izin keluar, pulang rumah, dan dispensasi santri.</p>
-            </div>
+            <PremiumBanner
+                title="Perizinan & Mobilitas Santri"
+                subtitle="Kontrol perizinan keluar pondok, pulang rumah, dan pelacakan riwayat kembali santri."
+                icon="fas fa-passport"
+                floatingIcon="fas fa-id-card"
+                bgGradient="linear-gradient(135deg, #92400e 0%, #713f12 100%)"
+                actionButton={canEdit && (
+                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
+                        <i className="fas fa-plus"></i> Buat Surat Izin
+                    </button>
+                )}
+            />
 
             <StatsPanel items={stats} />
 

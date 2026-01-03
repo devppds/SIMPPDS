@@ -12,6 +12,7 @@ import Autocomplete from '@/components/Autocomplete';
 import DataViewContainer from '@/components/DataViewContainer';
 import StatsPanel from '@/components/StatsPanel';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
+import PremiumBanner from '@/components/PremiumBanner';
 
 export default function PelanggaranPage() {
     const { user, isAdmin } = useAuth();
@@ -108,12 +109,18 @@ export default function PelanggaranPage() {
 
     return (
         <div className="view-container animate-in">
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 className="outfit" style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>
-                    Kedisiplinan Santri
-                </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Pencatatan pelanggaran, poin kedisiplinan, dan takzir santri.</p>
-            </div>
+            <PremiumBanner
+                title="Pusat Kedisiplinan Santri"
+                subtitle="Manajemen log pelanggaran, akumulasi poin kedisiplinan, dan kontrol takzir santri."
+                icon="fas fa-shield-alt"
+                floatingIcon="fas fa-gavel"
+                bgGradient="linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"
+                actionButton={canEdit && (
+                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
+                        <i className="fas fa-plus"></i> Catat Pelanggaran
+                    </button>
+                )}
+            />
 
             <StatsPanel items={stats} />
 

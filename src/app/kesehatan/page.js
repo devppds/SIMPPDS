@@ -7,6 +7,7 @@ import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
+import PremiumBanner from '@/components/PremiumBanner';
 
 export default function KesehatanPage() {
     const { canEdit, canDelete } = usePagePermission();
@@ -95,18 +96,20 @@ export default function KesehatanPage() {
 
     return (
         <div className="view-container animate-in">
+            <PremiumBanner
+                title="Pusat Kesehatan Santri (POSKESTREN)"
+                subtitle="Rekam medis rutin, manajemen obat, monitoring kesembuhan, dan riwayat perawatan santri."
+                icon="fas fa-hand-holding-medical"
+                floatingIcon="fas fa-heartbeat"
+                bgGradient="linear-gradient(135deg, #be123c 0%, #881337 100%)"
+                actionButton={canEdit && (
+                    <button className="btn btn-primary" style={{ height: 'fit-content', padding: '1.2rem 2.5rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
+                        <i className="fas fa-plus"></i> Input Rekam Medis
+                    </button>
+                )}
+            />
             <div className="card">
-                <div className="card-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>Kesehatan Santri (BK)</h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mencatat {displayData.length} data rekam medis.</p>
-                    </div>
-                    <div className="card-actions">
-                        {canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}>
-                            <i className="fas fa-plus"></i> Rekam Medis Baru
-                        </button>}
-                    </div>
-                </div>
+
 
                 <div className="table-controls">
                     <div className="search-wrapper">

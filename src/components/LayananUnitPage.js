@@ -7,10 +7,10 @@ import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import Autocomplete from './Autocomplete';
 
-// ✨ Unified Components
+// ✨ Integrated Shared Components
 import DataViewContainer from '@/components/DataViewContainer';
-import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
+import PremiumBanner from '@/components/PremiumBanner';
 import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -33,16 +33,16 @@ export default function LayananUnitPage({ unit: forceUnit }) {
         nominal: '0', jumlah: '1', keterangan: '', pj: '', pemohon_tipe: 'Santri'
     });
 
-    // Theme Configuration based on Unit
+    // Premium Theme Configuration based on Unit
     const theme = useMemo(() => {
         switch (forceUnit) {
-            case 'Keamanan': return { color: 'var(--danger)', icon: 'fas fa-shield-alt', bg: '#fef2f2', border: '#fee2e2' };
-            case 'Kesehatan': return { color: '#ec4899', icon: 'fas fa-heartbeat', bg: '#fdf2f8', border: '#fce7f3' };
-            case 'Pendidikan': return { color: '#f59e0b', icon: 'fas fa-graduation-cap', bg: '#fffbeb', border: '#fef3c7' };
-            case "Jam'iyyah": return { color: '#6366f1', icon: 'fas fa-users', bg: '#eef2ff', border: '#e0e7ff' };
-            case 'Lab': return { color: '#0ea5e9', icon: 'fas fa-desktop', bg: '#f0f9ff', border: '#e0f2fe' };
-            case 'Media': return { color: '#8b5cf6', icon: 'fas fa-camera', bg: '#f5f3ff', border: '#ede9fe' };
-            case 'Sekretariat': default: return { color: 'var(--primary)', icon: 'fas fa-file-signature', bg: '#f8fafc', border: '#e2e8f0' };
+            case 'Keamanan': return { color: '#dc2626', icon: 'fas fa-shield-alt', floating: 'fas fa-gavel', gradient: 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)', desc: 'Log pelanggaran, poin kedisiplinan, dan kontrol takzir.' };
+            case 'Kesehatan': return { color: '#e11d48', icon: 'fas fa-notes-medical', floating: 'fas fa-heartbeat', gradient: 'linear-gradient(135deg, #9f1239 0%, #881337 100%)', desc: 'Monitoring rekam medis, manajemen obat, dan riwayat perawatan.' };
+            case 'Pendidikan': return { color: '#0f172a', icon: 'fas fa-graduation-cap', floating: 'fas fa-book-reader', gradient: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)', desc: 'Pusat monitoring bimbingan ustadz dan penilaian akademis.' };
+            case "Jam'iyyah": return { color: '#4f46e5', icon: 'fas fa-users-cog', floating: 'fas fa-mosque', gradient: 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)', desc: 'Pengelolaan kegiatan organisasi dan ekstrakurikuler santri.' };
+            case 'Lab': return { color: '#2563eb', icon: 'fas fa-microchip', floating: 'fas fa-desktop', gradient: 'linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%)', desc: 'Manajemen operasional rental PC dan jasa percetakan.' };
+            case 'Media': return { color: '#7c3aed', icon: 'fas fa-photo-video', floating: 'fas fa-camera', gradient: 'linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)', desc: 'Penyewaan alat dokumentasi dan inventaris media digital.' };
+            default: return { color: 'var(--primary)', icon: 'fas fa-file-signature', floating: 'fas fa-folder-open', gradient: 'linear-gradient(135deg, var(--primary-dark) 0%, #1e1b4b 100%)', desc: 'Pusat layanan administrasi dan pencatatan riwayat unit.' };
         }
     }, [forceUnit]);
 
@@ -112,25 +112,25 @@ export default function LayananUnitPage({ unit: forceUnit }) {
 
     return (
         <div className="view-container animate-in">
-            <KopSurat judul={`Administrasi ${forceUnit}`} subJudul={`Pusat layanan dan log aktivitas seksi ${forceUnit.toLowerCase()}.`} hideOnScreen={true} />
+            <PremiumBanner
+                title={`Administrasi ${forceUnit}`}
+                subtitle={theme.desc}
+                icon={theme.icon}
+                floatingIcon={theme.floating}
+                bgGradient={theme.gradient}
+                actionButton={canEdit && (
+                    <button className="btn btn-primary" style={{ padding: '1.2rem 2rem', borderRadius: '18px', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }} onClick={() => openModal()}>
+                        <i className="fas fa-plus"></i> Input Layanan Baru
+                    </button>
+                )}
+            />
 
             <StatsPanel items={stats} />
 
-            <div style={{ marginBottom: '2rem', padding: '1.5rem', background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: theme.color, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                    <i className={theme.icon}></i>
-                </div>
-                <div>
-                    <h2 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Layanan {forceUnit}</h2>
-                    <p style={{ color: '#64748b', margin: 0 }}>Kelola transaksi dan pencatatan layanan khusus unit {forceUnit}.</p>
-                </div>
-            </div>
-
             <DataViewContainer
-                title={`Administrasi Layanan ${forceUnit}`}
-                subtitle={`Menampilkan riwayat transaksi unit.`}
-                headerActions={canEdit && <button className="btn btn-primary btn-sm" onClick={() => openModal()}><i className="fas fa-plus"></i> Input Layanan Baru</button>}
-                searchProps={{ value: search, onChange: e => setSearch(e.target.value) }}
+                title={`Riwayat Transaksi Unit ${forceUnit}`}
+                subtitle={`Menampilkan catatan log aktivitas dan jasa seksi.`}
+                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari pemohon atau jenis layanan..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
