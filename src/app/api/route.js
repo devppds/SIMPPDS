@@ -136,7 +136,7 @@ async function dispatcher(request) {
         if (action === 'getQuickStats') return await StatsHandler.handleGetQuickStats(db);
 
         // --- Data CRUD ---
-        if (action === 'getData') return await DataHandler.handleGetData(db, type);
+        if (action === 'getData') return await DataHandler.handleGetData(request, db, type);
         if (action === 'saveData') return await DataHandler.handleSaveData(request, db, type, id); // id from URL included
         if (action === 'deleteData') return await DataHandler.handleDeleteData(request, db, env, type, id);
 

