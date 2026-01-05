@@ -97,7 +97,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.google && view === 'login') {
-      const clientId = (config && config.find(c => c.key === 'google_client_id')?.value) || '765273331300-9h789fbe1kvd1vt5bc4ccn9ve2t1lpav.apps.googleusercontent.com';
+      const clientId = (Array.isArray(config) && config.find(c => c.key === 'google_client_id')?.value) || '765273331300-9h789fbe1kvd1vt5bc4ccn9ve2t1lpav.apps.googleusercontent.com';
 
       window.google.accounts.id.initialize({
         client_id: clientId,
