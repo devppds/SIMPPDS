@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
-    "build:worker": "npx open-next build",
+    "build": "npx @opennextjs/cloudflare",
+    "build:worker": "npx @opennextjs/cloudflare",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "npm run build:worker && npx wrangler deploy"
+    "deploy": "npx @opennextjs/cloudflare && npx wrangler deploy"
   },
   "dependencies": {
     "html5-qrcode": "^2.3.8",
