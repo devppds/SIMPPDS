@@ -3,7 +3,7 @@ export const NAV_ITEMS = [
         label: 'Dashboard',
         icon: 'fas fa-th-large',
         path: '/dashboard',
-        roles: ['admin', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu', 'wajar_murottil']
+        roles: ['admin', 'super_dashboard', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu', 'wajar_murottil']
     },
     {
         label: 'Laporan Pimpinan',
@@ -208,7 +208,8 @@ export const getFirstAllowedPath = (user) => {
     );
 
     if (user.role === 'dev_elzy') return '/develzy';
-    if (user.role === 'admin') return '/dashboard';
+    if (user.role === 'dev_elzy') return '/develzy';
+    if (user.role === 'admin' || user.role === 'super_dashboard') return '/dashboard';
 
     const count = countAllowedMenus(user);
 
@@ -265,7 +266,7 @@ export const getFirstAllowedPath = (user) => {
 
 export const countAllowedMenus = (user) => {
     if (!user) return 0;
-    if (user.role === 'admin' || user.role === 'dev_elzy') return 99; // Unlimited
+    if (user.role === 'admin' || user.role === 'dev_elzy' || user.role === 'super_dashboard') return 99; // Unlimited
 
     const isAllowed = (item, parentLabels = []) => {
         if (!item.roles && !item.path && !item.submenu) return true;

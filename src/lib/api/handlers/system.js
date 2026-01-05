@@ -158,6 +158,7 @@ export async function handleInitSystem(request, db) {
         if (roleCheck && roleCheck.count === 0) {
             const defaultRoles = [
                 { role: 'dev_elzy', label: 'DEVELZY Control', color: '#0f172a', menus: JSON.stringify(['Semua Menu', 'DEVELZY Control']), is_public: 0 },
+                { role: 'super_dashboard', label: 'Super Dashboard', color: '#2563eb', menus: JSON.stringify(['Semua Menu']), is_public: 0 },
                 { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: JSON.stringify(['Semua Menu']), is_public: 1 },
                 { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', menus: JSON.stringify(['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Arsiparis']), is_public: 1 },
                 { role: 'bendahara', label: 'Bendahara', color: '#10b981', menus: JSON.stringify(['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri']), is_public: 1 },
@@ -181,7 +182,7 @@ export async function handleInitSystem(request, db) {
         const dashUser = await db.prepare("SELECT id FROM users WHERE username = 'develzy_dash'").first();
         if (!dashUser) {
             await db.prepare("INSERT INTO users (username, fullname, password, password_plain, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)")
-                .bind('develzy_dash', 'DEVELZY Dashboard', '2509', '2509', 'admin').run();
+                .bind('develzy_dash', 'DEVELZY Dashboard', '2509', '2509', 'super_dashboard').run();
         }
     } catch (e) {
         console.error("Seeding develzy_dash failed", e);

@@ -46,7 +46,7 @@ export default function Sidebar() {
         if (!user) return false;
 
         // 1. Super Admin Bypass
-        if (user.role === 'dev_elzy') return true;
+        if (user.role === 'dev_elzy' || user.role === 'super_dashboard') return true;
 
         // 2. Menu-based Permission (Dynamic from DB)
         if (user.allowedMenus && Array.isArray(user.allowedMenus) && user.allowedMenus.length > 0) {
