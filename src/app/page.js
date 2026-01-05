@@ -167,7 +167,7 @@ export default function LoginPage() {
 
         .orb-1 { width: 600px; height: 600px; background: rgba(37, 99, 235, 0.4); top: -200px; right: -100px; }
         .orb-2 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.3); bottom: -100px; left: -100px; animation-delay: -5s; }
-        .orb-3 { width: 300px; height: 300px; background: rgba(16, 185, 129, 0.2); mid: 50%; left: 10%; animation-delay: -10s; }
+        .orb-3 { width: 300px; height: 300px; background: rgba(16, 185, 129, 0.2); top: 50%; left: 10%; animation-delay: -10s; }
 
         @keyframes float {
           0% { transform: translate(0, 0) scale(1); }
@@ -242,7 +242,7 @@ export default function LoginPage() {
           -webkit-text-fill-color: transparent;
         }
         
-        .subtitle { font-size: 1rem; color: #64748b; font-weight: 500; line-height: 1.6; }
+        .subtitle { font-size: 1rem; color: #64748b; font-weight: 500; line-height: 1.6; text-wrap: balance; }
 
         .form-group { margin-bottom: 1.5rem; text-align: left; position: relative; }
         .form-label { display: block; font-size: 0.8rem; color: #475569; margin-bottom: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 0.25rem; }
@@ -389,6 +389,89 @@ export default function LoginPage() {
           background-repeat: no-repeat;
           background-position: right 20px center;
           background-size: 18px;
+        }
+
+        /* --- MOBILE RESPONSIVE --- */
+        @media (max-width: 480px) {
+          .orb-1 { width: 300px; height: 300px; }
+          .orb-2 { width: 200px; height: 200px; }
+          .orb-3 { width: 150px; height: 150px; }
+
+          .auth-card {
+            padding: 3rem 1.5rem;
+            border-radius: 32px;
+          }
+
+          h1 {
+            font-size: 1.75rem;
+            letter-spacing: -1px;
+          }
+
+          .subtitle {
+            font-size: 0.9rem;
+          }
+
+          .logo-area {
+            margin-bottom: 2rem;
+          }
+
+          .logo-box {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+          }
+
+          .pin-container {
+            gap: 12px;
+          }
+
+          .pin-digit {
+            width: 50px;
+            height: 60px;
+            border-radius: 16px;
+            font-size: 1.5rem;
+          }
+
+          .premium-input {
+            padding: 14px 16px;
+            font-size: 0.95rem;
+          }
+
+          button.primary-btn {
+            padding: 16px;
+            font-size: 1rem;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .auth-wrapper {
+            padding: 10px;
+          }
+
+          .auth-card {
+            padding: 2rem 1rem;
+          }
+
+          .logo-box {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+          }
+
+          .pin-container {
+            gap: 8px;
+          }
+
+          .pin-digit {
+            width: 42px;
+            height: 52px;
+            border-radius: 12px;
+          }
+
+          h1 {
+            font-size: 1.5rem;
+          }
         }
       `}</style>
 
