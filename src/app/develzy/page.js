@@ -108,12 +108,14 @@ export default function DevelzyControlPage() {
             if (activeTab === 'general' || activeTab === 'branding') {
                 const res = await apiCall('getConfigs', 'GET');
                 if (res && Array.isArray(res) && isMounted.current) {
-                    const newConfigs = { ...configs };
+                    // Start with current state to preserve any other keys, but prioritize DB values
+                    const dbConfigs = {};
                     res.forEach(item => {
-                        if (newConfigs.hasOwnProperty(item.key)) newConfigs[item.key] = item.value;
+                        dbConfigs[item.key] = item.value;
                         if (item.key === 'maintenance_mode') setMaintenanceMode(item.value === 'true');
                     });
-                    setConfigs(newConfigs);
+
+                    setConfigs(prev => ({ ...prev, ...dbConfigs }));
                 }
             }
 
@@ -167,7 +169,7 @@ export default function DevelzyControlPage() {
 
         // Polling
         const interval = setInterval(() => {
-            if (activeTab === 'sessions' || activeTab === 'system' || activeTab === 'general') {
+            if (activeTab === 'sessions' || activeTab === 'system' || activeTab === 'general' || activeTab === 'branding') {
                 loadData();
                 loadSystemStats();
             }
