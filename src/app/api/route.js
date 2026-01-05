@@ -43,10 +43,37 @@ async function dispatcher(request) {
     try {
         // 3. Routing Logic
 
+
         // --- System & Config ---
         if (action === 'initSystem') return await SystemHandler.handleInitSystem(request, db);
         if (action === 'ping') return await SystemHandler.handlePing(db);
         if (action === 'getConfigs') return await SystemHandler.handleGetConfigs(db);
+
+        // --- 💀 REAL BACKEND: GLOBAL LOCKDOWN INTERCEPTOR ---
+        if (request.method !== 'GET' && action !== 'execKillSwitch' && action !== 'login') {
+            // Allow 'execKillSwitch' so we can Turn OFF Lockdown. Allow 'login' so admins can get in to fix it.
+            const lockdown = await db.prepare("SELECT value FROM system_configs WHERE key = 'KILLSWITCH_LOCKDOWN'").first();
+            if (lockdown && lockdown.value === '1') {
+                // But wait, allow Develzy to bypass?
+                const isAdmin = await verifyAdmin(request, db);
+                // Even Develzy might want to test the lockdown. 
+                // Let's say Strict Mode: Only 'execKillSwitch' to disable it is allowed.
+                return Response.json({
+                    error: "SYSTEM_LOCKDOWN",
+                    message: "Sistem dalam mode GLOBAL LOCKDOWN (Read-Only). Tidak ada perubahan data diizinkan."
+                }, { status: 503 });
+            }
+        }
+
+        // --- 💀 REAL BACKEND: KILL SWITCH ROUTES ---
+        if (action === 'getMorale') return await SystemHandler.handleGetRealMorale(db);
+        if (action === 'getReality') return await SystemHandler.handleGetRealityCheck(db);
+        if (action === 'execKillSwitch') {
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+            return await SystemHandler.handleKillSwitch(request, db);
+        }
+
         if (action === 'getSystemHealth') {
             const isAdmin = await verifyAdmin(request, db);
             if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
@@ -76,7 +103,21 @@ async function dispatcher(request) {
         if (action === 'googleLogin') return await AuthHandler.handleGoogleLogin(request, db);
 
         // Sessions
-        if (action === 'createSession') return await SystemHandler.handleCreateSession(request, db);
+        if (action === 'createSession') {
+            // Check KILLSWITCH API
+            const apiStatus = await db.prepare("SELECT value FROM system_configs WHERE key = 'KILLSWITCH_API'").first();
+            if (apiStatus && apiStatus.value === '1') {
+                // Check if user is trying to login as 'develzy' or 'admin', maybe allow them?
+                // For now, strict PUBLIC KILL means NO NEW SESSIONS.
+                // We will check inside createSession if we want granular control or just block here.
+                // Let's block here for effect.
+                const body = await request.clone().json(); // clone to not consume body stream
+                if (body.user?.role !== 'develzy') {
+                    return Response.json({ error: "PUBLIC_API_KILLED", message: "Akses Login Publik SEMENTARA DITUTUP oleh Otoritas." }, { status: 503 });
+                }
+            }
+            return await SystemHandler.handleCreateSession(request, db);
+        }
         if (action === 'logout') return await SystemHandler.handleLogout(request, db);
         if (action === 'getActiveSessions') {
             const isAdmin = await verifyAdmin(request, db);

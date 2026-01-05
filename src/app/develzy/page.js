@@ -15,6 +15,9 @@ const IntegrationTab = dynamic(() => import('./components/IntegrationTab'), { lo
 const FeaturesTab = dynamic(() => import('./components/FeaturesTab'), { loading: () => <p className="p-4 text-slate-400">Loading Ghost Layer...</p> });
 const RealityTab = dynamic(() => import('./components/RealityTab'), { loading: () => <p className="p-4 text-slate-400">Loading System Truth...</p> });
 const AuditTab = dynamic(() => import('./components/AuditTab'), { loading: () => <p className="p-4 text-slate-400">Loading Logs...</p> });
+const SessionsTab = dynamic(() => import('./components/SessionsTab'), { loading: () => <p className="p-4 text-slate-400">Loading Sessions...</p> });
+const RolesTab = dynamic(() => import('./components/RolesTab'), { loading: () => <p className="p-4 text-slate-400">Loading Access Control...</p> });
+const SystemTab = dynamic(() => import('./components/SystemTab'), { loading: () => <p className="p-4 text-slate-400">Loading System Core...</p> });
 
 export default function DevelzyControlPage() {
     const { user, isDevelzy, loading: authLoading } = useAuth();
@@ -140,7 +143,7 @@ export default function DevelzyControlPage() {
                 if (isMounted.current && res) {
                     setRolesList(res.map(r => ({
                         ...r,
-                        menus: r.menus ? (typeof r.menus === 'string' ? JSON.parse(r.menus) : r.menus) : []
+                        menus: r.menus ? (typeof r.menus === 'string' ? (() => { try { return JSON.parse(r.menus); } catch (e) { return []; } })() : r.menus) : []
                     })));
                 }
             }
@@ -315,7 +318,7 @@ export default function DevelzyControlPage() {
                         {activeTab === 'audit' && <AuditTab logs={logs} pagination={logsPagination} onPageChange={(p) => setLogsPagination({ ...logsPagination, page: p })} onRefresh={loadData} />}
                         {activeTab === 'sessions' && <SessionsTab activeSessions={activeSessions} onRefresh={loadData} />}
                         {activeTab === 'roles' && <RolesTab rolesList={rolesList} onRefresh={loadData} />}
-                        {activeTab === 'system' && <SystemTab dbHealth={dbHealth} onRefresh={() => { loadData(); loadSystemStats(); }} />}
+                        {activeTab === 'system' && <SystemTab dbHealth={dbHealth} configs={configs} onRefresh={() => { loadData(); loadSystemStats(); }} />}
                     </div>
                 </div>
             </div>

@@ -55,7 +55,7 @@ export default function AuditTab({ logs, pagination, onPageChange, onRefresh }) 
                                     <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 800, color: '#94a3b8' }}>{log.role}</div>
                                 </td>
                                 <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>
-                                    {new Date(log.timestamp).toLocaleString('id-ID')}
+                                    {log.timestamp ? new Date(log.timestamp).toLocaleString('id-ID') : '-'}
                                 </td>
                             </tr>
                         ))}
