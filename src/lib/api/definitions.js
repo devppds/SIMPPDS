@@ -46,7 +46,8 @@ export const HEADERS_CONFIG = {
     'jamiyyah_penasihat': ["kamar", "asrama", "nama_penasihat", "keterangan"],
     'jamiyyah_kelompok': ["nama_kelompok", "wilayah", "jumlah_santri", "ketua", "pembimbing", "keterangan"],
     'unit_lab_media_kas': ["tanggal", "unit", "tipe", "kategori", "nominal", "keterangan", "petugas"],
-    'unit_lab_media_tarif': ["unit", "nama_layanan", "harga", "keterangan"]
+    'unit_lab_media_tarif': ["unit", "nama_layanan", "harga", "keterangan"],
+    'presensi_pengurus': ["pengurus_id", "nama", "tanggal", "jam", "tipe", "keterangan"]
 };
 
 export const FILE_COLUMNS = {

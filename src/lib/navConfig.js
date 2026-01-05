@@ -162,6 +162,16 @@ export const NAV_ITEMS = [
 
 
     {
+        label: 'Presensi Pengurus',
+        icon: 'fas fa-qrcode',
+        roles: ['admin', 'sekretariat', 'bendahara', 'keamanan', 'pendidikan', 'kesehatan', 'jamiyyah'],
+        submenu: [
+            { label: 'Scan Kehadiran', path: '/presensi/scan', icon: 'fas fa-camera' },
+            { label: 'Display QR', path: '/presensi/generator', icon: 'fas fa-display' },
+            { label: 'Riwayat Absensi', path: '/presensi/riwayat', icon: 'fas fa-history' }
+        ]
+    },
+    {
         label: 'DEVELZY Control',
         icon: 'fas fa-rocket',
         path: '/develzy',
