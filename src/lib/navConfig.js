@@ -207,7 +207,8 @@ export const getFirstAllowedPath = (user) => {
         (user.allowedMenus && user.allowedMenus.some(m => (m.id || m.name || m) === 'Dashboard' || (m.id || m) === '/dashboard'))
     );
 
-    if (user.role === 'admin' || user.role === 'develzy') return '/dashboard';
+    if (user.role === 'develzy') return '/develzy';
+    if (user.role === 'admin') return '/dashboard';
 
     const count = countAllowedMenus(user);
 

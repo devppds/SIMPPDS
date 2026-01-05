@@ -2,20 +2,31 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function DevelzySidebar() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'general';
     const { logout } = useAuth();
+    // Helper to check if item is active
+    const isActive = (path) => {
+        if (path === '/develzy' && activeTab === 'general') return true;
+        if (path.includes(`tab=${activeTab}`)) return true;
+        return false;
+    };
 
     const menuItems = [
-        { label: 'System Overview', icon: 'fas fa-terminal', path: '/develzy' },
-        { label: 'Branding & Themes', icon: 'fas fa-palette', path: '/develzy?tab=branding' },
-        { label: 'Integrations', icon: 'fas fa-plug', path: '/develzy?tab=integrations' },
-        { label: 'Maintenance Log', icon: 'fas fa-database', path: '/develzy?tab=logs' },
-        { label: 'User Roles', icon: 'fas fa-user-shield', path: '/develzy?tab=roles' },
-        { label: 'Security Sockets', icon: 'fas fa-server', path: '/develzy?tab=system' },
+        { label: 'Ringkasan Sistem', icon: 'fas fa-terminal', path: '/develzy' }, // tab=general
+        { label: 'Tampilan & UI', icon: 'fas fa-palette', path: '/develzy?tab=branding' },
+        { label: 'Integrasi', icon: 'fas fa-plug', path: '/develzy?tab=integration' },
+        { label: 'Kontrol Fitur', icon: 'fas fa-toggle-on', path: '/develzy?tab=features' },
+        { label: 'Intelijen Sistem', icon: 'fas fa-brain', path: '/develzy?tab=reality' },
+        { label: 'Log Audit', icon: 'fas fa-file-contract', path: '/develzy?tab=audit' },
+        { label: 'Sesi Aktif', icon: 'fas fa-users-viewfinder', path: '/develzy?tab=sessions' },
+        { label: 'Manajemen Role', icon: 'fas fa-user-shield', path: '/develzy?tab=roles' },
+        { label: 'Kesehatan Sistem', icon: 'fas fa-server', path: '/develzy?tab=system' },
     ];
 
     return (
@@ -28,13 +39,13 @@ export default function DevelzySidebar() {
                 <div className="logo-text">DEVEL<span>ZY</span></div>
             </div>
 
-            <div className="nav-section-title">CORE PROTOCOLS</div>
+            <div className="nav-section-title">PROTOKOL UTAMA</div>
             <ul className="nav-list">
                 {menuItems.map((item, idx) => (
                     <li key={idx} className="nav-item">
                         <Link
                             href={item.path}
-                            className={`nav-link ${pathname === item.path ? 'active' : ''}`}
+                            className={`nav-link ${isActive(item.path) ? 'active' : ''}`}
                         >
                             <i className={item.icon}></i>
                             <span>{item.label}</span>
@@ -46,7 +57,7 @@ export default function DevelzySidebar() {
             <div className="sidebar-footer">
                 <button className="logout-btn" onClick={logout}>
                     <i className="fas fa-power-off"></i>
-                    <span>Terminate Session</span>
+                    <span>Akhiri Sesi</span>
                 </button>
             </div>
         </aside>

@@ -90,15 +90,15 @@ export default function SessionsTab({ activeSessions, onRefresh }) {
 
                         <div className="develzy-glass-card" style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ color: '#475569' }}><i className="fas fa-network-wired" style={{ width: '20px' }}></i> IP Address</span>
+                                <span style={{ color: '#475569' }}><i className="fas fa-network-wired" style={{ width: '20px' }}></i> Alamat IP</span>
                                 <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#f1f5f9' }}>{session.ip_address}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ color: '#475569' }}><i className="fas fa-desktop" style={{ width: '20px' }}></i> Device</span>
-                                <span style={{ fontWeight: 700, color: '#f1f5f9' }}>{session.user_agent?.includes('Windows') ? 'Windows / Laptop' : session.user_agent?.includes('Android') ? 'Android / Mobile' : 'Unknown Device'}</span>
+                                <span style={{ color: '#475569' }}><i className="fas fa-desktop" style={{ width: '20px' }}></i> Perangkat</span>
+                                <span style={{ fontWeight: 700, color: '#f1f5f9' }}>{session.user_agent?.includes('Windows') ? 'Windows / Laptop' : session.user_agent?.includes('Android') ? 'Android / Mobile' : 'Perangkat Tak Dikenal'}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ color: '#475569' }}><i className="fas fa-clock" style={{ width: '20px' }}></i> Login</span>
+                                <span style={{ color: '#475569' }}><i className="fas fa-clock" style={{ width: '20px' }}></i> Waktu Masuk</span>
                                 <span style={{ fontWeight: 700, color: '#f1f5f9' }}>{safeTime(session.login_at)}</span>
                             </div>
                         </div>
@@ -112,11 +112,11 @@ export default function SessionsTab({ activeSessions, onRefresh }) {
                             disabled={kickLoading === session.id || session.username === user?.username}
                         >
                             {kickLoading === session.id ? (
-                                <><i className="fas fa-circle-notch fa-spin" style={{ marginRight: '8px' }}></i> Terminating...</>
+                                <><i className="fas fa-circle-notch fa-spin" style={{ marginRight: '8px' }}></i> Mengeluarkan...</>
                             ) : session.username === user?.username ? (
-                                <><i className="fas fa-user-check" style={{ marginRight: '8px' }}></i> Active Session (You)</>
+                                <><i className="fas fa-user-check" style={{ marginRight: '8px' }}></i> Sesi Aktif (Anda)</>
                             ) : (
-                                <><i className="fas fa-power-off" style={{ marginRight: '8px' }}></i> Kick User</>
+                                <><i className="fas fa-power-off" style={{ marginRight: '8px' }}></i> Keluarkan Pengguna</>
                             )}
                         </button>
                     </div>

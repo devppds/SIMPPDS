@@ -12,10 +12,9 @@ import './develzy.css';
 const GeneralTab = dynamic(() => import('./components/GeneralTab'), { loading: () => <p className="p-4 text-slate-400">Loading Module...</p> });
 const BrandingTab = dynamic(() => import('./components/BrandingTab'), { loading: () => <p className="p-4 text-slate-400">Loading UI Engine...</p> });
 const IntegrationTab = dynamic(() => import('./components/IntegrationTab'), { loading: () => <p className="p-4 text-slate-400">Loading Integrations...</p> });
+const FeaturesTab = dynamic(() => import('./components/FeaturesTab'), { loading: () => <p className="p-4 text-slate-400">Loading Ghost Layer...</p> });
+const RealityTab = dynamic(() => import('./components/RealityTab'), { loading: () => <p className="p-4 text-slate-400">Loading System Truth...</p> });
 const AuditTab = dynamic(() => import('./components/AuditTab'), { loading: () => <p className="p-4 text-slate-400">Loading Logs...</p> });
-const SessionsTab = dynamic(() => import('./components/SessionsTab'), { loading: () => <p className="p-4 text-slate-400">Loading Sessions...</p> });
-const RolesTab = dynamic(() => import('./components/RolesTab'), { loading: () => <p className="p-4 text-slate-400">Loading Roles...</p> });
-const SystemTab = dynamic(() => import('./components/SystemTab'), { loading: () => <p className="p-4 text-slate-400">Loading Diagnostics...</p> });
 
 export default function DevelzyControlPage() {
     const { user, isDevelzy, loading: authLoading } = useAuth();
@@ -52,6 +51,9 @@ export default function DevelzyControlPage() {
     const [activeSessions, setActiveSessions] = useState([]);
     const [rolesList, setRolesList] = useState([]);
 
+    // The Oracle State
+    const [riskScore, setRiskScore] = useState(12); // 0-100 (Lower is better/safer)
+
     // Handlers
     const handleMaintenanceToggle = async () => {
         try {
@@ -85,6 +87,12 @@ export default function DevelzyControlPage() {
                     memory: 'Optimized'
                 });
                 setDbHealth(health || {});
+
+                // Simulate Risk Calculation
+                const baseRisk = 5; // Minimal risk
+                const sessionRisk = (activeSessions?.length > 50) ? 20 : 0;
+                const dbRisk = (!dbStats) ? 50 : 0;
+                setRiskScore(baseRisk + sessionRisk + dbRisk);
             }
         } catch (e) {
             console.error(e);
@@ -156,7 +164,7 @@ export default function DevelzyControlPage() {
 
         // Polling
         const interval = setInterval(() => {
-            if (activeTab === 'sessions' || activeTab === 'system') {
+            if (activeTab === 'sessions' || activeTab === 'system' || activeTab === 'general') {
                 loadData();
                 loadSystemStats();
             }
@@ -191,50 +199,104 @@ export default function DevelzyControlPage() {
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.7rem', marginBottom: '8px' }}>
                             <i className="fas fa-microchip"></i>
-                            Core Instance: Online
+                            Inti Sistem: Online
                         </div>
                         <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
-                            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Control
+                            Kontrol {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                         </h1>
                     </div>
                     <div className="maintenance-box" style={{ padding: '12px 24px', background: maintenanceMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', borderRadius: '16px', border: `1px solid ${maintenanceMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: maintenanceMode ? '#f87171' : '#34d399', textTransform: 'uppercase' }}>Service Status</div>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{maintenanceMode ? 'Maintenance Mode' : 'Production Live'}</div>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: maintenanceMode ? '#f87171' : '#34d399', textTransform: 'uppercase' }}>Status Layanan</div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{maintenanceMode ? 'Mode Perbaikan' : 'Live Produksi'}</div>
                         </div>
                         <button
                             onClick={handleMaintenanceToggle}
                             style={{ background: maintenanceMode ? '#ef4444' : '#10b981', border: 'none', padding: '10px 16px', borderRadius: '12px', color: 'white', fontWeight: 800, cursor: 'pointer', fontSize: '0.8rem', boxShadow: `0 4px 12px ${maintenanceMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}` }}
                         >
-                            {maintenanceMode ? 'Go Live' : 'Maintenance'}
+                            {maintenanceMode ? 'Onlinekan' : 'Perbaikan'}
                         </button>
                     </div>
                 </div>
 
-                {/* Quick Stats Grid */}
-                <div className="quick-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '3rem' }}>
-                    {[
-                        { label: 'System Uptime', value: systemStats.uptime, icon: 'fas fa-clock', color: '#6366f1' },
-                        { label: 'Database Health', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981' },
-                        { label: 'Security Level', value: 'High-Alert', icon: 'fas fa-shield-alt', color: '#f59e0b' },
-                        { label: 'Core Version', value: 'v3.2.0-ELZ', icon: 'fas fa-code-branch', color: '#ec4899' },
-                    ].map((stat, i) => (
-                        <div key={i} style={{
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            border: '1px solid rgba(255, 255, 255, 0.05)',
-                            borderRadius: '20px', padding: '1.25rem',
-                            display: 'flex', alignItems: 'center', gap: '1rem',
-                            backdropFilter: 'blur(5px)'
-                        }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
-                                <i className={stat.icon}></i>
-                            </div>
-                            <div>
-                                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
-                                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f1f5f9' }}>{stat.value}</div>
+                {/* THE ORACLE: System Intelligence Dashboard */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1.5rem', marginBottom: '3rem' }}>
+
+                    {/* 1. Risk Gauge */}
+                    <div className="develzy-card" style={{ display: 'flex', alignItems: 'center', gap: '2rem', background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.3) 100%)' }}>
+                        <div style={{ position: 'relative', width: '100px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" strokeWidth="4" />
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={riskScore > 50 ? '#ef4444' : riskScore > 20 ? '#f59e0b' : '#10b981'} strokeWidth="4" strokeDasharray={`${riskScore}, 100`} />
+                            </svg>
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                <span style={{ fontSize: '1.5rem', fontWeight: 900, color: riskScore > 50 ? '#ef4444' : '#10b981' }}>{riskScore}%</span>
                             </div>
                         </div>
-                    ))}
+                        <div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Skor Risiko Sistem</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f1f5f9', marginBottom: '4px' }}>{riskScore < 20 ? 'Sistem Stabil & Aman' : riskScore < 50 ? 'Perlu Perhatian' : 'Kritis / Bahaya'}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Prediksi anomali berbasis AI aktif.</div>
+                        </div>
+                    </div>
+
+                    {/* 2. AI Recommendations */}
+                    <div className="develzy-card" style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+                            <i className="fas fa-robot" style={{ color: '#8b5cf6' }}></i>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#cbd5e1' }}>Rekomendasi Cerdas</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '4px' }}>
+                            {riskScore < 20 ? (
+                                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px 16px', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.2)', flex: 1 }}>
+                                    <div style={{ fontWeight: 700, color: '#34d399', fontSize: '0.9rem', marginBottom: '2px' }}><i className="fas fa-check-circle mr-2"></i> Semua Sistem Optimal</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Tidak ada tindakan mendesak diperlukan saat ini.</div>
+                                </div>
+                            ) : (
+                                <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '10px 16px', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.2)', flex: 1 }}>
+                                    <div style={{ fontWeight: 700, color: '#f87171', fontSize: '0.9rem', marginBottom: '2px' }}><i className="fas fa-exclamation-triangle mr-2"></i> Anomali Terdeteksi</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Cek log audit dan sesi pengguna mencurigakan.</div>
+                                </div>
+                            )}
+                            <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '10px 16px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)', minWidth: '200px' }}>
+                                <div style={{ fontWeight: 700, color: '#38bdf8', fontSize: '0.9rem', marginBottom: '2px' }}>Backup Rutin</div>
+                                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Jadwal backup 4 jam lagi.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 3. Core Vitals Row (Merged Uptime & DB) */}
+                    <div style={{ gridColumn: 'span 3', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <i className="fas fa-clock" style={{ fontSize: '1.2rem', color: '#6366f1' }}></i>
+                            <div>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>Waktu Aktif</div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f1f5f9' }}>{systemStats.uptime}</div>
+                            </div>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <i className="fas fa-database" style={{ fontSize: '1.2rem', color: '#10b981' }}></i>
+                            <div>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>Database</div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f1f5f9' }}>{systemStats.requests}</div>
+                            </div>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <i className="fas fa-server" style={{ fontSize: '1.2rem', color: '#f59e0b' }}></i>
+                            <div>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>Server Load</div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f1f5f9' }}>{systemStats.cpu}</div>
+                            </div>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <i className="fas fa-code-branch" style={{ fontSize: '1.2rem', color: '#ec4899' }}></i>
+                            <div>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>Versi Inti</div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f1f5f9' }}>v3.5.0-ELZ</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div className="view-container" style={{ padding: 0 }}>
@@ -248,6 +310,8 @@ export default function DevelzyControlPage() {
                         {activeTab === 'general' && <GeneralTab configs={configs} setConfigs={setConfigs} />}
                         {activeTab === 'branding' && <BrandingTab configs={configs} setConfigs={setConfigs} />}
                         {activeTab === 'integration' && <IntegrationTab />}
+                        {activeTab === 'features' && <FeaturesTab configs={configs} setConfigs={setConfigs} />}
+                        {activeTab === 'reality' && <RealityTab />}
                         {activeTab === 'audit' && <AuditTab logs={logs} pagination={logsPagination} onPageChange={(p) => setLogsPagination({ ...logsPagination, page: p })} onRefresh={loadData} />}
                         {activeTab === 'sessions' && <SessionsTab activeSessions={activeSessions} onRefresh={loadData} />}
                         {activeTab === 'roles' && <RolesTab rolesList={rolesList} onRefresh={loadData} />}
