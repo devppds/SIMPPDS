@@ -27,7 +27,6 @@ export default function LoginPage() {
       return;
     }
 
-
     // Pre-fetch users and roles data silently
     const fetchUsers = async () => {
       try {
@@ -73,7 +72,7 @@ export default function LoginPage() {
       setLoading(true);
       setError('');
 
-      // Sedikit delay artifisial biar user sempat lihat PIN penuh (UX)
+      // Sedikit delay artifisial biar user sempat lihat (UX)
       setTimeout(() => {
         login({
           id: matchedUser.id,
@@ -85,14 +84,13 @@ export default function LoginPage() {
         });
         const targetPath = getFirstAllowedPath({ role: matchedUser.role, allowedMenus: matchedUser.allowedMenus });
         router.push(targetPath);
-      }, 300); // 0.3 detik
-
+      }, 800);
 
       return true;
     }
 
-    // Jika panjang sudah 6 (max) tapi tidak cocok
-    if (currentPin.length === 6) {
+    // Jika panjang sudah 4 (max) tapi tidak cocok
+    if (currentPin.length === 4) {
       setError('PIN Salah!');
       // Auto clear setelah 0.5 detik
       setTimeout(() => {
@@ -107,305 +105,247 @@ export default function LoginPage() {
     return false;
   };
 
-  const handleHandleInput = (value) => {
+  const handleInputChange = (e) => {
+    const value = e.target.value;
     // Hanya angka
     if (!/^\d*$/.test(value)) return;
 
     // Update State
-    if (value.length <= 6) {
+    if (value.length <= 4) {
       setPin(value);
-      // Check langsung
-      if (cachedUsers.length > 0 && value.length >= 4) {
+      setError('');
+      // Check langsung jika 4 digit
+      if (cachedUsers.length > 0 && value.length === 4) {
         checkPinAndLogin(value);
       }
     }
   };
 
-  const handleNumberClick = (num) => {
-    if (loading || isVerifying) return;
-    if (pin.length < 6) {
-      handleHandleInput(pin + num);
+  const handleManualSubmit = (e) => {
+    e.preventDefault();
+    if (pin.length === 4) {
+      checkPinAndLogin(pin);
     }
   };
 
-  const handleBackspace = () => {
-    if (loading || isVerifying) return;
-    setPin(pin.slice(0, -1));
-    setError('');
-  };
-
-  const handleClear = () => {
-    if (loading || isVerifying) return;
-    setPin('');
-    setError('');
-  };
-
   return (
-    <div className="login-container" style={{
-      minHeight: '100vh',
-      width: '100%',
-      // Background Premium Dark Elegant
-      background: `
-        radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
-        linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)
-      `,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-
-      {/* Background Orbs Animation */}
+    <div className="login-root">
       <style jsx global>{`
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-          100% { transform: translateY(0px); }
+
+        
+        .login-root {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f6f5f7;
+          font-family: 'Outfit', sans-serif;
         }
-        .glass-card {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+        .container {
+          background-color: #fff;
+          border-radius: 10px;
+          box-shadow: 0 14px 28px rgba(0,0,0,0.25), 
+                      0 10px 10px rgba(0,0,0,0.22);
+          position: relative;
+          overflow: hidden;
+          width: 768px;
+          max-width: 100%;
+          min-height: 480px;
+          display: flex;
         }
-        .numpad-btn {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: white;
-          transition: all 0.2s ease;
+
+        .form-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 0 50px;
+          height: 100%;
+          text-align: center;
+          background: white;
         }
-        .numpad-btn:hover {
-          background: rgba(255, 255, 255, 0.15);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+        .social-container {
+          margin: 20px 0;
         }
-        .numpad-btn:active {
-          transform: translateY(0);
-        }
-        .pin-dot {
-          width: 16px;
-          height: 16px;
+
+        .social-container a {
+          border: 1px solid #DDDDDD;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
-          transition: all 0.3s ease;
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          margin: 0 5px;
+          height: 40px;
+          width: 40px;
+          color: #333;
+          text-decoration: none;
+          transition: 0.3s;
         }
-        .pin-dot.filled {
-          background: #38bdf8;
-          box-shadow: 0 0 15px #38bdf8;
-          transform: scale(1.1);
+
+        .social-container a:hover {
+          background: #f1f1f1;
         }
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+
+        h1 {
+          font-weight: bold;
+          margin: 0;
+          color: #333;
         }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+
+        h2 {
+          text-align: center;
         }
-        @media (max-width: 480px) {
-          .glass-card {
-            padding: 1.5rem !important;
-            border-radius: 20px !important;
-            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4) !important;
-          }
-          .numpad-btn {
-            padding: 0.8rem !important;
-            font-size: 1.2rem !important;
-            border-radius: 12px !important;
-          }
-          .login-container {
-            padding: 1rem !important;
-          }
-          .brand-logo {
-            width: 80px !important;
-            margin-bottom: 1rem !important;
-          }
-          .brand-title {
-            font-size: 1.5rem !important;
-          }
+
+        p {
+          font-size: 14px;
+          font-weight: 100;
+          line-height: 20px;
+          letter-spacing: 0.5px;
+          margin: 20px 0 30px;
+        }
+
+        span {
+          font-size: 12px;
+          color: #888;
+          margin-bottom: 15px;
+        }
+
+        .inpt {
+          background-color: #eee;
+          border: none;
+          padding: 12px 15px;
+          margin: 8px 0;
+          width: 100%;
+          border-radius: 8px;
+          font-size: 16px;
+          text-align: center;
+          letter-spacing: 4px;
+          font-weight: bold;
+          outline: none;
+        }
+        
+        .inpt:focus {
+           background-color: #e0e0e0;
+           box-shadow: 0 0 0 2px rgba(0,184,148, 0.2);
+        }
+
+        button.btn-login {
+          border-radius: 20px;
+          border: 1px solid #10b981;
+          background-color: #10b981;
+          color: #FFFFFF;
+          font-size: 12px;
+          font-weight: bold;
+          padding: 12px 45px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          transition: transform 80ms ease-in;
+          margin-top: 15px;
+          cursor: pointer;
+        }
+
+        button.btn-login:active {
+          transform: scale(0.95);
+        }
+
+        button.btn-login:focus {
+          outline: none;
+        }
+
+        button.ghost {
+          background-color: transparent;
+          border-color: #FFFFFF;
+          border-radius: 20px;
+          border: 1px solid #FFFFFF;
+          color: #FFFFFF;
+          font-size: 12px;
+          font-weight: bold;
+          padding: 12px 45px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          cursor: pointer;
+          margin-top: 20px;
+        }
+
+        .overlay-container {
+          flex: 1;
+          background: #10b981;
+          background: -webkit-linear-gradient(to right, #10b981, #059669);
+          background: linear-gradient(to right, #10b981, #059669);
+          background-repeat: no-repeat;
+          background-size: cover;
+          background-position: 0 0;
+          color: #FFFFFF;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          padding: 0 40px;
+          text-align: center;
+        }
+
+        .error-msg { 
+          color: #ef4444; 
+          font-size: 12px; 
+          margin-top: 5px; 
+          min-height: 20px;
         }
       `}</style>
 
-      {/* Main Card */}
-      <div className="glass-card" style={{
-        borderRadius: '24px',
-        padding: '2.5rem',
-        maxWidth: '380px',
-        width: '100%',
-        position: 'relative',
-        zIndex: 10
-      }}>
-        {/* LOGO & TITLE */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            margin: '0 auto 1rem',
-            animation: 'float 6s ease-in-out infinite'
-          }}>
-            <img
-              src={config?.logo_url || "https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=256&bold=true"}
-              alt="Logo"
-              className="brand-logo"
-              style={{ width: '100px', marginBottom: '1.5rem', borderRadius: '20px', boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)' }}
-            />
-          </div>
-          <h1 className="outfit brand-title" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'white', marginBottom: '0.25rem', letterSpacing: '-0.5px' }}>
-            SIM-PPDS
-          </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', letterSpacing: '0.5px', textTransform: 'uppercase', opacity: 0.8 }}>Access Control System</p>
-        </div>
-
-        {/* PIN DOTS */}
-        <div style={{
-          marginBottom: '1.5rem',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '1rem', // Adjusted
-          height: '30px',
-          alignItems: 'center'
-        }}>
-          {/* Tampilkan loader jika sedang memverifikasi */}
-          {isVerifying ? (
-            <div style={{ color: '#38bdf8', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <i className="fas fa-circle-notch fa-spin"></i>
-              <span>MEMVERIFIKASI...</span>
+      <div className="container">
+        {/* Sign In Container */}
+        <div className="form-container sign-in-container">
+          <form onSubmit={handleManualSubmit} style={{ width: '100%' }}>
+            <h1>Sign in</h1>
+            <div className="social-container">
+              <a href="#" className="social" onClick={e => e.preventDefault()}><i className="fab fa-facebook-f"></i></a>
+              <a href="#" className="social" onClick={e => e.preventDefault()}><i className="fab fa-google-plus-g"></i></a>
+              <a href="#" className="social" onClick={e => e.preventDefault()}><i className="fab fa-linkedin-in"></i></a>
             </div>
-          ) : (
-            [...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className={`pin-dot ${i < pin.length ? 'filled' : ''}`}
-                style={{ width: '12px', height: '12px' }} // Adjusted
-              ></div>
-            ))
-          )}
-        </div>
+            <span>atau gunakan akun anda</span>
 
-        {/* Error Message */}
-        <div style={{
-          height: '24px',
-          marginBottom: '0.8rem',
-          textAlign: 'center',
-          opacity: error ? 1 : 0,
-          transition: 'opacity 0.3s'
-        }}>
-          {error && (
-            <span className="outfit" style={{
-              color: '#ef4444',
-              background: 'rgba(239, 68, 68, 0.1)',
-              padding: '4px 12px',
-              borderRadius: '16px',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              fontSize: '0.8rem'
-            }}>
-              {error}
-            </span>
-          )}
-        </div>
-
-        {/* NUMPAD */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '0.8rem', // Adjusted
-          marginBottom: '1.5rem'
-        }}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-            <button
-              key={num}
-              type="button"
-              className="numpad-btn outfit"
-              onClick={() => handleNumberClick(num.toString())}
+            <input
+              type="password"
+              placeholder="PIN Access (4 Digit)"
+              className="inpt"
+              value={pin}
+              onChange={handleInputChange}
+              maxLength={4}
               disabled={loading || isVerifying}
-              style={{
-                padding: '1rem', // Adjusted
-                fontSize: '1.4rem', // Adjusted
-                fontWeight: 500,
-                borderRadius: '16px',
-                cursor: 'pointer',
-                border: 'none',
-                background: 'rgba(255, 255, 255, 0.08)'
-              }}
-            >
-              {num}
+              autoFocus
+            />
+
+            <div className="error-msg">
+              {error && <span>{error}</span>}
+              {isVerifying && <span style={{ color: '#10b981' }}>Checking...</span>}
+            </div>
+
+            <a href="#" onClick={e => e.preventDefault()} style={{ fontSize: '12px', color: '#333', textDecoration: 'none', marginBottom: '15px', display: 'block' }}>Lupa kata sandi anda?</a>
+
+            <button className="btn-login" type="submit" disabled={loading || isVerifying}>
+              {loading ? 'LOADING...' : 'SIGN IN'}
             </button>
-          ))}
-
-          {/* Clear Button */}
-          <button
-            type="button"
-            className="numpad-btn"
-            onClick={handleClear}
-            disabled={loading || isVerifying}
-            style={{
-              padding: '1rem', // Adjusted
-              fontSize: '1rem',
-              borderRadius: '16px',
-              cursor: 'pointer',
-              color: '#ef4444',
-              borderColor: 'rgba(239, 68, 68, 0.3)',
-              background: 'rgba(239, 68, 68, 0.05)'
-            }}
-          >
-            <i className="fas fa-times"></i>
-          </button>
-
-          {/* Zero */}
-          <button
-            type="button"
-            className="numpad-btn outfit"
-            onClick={() => handleNumberClick('0')}
-            disabled={loading || isVerifying}
-            style={{
-              padding: '1rem', // Adjusted
-              fontSize: '1.4rem', // Adjusted
-              fontWeight: 500,
-              borderRadius: '16px',
-              cursor: 'pointer',
-              background: 'rgba(255, 255, 255, 0.08)'
-            }}
-          >
-            0
-          </button>
-
-          {/* Backspace */}
-          <button
-            type="button"
-            className="numpad-btn"
-            onClick={handleBackspace}
-            disabled={loading || isVerifying}
-            style={{
-              padding: '1rem', // Adjusted
-              fontSize: '1rem',
-              borderRadius: '16px',
-              cursor: 'pointer',
-              color: '#facc15',
-              borderColor: 'rgba(250, 204, 21, 0.3)',
-              background: 'rgba(250, 204, 21, 0.05)'
-            }}
-          >
-            <i className="fas fa-backspace"></i>
-          </button>
+          </form>
         </div>
 
-        {/* Footer */}
-        <div style={{
-          marginTop: '1.5rem',
-          textAlign: 'center',
-          fontSize: '0.7rem',
-          color: 'rgba(255, 255, 255, 0.3)',
-          letterSpacing: '1px'
-        }}>
-          <i className="fas fa-lock" style={{ marginRight: '6px' }}></i>
-          SECURED BY DENYR A.K.A DEVELZY
+        {/* Overlay Container */}
+        <div className="overlay-container">
+          <h1>Halo, Teman!</h1>
+          <p>
+            Selamat datang di SIM-PPDS. Masukkan PIN anda untuk mulai mengelola data santri.
+          </p>
+          <button className="ghost" id="signUp" onClick={() => alert("Silahkan hubungi Administrator untuk pendaftaran.")}>
+            SIGN UP
+          </button>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
 
 export const dynamic = 'force-dynamic';
+
