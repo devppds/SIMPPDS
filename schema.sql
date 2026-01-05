@@ -126,7 +126,8 @@ CREATE TABLE IF NOT EXISTS users (
     no_hp TEXT,
     otp_code TEXT,
     otp_expires DATETIME,
-    is_verified INTEGER DEFAULT 0
+    is_verified INTEGER DEFAULT 0,
+    pengurus_id INTEGER
 );
 
 -- 2. KEAMANAN & KETERTIBAN

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Script from 'next/script';
 import { useAuth } from '@/lib/AuthContext';
 import { apiCall } from '@/lib/utils';
 import { getFirstAllowedPath } from '@/lib/navConfig';
@@ -65,37 +64,13 @@ export default function LoginPage() {
     return () => { hasMounted.current = false; };
   }, [user, authLoading, router]);
 
-  // Google Login Logic
-  const onGoogleLoginSuccess = async (response) => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await apiCall('googleLogin', 'POST', { data: { idToken: response.credential } });
-      if (res.success) {
-        login(res.user);
-        router.push(getFirstAllowedPath(res.user));
-      } else {
-        setError(res.message || "Gagal login via Google");
-      }
-    } catch (err) {
-      setError("Kesalahan sistem login Google");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.google && view === 'login') {
-      const clientId = config?.google_client_id || '765273331300-9h789fbe1kvd1vt5bc4ccn9ve2t1lpav.apps.googleusercontent.com';
-      window.google.accounts.id.initialize({ client_id: clientId, callback: onGoogleLoginSuccess });
-      window.google.accounts.id.renderButton(document.getElementById("googleBtn"), {
-        theme: "filled_blue",
-        size: "large",
-        width: "100%",
-        shape: "pill"
-      });
+    let timer;
+    if (otpTimer > 0) {
+      timer = setInterval(() => setOtpTimer(prev => prev - 1), 1000);
     }
-  }, [view, config]);
+    return () => clearInterval(timer);
+  }, [otpTimer]);
 
   const checkPinAndLogin = async (currentPin) => {
     const matchedUser = cachedUsers.find(u => u.password_plain === currentPin);
@@ -117,16 +92,16 @@ export default function LoginPage() {
       return true;
     }
     if (currentPin.length === 4) {
-      setError('PIN Salah!');
-      setTimeout(() => { if (hasMounted.current) { setPin(''); setError(''); } }, 1200);
+      setError('PIN Akses tidak dikenali');
+      setTimeout(() => { if (hasMounted.current) { setPin(''); setError(''); } }, 1500);
     }
     return false;
   };
 
   const handleSendOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!regData.identifier || !regData.username || !regData.fullname || !regData.jabatan) {
-      setError("Semua kolom wajib diisi");
+      setError("Mohon lengkapi semua data pendaftaran");
       return;
     }
     setLoading(true);
@@ -140,7 +115,7 @@ export default function LoginPage() {
         setOtpTimer(60);
       }
     } catch (err) {
-      setError(err.message || "Gagal mengirim OTP");
+      setError(err.message || "Gagal mengirimkan kode OTP");
     } finally {
       setLoading(false);
     }
@@ -158,7 +133,7 @@ export default function LoginPage() {
         router.push(getFirstAllowedPath(res.user));
       }
     } catch (err) {
-      setError(err.message || "OTP salah atau kadaluwarsa");
+      setError(err.message || "Kode OTP salah atau telah kadaluwarsa");
     } finally {
       setLoading(false);
     }
@@ -172,7 +147,7 @@ export default function LoginPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+          background: #020617;
           font-family: 'Outfit', sans-serif;
           color: #f8fafc;
           padding: 20px;
@@ -180,232 +155,274 @@ export default function LoginPage() {
           position: relative;
         }
 
-        .auth-wrapper::before {
-          content: '';
+        /* Animated Background Orbs */
+        .orb {
           position: absolute;
-          width: 600px;
-          height: 600px;
-          background: rgba(37, 99, 235, 0.1);
-          filter: blur(120px);
           border-radius: 50%;
-          top: -100px;
-          right: -100px;
-          pointer-events: none;
+          filter: blur(100px);
+          z-index: 1;
+          opacity: 0.35;
+          animation: float 20s infinite alternate;
         }
 
-        .auth-wrapper::after {
-          content: '';
-          position: absolute;
-          width: 500px;
-          height: 500px;
-          background: rgba(16, 185, 129, 0.05);
-          filter: blur(100px);
-          border-radius: 50%;
-          bottom: -100px;
-          left: -100px;
-          pointer-events: none;
+        .orb-1 { width: 600px; height: 600px; background: rgba(37, 99, 235, 0.4); top: -200px; right: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.3); bottom: -100px; left: -100px; animation-delay: -5s; }
+        .orb-3 { width: 300px; height: 300px; background: rgba(16, 185, 129, 0.2); mid: 50%; left: 10%; animation-delay: -10s; }
+
+        @keyframes float {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(50px, 100px) scale(1.1); }
+          100% { transform: translate(-50px, 50px) scale(0.9); }
         }
 
         .auth-card {
-          background: rgba(30, 41, 59, 0.7);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 32px;
+          background: rgba(15, 23, 42, 0.4);
+          backdrop-filter: blur(35px) saturate(180%);
+          -webkit-backdrop-filter: blur(35px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 40px;
           width: 100%;
-          max-width: 440px;
-          padding: 3rem 2.5rem;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          max-width: 480px;
+          padding: 4rem 3rem;
+          box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.7);
           z-index: 10;
-          animation: cardFadeIn 0.8s ease-out;
+          animation: cardEntrance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+          position: relative;
+          overflow: hidden;
         }
 
-        @keyframes cardFadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+        .auth-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        }
+
+        @keyframes cardEntrance {
+          from { opacity: 0; transform: translateY(40px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .logo-area {
           text-align: center;
-          margin-bottom: 2rem;
+          margin-bottom: 3rem;
         }
 
         .logo-box {
-          width: 64px;
-          height: 64px;
-          background: linear-gradient(135deg, var(--primary, #2563eb) 0%, var(--accent, #3b82f6) 100%);
-          margin: 0 auto 1.5rem;
-          border-radius: 18px;
+          width: 88px;
+          height: 88px;
+          background: rgba(255, 255, 255, 0.03);
+          margin: 0 auto 2rem;
+          border-radius: 24px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
-          border: 2px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 12px;
+          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4);
+          transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
+        .logo-box:hover { transform: scale(1.05) rotate(5deg); }
 
         .logo-box img {
-          width: 40px;
-          height: 40px;
-          filter: brightness(0) invert(1);
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
         }
 
-        h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.025em; }
-        .subtitle { font-size: 0.95rem; color: #94a3b8; font-weight: 400; }
+        h1 { 
+          font-size: 2.25rem; 
+          font-weight: 900; 
+          margin-bottom: 0.75rem; 
+          letter-spacing: -2px; 
+          background: linear-gradient(to bottom, #fff, #94a3b8);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle { font-size: 1rem; color: #64748b; font-weight: 500; line-height: 1.6; }
 
-        .form-group { margin-bottom: 1.25rem; text-align: left; }
-        .form-label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 500; padding-left: 0.5rem; }
+        .form-group { margin-bottom: 1.5rem; text-align: left; position: relative; }
+        .form-label { display: block; font-size: 0.8rem; color: #475569; margin-bottom: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 0.25rem; }
 
         .premium-input {
           width: 100%;
-          background: rgba(15, 23, 42, 0.4);
+          background: rgba(2, 6, 23, 0.6);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          padding: 12px 16px;
+          border-radius: 20px;
+          padding: 16px 20px;
           color: white;
           font-size: 1rem;
-          transition: all 0.3s;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           outline: none;
         }
 
         .premium-input:focus {
-          border-color: var(--primary, #2563eb);
-          background: rgba(15, 23, 42, 0.6);
-          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+          border-color: var(--primary, #3b82f6);
+          background: rgba(2, 6, 23, 0.8);
+          box-shadow: 0 0 0 1px var(--primary, #3b82f6), 0 10px 30px -10px rgba(59, 130, 246, 0.4);
+          transform: translateY(-2px);
         }
 
         .pin-container {
           display: flex;
           justify-content: center;
-          gap: 12px;
-          margin: 1.5rem 0;
+          gap: 16px;
+          margin: 2rem 0;
+          cursor: pointer;
         }
 
         .pin-digit {
-          width: 50px;
-          height: 60px;
-          background: rgba(15, 23, 42, 0.5);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 14px;
+          width: 64px;
+          height: 72px;
+          background: rgba(2, 6, 23, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.5rem;
-          font-weight: 700;
+          font-size: 2rem;
+          font-weight: 900;
           color: white;
-          transition: all 0.2s;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
         .pin-digit.active {
-          border-color: var(--primary, #2563eb);
-          box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+          border-color: var(--primary, #3b82f6);
+          background: rgba(59, 130, 246, 0.05);
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+          transform: translateY(-8px) scale(1.05);
+        }
+
+        .pin-digit.filled {
+          background: var(--primary, #3b82f6);
+          border-color: var(--primary, #3b82f6);
+          box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+          animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1.1); }
         }
 
         button.primary-btn {
           width: 100%;
-          background: linear-gradient(135deg, var(--primary, #2563eb) 0%, var(--accent, #3b82f6) 100%);
+          background: linear-gradient(135deg, var(--primary, #3b82f6) 0%, var(--accent, #8b5cf6) 100%);
           color: white;
           border: none;
-          border-radius: 16px;
-          padding: 14px;
-          font-size: 1rem;
-          font-weight: 700;
+          border-radius: 22px;
+          padding: 18px;
+          font-size: 1.1rem;
+          font-weight: 800;
           cursor: pointer;
-          transition: all 0.3s;
-          margin-top: 1rem;
-          box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          margin-top: 1.5rem;
+          box-shadow: 0 15px 35px -10px rgba(59, 130, 246, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
         }
 
         button.primary-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          filter: brightness(1.1);
-          box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.4);
+          transform: translateY(-4px);
+          filter: brightness(1.15);
+          box-shadow: 0 25px 50px -15px rgba(59, 130, 246, 0.6);
         }
 
-        button.primary-btn:active { transform: scale(0.98); }
-        button.primary-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        .divider {
-          display: flex;
-          align-items: center;
-          margin: 2rem 0;
-          color: #475569;
-          font-size: 0.8rem;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-        }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .divider span { padding: 0 15px; }
+        button.primary-btn:active { transform: scale(0.96); }
+        button.primary-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .auth-footer {
-          margin-top: 2rem;
+          margin-top: 2.5rem;
           text-align: center;
-          font-size: 0.9rem;
-          color: #94a3b8;
+          font-size: 0.95rem;
+          color: #475569;
+          font-weight: 500;
         }
 
         .auth-toggle-link {
-          color: var(--primary, #2563eb);
-          font-weight: 700;
+          color: var(--primary, #3b82f6);
+          font-weight: 800;
           cursor: pointer;
-          margin-left: 5px;
-          text-decoration: none;
+          margin-left: 6px;
+          transition: all 0.3s;
+          display: inline-block;
+        }
+        
+        .auth-toggle-link:hover {
+          color: #fff;
+          transform: translateX(4px);
         }
 
-        .error-toast {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          color: #f87171;
-          padding: 10px;
-          border-radius: 12px;
-          font-size: 0.85rem;
-          margin-bottom: 1.5rem;
+        .status-toast {
+          padding: 12px 20px;
+          border-radius: 16px;
+          font-size: 0.9rem;
+          margin-bottom: 2rem;
           text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          font-weight: 600;
+          animation: slideInDown 0.4s ease-out;
         }
 
-        .success-toast {
-          background: rgba(16, 185, 129, 0.1);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          color: #34d399;
-          padding: 10px;
-          border-radius: 12px;
-          font-size: 0.85rem;
-          margin-bottom: 1.5rem;
-          text-align: center;
+        @keyframes slideInDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Hide real input for PIN */
-        .hidden-pin-input {
-          position: absolute;
-          opacity: 0;
-          pointer-events: none;
+        .error-toast { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
+        .success-toast { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; }
+
+        .hidden-pin-input { position: absolute; opacity: 0; pointer-events: none; }
+
+        select.premium-input {
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 20px center;
+          background-size: 18px;
         }
       `}</style>
+
+      {/* Dynamic Background Elements */}
+      <div className="orb orb-1"></div>
+      <div className="orb orb-2"></div>
+      <div className="orb orb-3"></div>
 
       <div className="auth-card">
         <div className="logo-area">
           <div className="logo-box">
-            <img src="/logo.png" alt="PPDS" onError={(e) => e.target.src = "https://ui-avatars.com/api/?name=L&background=transparent&color=fff"} />
+            <img
+              src={config?.logo_url || "https://ui-avatars.com/api/?name=LOGO&background=2563eb&color=fff&size=512&bold=true"}
+              alt="Logo Instansi"
+              onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=PPDS&background=2563eb&color=fff"; }}
+            />
           </div>
-          <h1>{view === 'login' ? 'Selamat Datang' : 'Pendaftaran Akun'}</h1>
+          <h1>{view === 'login' ? 'Selamat Datang' : 'Pendaftaran'}</h1>
           <p className="subtitle">
-            {view === 'login' ? 'Masuk ke Sistem Informasi SIM-PPDS' : 'Lengkapi data pengurus untuk mendaftar'}
+            {view === 'login' ? 'Sistem Manajemen Informasi SIM-PPDS' : 'Lengkapi data profil pengurus Anda'}
           </p>
         </div>
 
-        {error && <div className="error-toast">{error}</div>}
-        {isVerifying && <div className="success-toast">Memverifikasi identitas...</div>}
+        {error && <div className="status-toast error-toast"><i className="fas fa-exclamation-circle"></i> {error}</div>}
+        {isVerifying && <div className="status-toast success-toast"><i className="fas fa-circle-notch fa-spin"></i> Memvalidasi Identitas...</div>}
 
         {/* VIEW: LOGIN */}
         {view === 'login' && (
           <div className="animate-in">
-            <div id="googleBtn" style={{ marginBottom: '1rem' }}></div>
-
-            <div className="divider"><span>ATAU MASUK DENGAN PIN</span></div>
-
             <div className="form-group" style={{ textAlign: 'center' }}>
-              <span className="form-label">Masukkan PIN Access (4 Digit)</span>
+              <span className="form-label">PIN AKSES KERJA</span>
               <div className="pin-container" onClick={() => document.getElementById('pinInput').focus()}>
                 {[0, 1, 2, 3].map(i => (
-                  <div key={i} className={`pin-digit ${pin.length === i ? 'active' : ''}`}>
+                  <div key={i} className={`pin-digit ${pin.length === i ? 'active' : ''} ${pin.length > i ? 'filled' : ''}`}>
                     {pin[i] ? '•' : ''}
                   </div>
                 ))}
@@ -422,12 +439,14 @@ export default function LoginPage() {
                 }}
                 autoFocus
                 disabled={loading}
+                autoComplete="off"
               />
+              <p style={{ fontSize: '0.8rem', color: '#475569', marginTop: '1rem' }}>Masukkan 4 digit PIN unik yang Anda miliki</p>
             </div>
 
             <div className="auth-footer">
-              Belum punya akun?
-              <span className="auth-toggle-link" onClick={() => { setView('register'); setError(''); }}>Daftar Sekarang</span>
+              Personil baru?
+              <span className="auth-toggle-link" onClick={() => { setView('register'); setError(''); }}>Registrasi Akun <i className="fas fa-arrow-right" style={{ fontSize: '0.7rem' }}></i></span>
             </div>
           </div>
         )}
@@ -436,27 +455,40 @@ export default function LoginPage() {
         {view === 'register' && !otpSent && (
           <form onSubmit={handleSendOtp} className="animate-in">
             <div className="form-group">
-              <label className="form-label">Nama Lengkap Sesuai KTP</label>
+              <label className="form-label">Nama Lengkap</label>
               <input
                 type="text"
                 className="premium-input"
-                placeholder="cth: Ahmad Fauzi"
+                placeholder="Nama sesuai identitas resmi"
                 value={regData.fullname}
                 onChange={e => setRegData({ ...regData, fullname: e.target.value })}
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Username Pilihan</label>
-              <input
-                type="text"
-                className="premium-input"
-                placeholder="cth: fauzi88"
-                value={regData.username}
-                onChange={e => setRegData({ ...regData, username: e.target.value })}
-                required
-              />
+            <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label className="form-label">Username</label>
+                <input
+                  type="text"
+                  className="premium-input"
+                  placeholder="ID Akses"
+                  value={regData.username}
+                  onChange={e => setRegData({ ...regData, username: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">WhatsApp</label>
+                <input
+                  type="tel"
+                  className="premium-input"
+                  placeholder="08XXX"
+                  value={regData.identifier}
+                  onChange={e => setRegData({ ...regData, identifier: e.target.value })}
+                  required
+                />
+              </div>
             </div>
 
             <div className="form-group">
@@ -467,13 +499,13 @@ export default function LoginPage() {
                 onChange={e => setRegData({ ...regData, jabatan: e.target.value })}
                 required
               >
-                <option value="" disabled>Pilih Jabatan Sesuai SK</option>
-                <optgroup label="[ Dewan Harian ]">
+                <option value="" disabled>Pilih Posisi Anda</option>
+                <optgroup label="[ DEWAN HARIAN ]">
                   {jabatansList.filter(j => j.kelompok === 'Dewan Harian').map((j, i) => (
                     <option key={i} value={j.nama_jabatan}>{j.nama_jabatan}</option>
                   ))}
                 </optgroup>
-                <optgroup label="[ Dewan Pleno ]">
+                <optgroup label="[ DEWAN PLENO ]">
                   {jabatansList.filter(j => j.kelompok === 'Pleno').map((j, i) => (
                     <option key={i} value={j.nama_jabatan}>{j.nama_jabatan}</option>
                   ))}
@@ -481,25 +513,17 @@ export default function LoginPage() {
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">WhatsApp Utama (OTP)</label>
-              <input
-                type="tel"
-                className="premium-input"
-                placeholder="cth: 08123456789"
-                value={regData.identifier}
-                onChange={e => setRegData({ ...regData, identifier: e.target.value })}
-                required
-              />
-            </div>
-
             <button type="submit" className="primary-btn" disabled={loading}>
-              {loading ? 'Mengirim Kode...' : 'Daftar & Kirim OTP'}
+              {loading ? (
+                <><i className="fas fa-circle-notch fa-spin"></i> Memproses Pendaftaran...</>
+              ) : (
+                <><i className="fas fa-paper-plane"></i> Daftar & Kirim OTP</>
+              )}
             </button>
 
             <div className="auth-footer">
-              Sudah ada akun?
-              <span className="auth-toggle-link" onClick={() => { setView('login'); setError(''); }}>Masuk Ke Akun</span>
+              Telah terdaftar?
+              <span className="auth-toggle-link" onClick={() => { setView('login'); setError(''); }}>Kembali Login <i className="fas fa-undo" style={{ fontSize: '0.7rem' }}></i></span>
             </div>
           </form>
         )}
@@ -507,42 +531,45 @@ export default function LoginPage() {
         {/* VIEW: VERIFY OTP */}
         {otpSent && view === 'register' && (
           <form onSubmit={handleRegister} className="animate-in">
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <div className="subtitle" style={{ marginBottom: '1rem' }}>
-                Kode OTP telah dikirim ke nomor WhatsApp Anda: <br />
-                <strong style={{ color: 'white' }}>{regData.identifier}</strong>
-              </div>
+            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <p className="subtitle" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                Kami telah mengirimkan kode verifikasi 6 digit ke WhatsApp: <br />
+                <strong style={{ color: 'white', fontSize: '1.1rem' }}>{regData.identifier}</strong>
+              </p>
 
               <div className="form-group">
                 <input
                   type="text"
                   className="premium-input"
-                  style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem', fontWeight: 800 }}
+                  style={{ textAlign: 'center', fontSize: '1.8rem', letterSpacing: '0.8rem', fontWeight: 900, background: 'rgba(2, 6, 23, 0.8)' }}
                   placeholder="000000"
                   maxLength={6}
                   value={regData.otp}
                   onChange={e => setRegData({ ...regData, otp: e.target.value })}
                   required
                   autoFocus
+                  autoComplete="one-time-code"
                 />
               </div>
             </div>
 
             <button type="submit" className="primary-btn" disabled={loading}>
-              {loading ? 'Verifikasi...' : 'Verifikasi & Aktivasi'}
+              {loading ? <><i className="fas fa-circle-notch fa-spin"></i> Mengaktifkan...</> : <><i className="fas fa-check-double"></i> Verifikasi & Aktivasi</>}
             </button>
 
-            <div className="auth-footer">
-              Tidak menerima kode?
-              <span className="auth-toggle-link" style={{ opacity: otpTimer > 0 ? 0.5 : 1 }} onClick={() => otpTimer === 0 && handleSendOtp()}>
-                {otpTimer > 0 ? `Kirim Ulang (${otpTimer}s)` : 'Kirim Ulang'}
+            <div className="auth-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
+              Masalah dengan kode?
+              <span
+                className="auth-toggle-link"
+                style={{ opacity: otpTimer > 0 ? 0.5 : 1, pointerEvents: otpTimer > 0 ? 'none' : 'auto' }}
+                onClick={handleSendOtp}
+              >
+                {otpTimer > 0 ? `Kirim Ulang (${otpTimer}s)` : 'Kirim Ulang OTP'}
               </span>
             </div>
           </form>
         )}
       </div>
-
-      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
     </div>
   );
 }

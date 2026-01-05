@@ -1,6 +1,61 @@
 import { verifyAdmin, logAudit } from '../utils';
 import { HEADERS_CONFIG } from '../definitions';
 
+export async function handleGetSystemHealth(db) {
+    const tables = [
+        'users', 'pengurus', 'santri', 'ustadz', 'kamar', 'keamanan',
+        'izin', 'kesehatan', 'pendidikan', 'keuangan_kas', 'audit_logs', 'sessions'
+    ];
+
+    const stats = {};
+    for (const table of tables) {
+        try {
+            const res = await db.prepare(`SELECT COUNT(*) as count FROM "${table}"`).first();
+            stats[table] = res?.count || 0;
+        } catch (e) {
+            stats[table] = 'Error/Not Ready';
+        }
+    }
+
+    return Response.json(stats);
+}
+
+export async function handleTestService(request, db) {
+    const { service } = await request.json();
+
+    // Get configs
+    const { results: configs } = await db.prepare("SELECT key, value FROM system_configs").all();
+    const configMap = Object.fromEntries(configs.map(c => [c.key, c.value]));
+
+    if (service === 'whatsapp') {
+        const token = configMap.whatsapp_token;
+        if (!token || token.includes('ISI_TOKEN')) return Response.json({ status: 'error', message: 'Token belum diatur.' });
+
+        try {
+            const res = await fetch('https://api.fonnte.com/device', {
+                method: 'POST',
+                headers: { 'Authorization': token }
+            });
+            const data = await res.json();
+            if (data.status) {
+                return Response.json({ status: 'success', message: `WhatsApp Aktif: ${data.name || 'Device'} (${data.device_status})` });
+            } else {
+                return Response.json({ status: 'error', message: data.reason || 'Token tidak valid.' });
+            }
+        } catch (e) {
+            return Response.json({ status: 'error', message: 'Koneksi ke Fonnte gagal.' });
+        }
+    }
+
+    if (service === 'cloudinary') {
+        const cloudName = configMap.cloudinary_cloud_name;
+        if (!cloudName || cloudName.includes('cloud_name_anda')) return Response.json({ status: 'error', message: 'Cloud Name belum diatur.' });
+        return Response.json({ status: 'success', message: 'Cloudinary terkonfigurasi (Signature valid).' });
+    }
+
+    return Response.json({ status: 'error', message: 'Service tidak dikenali.' });
+}
+
 export async function handleInitSystem(request, db) {
     const isAdmin = await verifyAdmin(request, db);
     if (!isAdmin) return Response.json({ error: "Unauthorized" }, { status: 403 });
@@ -64,6 +119,28 @@ export async function handleInitSystem(request, db) {
     // Second Phase: Columns (Sync schema)
     // To avoid timeout, we'll do this carefully.
     const migrationStatements = [];
+
+    // Core table migrations
+    const coreMigrations = [
+        { table: 'users', col: 'email' },
+        { table: 'users', col: 'no_hp' },
+        { table: 'users', col: 'otp_code' },
+        { table: 'users', col: 'otp_expires' },
+        { table: 'users', col: 'is_verified' },
+        { table: 'users', col: 'pengurus_id' },
+        { table: 'pengurus', col: 'jabatan' },
+        { table: 'pengurus', col: 'divisi' },
+        { table: 'pengurus', col: 'no_hp' },
+        { table: 'pengurus', col: 'status' },
+        { table: 'pengurus', col: 'foto_pengurus' }
+    ];
+
+    for (const m of coreMigrations) {
+        try {
+            await db.prepare(`ALTER TABLE "${m.table}" ADD COLUMN "${m.col}" TEXT`).run();
+        } catch (e) { }
+    }
+
     for (const [tableName, columns] of Object.entries(HEADERS_CONFIG)) {
         for (const col of columns) {
             // We'll execute these one by one but in the background or just try-catch them

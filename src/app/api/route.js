@@ -49,6 +49,16 @@ async function dispatcher(request) {
         if (action === 'initSystem') return await SystemHandler.handleInitSystem(request, db);
         if (action === 'ping') return await SystemHandler.handlePing(db);
         if (action === 'getConfigs') return await SystemHandler.handleGetConfigs(db);
+        if (action === 'getSystemHealth') {
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+            return await SystemHandler.handleGetSystemHealth(db);
+        }
+        if (action === 'testService') {
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+            return await SystemHandler.handleTestService(request, db);
+        }
         if (action === 'updateConfig') {
             // Check Admin
             const isAdmin = await verifyAdmin(request, db);
