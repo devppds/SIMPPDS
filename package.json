@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack && npx @opennextjs/cloudflare build --skipNextBuild && cp -r .open-next/assets/* .open-next/ && rm -rf .open-next/assets && mv .open-next/worker.js .open-next/_worker.js",
-    "build:worker": "next build --webpack && npx @opennextjs/cloudflare build --skipNextBuild && cp -r .open-next/assets/* .open-next/ && rm -rf .open-next/assets && mv .open-next/worker.js .open-next/_worker.js",
+    "build": "next build --webpack && npx @opennextjs/cloudflare build --skipNextBuild && cp -r .open-next/assets/_next .open-next/ && cp -r .open-next/assets/* .open-next/ 2>/dev/null || : && rm -rf .open-next/assets && mv .open-next/worker.js .open-next/_worker.js && cp _routes.json .open-next/",
+    "build:worker": "next build --webpack && npx @opennextjs/cloudflare build --skipNextBuild && cp -r .open-next/assets/_next .open-next/ && cp -r .open-next/assets/* .open-next/ 2>/dev/null || : && rm -rf .open-next/assets && mv .open-next/worker.js .open-next/_worker.js && cp _routes.json .open-next/",
     "start": "next start",
     "lint": "eslint",
     "deploy": "npm run build && npx wrangler deploy"
