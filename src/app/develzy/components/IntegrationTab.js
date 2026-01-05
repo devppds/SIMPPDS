@@ -198,6 +198,7 @@ export default function IntegrationTab() {
                 isOpen={configModal.isOpen}
                 onClose={() => setConfigModal({ isOpen: false, service: null, data: {} })}
                 title={`Terminal Konfigurasi: ${configModal.service?.name}`}
+                theme="dark"
                 footer={(
                     <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button className="btn" style={{ padding: '10px 20px', background: 'transparent', color: '#64748b', border: '1px solid #334155', borderRadius: '12px', fontWeight: 700 }} onClick={() => setConfigModal({ isOpen: false, service: null, data: {} })}>Batalkan</button>

@@ -369,3 +369,88 @@
     color: white;
     box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
 }
+
+/* Dark Modal Theme Overrides */
+.modal-dark-overlay {
+    background: rgba(2, 6, 23, 0.9) !important;
+    backdrop-filter: blur(20px) !important;
+}
+
+.modal-container.theme-dark {
+    background: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8) !important;
+}
+
+.theme-dark .modal-header {
+    background: #0f172a !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 1.25rem 2rem !important;
+}
+
+.theme-dark .modal-header h3 {
+    color: #f8fafc !important;
+    font-size: 1.25rem !important;
+    /* Smaller size as requested */
+    letter-spacing: -0.5px !important;
+}
+
+.theme-dark .close-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #94a3b8 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.theme-dark .modal-body {
+    background: #0f172a !important;
+    padding: 1.5rem 2rem !important;
+    /* Reduced padding from 2.5rem */
+}
+
+.theme-dark .modal-footer {
+    background: #0f172a !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 1rem 2rem !important;
+}
+
+.theme-dark .form-label {
+    color: var(--develzy-text-secondary) !important;
+    font-size: 0.75rem !important;
+    margin-bottom: 0.4rem !important;
+}
+
+.theme-dark .form-control,
+.theme-dark select:not(.develzy-input) {
+    background: rgba(2, 6, 23, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+    padding: 10px 14px !important;
+    /* Smaller padding */
+    font-size: 0.9rem !important;
+}
+
+.theme-dark .form-control:focus {
+    border-color: var(--develzy-accent) !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Checkbox alignment fix for roles */
+.theme-dark input[type="checkbox"] {
+    accent-color: var(--develzy-accent);
+}
+
+.theme-dark .btn-secondary {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #94a3b8 !important;
+}
+
+.theme-dark .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+}

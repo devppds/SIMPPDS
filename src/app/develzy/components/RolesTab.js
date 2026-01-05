@@ -204,6 +204,7 @@ export default function RolesTab({ rolesList, onRefresh }) {
                 isOpen={isRoleModalOpen}
                 onClose={() => setIsRoleModalOpen(false)}
                 title={editingRole ? `Edit Role: ${editingRole.label}` : "Tambah Role Baru"}
+                theme="dark"
                 footer={(
                     <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button className="btn btn-secondary" onClick={() => setIsRoleModalOpen(false)}>Batal</button>
@@ -264,8 +265,8 @@ export default function RolesTab({ rolesList, onRefresh }) {
 
                     <div className="form-group" style={{ marginTop: '1.5rem' }}>
                         <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem', marginBottom: '1rem', display: 'block' }}>Akses Menu</label>
-                        <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <p style={{ fontSize: '0.8rem', color: '#475569', marginBottom: '1.5rem', fontWeight: 700 }}>Pilih protokol akses yang diizinkan:</p>
+                        <div style={{ padding: '1.25rem', background: 'rgba(2, 6, 23, 0.5)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '1.25rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pilih protokol akses yang diizinkan:</p>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }}>
                                 {allPossibleMenus.map((menu, i) => {
                                     const menuName = menu.label;
