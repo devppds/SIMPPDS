@@ -16,6 +16,7 @@ export default function LaporanPimpinan() {
         kesehatanTotal: 0,
         pemasukanBulanIni: 0,
         pengeluaranBulanIni: 0,
+        totalSaldo: 0,
         pengurusHadir: 0,
         unitStats: {}
     });
@@ -66,7 +67,7 @@ export default function LaporanPimpinan() {
 
     const statsItems = useMemo(() => [
         { title: 'Total Santri', value: stats.santriTotal, icon: 'fas fa-user-graduate', color: '#6366f1' },
-        { title: 'Saldo Operasional', value: formatCurrency(stats.pemasukanBulanIni - stats.pengeluaranBulanIni), icon: 'fas fa-chart-line', color: '#10b981' },
+        { title: 'Saldo Operasional', value: formatCurrency(stats.totalSaldo), icon: 'fas fa-chart-line', color: '#10b981' },
         { title: 'Kinerja Pengurus', value: stats.pengurusHadir + ' Tugas', icon: 'fas fa-user-tie', color: '#8b5cf6' },
         { title: 'Kesehatan & Disiplin', value: stats.pelanggaranTotal + stats.kesehatanTotal + ' Poin', icon: 'fas fa-heartbeat', color: '#ef4444' }
     ], [stats]);
@@ -83,7 +84,7 @@ export default function LaporanPimpinan() {
                     apiCall('getData', 'GET', { type: 'pengurus' }),
                     apiCall('getData', 'GET', { type: 'keamanan' }),
                     apiCall('getData', 'GET', { type: 'kesehatan' }),
-                    apiCall('getData', 'GET', { type: 'keuangan_kas' }),
+                    apiCall('getData', 'GET', { type: 'arus_kas' }),
                     apiCall('getData', 'GET', { type: 'kamar' }),
                     apiCall('getData', 'GET', { type: 'pengurus_absen' })
                 ]);
@@ -102,22 +103,32 @@ export default function LaporanPimpinan() {
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
 
-                // Dynamic Hijri logic (Simplified for display)
-                const HIJRI_MONTHS = ['Muharram', 'Shafar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', 'Sya\'ban', 'Ramadhan', 'Syawal', 'Dzulqa\'dah', 'Dzulhijjah'];
-
-                // Approximate Hijri for now (Rajab 1447 starts late Dec 2025/Jan 2026)
                 const hMonth = 'Rajab';
                 const hYear = '1447';
 
                 const monthlyAbsen = (pengurusAbsen || []).filter(a => a.bulan === hMonth && a.tahun === hYear);
                 const totalWorkingSessions = monthlyAbsen.reduce((sum, a) => sum + (Number(a.tugas) || 0), 0);
 
-                const pemasukan = (arusKas || [])
-                    .filter(item => item.tipe === 'Masuk' && new Date(item.tanggal).getMonth() === currentMonth && new Date(item.tanggal).getFullYear() === currentYear)
+                // Financial Overview from Bendahara (arus_kas)
+                const totalBalance = (arusKas || []).reduce((sum, d) => {
+                    const n = Number(d.nominal) || 0;
+                    return d.tipe === 'Masuk' ? sum + n : sum - n;
+                }, 0);
+
+                const monthlyPemasukan = (arusKas || [])
+                    .filter(item => {
+                        if (!item.tanggal) return false;
+                        const d = new Date(item.tanggal);
+                        return item.tipe === 'Masuk' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                    })
                     .reduce((sum, item) => sum + (Number(item.nominal) || 0), 0);
 
-                const pengeluaran = (arusKas || [])
-                    .filter(item => item.tipe === 'Keluar' && new Date(item.tanggal).getMonth() === currentMonth && new Date(item.tanggal).getFullYear() === currentYear)
+                const monthlyPengeluaran = (arusKas || [])
+                    .filter(item => {
+                        if (!item.tanggal) return false;
+                        const d = new Date(item.tanggal);
+                        return item.tipe === 'Keluar' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                    })
                     .reduce((sum, item) => sum + (Number(item.nominal) || 0), 0);
 
                 const totalCap = (kamarData || []).reduce((sum, k) => sum + (Number(k.kapasitas) || 0), 0);
@@ -126,7 +137,6 @@ export default function LaporanPimpinan() {
 
                 if (totalCap > 0) setOccupancy(Math.round((sTotal / totalCap) * 100));
 
-                // Unit Stats
                 const unitCount = { 'MHM': 0, 'MIU': 0, 'MADIN': 0 };
                 activeSantri.forEach(s => {
                     const m = (s.madrasah || '').toUpperCase();
@@ -140,8 +150,9 @@ export default function LaporanPimpinan() {
                     ustadzTotal: (pengurus || []).length,
                     pelanggaranTotal: (pelanggaran || []).length,
                     kesehatanTotal: (kesehatan || []).filter(k => k.status_periksa !== 'Sembuh')?.length || 0,
-                    pemasukanBulanIni: pemasukan,
-                    pengeluaranBulanIni: pengeluaran,
+                    pemasukanBulanIni: monthlyPemasukan,
+                    pengeluaranBulanIni: monthlyPengeluaran,
+                    totalSaldo: totalBalance,
                     pengurusHadir: totalWorkingSessions,
                     unitStats: unitCount
                 };
@@ -239,7 +250,7 @@ export default function LaporanPimpinan() {
 
                         <div style={{ padding: '2rem', background: '#f8fafc', borderRadius: '24px', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Proyeksi Saldo Bersih</div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Saldo Bersih Bulan Ini</div>
                                 <div style={{ fontSize: '1.8rem', fontWeight: 900, color: (stats.pemasukanBulanIni - stats.pengeluaranBulanIni) >= 0 ? '#10b981' : '#ef4444' }}>
                                     {formatCurrency(stats.pemasukanBulanIni - stats.pengeluaranBulanIni)}
                                 </div>
