@@ -42,3 +42,12 @@ next-env.d.ts
 
 # local database
 db-local/
+
+# OpenNext & Temporary
+.open-next/
+temp_next/
+open-next.output.json
+debug_critters*.js
+fix_critters*.js
+fix_opentelemetry.js
+entry-worker.mjs
