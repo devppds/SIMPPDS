@@ -3,7 +3,7 @@ export const NAV_ITEMS = [
         label: 'Dashboard',
         icon: 'fas fa-th-large',
         path: '/dashboard',
-        roles: ['admin', 'super_dashboard', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu', 'wajar_murottil']
+        roles: ['admin', 'keamanan', 'pendidikan', 'kesehatan', 'bendahara', 'sekretariat', 'jamiyyah', 'madrasah_miu', 'wajar_murottil']
     },
     {
         label: 'Laporan Pimpinan',
