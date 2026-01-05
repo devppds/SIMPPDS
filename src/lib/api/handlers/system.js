@@ -188,7 +188,33 @@ export async function handleInitSystem(request, db) {
         console.error("Seeding develzy_dash failed", e);
     }
 
-    // 4. Seed master_pembimbing if empty
+    // 4. Role Repair & Migration (Self-Healing)
+    try {
+        // Fix Legacy 'develzy' role name in DB
+        const legacyRole = await db.prepare("SELECT id FROM roles WHERE role = 'develzy'").first();
+        if (legacyRole) {
+            await db.prepare("UPDATE roles SET role = 'dev_elzy', label = 'DEVELZY Control', is_public = 0 WHERE id = ?").bind(legacyRole.id).run();
+        }
+
+        // Ensure 'super_dashboard' exists
+        const sdRole = await db.prepare("SELECT id FROM roles WHERE role = 'super_dashboard'").first();
+        if (!sdRole) {
+            await db.prepare("INSERT INTO roles (role, label, color, menus, is_public) VALUES (?, ?, ?, ?, ?)")
+                .bind('super_dashboard', 'Super Dashboard', '#2563eb', JSON.stringify(['Semua Menu']), 0).run();
+        }
+
+        // Ensure 'dev_elzy' exists if it wasn't a rename
+        const deRole = await db.prepare("SELECT id FROM roles WHERE role = 'dev_elzy'").first();
+        if (!deRole) {
+            await db.prepare("INSERT INTO roles (role, label, color, menus, is_public) VALUES (?, ?, ?, ?, ?)")
+                .bind('dev_elzy', 'DEVELZY Control', '#0f172a', JSON.stringify(['Semua Menu', 'DEVELZY Control']), 0).run();
+        }
+
+    } catch (e) {
+        console.error("Role Repair Failed:", e);
+    }
+
+    // 5. Seed master_pembimbing if empty
     try {
         const pembimbingCheck = await db.prepare("SELECT COUNT(*) as count FROM master_pembimbing").first();
         if (pembimbingCheck && pembimbingCheck.count === 0) {
