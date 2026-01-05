@@ -539,11 +539,21 @@ export default function LoginPage() {
                     onChange={e => setRegData({ ...regData, jabatan: e.target.value })}
                     disabled={loading}
                   >
-                    <option value="" disabled>--- Pilih Jabatan Anda ---</option>
-                    {jabatansList.map((j, idx) => (
-                      <option key={idx} value={j.nama_jabatan}>{j.nama_jabatan}</option>
-                    ))}
-                    <option value="Anggota">Anggota/Lainnya</option>
+                    <option value="" disabled>--- Pilih Jabatan Sesuai SK ---</option>
+
+                    {/* Group: Dewan Harian */}
+                    <optgroup label="[ Dewan Harian ]">
+                      {jabatansList.filter(j => j.kelompok === 'Dewan Harian').map((j, idx) => (
+                        <option key={`harian-${idx}`} value={j.nama_jabatan}>{j.nama_jabatan}</option>
+                      ))}
+                    </optgroup>
+
+                    {/* Group: Dewan Pleno */}
+                    <optgroup label="[ Dewan Pleno ]">
+                      {jabatansList.filter(j => j.kelompok === 'Pleno').map((j, idx) => (
+                        <option key={`pleno-${idx}`} value={j.nama_jabatan}>{j.nama_jabatan}</option>
+                      ))}
+                    </optgroup>
                   </select>
                   <input
                     type="text"
