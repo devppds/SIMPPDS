@@ -11,24 +11,22 @@ export async function handleSendOtp(request, db) {
     const pin = '25' + Math.floor(10 + Math.random() * 90).toString(); // Format: 25XX
     const expires = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
 
-    // 2. Save OTP to users table (or a temporary table, but we added columns to users table)
-    // If target is WA number, it might not exist yet in 'users' table if it's a new registration.
-    // So we'll try to update existing or just respond with success for demo if it's new.
-    // For real registration, we might need a separate 'temporary_registrations' table, 
-    // but the user asked to add columns to 'users', so we'll assume we find by email or no_hp.
-
-    // Check if user exists by no_hp or email
+    // 2. Logic Check & Save
     let user = await db.prepare("SELECT * FROM users WHERE no_hp = ? OR email = ?")
         .bind(target, target).first();
 
     if (!user) {
-        // For Registration: Create a 'pending' user with generated PIN
-        const tempUsername = 'user_' + Date.now();
-        await db.prepare("INSERT INTO users (username, password, password_plain, no_hp, email, otp_code, otp_expires, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)")
-            .bind(tempUsername, 'pending_otp', pin, target, target, otp, expires, 'absen_pengurus').run();
+        // Registration Flow: Check if username already exists
+        if (!username || !fullname) return Response.json({ error: "Username dan Nama Lengkap wajib diisi" }, { status: 400 });
+
+        const existingUsername = await db.prepare("SELECT id FROM users WHERE username = ?").bind(username).first();
+        if (existingUsername) return Response.json({ error: "Username sudah digunakan, silakan pilih yang lain" }, { status: 400 });
+
+        // Create a 'pending' user with provided username and fullname
+        await db.prepare("INSERT INTO users (username, fullname, password, password_plain, no_hp, email, otp_code, otp_expires, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)")
+            .bind(username, fullname, 'pending_otp', pin, target, target, otp, expires, 'absen_pengurus').run();
     } else {
-        // For Existing: We reuse existing PIN or update it? 
-        // User asked to provide PIN in WA, so we'll update it for clarity.
+        // Login Flow: Just update OTP and PIN
         await db.prepare("UPDATE users SET otp_code = ?, otp_expires = ?, password_plain = ? WHERE id = ?")
             .bind(otp, expires, pin, user.id).run();
     }

@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [pin, setPin] = useState('');
 
   // State: Register
-  const [regData, setRegData] = useState({ identifier: '', otp: '', name: '' });
+  const [regData, setRegData] = useState({ identifier: '', otp: '', username: '', fullname: '' });
   const [otpSent, setOtpSent] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
 
@@ -189,8 +189,8 @@ export default function LoginPage() {
   // -- LOGIC: REGISTER (OTP) --
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    if (!regData.identifier) {
-      setError("Masukkan Email atau No. WhatsApp");
+    if (!regData.identifier || !regData.username || !regData.fullname) {
+      setError("Semua kolom (Nama, Username, WA/Email) wajib diisi");
       return;
     }
 
@@ -199,7 +199,11 @@ export default function LoginPage() {
 
     try {
       const res = await apiCall('sendOtp', 'POST', {
-        data: { target: regData.identifier }
+        data: {
+          target: regData.identifier,
+          username: regData.username,
+          fullname: regData.fullname
+        }
       });
 
       if (res.success) {
@@ -506,16 +510,34 @@ export default function LoginPage() {
                 <>
                   <input
                     type="text"
+                    placeholder="Nama Lengkap"
+                    className="inpt"
+                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left' }}
+                    value={regData.fullname}
+                    onChange={e => setRegData({ ...regData, fullname: e.target.value })}
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    className="inpt"
+                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left' }}
+                    value={regData.username}
+                    onChange={e => setRegData({ ...regData, username: e.target.value })}
+                    disabled={loading}
+                  />
+                  <input
+                    type="text"
                     placeholder="Email / No. WhatsApp (08...)"
                     className="inpt"
                     style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left' }}
                     value={regData.identifier}
                     onChange={e => setRegData({ ...regData, identifier: e.target.value })}
                     disabled={loading}
-                    autoFocus
                   />
                   <button className="btn-login" type="submit" disabled={loading}>
-                    {loading ? 'MENGIRIM...' : 'KIRIM KODE OTP'}
+                    {loading ? 'MENGIRIM...' : 'DAFTAR & KIRIM OTP'}
                   </button>
                 </>
               ) : (
