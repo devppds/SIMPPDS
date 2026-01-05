@@ -6,8 +6,9 @@ export async function handleSendOtp(request, db) {
     const { target } = await request.json();
     if (!target) return Response.json({ error: "Kolom target (Email/WA) wajib diisi" }, { status: 400 });
 
-    // 1. Generate OTP (6 digits)
+    // 1. Generate OTP (6 digits) and PIN (4 digits starting with 25)
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const pin = '25' + Math.floor(10 + Math.random() * 90).toString(); // Format: 25XX
     const expires = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
 
     // 2. Save OTP to users table (or a temporary table, but we added columns to users table)
@@ -21,15 +22,15 @@ export async function handleSendOtp(request, db) {
         .bind(target, target).first();
 
     if (!user) {
-        // For Registration: Create a 'pending' user or just use a dedicated table.
-        // Since we are adding to 'users' table, let's create a pending user.
+        // For Registration: Create a 'pending' user with generated PIN
         const tempUsername = 'user_' + Date.now();
-        await db.prepare("INSERT INTO users (username, password, no_hp, email, otp_code, otp_expires, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, 0)")
-            .bind(tempUsername, 'pending_otp', target, target, otp, expires, 'absen_pengurus').run();
+        await db.prepare("INSERT INTO users (username, password, password_plain, no_hp, email, otp_code, otp_expires, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)")
+            .bind(tempUsername, 'pending_otp', pin, target, target, otp, expires, 'absen_pengurus').run();
     } else {
-        // For Login/Verification: Update existing
-        await db.prepare("UPDATE users SET otp_code = ?, otp_expires = ? WHERE id = ?")
-            .bind(otp, expires, user.id).run();
+        // For Existing: We reuse existing PIN or update it? 
+        // User asked to provide PIN in WA, so we'll update it for clarity.
+        await db.prepare("UPDATE users SET otp_code = ?, otp_expires = ?, password_plain = ? WHERE id = ?")
+            .bind(otp, expires, pin, user.id).run();
     }
 
     // 3. Get WhatsApp Config
@@ -68,8 +69,11 @@ Halo Khodimin,
 Kode verifikasi Anda adalah: 
 *${otp}*
 
-Kode ini bersifat *RAHASIA* dan berlaku selama *5 menit*. 
-Mohon jangan bagikan kode ini kepada siapapun demi keamanan akun Anda.
+Gunakan PIN berikut untuk Masuk (Login):
+*${pin}*
+
+Kode OTP berlaku selama *5 menit*. 
+Simpan PIN Anda dengan baik dan jangan bagikan ke siapa pun.
 
 Terima Kasih,
 *Admin SIM-PPDS*`
