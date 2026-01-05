@@ -330,9 +330,11 @@ export async function handleCreateSession(request, db) {
     const now = new Date().toISOString();
 
     // --- SINGLE SESSION POLICY ---
-    // Invalidate previous active sessions for this user to ensure only one active session exists
-    await db.prepare(`UPDATE sessions SET status = 'revoked', last_active = ? WHERE username = ? AND status = 'active'`)
-        .bind(now, user.username).run();
+    // Revoke previous sessions UNLESS it's a Develzy/Super Dashboard account (Allow Multi-Device)
+    if (user.role !== 'dev_elzy' && user.role !== 'super_dashboard') {
+        await db.prepare(`UPDATE sessions SET status = 'revoked', last_active = ? WHERE username = ? AND status = 'active'`)
+            .bind(now, user.username).run();
+    }
 
     await db.prepare(`INSERT INTO sessions (token, username, fullname, role, ip_address, user_agent, login_at, last_active, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`)
