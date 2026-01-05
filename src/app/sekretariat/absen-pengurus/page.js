@@ -35,6 +35,7 @@ export default function AbsensiPengurusPage() {
     const [formState, setFormState] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [expandedSections, setExpandedSections] = useState(['DEWAN HARIAN', 'PLENO']);
 
     const isMounted = React.useRef(false);
 
@@ -187,15 +188,33 @@ export default function AbsensiPengurusPage() {
         exportToExcel(exportData, `Rekap_Absensi_Pengurus_${filterMonth}_${filterYear}`, ['Jabatan / Seksi', 'Nama Pengurus', 'Unit', 'Total Tugas', 'Total Izin', 'Total Alfa', 'Keterangan']);
     };
 
-    // Grouping logic
+    const toggleSection = (section) => {
+        setExpandedSections(prev =>
+            prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
+        );
+    };
+
+    // Grouping logic (2-level: Division -> Jabatan)
     const groupedData = useMemo(() => {
-        const groups = {};
+        const divisions = {
+            'DEWAN HARIAN': {},
+            'PLENO': {},
+            'LAINNYA': {}
+        };
+
         pengurusList.forEach(p => {
-            const groupKey = p.jabatan || 'Lainnya';
-            if (!groups[groupKey]) groups[groupKey] = [];
-            groups[groupKey].push(p);
+            const div = (p.divisi || 'LAINNYA').toUpperCase();
+            const role = p.jabatan || 'Lainnya';
+            const targetDiv = divisions[div] ? div : 'PLENO'; // Map unknown to PLENO as fallback or LAINNYA
+
+            if (!divisions[targetDiv][role]) divisions[targetDiv][role] = [];
+            divisions[targetDiv][role].push(p);
         });
-        return groups;
+
+        // Remove empty divisions
+        if (Object.keys(divisions['LAINNYA']).length === 0) delete divisions['LAINNYA'];
+
+        return divisions;
     }, [pengurusList]);
 
     const statsItems = useMemo(() => {
@@ -249,49 +268,96 @@ export default function AbsensiPengurusPage() {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '50px' }}><i className="fas fa-spinner fa-spin fa-2x"></i><p>Memuat data...</p></div>
             ) : (
-                Object.entries(groupedData).map(([role, list]) => (
-                    <div key={role} style={{ marginBottom: '30px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', borderLeft: '4px solid var(--primary)', paddingLeft: '15px' }}>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Jabatan / Seksi: {role}</h3>
-                            <span className="th-badge" style={{ fontSize: '0.7rem' }}>{list.length} Orang</span>
+                Object.entries(groupedData).map(([divName, roles]) => (
+                    <div key={divName} className="division-section" style={{ marginBottom: '40px' }}>
+                        {/* Division Accordion Header */}
+                        <div
+                            onClick={() => toggleSection(divName)}
+                            style={{
+                                background: 'white',
+                                padding: '1.25rem 1.5rem',
+                                borderRadius: '18px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                                border: '1px solid #e2e8f0',
+                                marginBottom: '20px',
+                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                                transition: 'all 0.3s'
+                            }}
+                            className="accordion-header"
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{
+                                    width: '45px', height: '45px', borderRadius: '14px',
+                                    background: divName === 'DEWAN HARIAN' ? '#eff6ff' : '#f0fdf4',
+                                    color: divName === 'DEWAN HARIAN' ? '#2563eb' : '#16a34a',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem'
+                                }}>
+                                    <i className={divName === 'DEWAN HARIAN' ? 'fas fa-landmark' : 'fas fa-users-cog'}></i>
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1e293b', margin: 0 }}>{divName}</h2>
+                                    <small style={{ color: '#64748b', fontWeight: 600 }}>{Object.values(roles).flat().length} Pengurus Terdata</small>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <span className="th-badge" style={{ background: '#f1f5f9' }}>{Object.keys(roles).length} Kelompok Bidang</span>
+                                <i className={`fas fa-chevron-${expandedSections.includes(divName) ? 'up' : 'down'}`} style={{ color: '#94a3b8' }}></i>
+                            </div>
                         </div>
 
-                        <div className="table-wrapper">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Nama Pengurus</th>
-                                        <th width="120px">Tugas</th>
-                                        <th width="120px">Izin</th>
-                                        <th width="120px">Alfa</th>
-                                        <th>Alasan Izin / Keterangan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {list.map(p => {
-                                        const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '' };
+                        {/* Subgroups (Jabatan) */}
+                        {expandedSections.includes(divName) && (
+                            <div className="animate-in" style={{ paddingLeft: '10px' }}>
+                                {Object.entries(roles).map(([role, list]) => (
+                                    <div key={role} style={{ marginBottom: '30px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', borderLeft: '4px solid var(--primary)', paddingLeft: '15px' }}>
+                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Jabatan / Seksi: {role}</h3>
+                                            <span className="th-badge" style={{ fontSize: '0.7rem' }}>{list.length} Orang</span>
+                                        </div>
 
-                                        return (
-                                            <tr key={p.id}>
-                                                <td><strong>{p.nama}</strong><br /><small style={{ color: 'var(--text-muted)' }}>{p.divisi || '-'}</small></td>
-                                                <td>
-                                                    <input type="number" className="form-control-sm" value={values.tugas} onChange={e => handleInputChange(p.id, 'tugas', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
-                                                </td>
-                                                <td>
-                                                    <input type="number" className="form-control-sm" value={values.izin} onChange={e => handleInputChange(p.id, 'izin', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
-                                                </td>
-                                                <td>
-                                                    <input type="number" className="form-control-sm" value={values.alfa} onChange={e => handleInputChange(p.id, 'alfa', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
-                                                </td>
-                                                <td>
-                                                    <input type="text" className="form-control-sm" placeholder="Alasan..." value={values.alasan_izin} onChange={e => handleInputChange(p.id, 'alasan_izin', e.target.value)} style={{ width: '100%' }} />
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                                        <div className="table-wrapper">
+                                            <table className="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nama Pengurus</th>
+                                                        <th width="120px">Tugas</th>
+                                                        <th width="120px">Izin</th>
+                                                        <th width="120px">Alfa</th>
+                                                        <th>Alasan Izin / Keterangan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {list.map(p => {
+                                                        const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '' };
+
+                                                        return (
+                                                            <tr key={p.id}>
+                                                                <td><strong>{p.nama}</strong></td>
+                                                                <td>
+                                                                    <input type="number" className="form-control-sm" value={values.tugas} onChange={e => handleInputChange(p.id, 'tugas', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" className="form-control-sm" value={values.izin} onChange={e => handleInputChange(p.id, 'izin', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" className="form-control-sm" value={values.alfa} onChange={e => handleInputChange(p.id, 'alfa', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" className="form-control-sm" placeholder="Alasan..." value={values.alasan_izin} onChange={e => handleInputChange(p.id, 'alasan_izin', e.target.value)} style={{ width: '100%' }} />
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 ))
             )}

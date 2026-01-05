@@ -18,10 +18,9 @@ export default function RiwayatAbsensiPengurusPage() {
     const [pengurusList, setPengurusList] = useState([]);
     const [targetData, setTargetData] = useState([]);
     const [search, setSearch] = useState('');
-    const [filterStatus, setFilterStatus] = useState('Semua');
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
     const [mounted, setMounted] = useState(false);
+    const [expandedSections, setExpandedSections] = useState(['DEWAN HARIAN', 'PLENO']);
 
     const STATUS_OPTIONS = ['Semua', 'Hadir', 'Izin', 'Alfa'];
 
@@ -115,6 +114,27 @@ export default function RiwayatAbsensiPengurusPage() {
         });
     }, [processedData, search, filterStatus]);
 
+    const toggleSection = (section) => {
+        setExpandedSections(prev =>
+            prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
+        );
+    };
+
+    const groupedData = useMemo(() => {
+        const divisions = {
+            'DEWAN HARIAN': [],
+            'PLENO': [],
+            'LAINNYA': []
+        };
+        displayData.forEach(d => {
+            const div = (d.divisi || 'LAINNYA').toUpperCase();
+            if (divisions[div]) divisions[div].push(d);
+            else divisions['PLENO'].push(d);
+        });
+        if (divisions['LAINNYA'].length === 0) delete divisions['LAINNYA'];
+        return divisions;
+    }, [displayData]);
+
     const stats = useMemo(() => {
         const totalHadir = displayData.reduce((sum, d) => sum + d.hadir, 0);
         const totalIzin = displayData.reduce((sum, d) => sum + d.izin, 0);
@@ -195,25 +215,111 @@ export default function RiwayatAbsensiPengurusPage() {
 
             <StatsPanel items={stats} />
 
-            <DataViewContainer
-                title="Rekap Absensi Pengurus"
-                subtitle={`Menampilkan ${displayData.length} pengurus`}
-                headerActions={
-                    <>
-                        <button className="btn btn-outline btn-sm" onClick={() => window.print()}>
-                            <i className="fas fa-print"></i> Print
+            <div className="card-glass" style={{ padding: '1.5rem', borderRadius: '20px', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '250px' }}>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Cari nama atau jabatan..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <div style={{ width: '150px' }}>
+                        <SelectInput value={filterStatus} onChange={e => setFilterStatus(e.target.value)} options={STATUS_OPTIONS} style={{ marginBottom: 0 }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button className="btn btn-outline" onClick={() => window.print()}>
+                            <i className="fas fa-print"></i>
                         </button>
-                        <button className="btn btn-secondary btn-sm" onClick={handleExport} disabled={displayData.length === 0}>
-                            <i className="fas fa-file-excel"></i> Export Excel
+                        <button className="btn btn-secondary" onClick={handleExport} disabled={displayData.length === 0}>
+                            <i className="fas fa-file-excel"></i> Export
                         </button>
-                    </>
-                }
-                searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama / jabatan / divisi..." }}
-                filters={
-                    <SelectInput value={filterStatus} onChange={e => setFilterStatus(e.target.value)} options={STATUS_OPTIONS} style={{ width: '150px', marginBottom: 0 }} />
-                }
-                tableProps={{ columns, data: displayData, loading }}
-            />
+                    </div>
+                </div>
+            </div>
+
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: '50px' }}><i className="fas fa-spinner fa-spin fa-2x"></i><p>Memproses riwayat...</p></div>
+            ) : (
+                Object.entries(groupedData).map(([divName, list]) => (
+                    <div key={divName} style={{ marginBottom: '40px' }}>
+                        <div
+                            onClick={() => toggleSection(divName)}
+                            style={{
+                                background: 'white',
+                                padding: '1.25rem 1.5rem',
+                                borderRadius: '18px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                                border: '1px solid #e2e8f0',
+                                marginBottom: '20px',
+                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{
+                                    width: '40px', height: '40px', borderRadius: '12px',
+                                    background: divName === 'DEWAN HARIAN' ? '#eff6ff' : '#f0fdf4',
+                                    color: divName === 'DEWAN HARIAN' ? '#2563eb' : '#16a34a',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <i className={divName === 'DEWAN HARIAN' ? 'fas fa-landmark' : 'fas fa-users-cog'}></i>
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: '1.1rem', fontWeight: 900, margin: 0 }}>{divName}</h2>
+                                    <small style={{ color: '#64748b' }}>{list.length} Orang Terdaftar</small>
+                                </div>
+                            </div>
+                            <i className={`fas fa-chevron-${expandedSections.includes(divName) ? 'up' : 'down'}`} style={{ color: '#94a3b8' }}></i>
+                        </div>
+
+                        {expandedSections.includes(divName) && (
+                            <div className="animate-in table-wrapper">
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Pengurus</th>
+                                            <th>Target</th>
+                                            <th>Tugas</th>
+                                            <th className="hide-mobile">Izin</th>
+                                            <th className="hide-mobile">Alfa</th>
+                                            <th>% Hadir</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {list.map(row => {
+                                            const color = row.persentaseKehadiran >= 80 ? '#166534' : row.persentaseKehadiran >= 60 ? '#92400e' : '#991b1b';
+                                            return (
+                                                <tr key={row.id}>
+                                                    <td>
+                                                        <div style={{ fontWeight: 800 }}>{row.nama_pengurus}</div>
+                                                        <small style={{ color: '#64748b' }}>{row.jabatan}</small>
+                                                    </td>
+                                                    <td>{row.total_target}x</td>
+                                                    <td><span className="th-badge" style={{ background: '#dcfce7', color: '#166534' }}>{row.hadir}x</span></td>
+                                                    <td className="hide-mobile">{row.izin}x</td>
+                                                    <td className="hide-mobile">{row.alfa}x</td>
+                                                    <td style={{ fontWeight: 800, color }}>{row.persentaseKehadiran}%</td>
+                                                    <td>
+                                                        <button className="btn-vibrant btn-vibrant-purple" onClick={() => { setViewData(row); setIsViewModalOpen(true); }}>
+                                                            <i className="fas fa-eye"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                ))
+            )}
 
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Ringkasan Kehadiran" width="600px">
                 {viewData && (
