@@ -36,6 +36,26 @@ export default function DashboardPage() {
     useEffect(() => {
         setMounted(true);
         isMounted.current = true;
+
+        // 🛡️ UI PROTECTION SHIELD
+        // Prevent Right-Click
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            return false;
+        };
+
+        // Prevent Inspector Shortcuts (F12, Ctrl+Shift+I, Ctrl+Shift+C)
+        const handleKeyDown = (e) => {
+            if (e.keyCode === 123 ||
+                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 67))) {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        document.addEventListener('contextmenu', handleContextMenu);
+        document.addEventListener('keydown', handleKeyDown);
+
         const fetchDashboardData = async () => {
             // Safety Check: If not authorized for dashboard, redirect elsewhere
             const dashboardItem = (require('@/lib/navConfig').NAV_ITEMS).find(i => i.label === 'Dashboard');
@@ -68,7 +88,12 @@ export default function DashboardPage() {
             }
         };
         fetchDashboardData();
-        return () => { isMounted.current = false; };
+        return () => {
+            isMounted.current = false;
+            // Clean up protection
+            document.removeEventListener('contextmenu', handleContextMenu);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 
     // ✨ Optimized Smart Stat Cards Logic (Detects Develzy Access)
