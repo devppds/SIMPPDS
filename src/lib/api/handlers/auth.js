@@ -196,12 +196,22 @@ export async function handleLogin(request, db) {
         return Response.json({ error: "PIN Akses tidak dikenali" }, { status: 401 });
     }
 
+    // 🚀 Auto-Migration for Legacy 'develzy' users
+    if (user.role === 'develzy') {
+        const newRole = 'dev_elzy';
+        await db.prepare("UPDATE users SET role = ? WHERE id = ?").bind(newRole, user.id).run();
+        user.role = newRole; // Update local variable for response
+    }
+
     // 2. Fetch allowed menus for this role
     const roleConfig = await db.prepare("SELECT menus FROM roles WHERE role = ?").bind(user.role).first();
     let allowedMenus = [];
     try {
         if (roleConfig?.menus) allowedMenus = JSON.parse(roleConfig.menus);
-    } catch (e) { }
+    } catch (e) {
+        // Fallback for dev_elzy if role config missing
+        if (user.role === 'dev_elzy') allowedMenus = ['Semua Menu', 'DEVELZY Control'];
+    }
 
     return Response.json({
         success: true,
