@@ -193,15 +193,61 @@ export default function DevelzyControlPage() {
 
     if (!isDevelzy) return null;
 
+    // 🚀 Real-time Speed Monitoring
+    const [sysLatency, setSysLatency] = useState(0);
+    const [speedColor, setSpeedColor] = useState('#10b981'); // Green
+    const [speedLabel, setSpeedLabel] = useState('Optimal');
+
+    useEffect(() => {
+        if (!isDevelzy) return;
+        const checkSpeed = async () => {
+            const start = performance.now();
+            try {
+                await apiCall('ping', 'GET'); // Simple lightweight ping
+                const end = performance.now();
+                const latency = Math.round(end - start);
+
+                setSysLatency(latency);
+                if (latency < 200) {
+                    setSpeedColor('#10b981'); // Green
+                    setSpeedLabel('Sistem Cepat');
+                } else if (latency < 800) {
+                    setSpeedColor('#f59e0b'); // Yellow
+                    setSpeedLabel('Sistem Melambat');
+                } else {
+                    setSpeedColor('#ef4444'); // Red
+                    setSpeedLabel('Sangat Lambat');
+                }
+            } catch (e) {
+                setSysLatency(9999);
+                setSpeedColor('#ef4444');
+                setSpeedLabel('Offline / Error');
+            }
+        };
+
+        checkSpeed(); // Initial check
+        const interval = setInterval(checkSpeed, 5000); // Poll every 5s
+        return () => clearInterval(interval);
+    }, [isDevelzy]);
+
     return (
         <div className="develzy-page-container">
             <div className="view-container">
                 {/* Header and Stats reused from old code but simplified */}
                 <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                     <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.7rem', marginBottom: '8px' }}>
-                            <i className="fas fa-microchip"></i>
-                            Inti Sistem: Online
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.7rem' }}>
+                                <i className="fas fa-microchip"></i>
+                                Inti Sistem: Online
+                            </div>
+                            {/* 🔥 Realtime Speed Indicator */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: `${speedColor}15`, padding: '4px 10px', borderRadius: '20px', border: `1px solid ${speedColor}30` }}>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: speedColor, boxShadow: `0 0 8px ${speedColor}` }}></div>
+                                <span style={{ color: speedColor, fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                                    {speedLabel} ({sysLatency}ms)
+                                </span>
+                            </div>
                         </div>
                         <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
                             Kontrol {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
