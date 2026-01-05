@@ -8,13 +8,32 @@ import DataViewContainer from '@/components/DataViewContainer';
 import KopSurat from '@/components/KopSurat';
 import StatsPanel from '@/components/StatsPanel';
 
-export default function RiwayatPresensiView({ fixedDivisi = null }) {
+export default function RiwayatPresensiView({ fixedDivisi: propFixedDivisi = null }) {
     const { user } = useAuth();
     const { canDelete } = usePagePermission();
     const [pengurusList, setPengurusList] = useState([]);
-    const [filterDivisi, setFilterDivisi] = useState(fixedDivisi || 'Semua');
 
-    const isSekretariat = (user?.role === 'admin' || user?.role === 'sekretariat') && !fixedDivisi;
+    // Determine effective fixedDivisi based on user role (if not already provided by prop)
+    const effectiveFixedDivisi = useMemo(() => {
+        if (propFixedDivisi) return propFixedDivisi;
+        if (user?.role === 'admin' || user?.role === 'sekretariat') return null;
+
+        // Map roles to their respective divisions/units
+        const roleToDivisi = {
+            'pendidikan': 'Pendidikan',
+            'keamanan': 'Keamanan',
+            'bendahara': 'Bendahara',
+            'kesehatan': 'Kesehatan',
+            'jamiyyah': 'Jamiyyah',
+            'wajar_murottil': 'Wajar-Murottil'
+        };
+
+        return roleToDivisi[user?.role] || null;
+    }, [user, propFixedDivisi]);
+
+    const [filterDivisi, setFilterDivisi] = useState(effectiveFixedDivisi || 'Semua');
+
+    const isSekretariat = (user?.role === 'admin' || user?.role === 'sekretariat') && !effectiveFixedDivisi;
 
     const {
         data, loading, search, setSearch, handleDelete
@@ -51,11 +70,16 @@ export default function RiwayatPresensiView({ fixedDivisi = null }) {
                 (d.jabatan || '').toLowerCase().includes(search.toLowerCase()) ||
                 (d.tanggal || '').includes(search);
 
-            const matchDivisi = filterDivisi === 'Semua' || d.divisi === filterDivisi;
+            // Re-check fixed division protection
+            const currentFilter = effectiveFixedDivisi || filterDivisi;
+
+            const matchDivisi = currentFilter === 'Semua' ||
+                (d.divisi === currentFilter) ||
+                (d.jabatan && d.jabatan.toLowerCase().includes(currentFilter.toLowerCase()));
 
             return matchSearch && matchDivisi;
         }).sort((a, b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
-    }, [enrichedData, search, filterDivisi]);
+    }, [enrichedData, search, filterDivisi, effectiveFixedDivisi]);
 
     const stats = useMemo(() => [
         { title: 'Total Scanning', value: displayData.length, icon: 'fas fa-qrcode', color: 'var(--primary)' },

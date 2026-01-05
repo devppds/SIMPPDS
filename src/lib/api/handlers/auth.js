@@ -34,8 +34,8 @@ export async function handleSendOtp(request, db) {
         if (existingUsername) return Response.json({ error: "Username sudah digunakan, silakan pilih yang lain" }, { status: 400 });
 
         // Create a 'pending' user with provided username and fullname
-        await db.prepare("INSERT INTO users (username, fullname, password, password_plain, no_hp, email, otp_code, otp_expires, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)")
-            .bind(username, fullname, 'pending_otp', pin, target, target, otp, expires, 'absensi_pengurus').run();
+        await db.prepare("INSERT INTO users (username, fullname, password, password_plain, no_hp, email, otp_code, otp_expires, role, is_verified, pengurus_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)")
+            .bind(username, fullname, 'pending_otp', pin, target, target, otp, expires, 'absensi_pengurus', pengurus.id).run();
     } else {
         // Login Flow: Just update OTP and PIN
         await db.prepare("UPDATE users SET otp_code = ?, otp_expires = ?, password_plain = ? WHERE id = ?")
@@ -154,11 +154,12 @@ export async function handleGoogleLogin(request, db) {
         let user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
 
         if (!user) {
-            // Auto Register if user doesn't exist? (Or reject?)
-            // For now, let's create a new user with default role
+            // Find in pengurus table by email
+            const pengurus = await db.prepare("SELECT id FROM pengurus WHERE email = ? OR no_hp = ?").bind(email, email).first();
+
             const username = email.split('@')[0] + '_' + Math.random().toString(36).substring(7);
-            await db.prepare("INSERT INTO users (username, fullname, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)")
-                .bind(username, name, email, 'google_auth', 'absensi_pengurus').run();
+            await db.prepare("INSERT INTO users (username, fullname, email, password, role, is_verified, pengurus_id) VALUES (?, ?, ?, ?, ?, 1, ?)")
+                .bind(username, name, email, 'google_auth', 'absensi_pengurus', pengurus?.id || null).run();
 
             user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
         }
@@ -170,6 +171,7 @@ export async function handleGoogleLogin(request, db) {
                 username: user.username,
                 fullname: user.fullname,
                 role: user.role,
+                pengurus_id: user.pengurus_id,
                 avatar: user.avatar || payload.picture
             }
         });
@@ -178,4 +180,3 @@ export async function handleGoogleLogin(request, db) {
         return Response.json({ status: "error", message: err.message }, { status: 500 });
     }
 }
-
