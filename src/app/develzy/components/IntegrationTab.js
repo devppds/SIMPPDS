@@ -34,7 +34,7 @@ export default function IntegrationTab() {
     const handleTestService = async (serviceKey) => {
         showToast(`Menguji koneksi ${serviceKey}...`, "info");
         try {
-            const res = await apiCall('testService', 'POST', { service: serviceKey });
+            const res = await apiCall('testService', 'POST', { data: { service: serviceKey } });
             if (res.success) {
                 showToast(`Koneksi ${serviceKey} BERHASIL!`, "success");
                 setServiceStatus(prev => ({
@@ -110,7 +110,7 @@ export default function IntegrationTab() {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
                 {[
                     { name: 'WhatsApp Gateway', statusKey: 'whatsapp', icon: 'fab fa-whatsapp', desc: 'Layanan notifikasi pesan otomatis (Fonnte).' },
                     { name: 'Cloudinary Storage', statusKey: 'cloudinary', icon: 'fas fa-cloud', desc: 'Penyimpanan gambar dan aset digital.' },
