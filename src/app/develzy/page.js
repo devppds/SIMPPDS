@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { apiCall } from '@/lib/utils';
@@ -13,8 +13,10 @@ import { NAV_ITEMS } from '@/lib/navConfig';
 export default function DevelzyControlPage() {
     const { user, isDevelzy, loading: authLoading, refreshConfig } = useAuth(); // Pakai isDevelzy
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get('tab') || 'general';
+    const activeTab = tabParam;
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState('general');
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [loading, setLoading] = useState(false);
     const isMounted = useRef(false);
@@ -47,6 +49,28 @@ export default function DevelzyControlPage() {
         database: { status: 'Checking...', color: '#94a3b8' },
         email: { status: 'Not Configured', color: '#94a3b8' }
     });
+
+    // Real-time Polling for Sessions & System Stats
+    useEffect(() => {
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
+        }
+
+        // Initial load
+        loadData();
+        loadSystemStats();
+
+        // Protocol Sync Interval (Every 15 seconds)
+        const pollInterval = setInterval(() => {
+            if (activeTab === 'sessions' || activeTab === 'system') {
+                loadData();
+                loadSystemStats();
+            }
+        }, 15000);
+
+        return () => clearInterval(pollInterval);
+    }, [activeTab]);
 
     // Real-time Branding Preview
     useEffect(() => {
@@ -424,12 +448,13 @@ export default function DevelzyControlPage() {
 
         modal.innerHTML = `
             <div style="
-                background: white;
+                background: #020617;
                 border-radius: 32px;
                 padding: 4rem 3.5rem;
                 max-width: 680px;
                 width: 90%;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+                border: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                 animation: slideUp 0.3s ease;
             ">
                 <div style="text-align: center; margin-bottom: 2.5rem;">
@@ -449,13 +474,13 @@ export default function DevelzyControlPage() {
                     <h2 class="outfit" style="
                         font-size: 2.25rem;
                         font-weight: 900;
-                        color: #1e293b;
+                        color: #f8fafc;
                         margin-bottom: 1.25rem;
                         letter-spacing: -0.5px;
                     ">${actionText} Mode Pemeliharaan</h2>
                     <p style="
                         font-size: 1.2rem;
-                        color: #64748b;
+                        color: #94a3b8;
                         line-height: 1.7;
                         margin: 0 auto;
                         max-width: 500px;
@@ -465,35 +490,37 @@ export default function DevelzyControlPage() {
                     </p>
                     
                     ${!maintenanceMode ? `
-                        <div style="text-align: left; background: #f8fafc; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
-                            <label style="display: block; font-weight: 800; color: #1e293b; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase;">Durasi Pemeliharaan (Menit)</label>
+                        <div style="text-align: left; background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 2rem;">
+                            <label style="display: block; font-weight: 800; color: #cbd5e1; margin-bottom: 10px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Durasi Pemeliharaan (Menit)</label>
                             <input type="number" id="maintMinutes" value="60" min="1" max="1440" style="
                                 width: 100%;
-                                padding: 12px 16px;
-                                border-radius: 12px;
-                                border: 2px solid #cbd5e1;
-                                font-size: 1.2rem;
+                                padding: 14px 18px;
+                                border-radius: 14px;
+                                border: 1px solid rgba(255,255,255,0.1);
+                                background: rgba(0,0,0,0.2);
+                                font-size: 1.4rem;
                                 font-weight: 800;
-                                color: var(--primary);
+                                color: #10b981;
                                 outline: none;
                                 transition: all 0.2s;
-                            " onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#cbd5e1'">
-                            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">Tentukan berapa lama sistem akan terkunci untuk pemeliharaan.</p>
+                                font-family: 'monospace';
+                            " onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 10px rgba(16,185,129,0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none'">
+                            <p style="font-size: 0.8rem; color: #475569; margin-top: 10px; font-weight: 600;">Otorisasi kunci sistem untuk jangka waktu yang ditentukan.</p>
                         </div>
                     ` : ''}
 
                     <span style="
                         display: inline-block;
-                        background: ${maintenanceMode ? '#ecfdf5' : '#fef2f2'};
-                        color: ${maintenanceMode ? '#047857' : '#dc2626'};
+                        background: ${maintenanceMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
+                        color: ${maintenanceMode ? '#10b981' : '#f87171'};
                         padding: 12px 24px;
                         border-radius: 12px;
                         font-size: 1.05rem;
-                        font-weight: 700;
-                        box-shadow: 0 2px 8px ${maintenanceMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};
+                        font-weight: 800;
+                        border: 1px solid ${maintenanceMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'};
                     ">
                         <i class="fas fa-${maintenanceMode ? 'power-off' : 'shield-alt'}" style="margin-right: 8px; font-size: 1.1rem;"></i>
-                        ${maintenanceMode ? 'Sistem akan kembali online' : 'Hanya admin yang bisa akses'}
+                        ${maintenanceMode ? 'PROTOCOL: RESTORE ONLINE' : 'PROTOCOL: ADMIN_RESTRICTED'}
                     </span>
                 </div>
                 <div style="
@@ -504,16 +531,16 @@ export default function DevelzyControlPage() {
                     <button id="cancelMaintenance" style="
                         flex: 1;
                         padding: 18px 32px;
-                        border: 2px solid #e2e8f0;
-                        background: white;
-                        color: #64748b;
-                        border-radius: 14px;
+                        border: 1px solid rgba(255,255,255,0.1);
+                        background: rgba(255,255,255,0.05);
+                        color: #94a3b8;
+                        border-radius: 16px;
                         font-size: 1.1rem;
                         font-weight: 700;
                         cursor: pointer;
                         transition: all 0.2s;
-                    " onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'">
-                        Batal
+                    " onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.color='#f1f5f9'" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#94a3b8'">
+                        Abort Action
                     </button>
                     <button id="confirmMaintenance" style="
                         flex: 1;
@@ -521,15 +548,15 @@ export default function DevelzyControlPage() {
                         border: none;
                         background: ${maintenanceMode ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'};
                         color: white;
-                        border-radius: 14px;
+                        border-radius: 16px;
                         font-size: 1.1rem;
-                        font-weight: 700;
+                        font-weight: 800;
                         cursor: pointer;
                         box-shadow: 0 6px 16px ${maintenanceMode ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'};
                         transition: all 0.2s;
                     " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px ${maintenanceMode ? 'rgba(16, 185, 129, 0.45)' : 'rgba(239, 68, 68, 0.45)'}'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px ${maintenanceMode ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}'">
                         <i class="fas fa-${maintenanceMode ? 'check' : 'power-off'}" style="margin-right: 10px; font-size: 1.15rem;"></i>
-                        ${actionText} Sekarang
+                        Authorize ${actionText}
                     </button>
                 </div>
             </div>
@@ -855,178 +882,167 @@ export default function DevelzyControlPage() {
                 confirmText="Ya, Keluarkan"
                 loading={kickLoading === confirmKick.sessionId}
             />
-            {/* Hero Header */}
-            <div className="develzy-hero" style={{
-                background: 'linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%)',
-                borderRadius: '32px',
-                padding: '3rem',
-                color: 'white',
-                marginBottom: '3rem',
-                position: 'relative',
-                overflow: 'hidden',
-                boxShadow: '0 20px 40px -10px rgba(30, 58, 138, 0.3)'
-            }}>
-                <div style={{ position: 'relative', zIndex: 2 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#60a5fa', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem', marginBottom: '1rem' }}>
-                        <i className="fas fa-rocket"></i>
-                        Pusat Kontrol Sistem
+            {/* --- COMPACT SYSTEM HEADER --- */}
+            <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.7rem', marginBottom: '8px' }}>
+                        <i className="fas fa-microchip"></i>
+                        Core Instance: Online
                     </div>
-                    <h1 className="outfit hero-title" style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '10px' }}>Panel Kontrol DEVELZY</h1>
-                    <p className="hero-desc" style={{ opacity: 0.8, fontSize: '1.1rem', maxWidth: '600px' }}>
-                        Pusat kendali operasional tingkat tinggi untuk konfigurasi infrastruktur,
-                        manajemen layanan, dan pemantauan sistem secara real-time.
-                    </p>
+                    <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
+                        {tabs.find(t => t.id === activeTab)?.label || 'System Control'}
+                    </h1>
                 </div>
-                {/* Decorative circle */}
-                <div style={{
-                    position: 'absolute', right: '-50px', top: '-50px',
-                    width: '300px', height: '300px', borderRadius: '50%',
-                    background: 'rgba(59, 130, 246, 0.1)', zIndex: 1
-                }}></div>
+
+                <div className="maintenance-box" style={{ padding: '12px 24px', background: maintenanceMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', borderRadius: '16px', border: `1px solid ${maintenanceMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: maintenanceMode ? '#f87171' : '#34d399', textTransform: 'uppercase' }}>Service Status</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{maintenanceMode ? 'Maintenance Mode' : 'Production Live'}</div>
+                    </div>
+                    <button
+                        onClick={handleMaintenanceToggle}
+                        style={{ background: maintenanceMode ? '#ef4444' : '#10b981', border: 'none', padding: '10px 16px', borderRadius: '12px', color: 'white', fontWeight: 800, cursor: 'pointer', fontSize: '0.8rem', boxShadow: `0 4px 12px ${maintenanceMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}` }}
+                    >
+                        {maintenanceMode ? 'Go Live' : 'Maintenance'}
+                    </button>
+                </div>
             </div>
 
-            {/* Quick Stats Grid */}
-            <div className="quick-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
+            {/* Quick Stats Grid - Specialized Dark Style */}
+            <div className="quick-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '3rem' }}>
                 {[
-                    { label: 'Waktu Operasional', value: systemStats.uptime, icon: 'fas fa-clock', color: '#2563eb', desc: 'Sejak deployment' },
-                    { label: 'Status Database', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981', desc: 'Koneksi aktif' },
-                    { label: 'Runtime Sistem', value: systemStats.cpu, icon: 'fas fa-microchip', color: '#8b5cf6', desc: 'Auto-scaling' },
-                    { label: 'Pemeliharaan', value: maintenanceMode ? 'OFFLINE' : 'LIVE', icon: 'fas fa-power-off', color: maintenanceMode ? '#ef4444' : '#10b981', desc: maintenanceMode ? 'Mode pemeliharaan' : 'Sistem normal' },
+                    { label: 'System Uptime', value: systemStats.uptime, icon: 'fas fa-clock', color: '#6366f1' },
+                    { label: 'Database Health', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981' },
+                    { label: 'Security Level', value: 'High-Alert', icon: 'fas fa-shield-alt', color: '#f59e0b' },
+                    { label: 'Core Version', value: 'v3.2.0-ELZ', icon: 'fas fa-code-branch', color: '#ec4899' },
                 ].map((stat, i) => (
-                    <div key={i} className="card stat-card-compact" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem' }}>
-                        <div className="stat-icon" style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                    <div key={i} style={{
+                        background: 'rgba(15, 23, 42, 0.4)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '20px', padding: '1.25rem',
+                        display: 'flex', alignItems: 'center', gap: '1rem',
+                        backdropFilter: 'blur(5px)'
+                    }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
                             <i className={stat.icon}></i>
                         </div>
                         <div>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{stat.label}</div>
-                            <div className="stat-value" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>{stat.value}</div>
+                            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f1f5f9' }}>{stat.value}</div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="main-layout-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 280px) 1fr', gap: '2.5rem' }}>
-                {/* Sidebar Navigation */}
-                <div className="develzy-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div className="sidebar-scrollable" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {tabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                style={{
-                                    padding: '16px 20px',
-                                    borderRadius: '14px',
-                                    border: 'none',
-                                    background: activeTab === tab.id ? 'white' : 'transparent',
-                                    color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-muted)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    fontWeight: activeTab === tab.id ? 800 : 600,
-                                    fontSize: '0.95rem',
-                                    textAlign: 'left',
-                                    transition: 'all 0.2s',
-                                    cursor: 'pointer',
-                                    boxShadow: activeTab === tab.id ? '0 10px 15px -3px rgba(0,0,0,0.05)' : 'none'
-                                }}
-                            >
-                                <i className={tab.icon} style={{ width: '20px' }}></i>
-                                <span>{tab.label}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="maintenance-box" style={{ marginTop: '2rem', padding: '20px', background: '#fff1f2', borderRadius: '20px', border: '1px solid #fee2e2' }}>
-                        <h4 className="outfit" style={{ color: '#be123c', fontSize: '0.9rem', marginBottom: '8px' }}>Zona Bahaya</h4>
-                        <button
-                            className="btn btn-primary"
-                            style={{
-                                width: '100%', background: '#ef4444', color: 'white',
-                                border: 'none', fontSize: '0.8rem', padding: '10px'
-                            }}
-                            onClick={handleMaintenanceToggle}
-                        >
-                            {maintenanceMode ? 'Disable Maintenance' : 'Maintenance Mode'}
-                        </button>
-                    </div>
-                </div>
-
+            <div className="view-container" style={{ padding: 0 }}>
                 {/* Main Content Area */}
-                <div className="card content-area" style={{ padding: '2.5rem', minHeight: '500px' }}>
+                <div className="develzy-content-card" style={{
+                    background: 'rgba(15, 23, 42, 0.3)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '24px', padding: '2.5rem',
+                    minHeight: '600px',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+                }}>
                     {activeTab === 'general' && (
                         <div className="animate-in">
-                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>Konfigurasi Global</h3>
-                            <div className="form-grid">
+                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem', color: '#f8fafc' }}>Konfigurasi Global</h3>
+                            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
                                 <div className="form-group">
-                                    <label className="form-label">Nama Instansi / Pondok</label>
+                                    <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.85rem' }}>Nama Instansi / Pondok</label>
                                     <input
                                         type="text"
                                         className="form-control"
+                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
                                         value={configs.nama_instansi}
                                         onChange={e => setConfigs({ ...configs, nama_instansi: e.target.value })}
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Tahun Ajaran Aktif</label>
+                                    <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.85rem' }}>Tahun Ajaran Aktif</label>
                                     <input
                                         type="text"
                                         className="form-control"
+                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
                                         value={configs.tahun_ajaran}
                                         onChange={e => setConfigs({ ...configs, tahun_ajaran: e.target.value })}
                                     />
                                 </div>
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Deskripsi Sistem (Meta)</label>
+                            <div className="form-group" style={{ marginTop: '1.5rem' }}>
+                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.85rem' }}>Deskripsi Sistem (Meta)</label>
                                 <textarea
                                     className="form-control"
                                     rows="3"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%', resize: 'none' }}
                                     value={configs.deskripsi}
                                     onChange={e => setConfigs({ ...configs, deskripsi: e.target.value })}
                                 ></textarea>
                             </div>
-                            <button className="btn btn-primary" onClick={handleSaveConfig} style={{ marginTop: '1rem' }}>Simpan Konfigurasi</button>
+                            <button className="btn" onClick={handleSaveConfig} style={{ marginTop: '2rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '12px 24px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)', fontWeight: 800 }}>
+                                <i className="fas fa-save" style={{ marginRight: '8px' }}></i> Simpan Konfigurasi
+                            </button>
                         </div>
                     )}
 
                     {activeTab === 'branding' && (
                         <div className="animate-in">
-                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>Branding & UI Engine</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                                <div style={{ border: '1px solid #f1f5f9', padding: '1.5rem', borderRadius: '16px', background: 'white' }}>
-                                    <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 700 }}>Primary Color</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <input
-                                            type="color"
-                                            value={configs.primary_color || '#2563eb'}
-                                            onChange={e => setConfigs({ ...configs, primary_color: e.target.value })}
-                                            style={{ width: '60px', height: '60px', borderRadius: '12px', border: 'none', cursor: 'pointer', padding: 0, overflow: 'hidden' }}
-                                        />
+                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem', color: '#f8fafc' }}>Branding & UI Engine</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                <div style={{ border: '1px solid rgba(255,255,255,0.08)', padding: '1.75rem', borderRadius: '24px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: configs.primary_color || '#2563eb', boxShadow: `0 0 10px ${configs.primary_color || '#2563eb'}` }}></div>
+                                        <label style={{ fontWeight: 800, color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Primary Interface Color</label>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="color"
+                                                value={configs.primary_color || '#2563eb'}
+                                                onChange={e => setConfigs({ ...configs, primary_color: e.target.value })}
+                                                style={{ width: '70px', height: '70px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer', padding: 0, overflow: 'hidden', background: 'transparent' }}
+                                            />
+                                        </div>
                                         <div>
-                                            <div style={{ fontWeight: 800, color: configs.primary_color }}>{configs.primary_color}</div>
-                                            <small style={{ color: 'var(--text-muted)' }}>Warna Utama Aplikasi</small>
+                                            <div style={{ fontWeight: 800, color: '#f1f5f9', fontSize: '1.2rem', fontFamily: 'monospace' }}>{configs.primary_color?.toUpperCase()}</div>
+                                            <small style={{ color: '#475569', fontSize: '0.75rem' }}>HEX PROTOCOL</small>
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ border: '1px solid #f1f5f9', padding: '1.5rem', borderRadius: '16px', background: 'white' }}>
-                                    <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 700 }}>Sidebar Theme</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+                                <div style={{ border: '1px solid rgba(255,255,255,0.08)', padding: '1.75rem', borderRadius: '24px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: configs.sidebar_theme || '#1e1b4b', boxShadow: `0 0 10px ${configs.sidebar_theme || '#1e1b4b'}` }}></div>
+                                        <label style={{ fontWeight: 800, color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Navigation Backdrop</label>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                                         <input
                                             type="color"
                                             value={configs.sidebar_theme || '#1e1b4b'}
                                             onChange={e => setConfigs({ ...configs, sidebar_theme: e.target.value })}
-                                            style={{ width: '60px', height: '60px', borderRadius: '12px', border: 'none', cursor: 'pointer', padding: 0, overflow: 'hidden' }}
+                                            style={{ width: '70px', height: '70px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer', padding: 0, overflow: 'hidden', background: 'transparent' }}
                                         />
                                         <div>
-                                            <div style={{ fontWeight: 800, color: configs.sidebar_theme }}>{configs.sidebar_theme}</div>
-                                            <small style={{ color: 'var(--text-muted)' }}>Warna Navigasi Samping</small>
+                                            <div style={{ fontWeight: 800, color: '#f1f5f9', fontSize: '1.2rem', fontFamily: 'monospace' }}>{configs.sidebar_theme?.toUpperCase()}</div>
+                                            <small style={{ color: '#475569', fontSize: '0.75rem' }}>HEX PROTOCOL</small>
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ gridColumn: '1 / -1', border: '1px solid #f1f5f9', padding: '1.5rem', borderRadius: '16px', background: 'white' }}>
-                                    <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 700 }}>Logo Instansi</label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2rem', alignItems: 'center' }}>
-                                        <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+                                <div style={{ gridColumn: '1 / -1', border: '1px solid rgba(255,255,255,0.08)', padding: '2rem', borderRadius: '24px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)' }}>
+                                    <label style={{ display: 'block', marginBottom: '1.5rem', fontWeight: 800, color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Identity & Branding Logo</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '3rem', alignItems: 'center' }}>
+                                        <div style={{
+                                            padding: '1.5rem',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            borderRadius: '24px',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            width: '160px',
+                                            height: '160px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)'
+                                        }}>
                                             <img
                                                 src={configs.logo_url || "https://ui-avatars.com/api/?name=LOGO&background=2563eb&color=fff&size=512"}
                                                 style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
@@ -1039,25 +1055,34 @@ export default function DevelzyControlPage() {
                                                 currentUrl={configs.logo_url}
                                                 onUploadSuccess={url => setConfigs({ ...configs, logo_url: url })}
                                                 folder="branding_assets"
-                                                label="Upload Logo Baru"
+                                                label="Upload Identity Asset"
                                             />
-                                            <p style={{ marginTop: '10px', fontSize: '0.8rem', color: '#64748b' }}>
-                                                URL Aktif: <span style={{ fontFamily: 'monospace', color: configs.logo_url?.includes('cloudinary') ? '#10b981' : '#f59e0b' }}>{configs.logo_url || 'Default Image'}</span>
-                                            </p>
+                                            <div style={{
+                                                marginTop: '1.5rem',
+                                                padding: '10px 15px',
+                                                background: 'rgba(0,0,0,0.2)',
+                                                borderRadius: '10px',
+                                                fontSize: '0.75rem',
+                                                fontFamily: 'monospace',
+                                                color: '#475569',
+                                                border: '1px solid rgba(255,255,255,0.03)',
+                                                wordBreak: 'break-all'
+                                            }}>
+                                                PATH: <span style={{ color: configs.logo_url?.includes('cloudinary') ? '#10b981' : '#f59e0b' }}>{configs.logo_url || 'DEFAULT_IDENTIFIER'}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <button className="btn btn-primary" onClick={handleSaveConfig}>
-                                <i className="fas fa-save" style={{ marginRight: '8px' }}></i>
-                                Simpan Perubahan Branding
+                            <button className="btn" onClick={handleSaveConfig} style={{ marginTop: '2rem', padding: '14px 28px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.2)', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                <i className="fas fa-microchip" style={{ marginRight: '8px' }}></i> Overwrite Global Branding
                             </button>
                         </div>
                     )}
 
                     {activeTab === 'integration' && (
                         <div className="animate-in">
-                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>API & Service Integrations</h3>
+                            <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem', color: '#f8fafc' }}>API & Service Integrations</h3>
                             {[
                                 { name: 'WhatsApp Gateway', statusKey: 'whatsapp', icon: 'fab fa-whatsapp' },
                                 { name: 'Cloudinary Storage', statusKey: 'cloudinary', icon: 'fas fa-cloud' },
@@ -1067,17 +1092,19 @@ export default function DevelzyControlPage() {
                                 const status = serviceStatus[service.statusKey];
                                 return (
                                     <div key={idx} style={{
-                                        padding: '1.5rem', border: '1.5px solid #f1f5f9',
-                                        borderRadius: '16px', marginBottom: '1rem',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                                        padding: '1.5rem', border: '1px solid rgba(255,255,255,0.08)',
+                                        borderRadius: '20px', marginBottom: '1rem',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        background: 'rgba(255,255,255,0.02)',
+                                        backdropFilter: 'blur(10px)'
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                                            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: `${status.color}15`, color: status.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                                            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${status.color}15`, color: status.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', border: `1px solid ${status.color}30` }}>
                                                 <i className={service.icon}></i>
                                             </div>
                                             <div>
-                                                <div style={{ fontWeight: 800, color: '#1e293b' }}>{service.name}</div>
-                                                <div style={{ fontSize: '0.8rem', color: status.color, fontWeight: 700 }}>
+                                                <div style={{ fontWeight: 800, color: '#f1f5f9', fontSize: '1.1rem' }}>{service.name}</div>
+                                                <div style={{ fontSize: '0.8rem', color: status.color, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                     {status.status}
                                                 </div>
                                             </div>
@@ -1085,14 +1112,20 @@ export default function DevelzyControlPage() {
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             {(service.statusKey === 'whatsapp' || service.statusKey === 'cloudinary') && (
                                                 <button
-                                                    className="btn btn-outline"
-                                                    style={{ padding: '8px 16px', fontSize: '0.75rem', borderColor: '#e2e8f0' }}
+                                                    className="btn"
+                                                    style={{ padding: '10px 18px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                                     onClick={() => handleTestService(service.statusKey)}
                                                 >
-                                                    <i className="fas fa-vial" style={{ marginRight: '6px' }}></i> Test Connection
+                                                    <i className="fas fa-vial" style={{ marginRight: '6px' }}></i> Test
                                                 </button>
                                             )}
-                                            <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.75rem' }} onClick={() => handleOpenConfig(service)}>Configure</button>
+                                            <button
+                                                className="btn"
+                                                style={{ padding: '10px 18px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', color: '#f1f5f9', border: 'none', borderRadius: '12px', fontWeight: 700 }}
+                                                onClick={() => handleOpenConfig(service)}
+                                            >
+                                                Configure
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -1126,26 +1159,26 @@ export default function DevelzyControlPage() {
                                 </div>
                             )}
 
-                            <div style={{ border: '1.5px solid #f1f5f9', borderRadius: '16px', overflow: 'hidden' }}>
+                            <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', overflow: 'hidden', background: 'rgba(255,255,255,0.02)' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead style={{ background: '#f8fafc' }}>
+                                    <thead style={{ background: 'rgba(255,255,255,0.05)' }}>
                                         <tr>
-                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left' }}>User Action</th>
-                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left' }}>IP / Role</th>
-                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left' }}>Timestamp</th>
+                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>User Action</th>
+                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>IP / Role</th>
+                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Timestamp</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {logs.length === 0 ? (
-                                            <tr style={{ borderBottom: '1px solid #f8fafc' }}>
-                                                <td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada catatan aktivitas.</td>
+                                            <tr>
+                                                <td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Belum ada catatan aktivitas.</td>
                                             </tr>
                                         ) : logs.map((log, i) => (
-                                            <tr key={i} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                                 <td style={{ padding: '12px 20px', fontSize: '0.85rem' }}>
-                                                    <div style={{ fontWeight: 700 }}>{log.username} <span style={{ fontWeight: 400, opacity: 0.7 }}>melakukan</span> <span style={{ color: 'var(--primary)' }}>{log.action}</span></div>
-                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Target: {log.target_type} ({log.target_id || '-'})</div>
-                                                    {log.details && <div style={{ fontSize: '0.75rem', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>{log.details}</div>}
+                                                    <div style={{ fontWeight: 700, color: '#f1f5f9' }}>{log.username} <span style={{ fontWeight: 400, opacity: 0.7 }}>melakukan</span> <span style={{ color: '#10b981' }}>{log.action}</span></div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Target: {log.target_type} ({log.target_id || '-'})</div>
+                                                    {log.details && <div style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '4px', color: '#94a3b8' }}>{log.details}</div>}
                                                 </td>
                                                 <td style={{ padding: '12px 20px', fontSize: '0.8rem' }}>
                                                     <div>{log.ip_address}</div>
@@ -1161,56 +1194,39 @@ export default function DevelzyControlPage() {
                             </div>
 
                             {/* Pagination Controls */}
-                            {logsPagination.totalPages > 1 && (
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem', padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                <button
+                                    className="btn"
+                                    style={{ padding: '8px 16px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }}
+                                    disabled={logsPagination.page <= 1}
+                                    onClick={() => setLogsPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                                >
+                                    <i className="fas fa-chevron-left" style={{ marginRight: '6px' }}></i>
+                                    Sebelumnya
+                                </button>
                                 <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    marginTop: '1.5rem',
-                                    padding: '1rem 1.5rem',
-                                    background: '#f8fafc',
-                                    borderRadius: '12px',
-                                    border: '1px solid #e2e8f0'
+                                    padding: '8px 16px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    color: '#cbd5e1'
                                 }}>
-                                    <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-                                        Menampilkan {logs.length} dari {logsPagination.total} log
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                        <button
-                                            className="btn btn-secondary"
-                                            style={{ padding: '8px 16px', fontSize: '0.8rem' }}
-                                            disabled={logsPagination.page === 1}
-                                            onClick={() => setLogsPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                                        >
-                                            <i className="fas fa-chevron-left" style={{ marginRight: '6px' }}></i>
-                                            Sebelumnya
-                                        </button>
-                                        <div style={{
-                                            padding: '8px 16px',
-                                            background: 'white',
-                                            borderRadius: '8px',
-                                            border: '1px solid #e2e8f0',
-                                            fontSize: '0.85rem',
-                                            fontWeight: 700,
-                                            color: '#1e293b'
-                                        }}>
-                                            Halaman {logsPagination.page} / {logsPagination.totalPages}
-                                        </div>
-                                        <button
-                                            className="btn btn-secondary"
-                                            style={{ padding: '8px 16px', fontSize: '0.8rem' }}
-                                            disabled={logsPagination.page >= logsPagination.totalPages}
-                                            onClick={() => {
-                                                setLogsPagination(prev => ({ ...prev, page: prev.page + 1 }));
-
-                                            }}
-                                        >
-                                            Selanjutnya
-                                            <i className="fas fa-chevron-right" style={{ marginLeft: '6px' }}></i>
-                                        </button>
-                                    </div>
+                                    Halaman {logsPagination.page} / {logsPagination.totalPages}
                                 </div>
-                            )}
+                                <button
+                                    className="btn"
+                                    style={{ padding: '8px 16px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }}
+                                    disabled={logsPagination.page >= logsPagination.totalPages}
+                                    onClick={() => {
+                                        setLogsPagination(prev => ({ ...prev, page: prev.page + 1 }));
+                                    }}
+                                >
+                                    Selanjutnya
+                                    <i className="fas fa-chevron-right" style={{ marginLeft: '6px' }}></i>
+                                </button>
+                            </div>
                         </div>
                     )}
 
@@ -1223,15 +1239,20 @@ export default function DevelzyControlPage() {
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
                                 {activeSessions.length === 0 ? (
-                                    <div style={{ gridColumn: '1 / -1', padding: '4rem 2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '24px', border: '2px dashed #e2e8f0' }}>
-                                        <div style={{ width: '80px', height: '80px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-                                            <i className="fas fa-users-slash" style={{ fontSize: '2.5rem', color: '#cbd5e1' }}></i>
+                                    <div style={{ gridColumn: '1 / -1', padding: '4rem 2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '2px dashed rgba(255,255,255,0.1)' }}>
+                                        <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                                            <i className="fas fa-users-slash" style={{ fontSize: '2.5rem', color: '#475569' }}></i>
                                         </div>
-                                        <h3 style={{ color: '#1e293b', marginBottom: '8px' }}>Tidak Ada Sesi Aktif</h3>
+                                        <h3 style={{ color: '#f1f5f9', marginBottom: '8px' }}>Tidak Ada Sesi Aktif</h3>
                                         <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Semua user sedang offline atau sesi telah berakhir.</p>
                                     </div>
                                 ) : activeSessions.map((session, i) => (
-                                    <div key={i} className="card" style={{ padding: '1.5rem', position: 'relative', border: '1.5px solid #f1f5f9', transition: 'all 0.3s ease' }}>
+                                    <div key={i} style={{
+                                        padding: '1.5rem', position: 'relative',
+                                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px',
+                                        background: 'rgba(15, 23, 42, 0.4)',
+                                        transition: 'all 0.3s ease'
+                                    }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' }}>
                                             <div style={{ position: 'relative' }}>
                                                 <img
@@ -1239,53 +1260,54 @@ export default function DevelzyControlPage() {
                                                     style={{ width: '56px', height: '56px', borderRadius: '16px', objectFit: 'cover' }}
                                                     alt="User"
                                                 />
-                                                <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', border: '3px solid white', boxShadow: '0 0 10px rgba(16, 185, 129, 0.4)' }}></div>
+                                                <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', border: '3px solid #0f172a', boxShadow: '0 0 10px rgba(16, 185, 129, 0.4)' }}></div>
                                             </div>
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1.1rem' }}>{session.fullname}</div>
+                                                <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '1.1rem' }}>{session.fullname}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', background: session.role === 'admin' || session.role === 'develzy' ? '#fee2e2' : '#f1f5f9', color: session.role === 'admin' || session.role === 'develzy' ? '#ef4444' : '#64748b', borderRadius: '6px', textTransform: 'uppercase' }}>{session.role}</span>
-                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>@{session.username}</span>
+                                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '2px 8px', background: session.role === 'admin' || session.role === 'develzy' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.05)', color: session.role === 'admin' || session.role === 'develzy' ? '#f87171' : '#94a3b8', borderRadius: '6px', textTransform: 'uppercase' }}>{session.role}</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#475569' }}>@{session.username}</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '16px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px', color: '#475569', border: '1px solid #f1f5f9' }}>
+                                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '16px', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '10px', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.05)' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ color: '#94a3b8' }}><i className="fas fa-network-wired" style={{ width: '20px' }}></i> IP Address</span>
-                                                <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#1e293b' }}>{session.ip_address}</span>
+                                                <span style={{ color: '#475569' }}><i className="fas fa-network-wired" style={{ width: '20px' }}></i> IP Address</span>
+                                                <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#f1f5f9' }}>{session.ip_address}</span>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ color: '#94a3b8' }}><i className="fas fa-sign-in-alt" style={{ width: '20px' }}></i> Login</span>
-                                                <span style={{ fontWeight: 700, color: '#1e293b' }}>{safeTime(session.login_at)}</span>
+                                                <span style={{ color: '#475569' }}><i className="fas fa-desktop" style={{ width: '20px' }}></i> Device</span>
+                                                <span style={{ fontWeight: 700, color: '#f1f5f9' }}>{session.user_agent?.includes('Windows') ? 'Windows / Laptop' : session.user_agent?.includes('Android') ? 'Android / Mobile' : 'Unknown Device'}</span>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ color: '#94a3b8' }}><i className="fas fa-heartbeat" style={{ width: '20px' }}></i> Aktivitas</span>
-                                                <span style={{ fontWeight: 700, color: '#3b82f6' }}>{safeTime(session.last_active)}</span>
+                                                <span style={{ color: '#475569' }}><i className="fas fa-clock" style={{ width: '20px' }}></i> Login</span>
+                                                <span style={{ fontWeight: 700, color: '#f1f5f9' }}>{safeTime(session.login_at)}</span>
                                             </div>
                                         </div>
 
                                         <button
-                                            className="btn btn-secondary"
                                             onClick={() => handleTerminateActiveSession(session.id, session.fullname)}
                                             style={{
                                                 width: '100%',
                                                 marginTop: '1.25rem',
-                                                borderColor: '#fee2e2',
-                                                color: '#ef4444',
-                                                background: kickLoading === session.id ? '#fef2f2' : 'transparent',
+                                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                color: '#f87171',
+                                                background: kickLoading === session.id ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
                                                 padding: '12px',
-                                                fontWeight: 700,
-                                                borderRadius: '12px'
+                                                fontWeight: 800,
+                                                borderRadius: '14px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.85rem'
                                             }}
                                             disabled={kickLoading === session.id || session.username === user?.username}
                                         >
                                             {kickLoading === session.id ? (
-                                                <><i className="fas fa-circle-notch fa-spin" style={{ marginRight: '8px' }}></i> Memproses...</>
+                                                <><i className="fas fa-circle-notch fa-spin" style={{ marginRight: '8px' }}></i> Terminating...</>
                                             ) : session.username === user?.username ? (
-                                                <><i className="fas fa-user-check" style={{ marginRight: '8px' }}></i> Sesi Anda</>
+                                                <><i className="fas fa-user-check" style={{ marginRight: '8px' }}></i> Active Session (You)</>
                                             ) : (
-                                                <><i className="fas fa-sign-out-alt" style={{ marginRight: '8px' }}></i> Keluarkan Paksa</>
+                                                <><i className="fas fa-power-off" style={{ marginRight: '8px' }}></i> Kick User</>
                                             )}
                                         </button>
                                     </div>
@@ -1307,9 +1329,9 @@ export default function DevelzyControlPage() {
                                 {rolesList.map((item, idx) => (
                                     <div key={idx} style={{
                                         padding: '1.5rem',
-                                        border: '2px solid #f1f5f9',
-                                        borderRadius: '20px',
-                                        background: 'white',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                        borderRadius: '24px',
+                                        background: 'rgba(255,255,255,0.02)',
                                         transition: 'all 0.2s',
                                         display: 'grid',
                                         gridTemplateColumns: '1fr auto',
@@ -1317,7 +1339,7 @@ export default function DevelzyControlPage() {
                                         alignItems: 'center'
                                     }}>
                                         <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                                                 <div style={{
                                                     width: '48px',
                                                     height: '48px',
@@ -1333,52 +1355,52 @@ export default function DevelzyControlPage() {
                                                     <i className="fas fa-user-shield"></i>
                                                 </div>
                                                 <div style={{ flex: 1 }}>
-                                                    <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1.1rem' }}>{item.label}</div>
-                                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'monospace' }}>{item.role}</div>
+                                                    <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '1.1rem' }}>{item.label}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#475569', fontFamily: 'monospace' }}>{item.role}</div>
                                                 </div>
                                                 <div style={{
-                                                    background: `${item.color}10`,
-                                                    color: item.color,
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    color: '#cbd5e1',
                                                     padding: '8px 16px',
                                                     borderRadius: '10px',
                                                     fontSize: '0.85rem',
                                                     fontWeight: 700
                                                 }}>
-                                                    <i className="fas fa-users" style={{ marginRight: '6px' }}></i>
+                                                    <i className="fas fa-users" style={{ marginRight: '6px', color: item.color }}></i>
                                                     {item.users} User
                                                 </div>
                                                 <div style={{
-                                                    background: item.is_public ? '#ecfdf5' : '#fef2f2',
-                                                    color: item.is_public ? '#10b981' : '#ef4444',
+                                                    background: item.is_public ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                                    color: item.is_public ? '#10b981' : '#f87171',
                                                     padding: '8px 16px',
                                                     borderRadius: '10px',
                                                     fontSize: '0.85rem',
                                                     fontWeight: 700,
-                                                    border: `1px solid ${item.is_public ? '#d1fae5' : '#fee2e2'}`
+                                                    border: `1px solid ${item.is_public ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
                                                 }}>
                                                     <i className={`fas fa-${item.is_public ? 'globe' : 'lock'}`} style={{ marginRight: '6px' }}></i>
                                                     {item.is_public ? 'Public' : 'Private'}
                                                 </div>
                                             </div>
-                                            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600, marginBottom: '10px' }}>Akses Menu:</div>
+                                            <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 800, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Access Protocol:</div>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                                 {item.menus.map((menu, i) => (
                                                     <span key={i} style={{
-                                                        background: '#f8fafc',
-                                                        border: '1px solid #e2e8f0',
-                                                        color: '#64748b',
-                                                        padding: '4px 10px',
-                                                        borderRadius: '8px',
+                                                        background: 'rgba(255,255,255,0.03)',
+                                                        border: '1px solid rgba(255,255,255,0.08)',
+                                                        color: '#94a3b8',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '10px',
                                                         fontSize: '0.75rem',
-                                                        fontWeight: 600,
+                                                        fontWeight: 700,
                                                         display: 'flex',
                                                         alignItems: 'center',
-                                                        gap: '6px'
+                                                        gap: '8px'
                                                     }}>
-                                                        <i className={`fas fa-${menu.access === 'view' ? 'eye' : 'edit'}`} style={{ color: item.color, fontSize: '0.7rem' }}></i>
+                                                        <i className={`fas fa-${menu.access === 'view' ? 'eye-slash' : 'shield-alt'}`} style={{ color: item.color, fontSize: '0.7rem' }}></i>
                                                         {menu.name}
-                                                        <span style={{ fontSize: '0.65rem', opacity: 0.7, background: '#e2e8f0', padding: '1px 4px', borderRadius: '4px' }}>
-                                                            {menu.access === 'view' ? 'View' : 'Full'}
+                                                        <span style={{ fontSize: '0.65rem', opacity: 0.6, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                            {menu.access === 'view' ? 'READ' : 'ROOT'}
                                                         </span>
                                                     </span>
                                                 ))}
@@ -1386,18 +1408,18 @@ export default function DevelzyControlPage() {
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             <button
-                                                className="btn btn-secondary"
-                                                style={{ padding: '10px 20px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                                                className="btn"
+                                                style={{ padding: '10px 20px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                                 onClick={() => handleEditRole(item)}
                                             >
-                                                <i className="fas fa-edit" style={{ marginRight: '8px' }}></i> Edit Permissions
+                                                <i className="fas fa-terminal" style={{ marginRight: '8px', color: '#6366f1' }}></i> Configure
                                             </button>
                                             <button
-                                                className="btn btn-outline"
-                                                style={{ padding: '10px 20px', fontSize: '0.8rem', color: '#ef4444', borderColor: '#fee2e2' }}
+                                                className="btn"
+                                                style={{ padding: '10px 20px', fontSize: '0.8rem', background: 'transparent', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px' }}
                                                 onClick={() => handleDeleteRole(item)}
                                             >
-                                                <i className="fas fa-trash" style={{ marginRight: '8px' }}></i> Hapus Role
+                                                <i className="fas fa-trash-alt" style={{ marginRight: '8px' }}></i> Delete
                                             </button>
                                         </div>
                                     </div>
@@ -1407,17 +1429,16 @@ export default function DevelzyControlPage() {
                             <div style={{
                                 marginTop: '2rem',
                                 padding: '1.5rem',
-                                background: '#fffbeb',
+                                background: 'rgba(245, 158, 11, 0.05)',
                                 borderRadius: '16px',
-                                border: '1px solid #fef3c7'
+                                border: '1px solid rgba(245, 158, 11, 0.1)'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                    <i className="fas fa-lightbulb" style={{ color: '#f59e0b', fontSize: '1.2rem' }}></i>
-                                    <strong style={{ color: '#92400e' }}>Tips</strong>
+                                    <i className="fas fa-info-circle" style={{ color: '#f59e0b', fontSize: '1.2rem' }}></i>
+                                    <strong style={{ color: '#f59e0b' }}>Protocol Advisory</strong>
                                 </div>
-                                <p style={{ fontSize: '0.85rem', color: '#78350f', margin: 0 }}>
-                                    Role "Super Administrator" kini dapat dihapus atau diubah jika diperlukan.
-                                    Harap berhati-hati saat menghapus role kritis ini karena akan mempengaruhi akses seluruh personil dengan role tersebut.
+                                <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>
+                                    Role "Super Administrator" adalah entitas tingkat tinggi. Harap berhati-hati saat memodifikasi akses pada peran ini karena perubahan akan berdampak langsung pada seluruh infrastruktur kendali.
                                 </p>
                             </div>
                         </div>
@@ -1428,41 +1449,45 @@ export default function DevelzyControlPage() {
                             <h3 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>System Integrity & Health Dashboard</h3>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', border: '1.5px solid #f1f5f9' }}>
-                                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem' }}>Database Record Counts</div>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '1px' }}>Database Record Counts</div>
                                     <div style={{ display: 'grid', gap: '10px' }}>
                                         {Object.entries(dbHealth).map(([table, count]) => (
-                                            <div key={table} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
-                                                <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{table.replace('_', ' ')}</span>
-                                                <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{count}</span>
+                                            <div key={table} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}>
+                                                <span style={{ fontWeight: 600, textTransform: 'capitalize', color: '#94a3b8' }}>{table.replace('_', ' ')}</span>
+                                                <span style={{ fontWeight: 800, color: '#10b981' }}>{count}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                    <div style={{ background: '#f0fdf4', padding: '1.5rem', borderRadius: '16px', border: '1.5px solid #dcfce7' }}>
+                                    <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
-                                            <div style={{ width: '40px', height: '40px', background: '#22c55e', color: 'white', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <div style={{ width: '40px', height: '40px', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <i className="fas fa-microchip"></i>
                                             </div>
                                             <div>
-                                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase' }}>Runtime Engine</div>
-                                                <div style={{ fontWeight: 800, color: '#14532d' }}>Cloudflare Edge (V8)</div>
+                                                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#10b981', textTransform: 'uppercase' }}>Runtime Engine</div>
+                                                <div style={{ fontWeight: 800, color: '#f1f5f9' }}>Cloudflare Edge (V8)</div>
                                             </div>
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#166534', lineHeight: '1.5' }}>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.6' }}>
                                             Sistem berjalan di infrastruktur serverless global dengan latensi rendah dan auto-scaling cerdas.
                                         </div>
                                     </div>
 
-                                    <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', border: '1.5px solid #f1f5f9' }}>
-                                        <h4 style={{ fontSize: '0.9rem', marginBottom: '1rem', fontWeight: 800 }}>Maintenance Tools</h4>
-                                        <button className="btn btn-primary" onClick={handleInitSystem} style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
-                                            <i className="fas fa-database" style={{ marginRight: '8px' }}></i> Sync Table Schemas
+                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                        <h4 style={{ fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 800, color: '#f1f5f9' }}>Maintenance Tools</h4>
+                                        <button
+                                            className="btn"
+                                            onClick={handleInitSystem}
+                                            style={{ width: '100%', justifyContent: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', cursor: 'pointer', fontWeight: 700 }}
+                                        >
+                                            <i className="fas fa-layer-group" style={{ marginRight: '8px', color: '#10b981' }}></i> Sync Table Schemas
                                         </button>
-                                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '10px', textAlign: 'center' }}>
-                                            Gunakan tombol ini jika ada pembaruan struktur tabel database.
+                                        <p style={{ fontSize: '0.7rem', color: '#475569', marginTop: '10px', textAlign: 'center' }}>
+                                            Update struktur tabel database ke versi terbaru.
                                         </p>
                                     </div>
                                 </div>
@@ -1495,40 +1520,43 @@ export default function DevelzyControlPage() {
                 )}
             >
                 <div style={{ padding: '10px' }}>
-                    <div style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #bae6fd', display: 'flex', gap: '12px' }}>
-                        <i className="fas fa-info-circle" style={{ color: '#0ea5e9', marginTop: '3px' }}></i>
-                        <p style={{ fontSize: '0.85rem', color: '#0369a1', margin: 0 }}>
+                    <div style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid rgba(59, 130, 246, 0.1)', display: 'flex', gap: '12px' }}>
+                        <i className="fas fa-info-circle" style={{ color: '#3b82f6', marginTop: '3px' }}></i>
+                        <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>
                             Hati-hati saat mengubah pengaturan ini. Parameter yang salah dapat menyebabkan layanan terkait berhenti berfungsi.
                         </p>
                     </div>
 
                     {configModal.service?.statusKey === 'whatsapp' && (
-                        <div className="grid gap-4">
+                        <div style={{ display: 'grid', gap: '1.25rem' }}>
                             <div className="form-group">
-                                <label className="form-label">API Gateway URL</label>
+                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>API Gateway Interface</label>
                                 <input
                                     type="text"
                                     className="form-control"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
                                     placeholder="https://api.whatsapp-gateway.com/v1"
                                     value={configModal.data.whatsapp_api_url || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_api_url: e.target.value } })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">API Token</label>
+                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Authorization Secret (Token)</label>
                                 <input
                                     type="password"
                                     className="form-control"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
                                     placeholder="Masukkan Token API"
                                     value={configModal.data.whatsapp_token || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_token: e.target.value } })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Device ID</label>
+                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Default Transmission Channel (ID)</label>
                                 <input
                                     type="text"
                                     className="form-control"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
                                     placeholder="Ex: 512"
                                     value={configModal.data.whatsapp_device_id || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_device_id: e.target.value } })}
@@ -1570,52 +1598,57 @@ export default function DevelzyControlPage() {
                     )}
 
                     {configModal.service?.statusKey === 'email' && (
-                        <div className="grid gap-4">
-                            <div className="form-grid">
+                        <div style={{ display: 'grid', gap: '1.25rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '1rem' }}>
                                 <div className="form-group">
-                                    <label className="form-label">SMTP Host</label>
+                                    <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>SMTP Host Protocol</label>
                                     <input
                                         type="text"
                                         className="form-control"
+                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '10px 14px', borderRadius: '10px', width: '100%' }}
                                         placeholder="smtp.gmail.com"
                                         value={configModal.data.smtp_host || ''}
                                         onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_host: e.target.value } })}
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Port</label>
+                                    <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Port</label>
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="465 (SSL) / 587 (TLS)"
+                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '10px 14px', borderRadius: '10px', width: '100%' }}
+                                        placeholder="465 / 587"
                                         value={configModal.data.smtp_port || ''}
                                         onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_port: e.target.value } })}
                                     />
                                 </div>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">SMTP Username</label>
+                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Credential Identity (User)</label>
                                 <input
                                     type="text"
                                     className="form-control"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '10px 14px', borderRadius: '10px', width: '100%' }}
                                     value={configModal.data.smtp_user || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_user: e.target.value } })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">SMTP Password</label>
+                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Secure Access Key (Pass)</label>
                                 <input
                                     type="password"
                                     className="form-control"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '10px 14px', borderRadius: '10px', width: '100%' }}
                                     value={configModal.data.smtp_password || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_password: e.target.value } })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Sender Email (From)</label>
+                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Outbound Alias (Sender)</label>
                                 <input
                                     type="email"
                                     className="form-control"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '10px 14px', borderRadius: '10px', width: '100%' }}
                                     placeholder="noreply@pondok.com"
                                     value={configModal.data.smtp_from_email || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_from_email: e.target.value } })}
@@ -1652,10 +1685,11 @@ export default function DevelzyControlPage() {
             >
                 <div style={{ padding: '10px' }}>
                     <div className="form-group">
-                        <label className="form-label">Nama Role</label>
+                        <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Nama Role</label>
                         <input
                             type="text"
                             className="form-control"
+                            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
                             value={roleFormData.label}
                             onChange={(e) => setRoleFormData({ ...roleFormData, label: e.target.value })}
                             placeholder="Contoh: Panitia Qurban"
@@ -1663,33 +1697,34 @@ export default function DevelzyControlPage() {
                     </div>
                     {/* Only show Role ID input if adding new role */}
                     {!editingRole && (
-                        <div className="form-group">
-                            <label className="form-label">Kode Role (ID)</label>
+                        <div className="form-group" style={{ marginTop: '1.25rem' }}>
+                            <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Kode Role (ID)</label>
                             <input
                                 type="text"
                                 className="form-control"
+                                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
                                 value={roleFormData.role}
                                 onChange={(e) => setRoleFormData({ ...roleFormData, role: e.target.value })}
                                 placeholder="panitia_qurban (otomatis lowercase)"
                             />
-                            <small style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Digunakan untuk coding & database key.</small>
+                            <small style={{ color: '#475569', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Digunakan untuk coding & database key.</small>
                         </div>
                     )}
-                    <div className="form-group">
-                        <label className="form-label">Warna Badge</label>
+                    <div className="form-group" style={{ marginTop: '1.25rem' }}>
+                        <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Warna Badge</label>
                         <input
                             type="color"
                             className="form-control"
-                            style={{ height: '50px', padding: '5px' }}
+                            style={{ height: '50px', padding: '5px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', width: '100%', cursor: 'pointer' }}
                             value={roleFormData.color}
                             onChange={(e) => setRoleFormData({ ...roleFormData, color: e.target.value })}
                         />
                     </div>
-                    <div className="form-group">
-                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                    <div className="form-group" style={{ marginTop: '1.25rem' }}>
+                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>
                             Visibility Status
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '0.8rem', color: roleFormData.is_public ? '#10b981' : '#94a3b8', fontWeight: 700 }}>
+                                <span style={{ fontSize: '0.8rem', color: roleFormData.is_public ? '#10b981' : '#f87171', fontWeight: 800 }}>
                                     {roleFormData.is_public ? 'PUBLIC' : 'PRIVATE'}
                                 </span>
                                 <input
@@ -1700,24 +1735,23 @@ export default function DevelzyControlPage() {
                                 />
                             </div>
                         </label>
-                        <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                        <small style={{ color: '#475569', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
                             {roleFormData.is_public
                                 ? 'Role ini dapat dipilih oleh Manajemen Akses.'
                                 : 'Role ini disembunyikan dari daftar pilihan di Manajemen Akses.'}
                         </small>
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Akses Menu</label>
-                        <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>Centang menu yang diizinkan:</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '5px' }}>
+                    <div className="form-group" style={{ marginTop: '1.5rem' }}>
+                        <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem', marginBottom: '1rem', display: 'block' }}>Akses Menu</label>
+                        <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <p style={{ fontSize: '0.8rem', color: '#475569', marginBottom: '1.5rem', fontWeight: 700 }}>Pilih protokol akses yang diizinkan:</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }}>
                                 {allPossibleMenus.map((menu, i) => {
                                     const menuName = menu.label;
                                     const uniqueId = menu.uniqueId;
                                     const existingPerm = roleFormData.menus.find(m => (m.id || m.name) === uniqueId || (m.name === menuName && !m.id));
                                     const isChecked = !!existingPerm;
 
-                                    // Check if all children are checked
                                     const areAllChildrenChecked = menu.isHeader && menu.childrenIds.length > 0 &&
                                         menu.childrenIds.every(cid => roleFormData.menus.some(m => (m.id || m.name) === cid));
 
@@ -1726,11 +1760,8 @@ export default function DevelzyControlPage() {
 
                                     const handleToggle = (checked) => {
                                         let newMenus = [...roleFormData.menus];
-
                                         const targetIds = [uniqueId, ...menu.childrenIds];
-
                                         if (checked) {
-                                            // Add this and all children if not already present
                                             targetIds.forEach(tid => {
                                                 if (!newMenus.some(m => (m.id || m.name) === tid)) {
                                                     const targetMenu = allPossibleMenus.find(am => am.uniqueId === tid);
@@ -1738,24 +1769,23 @@ export default function DevelzyControlPage() {
                                                 }
                                             });
                                         } else {
-                                            // Remove this and all children
                                             newMenus = newMenus.filter(m => !targetIds.includes(m.id || m.name));
                                         }
-
                                         setRoleFormData({ ...roleFormData, menus: newMenus });
                                     };
 
                                     return (
                                         <div key={i} style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            padding: '8px 12px', borderRadius: '8px',
-                                            marginLeft: `${menu.depth * 20}px`,
-                                            background: menu.isHeader ? '#f8fafc' : (isChecked ? '#f1f5f9' : 'transparent'),
-                                            border: isChecked || areAllChildrenChecked || isPartiallyChecked ? '1px solid #cbd5e1' : (menu.isHeader ? '1px solid #f1f5f9' : '1px solid transparent'),
-                                            marginBottom: menu.isHeader ? '4px' : '0'
+                                            padding: '10px 14px', borderRadius: '10px',
+                                            marginLeft: `${menu.depth * 24}px`,
+                                            background: menu.isHeader ? 'rgba(16, 185, 129, 0.03)' : (isChecked ? 'rgba(255,255,255,0.02)' : 'transparent'),
+                                            border: (isChecked || areAllChildrenChecked || isPartiallyChecked) ? `1px solid ${roleFormData.color}30` : (menu.isHeader ? '1px solid rgba(255,255,255,0.03)' : '1px solid transparent'),
+                                            marginBottom: menu.isHeader ? '6px' : '2px',
+                                            transition: 'all 0.2s'
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', flex: 1 }}>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', width: '100%', margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.85rem', flex: 1 }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', width: '100%', margin: 0, color: menu.isHeader ? '#f1f5f9' : '#94a3b8', fontWeight: menu.isHeader ? 800 : 600 }}>
                                                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                         <input
                                                             type="checkbox"
@@ -1815,6 +1845,6 @@ export default function DevelzyControlPage() {
                 </div>
             </Modal>
 
-        </div>
+        </div >
     );
 }

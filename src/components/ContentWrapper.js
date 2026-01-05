@@ -12,6 +12,7 @@ export default function ContentWrapper({ children }) {
     const { loading, config, isAdmin, isDevelzy, user } = useAuth();
     const pathname = usePathname();
     const isLoginPage = pathname === '/'; // Login page is root
+    const isDevelzyRoute = pathname?.startsWith('/develzy');
 
     const { logout } = useAuth();
     const isSingleMenuUser = user && countAllowedMenus(user) === 1;
@@ -28,8 +29,8 @@ export default function ContentWrapper({ children }) {
         );
     }
 
-    // Jika halaman login, tampilkan full screen tanpa sidebar/header
-    if (isLoginPage) {
+    // Jika halaman login atau rute Develzy, tampilkan tanpa sidebar/header bawaan
+    if (isLoginPage || isDevelzyRoute) {
         return <>{children}</>;
     }
 
