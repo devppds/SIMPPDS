@@ -47,6 +47,19 @@ export default function DevelzyControlPage() {
         email: { status: 'Not Configured', color: '#94a3b8' }
     });
 
+    // Real-time Branding Preview
+    useEffect(() => {
+        if (activeTab === 'branding') {
+            if (configs.primary_color) {
+                document.documentElement.style.setProperty('--primary', configs.primary_color);
+                document.documentElement.style.setProperty('--accent', configs.primary_color);
+            }
+            if (configs.sidebar_theme) {
+                document.documentElement.style.setProperty('--sidebar-bg', configs.sidebar_theme);
+            }
+        }
+    }, [configs.primary_color, configs.sidebar_theme, activeTab]);
+
     // Role Management State
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [editingRole, setEditingRole] = useState(null);

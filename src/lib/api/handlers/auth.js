@@ -3,7 +3,7 @@
  */
 
 export async function handleSendOtp(request, db) {
-    const { target, username, fullname } = await request.json();
+    const { target, username, fullname, jabatan } = await request.json();
     if (!target) return Response.json({ error: "Kolom target (Email/WA) wajib diisi" }, { status: 400 });
 
     // 1. Generate OTP (6 digits) and PIN (4 digits starting with 25)
@@ -16,24 +16,27 @@ export async function handleSendOtp(request, db) {
         .bind(target, target).first();
 
     if (!user) {
-        // Registration Flow: Check if provided details exist in 'pengurus' table
+        // Registration Flow
         if (!username || !fullname) return Response.json({ error: "Username dan Nama Lengkap wajib diisi" }, { status: 400 });
 
-        // Validate against pengurus table
-        const pengurus = await db.prepare("SELECT * FROM pengurus WHERE nama = ? AND (no_hp = ? OR no_hp = ?)")
+        // A. Check if provided details exist in 'pengurus' table
+        let pengurus = await db.prepare("SELECT * FROM pengurus WHERE nama = ? AND (no_hp = ? OR no_hp = ?)")
             .bind(fullname, target, target.replace(/^0/, '62')).first();
 
+        // B. If NOT found, create NEW pengurus profile (Automatic Onboarding)
         if (!pengurus) {
-            return Response.json({
-                error: "Pendaftaran Gagal",
-                message: "Nama atau No. WA Anda tidak terdaftar di Basis Data Pengurus. Silakan hubungi Sekretariat."
-            }, { status: 404 });
+            const result = await db.prepare("INSERT INTO pengurus (nama, no_hp, jabatan, status, tahun_mulai) VALUES (?, ?, ?, 'Aktif', ?)")
+                .bind(fullname, target, jabatan || 'Anggota', new Date().getFullYear().toString()).run();
+
+            // Get the ID of newly created pengurus
+            const newId = result.meta.last_row_id;
+            pengurus = { id: newId };
         }
 
         const existingUsername = await db.prepare("SELECT id FROM users WHERE username = ?").bind(username).first();
         if (existingUsername) return Response.json({ error: "Username sudah digunakan, silakan pilih yang lain" }, { status: 400 });
 
-        // Create a 'pending' user with provided username and fullname
+        // C. Create the user record linked to pengurus_id
         await db.prepare("INSERT INTO users (username, fullname, password, password_plain, no_hp, email, otp_code, otp_expires, role, is_verified, pengurus_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)")
             .bind(username, fullname, 'pending_otp', pin, target, target, otp, expires, 'absensi_pengurus', pengurus.id).run();
     } else {

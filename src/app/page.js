@@ -18,7 +18,8 @@ export default function LoginPage() {
   const [pin, setPin] = useState('');
 
   // State: Register
-  const [regData, setRegData] = useState({ identifier: '', otp: '', username: '', fullname: '' });
+  const [regData, setRegData] = useState({ identifier: '', otp: '', username: '', fullname: '', jabatan: '' });
+  const [jabatansList, setJabatansList] = useState([]);
   const [otpSent, setOtpSent] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
 
@@ -42,9 +43,10 @@ export default function LoginPage() {
     // Pre-fetch users and roles data silently
     const fetchUsers = async () => {
       try {
-        const [usersData, rolesData] = await Promise.all([
+        const [usersData, rolesData, jabRes] = await Promise.all([
           apiCall('getData', 'GET', { type: 'users' }),
-          apiCall('getData', 'GET', { type: 'roles' })
+          apiCall('getData', 'GET', { type: 'roles' }),
+          apiCall('getData', 'GET', { type: 'master_jabatan' })
         ]);
 
         if (hasMounted.current) {
@@ -62,6 +64,7 @@ export default function LoginPage() {
             return { ...u, allowedMenus };
           });
           setCachedUsers(enrichedUsers);
+          setJabatansList(jabRes || []);
         }
       } catch (err) {
         console.error("Failed to pre-fetch data:", err);
@@ -190,8 +193,8 @@ export default function LoginPage() {
   // -- LOGIC: REGISTER (OTP) --
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    if (!regData.identifier || !regData.username || !regData.fullname) {
-      setError("Semua kolom (Nama, Username, WA/Email) wajib diisi");
+    if (!regData.identifier || !regData.username || !regData.fullname || !regData.jabatan) {
+      setError("Semua kolom wajib diisi (termasuk Jabatan)");
       return;
     }
 
@@ -203,7 +206,8 @@ export default function LoginPage() {
         data: {
           target: regData.identifier,
           username: regData.username,
-          fullname: regData.fullname
+          fullname: regData.fullname,
+          jabatan: regData.jabatan
         }
       });
 
@@ -528,6 +532,19 @@ export default function LoginPage() {
                     onChange={e => setRegData({ ...regData, username: e.target.value })}
                     disabled={loading}
                   />
+                  <select
+                    className="inpt"
+                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left', appearance: 'none' }}
+                    value={regData.jabatan}
+                    onChange={e => setRegData({ ...regData, jabatan: e.target.value })}
+                    disabled={loading}
+                  >
+                    <option value="" disabled>--- Pilih Jabatan Anda ---</option>
+                    {jabatansList.map((j, idx) => (
+                      <option key={idx} value={j.nama_jabatan}>{j.nama_jabatan}</option>
+                    ))}
+                    <option value="Anggota">Anggota/Lainnya</option>
+                  </select>
                   <input
                     type="text"
                     placeholder="Email / No. WhatsApp (08...)"

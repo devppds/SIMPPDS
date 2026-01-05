@@ -30,6 +30,11 @@ export function AuthProvider({ children }) {
                 // Apply Global Theme
                 if (newConfig.primary_color) {
                     document.documentElement.style.setProperty('--primary', newConfig.primary_color);
+                    document.documentElement.style.setProperty('--accent', newConfig.primary_color);
+                    document.documentElement.style.setProperty('--primary-dark', newConfig.primary_color);
+                }
+                if (newConfig.sidebar_theme) {
+                    document.documentElement.style.setProperty('--sidebar-bg', newConfig.sidebar_theme);
                 }
             }
         } catch (e) {
