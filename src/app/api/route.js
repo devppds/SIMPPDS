@@ -68,6 +68,7 @@ async function dispatcher(request) {
         // --- 💀 REAL BACKEND: KILL SWITCH ROUTES ---
         if (action === 'getMorale') return await SystemHandler.handleGetRealMorale(db);
         if (action === 'getReality') return await SystemHandler.handleGetRealityCheck(db);
+        if (action === 'checkServices') return await SystemHandler.handleCheckServices(db);
         if (action === 'execKillSwitch') {
             const isAdmin = await verifyAdmin(request, db);
             if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });

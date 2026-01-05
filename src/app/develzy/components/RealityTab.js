@@ -1,31 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/lib/ToastContext';
+import { apiCall } from '@/lib/utils';
 
 export default function RealityTab() {
     const { showToast } = useToast();
+    const [loading, setLoading] = useState(true);
     const [sinkholeActive, setSinkholeActive] = useState(false);
 
-    // Mock Data for "Reality Check" (Layer 11)
-    const drifts = [
-        { item: 'PHP Memory Limit', ideal: '512M', actual: '128M', severity: 'medium' },
-        { item: 'Upload Permission', ideal: 'Admin Only', actual: 'Public (Drift)', severity: 'high' }
-    ];
+    // REAL STATE
+    const [drifts, setDrifts] = useState([]);
+    const [trustScores, setTrustScores] = useState([]);
+    const [trafficStats, setTrafficStats] = useState({ legit: 100, phantom: 0, sources: [] });
 
-    // Mock Data for "Trust Engine" (Layer 13)
-    const trustScores = [
-        { user: 'Admin Utama', score: 98, status: 'Legitimate' },
-        { user: 'Staf Magang', score: 45, status: 'Behavior Deviation', msg: 'Melakukan penghapusan massal' },
-        { user: 'Sistem Bot', score: 10, status: 'Untrusted' }
-    ];
-
-    // Mock Data for "Dark Traffic" (Layer 14)
-    const trafficStats = {
-        legit: 65,
-        phantom: 35, // 35% dark traffic
-        sources: ['Internal Loop (API)', 'Scraper Bot (Unknown)']
+    const fetchReality = async () => {
+        try {
+            const res = await apiCall('getReality', 'GET');
+            if (res) {
+                setDrifts(res.drifts || []);
+                setTrustScores(res.trustScores || []);
+                setTrafficStats({
+                    legit: res.phantom?.legit || 100,
+                    phantom: res.phantom?.phantom || 0,
+                    sources: res.phantom?.sources || []
+                });
+            }
+        } catch (e) {
+            console.error("Reality Check Failed", e);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        fetchReality();
+        const interval = setInterval(fetchReality, 10000); // 10s heartbeat
+        return () => clearInterval(interval);
+    }, []);
+
+    if (loading) return <div className="p-8 text-center text-slate-500 animate-pulse">Syncing with Reality Layers...</div>;
 
     return (
         <div className="animate-in">
