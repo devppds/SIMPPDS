@@ -13,12 +13,30 @@ export default function RiwayatPresensiView({ fixedDivisi: propFixedDivisi = nul
     const { canDelete } = usePagePermission();
     const [pengurusList, setPengurusList] = useState([]);
 
-    // Determine effective fixedDivisi based on user role (if not already provided by prop)
+    // Determine effective fixedDivisi based on user role or linked pengurus data
     const effectiveFixedDivisi = useMemo(() => {
         if (propFixedDivisi) return propFixedDivisi;
         if (user?.role === 'admin' || user?.role === 'sekretariat') return null;
 
-        // Map roles to their respective divisions/units
+        // 1. Try to find division from official Pengurus Profile (Linked via pengurus_id)
+        if (user?.pengurus_id && pengurusList.length > 0) {
+            const profile = pengurusList.find(p => Number(p.id) === Number(user.pengurus_id));
+            if (profile) {
+                // If the division is set, use it. Otherwise guess from Jabatan.
+                if (profile.divisi && profile.divisi !== '-') return profile.divisi;
+
+                const job = (profile.jabatan || '').toLowerCase();
+                const div = (profile.divisi || '').toLowerCase();
+                if (job.includes('murottil') || job.includes('wajar') || div.includes('murottil') || div.includes('wajar')) return 'Wajar-Murottil';
+                if (job.includes('pendidikan') || div.includes('pendidikan')) return 'Pendidikan';
+                if (job.includes('keamanan') || div.includes('keamanan')) return 'Keamanan';
+                if (job.includes('bendahara') || div.includes('bendahara')) return 'Bendahara';
+                if (job.includes('kesehatan') || div.includes('kesehatan')) return 'Kesehatan';
+                if (job.includes('jamiyyah') || div.includes('jamiyyah')) return 'Jamiyyah';
+            }
+        }
+
+        // 2. Fallback to role-based mapping if pengurus_id is missing or profile not found
         const roleToDivisi = {
             'pendidikan': 'Pendidikan',
             'keamanan': 'Keamanan',
@@ -29,7 +47,7 @@ export default function RiwayatPresensiView({ fixedDivisi: propFixedDivisi = nul
         };
 
         return roleToDivisi[user?.role] || null;
-    }, [user, propFixedDivisi]);
+    }, [user, propFixedDivisi, pengurusList]);
 
     const [filterDivisi, setFilterDivisi] = useState(effectiveFixedDivisi || 'Semua');
 
@@ -75,7 +93,10 @@ export default function RiwayatPresensiView({ fixedDivisi: propFixedDivisi = nul
 
             const matchDivisi = currentFilter === 'Semua' ||
                 (d.divisi === currentFilter) ||
-                (d.jabatan && d.jabatan.toLowerCase().includes(currentFilter.toLowerCase()));
+                (d.jabatan && (
+                    d.jabatan.toLowerCase().includes(currentFilter.toLowerCase()) ||
+                    (currentFilter === 'Wajar-Murottil' && (d.jabatan.toLowerCase().includes('wajar') || d.jabatan.toLowerCase().includes('murottil')))
+                ));
 
             return matchSearch && matchDivisi;
         }).sort((a, b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));

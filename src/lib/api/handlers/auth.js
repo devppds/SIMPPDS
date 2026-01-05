@@ -128,7 +128,8 @@ export async function handleVerifyOtp(request, db) {
             id: user.id,
             username: user.username,
             fullname: user.fullname,
-            role: user.role
+            role: user.role,
+            pengurus_id: user.pengurus_id
         }
     });
 }

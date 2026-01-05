@@ -74,10 +74,12 @@ export default function QRScannerPage() {
                 const configRes = await apiCall('getData', 'GET', { type: 'presensi_config' });
                 const config = (configRes || []).find(c => c.key === 'allowed_static_jabatan');
 
-                let allowedStaticJabatans = ["Kesehatan", "Jam'iyyah", "Dok-Media Pondok", "Humasy & Logistik", "PLP", "Pembangunan"]; // Fallback
+                // Fallback includes Wajar & Murottil as requested
+                let allowedStaticJabatans = ["Kesehatan", "Jam'iyyah", "Dok-Media Pondok", "Humasy & Logistik", "PLP", "Pembangunan", "Wajar-Murottil", "Wajar", "Murottil"];
                 if (config && config.value) {
                     try {
-                        allowedStaticJabatans = JSON.parse(config.value);
+                        const parsed = JSON.parse(config.value);
+                        if (Array.isArray(parsed)) allowedStaticJabatans = [...new Set([...allowedStaticJabatans, ...parsed])];
                     } catch (e) {
                         console.error("Failed to parse allowed_static_jabatan", e);
                     }
@@ -85,10 +87,21 @@ export default function QRScannerPage() {
 
                 // Fetch latest pengurus data to verify jabatan
                 const pengurusRes = await apiCall('getData', 'GET', { type: 'pengurus' });
-                const currentPengurus = (pengurusRes || []).find(p => Number(p.id) === Number(user?.id));
+                // CRITICAL FIX: Use user.pengurus_id to find the official profile
+                const currentPengurus = (pengurusRes || []).find(p => Number(p.id) === Number(user?.pengurus_id));
 
-                if (!currentPengurus || !allowedStaticJabatans.includes(currentPengurus.jabatan)) {
-                    throw new Error(`Jabatan Anda (${currentPengurus?.jabatan || 'Tidak Diketahui'}) tidak diizinkan menggunakan QR Statis. Silakan gunakan QR Dinamis di kantor.`);
+                if (!currentPengurus) {
+                    throw new Error("Data Pengurus Anda tidak ditemukan. Silakan hubungi Sekretariat.");
+                }
+
+                const staffJabatan = (currentPengurus.jabatan || '').toLowerCase();
+                const isAllowed = allowedStaticJabatans.some(allowed =>
+                    staffJabatan.includes(allowed.toLowerCase()) ||
+                    (currentPengurus.divisi && currentPengurus.divisi.toLowerCase().includes(allowed.toLowerCase()))
+                );
+
+                if (!isAllowed) {
+                    throw new Error(`Unit/Jabatan Anda (${currentPengurus.jabatan || 'Tidak Diketahui'}) tidak diizinkan menggunakan QR Statis.`);
                 }
             }
 
@@ -100,7 +113,7 @@ export default function QRScannerPage() {
             const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
 
             const payload = {
-                pengurus_id: user?.id || 0,
+                pengurus_id: user?.pengurus_id || 0,
                 nama: user?.fullname || user?.username || 'Unknown Staff',
                 tanggal: dateStr,
                 jam: timeStr,

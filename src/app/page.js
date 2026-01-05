@@ -129,6 +129,7 @@ export default function LoginPage() {
           username: matchedUser.username,
           fullname: matchedUser.fullname,
           role: matchedUser.role,
+          pengurus_id: matchedUser.pengurus_id,
           avatar: matchedUser.avatar || '',
           allowedMenus: matchedUser.allowedMenus || []
         });
