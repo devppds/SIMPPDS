@@ -193,7 +193,7 @@ export const NAV_ITEMS = [
         label: 'DEVELZY Control',
         icon: 'fas fa-rocket',
         path: '/develzy',
-        roles: ['develzy']
+        roles: ['dev_elzy']
     }
 ];
 
@@ -207,7 +207,7 @@ export const getFirstAllowedPath = (user) => {
         (user.allowedMenus && user.allowedMenus.some(m => (m.id || m.name || m) === 'Dashboard' || (m.id || m) === '/dashboard'))
     );
 
-    if (user.role === 'develzy') return '/develzy';
+    if (user.role === 'dev_elzy') return '/develzy';
     if (user.role === 'admin') return '/dashboard';
 
     const count = countAllowedMenus(user);
@@ -265,7 +265,7 @@ export const getFirstAllowedPath = (user) => {
 
 export const countAllowedMenus = (user) => {
     if (!user) return 0;
-    if (user.role === 'admin' || user.role === 'develzy') return 99; // Unlimited
+    if (user.role === 'admin' || user.role === 'dev_elzy') return 99; // Unlimited
 
     const isAllowed = (item, parentLabels = []) => {
         if (!item.roles && !item.path && !item.submenu) return true;

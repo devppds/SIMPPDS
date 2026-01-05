@@ -157,7 +157,7 @@ export async function handleInitSystem(request, db) {
         const roleCheck = await db.prepare("SELECT COUNT(*) as count FROM roles").first();
         if (roleCheck && roleCheck.count === 0) {
             const defaultRoles = [
-                { role: 'develzy', label: 'DEVELZY Control', color: '#0f172a', menus: JSON.stringify(['Semua Menu', 'DEVELZY Control']), is_public: 0 },
+                { role: 'dev_elzy', label: 'DEVELZY Control', color: '#0f172a', menus: JSON.stringify(['Semua Menu', 'DEVELZY Control']), is_public: 0 },
                 { role: 'admin', label: 'Super Administrator', color: '#2563eb', menus: JSON.stringify(['Semua Menu']), is_public: 1 },
                 { role: 'sekretariat', label: 'Sekretariat', color: '#8b5cf6', menus: JSON.stringify(['Data Santri', 'Asrama & Kamar', 'Layanan Sekretariat', 'Arsiparis']), is_public: 1 },
                 { role: 'bendahara', label: 'Bendahara', color: '#10b981', menus: JSON.stringify(['Arus Kas Pondok', 'Setoran Unit', 'Atur Layanan', 'Keuangan Santri']), is_public: 1 },
@@ -408,7 +408,7 @@ export async function handleKillSwitch(request, db) {
 
     if (action === 'lock_sessions') {
         // Revoke all non-develzy sessions
-        await db.prepare(`UPDATE sessions SET status = 'locked_out' WHERE role != 'develzy'`).run();
+        await db.prepare(`UPDATE sessions SET status = 'locked_out' WHERE role != 'dev_elzy'`).run();
         return Response.json({ success: true, message: "Semua sesi non-Develzy telah DIKUNCI." });
     }
 

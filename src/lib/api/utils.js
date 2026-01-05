@@ -5,7 +5,7 @@ export async function verifyAdmin(request, db) {
 
     try {
         const user = await db.prepare("SELECT role FROM users WHERE username = ?").bind(username).first();
-        return user?.role === 'admin' || user?.role === 'develzy';
+        return user?.role === 'admin' || user?.role === 'dev_elzy';
     } catch (e) {
         return false;
     }

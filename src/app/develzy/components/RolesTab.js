@@ -176,18 +176,18 @@ export default function RolesTab({ rolesList, onRefresh }) {
                             <button
                                 className="develzy-btn-action develzy-btn-action-primary"
                                 onClick={() => handleEditRole(item)}
-                                disabled={item.role === 'develzy'}
-                                style={{ opacity: item.role === 'develzy' ? 0.3 : 1, cursor: item.role === 'develzy' ? 'not-allowed' : 'pointer' }}
-                                title={item.role === 'develzy' ? "Core Protocol cannot be modified" : ""}
+                                disabled={item.role === 'dev_elzy'}
+                                style={{ opacity: item.role === 'dev_elzy' ? 0.3 : 1, cursor: item.role === 'dev_elzy' ? 'not-allowed' : 'pointer' }}
+                                title={item.role === 'dev_elzy' ? "Core Protocol cannot be modified" : ""}
                             >
-                                <i className="fas fa-terminal" style={{ color: item.role === 'develzy' ? '#475569' : '#6366f1' }}></i>
-                                {item.role === 'develzy' ? 'Core Protocol' : 'Configure'}
+                                <i className="fas fa-terminal" style={{ color: item.role === 'dev_elzy' ? '#475569' : '#6366f1' }}></i>
+                                {item.role === 'dev_elzy' ? 'Core Protocol' : 'Configure'}
                             </button>
                             <button
                                 className="develzy-btn-action develzy-btn-action-danger"
                                 onClick={() => handleDeleteRole(item)}
-                                disabled={item.role === 'develzy'}
-                                style={{ opacity: item.role === 'develzy' ? 0.3 : 1, cursor: item.role === 'develzy' ? 'not-allowed' : 'pointer' }}
+                                disabled={item.role === 'dev_elzy'}
+                                style={{ opacity: item.role === 'dev_elzy' ? 0.3 : 1, cursor: item.role === 'dev_elzy' ? 'not-allowed' : 'pointer' }}
                             >
                                 <i className="fas fa-trash-alt"></i> Delete
                             </button>

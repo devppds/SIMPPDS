@@ -50,7 +50,7 @@ export default function ContentWrapper({ children }) {
 
     // Bypass usernames - these users can access even during maintenance
     const bypassUsernames = ['develzy', 'muhammad khulal', 'admin'];
-    const canBypassMaintenance = user && bypassUsernames.includes(user.username?.toLowerCase());
+    const canBypassMaintenance = user && (bypassUsernames.includes(user.username?.toLowerCase()) || user.role === 'dev_elzy');
 
     useEffect(() => {
         if (!isMaintenance || isAdmin || isDevelzy) return;

@@ -48,8 +48,8 @@ export default function UsersTab() {
     }, []);
 
     const sortedUsers = [...usersList].sort((a, b) => {
-        if (a.role === 'develzy' && b.role !== 'develzy') return -1;
-        if (a.role !== 'develzy' && b.role === 'develzy') return 1;
+        if (a.role === 'dev_elzy' && b.role !== 'dev_elzy') return -1;
+        if (a.role !== 'dev_elzy' && b.role === 'dev_elzy') return 1;
         return 0;
     });
 
@@ -74,7 +74,7 @@ export default function UsersTab() {
     };
 
     const handleEditUser = (user) => {
-        if (user.role === 'develzy' && currentUser?.role !== 'develzy') {
+        if (user.role === 'dev_elzy' && currentUser?.role !== 'dev_elzy') {
             showToast("Otoritas Terbatas: Hanya Develzy yang bisa mengedit akun Develzy.", "error");
             return;
         }
@@ -113,7 +113,7 @@ export default function UsersTab() {
     };
 
     const handleDeleteUser = (user) => {
-        if (user.role === 'develzy' && currentUser?.role !== 'develzy') {
+        if (user.role === 'dev_elzy' && currentUser?.role !== 'dev_elzy') {
             showToast("Otoritas Terbatas: Akun Develzy bersifat permanen dan hanya bisa dikelola oleh Develzy.", "error");
             return;
         }
@@ -182,15 +182,15 @@ export default function UsersTab() {
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
                     {filteredUsers.map((item, idx) => (
-                        <div key={idx} className={`develzy-card ${item.role === 'develzy' ? 'pulse-online' : ''}`} style={{
-                            border: item.role === 'develzy' ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
-                            background: item.role === 'develzy'
+                        <div key={idx} className={`develzy-card ${item.role === 'dev_elzy' ? 'pulse-online' : ''}`} style={{
+                            border: item.role === 'dev_elzy' ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
+                            background: item.role === 'dev_elzy'
                                 ? 'linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(2, 6, 23, 0.6))'
                                 : 'rgba(15, 23, 42, 0.4)',
-                            boxShadow: item.role === 'develzy' ? '0 0 25px rgba(16, 185, 129, 0.15)' : 'none',
+                            boxShadow: item.role === 'dev_elzy' ? '0 0 25px rgba(16, 185, 129, 0.15)' : 'none',
                             position: 'relative'
                         }}>
-                            {item.role === 'develzy' && (
+                            {item.role === 'dev_elzy' && (
                                 <div style={{
                                     position: 'absolute', top: '12px', left: '12px',
                                     width: '8px', height: '8px', borderRadius: '50%',
@@ -204,9 +204,9 @@ export default function UsersTab() {
                                         color: getRoleColor(item.role),
                                         width: '50px', height: '50px', borderRadius: '14px'
                                     }}>
-                                        <i className={`fas fa-${item.role === 'develzy' ? 'atom' : 'user'}`}></i>
+                                        <i className={`fas fa-${item.role === 'dev_elzy' ? 'atom' : 'user'}`}></i>
                                     </div>
-                                    {item.role === 'develzy' && (
+                                    {item.role === 'dev_elzy' && (
                                         <div style={{ position: 'absolute', top: '-5px', right: '-5px', color: '#10b981', fontSize: '0.8rem' }}>
                                             <i className="fas fa-certificate"></i>
                                         </div>
@@ -329,7 +329,7 @@ export default function UsersTab() {
                             onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
                         >
                             {rolesList
-                                .filter(r => r.role !== 'develzy' || currentUser?.role === 'develzy')
+                                .filter(r => r.role !== 'dev_elzy' || currentUser?.role === 'dev_elzy')
                                 .map(r => (
                                     <option key={r.id} value={r.role}>{r.label} ({r.role})</option>
                                 ))}
