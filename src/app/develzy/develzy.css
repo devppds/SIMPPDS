@@ -19,6 +19,16 @@
     min-height: 100vh;
     background-color: var(--develzy-bg);
     color: var(--develzy-text-primary);
+    margin-left: 280px;
+    /* Offset for Sidebar */
+    width: calc(100% - 280px);
+}
+
+/* Ensure view-container inside Develzy page respects sidebar */
+.develzy-page-wrapper .view-container {
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .develzy-card {

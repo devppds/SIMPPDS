@@ -184,73 +184,75 @@ export default function DevelzyControlPage() {
     if (!isDevelzy) return null;
 
     return (
-        <div className="view-container">
-            {/* Header and Stats reused from old code but simplified */}
-            <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.7rem', marginBottom: '8px' }}>
-                        <i className="fas fa-microchip"></i>
-                        Core Instance: Online
+        <div className="develzy-page-container">
+            <div className="view-container">
+                {/* Header and Stats reused from old code but simplified */}
+                <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.7rem', marginBottom: '8px' }}>
+                            <i className="fas fa-microchip"></i>
+                            Core Instance: Online
+                        </div>
+                        <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
+                            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Control
+                        </h1>
                     </div>
-                    <h1 className="outfit" style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
-                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Control
-                    </h1>
-                </div>
-                <div className="maintenance-box" style={{ padding: '12px 24px', background: maintenanceMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', borderRadius: '16px', border: `1px solid ${maintenanceMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: maintenanceMode ? '#f87171' : '#34d399', textTransform: 'uppercase' }}>Service Status</div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{maintenanceMode ? 'Maintenance Mode' : 'Production Live'}</div>
+                    <div className="maintenance-box" style={{ padding: '12px 24px', background: maintenanceMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', borderRadius: '16px', border: `1px solid ${maintenanceMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: maintenanceMode ? '#f87171' : '#34d399', textTransform: 'uppercase' }}>Service Status</div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{maintenanceMode ? 'Maintenance Mode' : 'Production Live'}</div>
+                        </div>
+                        <button
+                            onClick={handleMaintenanceToggle}
+                            style={{ background: maintenanceMode ? '#ef4444' : '#10b981', border: 'none', padding: '10px 16px', borderRadius: '12px', color: 'white', fontWeight: 800, cursor: 'pointer', fontSize: '0.8rem', boxShadow: `0 4px 12px ${maintenanceMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}` }}
+                        >
+                            {maintenanceMode ? 'Go Live' : 'Maintenance'}
+                        </button>
                     </div>
-                    <button
-                        onClick={handleMaintenanceToggle}
-                        style={{ background: maintenanceMode ? '#ef4444' : '#10b981', border: 'none', padding: '10px 16px', borderRadius: '12px', color: 'white', fontWeight: 800, cursor: 'pointer', fontSize: '0.8rem', boxShadow: `0 4px 12px ${maintenanceMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}` }}
-                    >
-                        {maintenanceMode ? 'Go Live' : 'Maintenance'}
-                    </button>
                 </div>
-            </div>
 
-            {/* Quick Stats Grid */}
-            <div className="quick-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '3rem' }}>
-                {[
-                    { label: 'System Uptime', value: systemStats.uptime, icon: 'fas fa-clock', color: '#6366f1' },
-                    { label: 'Database Health', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981' },
-                    { label: 'Security Level', value: 'High-Alert', icon: 'fas fa-shield-alt', color: '#f59e0b' },
-                    { label: 'Core Version', value: 'v3.2.0-ELZ', icon: 'fas fa-code-branch', color: '#ec4899' },
-                ].map((stat, i) => (
-                    <div key={i} style={{
-                        background: 'rgba(15, 23, 42, 0.4)',
+                {/* Quick Stats Grid */}
+                <div className="quick-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '3rem' }}>
+                    {[
+                        { label: 'System Uptime', value: systemStats.uptime, icon: 'fas fa-clock', color: '#6366f1' },
+                        { label: 'Database Health', value: systemStats.requests, icon: 'fas fa-database', color: '#10b981' },
+                        { label: 'Security Level', value: 'High-Alert', icon: 'fas fa-shield-alt', color: '#f59e0b' },
+                        { label: 'Core Version', value: 'v3.2.0-ELZ', icon: 'fas fa-code-branch', color: '#ec4899' },
+                    ].map((stat, i) => (
+                        <div key={i} style={{
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            borderRadius: '20px', padding: '1.25rem',
+                            display: 'flex', alignItems: 'center', gap: '1rem',
+                            backdropFilter: 'blur(5px)'
+                        }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
+                                <i className={stat.icon}></i>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
+                                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f1f5f9' }}>{stat.value}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="view-container" style={{ padding: 0 }}>
+                    <div className="develzy-content-card" style={{
+                        background: 'rgba(15, 23, 42, 0.3)',
                         border: '1px solid rgba(255, 255, 255, 0.05)',
-                        borderRadius: '20px', padding: '1.25rem',
-                        display: 'flex', alignItems: 'center', gap: '1rem',
-                        backdropFilter: 'blur(5px)'
+                        borderRadius: '24px', padding: '2.5rem',
+                        minHeight: '600px',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
                     }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
-                            <i className={stat.icon}></i>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f1f5f9' }}>{stat.value}</div>
-                        </div>
+                        {activeTab === 'general' && <GeneralTab configs={configs} setConfigs={setConfigs} />}
+                        {activeTab === 'branding' && <BrandingTab configs={configs} setConfigs={setConfigs} />}
+                        {activeTab === 'integration' && <IntegrationTab />}
+                        {activeTab === 'audit' && <AuditTab logs={logs} pagination={logsPagination} onPageChange={(p) => setLogsPagination({ ...logsPagination, page: p })} onRefresh={loadData} />}
+                        {activeTab === 'sessions' && <SessionsTab activeSessions={activeSessions} onRefresh={loadData} />}
+                        {activeTab === 'roles' && <RolesTab rolesList={rolesList} onRefresh={loadData} />}
+                        {activeTab === 'system' && <SystemTab dbHealth={dbHealth} onRefresh={() => { loadData(); loadSystemStats(); }} />}
                     </div>
-                ))}
-            </div>
-
-            <div className="view-container" style={{ padding: 0 }}>
-                <div className="develzy-content-card" style={{
-                    background: 'rgba(15, 23, 42, 0.3)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '24px', padding: '2.5rem',
-                    minHeight: '600px',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
-                }}>
-                    {activeTab === 'general' && <GeneralTab configs={configs} setConfigs={setConfigs} />}
-                    {activeTab === 'branding' && <BrandingTab configs={configs} setConfigs={setConfigs} />}
-                    {activeTab === 'integration' && <IntegrationTab />}
-                    {activeTab === 'audit' && <AuditTab logs={logs} pagination={logsPagination} onPageChange={(p) => setLogsPagination({ ...logsPagination, page: p })} onRefresh={loadData} />}
-                    {activeTab === 'sessions' && <SessionsTab activeSessions={activeSessions} onRefresh={loadData} />}
-                    {activeTab === 'roles' && <RolesTab rolesList={rolesList} onRefresh={loadData} />}
-                    {activeTab === 'system' && <SystemTab dbHealth={dbHealth} onRefresh={() => { loadData(); loadSystemStats(); }} />}
                 </div>
             </div>
         </div>
