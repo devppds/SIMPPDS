@@ -109,12 +109,12 @@ export default function SessionsTab({ activeSessions, onRefresh }) {
                             style={{
                                 background: kickLoading === session.id ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
                             }}
-                            disabled={kickLoading === session.id || session.username === user?.username}
+                            disabled={kickLoading === session.id}
                         >
                             {kickLoading === session.id ? (
-                                <><i className="fas fa-circle-notch fa-spin" style={{ marginRight: '8px' }}></i> Mengeluarkan...</>
+                                <><i className="fas fa-circle-notch fa-spin" style={{ marginRight: '8px' }}></i> Memproses...</>
                             ) : session.username === user?.username ? (
-                                <><i className="fas fa-user-check" style={{ marginRight: '8px' }}></i> Sesi Aktif (Anda)</>
+                                <><i className="fas fa-sign-out-alt" style={{ marginRight: '8px' }}></i> Akhiri Sesi Ini (Logout)</>
                             ) : (
                                 <><i className="fas fa-power-off" style={{ marginRight: '8px' }}></i> Keluarkan Pengguna</>
                             )}
