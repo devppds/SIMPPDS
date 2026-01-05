@@ -6,11 +6,22 @@ import { useAuth } from '@/lib/AuthContext';
 import { apiCall } from '@/lib/utils';
 import { getFirstAllowedPath } from '@/lib/navConfig';
 
-
 export default function LoginPage() {
   const router = useRouter();
   const { login, user, loading: authLoading, config } = useAuth();
+
+  // State: View Mode (login | register)
+  const [view, setView] = useState('login');
+
+  // State: Login
   const [pin, setPin] = useState('');
+
+  // State: Register
+  const [regData, setRegData] = useState({ identifier: '', otp: '', name: '' });
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  // Shared States
   const [loading, setLoading] = useState(false); // UI Loader
   const [isVerifying, setIsVerifying] = useState(false); // Logic Loader
   const [error, setError] = useState('');
@@ -61,7 +72,7 @@ export default function LoginPage() {
     return () => { hasMounted.current = false; };
   }, [user, authLoading, router]);
 
-  // 2. Logic Check PIN Real-time
+  // -- LOGIC: LOGIN (PIN) --
   const checkPinAndLogin = async (currentPin) => {
     // Cari user yang password_plain-nya cocok dengan PIN saat ini
     const matchedUser = cachedUsers.find(u => u.password_plain === currentPin);
@@ -128,10 +139,62 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    // Placeholder Logic
+    // In real implementation this would use Firebase Auth or NextAuth
+    alert("Fitur Google Login akan segera aktif! (Memerlukan konfigurasi GCP)");
+  };
+
+  // -- LOGIC: REGISTER (OTP) --
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!regData.identifier) {
+      setError("Masukkan Email atau No. WhatsApp");
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    // Placeholder API Call for sending OTP
+    try {
+      // await apiCall('sendOtp', 'POST', { target: regData.identifier });
+
+      // Simulating success
+      setTimeout(() => {
+        setOtpSent(true);
+        setLoading(false);
+        setOtpTimer(60); // 60s countdown
+        alert(`Kode OTP terkirim ke ${regData.identifier}\n(Mode Demo: Kode bebas)`);
+      }, 1500);
+
+    } catch (err) {
+      setError("Gagal mengirim kode. Coba lagi.");
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!regData.otp) {
+      setError("Masukkan Kode OTP");
+      return;
+    }
+
+    setLoading(true);
+    // Placeholder Verification
+    setTimeout(() => {
+      alert("Pendaftaran Berhasil! Harap tunggu persetujuan Admin.\nRole Default: Absensi Pengurus");
+      setLoading(false);
+      setView('login');
+      setRegData({ identifier: '', otp: '', name: '' });
+      setOtpSent(false);
+    }, 1500);
+  };
+
   return (
     <div className="login-root">
       <style jsx global>{`
-
         
         .login-root {
           min-height: 100vh;
@@ -165,6 +228,7 @@ export default function LoginPage() {
           height: 100%;
           text-align: center;
           background: white;
+          transition: all 0.6s ease-in-out;
         }
 
         .social-container {
@@ -183,10 +247,13 @@ export default function LoginPage() {
           color: #333;
           text-decoration: none;
           transition: 0.3s;
+          cursor: pointer;
         }
 
         .social-container a:hover {
           background: #f1f1f1;
+          border-color: #1075b9ff;
+          color: #1075b9ff;
         }
 
         h1 {
@@ -225,17 +292,18 @@ export default function LoginPage() {
           letter-spacing: 4px;
           font-weight: bold;
           outline: none;
+          color: #333;
         }
         
         .inpt:focus {
            background-color: #e0e0e0;
-           box-shadow: 0 0 0 2px rgba(0,184,148, 0.2);
+           box-shadow: 0 0 0 2px rgba(0, 132, 184, 0.21);
         }
 
         button.btn-login {
           border-radius: 20px;
-          border: 1px solid #10b981;
-          background-color: #10b981;
+          border: 1px solid #1075b9ff;
+          background-color: #1075b9ff;
           color: #FFFFFF;
           font-size: 12px;
           font-weight: bold;
@@ -255,6 +323,26 @@ export default function LoginPage() {
           outline: none;
         }
 
+        button.btn-google {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+        }
+        button.btn-google:hover {
+            background: #f8fafc;
+            border-color: #ccc;
+        }
+
         button.ghost {
           background-color: transparent;
           border-color: #FFFFFF;
@@ -272,9 +360,9 @@ export default function LoginPage() {
 
         .overlay-container {
           flex: 1;
-          background: #10b981;
-          background: -webkit-linear-gradient(to right, #10b981, #059669);
-          background: linear-gradient(to right, #10b981, #059669);
+          background: #1075b9ff;
+          background: -webkit-linear-gradient(to right, #1075b9ff, #056696ff);
+          background: linear-gradient(to right, #1075b9ff, #056696ff);
           background-repeat: no-repeat;
           background-size: cover;
           background-position: 0 0;
@@ -294,52 +382,145 @@ export default function LoginPage() {
           margin-top: 5px; 
           min-height: 20px;
         }
+        
+        .separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            margin: 15px 0;
+        }
+        .separator::before, .separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        .separator span {
+            padding: 0 10px;
+            color: #888;
+            font-size: 12px;
+            margin: 0;
+        }
       `}</style>
 
-      <div className="container">
-        {/* Sign In Container */}
-        <div className="form-container sign-in-container">
-          <form onSubmit={handleManualSubmit} style={{ width: '100%' }}>
-            <h1>Sign in</h1>
-            <div className="social-container">
-              <a href="#" className="social" onClick={e => e.preventDefault()}><i className="fab fa-facebook-f"></i></a>
-              <a href="#" className="social" onClick={e => e.preventDefault()}><i className="fab fa-google-plus-g"></i></a>
-              <a href="#" className="social" onClick={e => e.preventDefault()}><i className="fab fa-linkedin-in"></i></a>
-            </div>
-            <span>atau gunakan akun anda</span>
+      <div className="container" >
 
-            <input
-              type="password"
-              placeholder="PIN Access (4 Digit)"
-              className="inpt"
-              value={pin}
-              onChange={handleInputChange}
-              maxLength={4}
-              disabled={loading || isVerifying}
-              autoFocus
-            />
+        {/* VIEW: LOGIN */}
+        {view === 'login' && (
+          <div className="form-container sign-in-container">
+            <form onSubmit={handleManualSubmit} style={{ width: '100%' }}>
+              <h1>Masuk</h1>
+              <div style={{ margin: '20px 0', width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <button type="button" className="btn-google" onClick={handleGoogleLogin}>
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20" alt="G" />
+                  Masuk dengan Google
+                </button>
+              </div>
 
-            <div className="error-msg">
-              {error && <span>{error}</span>}
-              {isVerifying && <span style={{ color: '#10b981' }}>Checking...</span>}
-            </div>
+              <div className="separator"><span>atau</span></div>
 
-            <a href="#" onClick={e => e.preventDefault()} style={{ fontSize: '12px', color: '#333', textDecoration: 'none', marginBottom: '15px', display: 'block' }}>Lupa kata sandi anda?</a>
+              <input
+                type="password"
+                placeholder="PIN Access (4 Digit)"
+                className="inpt"
+                value={pin}
+                onChange={handleInputChange}
+                maxLength={4}
+                disabled={loading || isVerifying}
+                autoFocus
+              />
 
-            <button className="btn-login" type="submit" disabled={loading || isVerifying}>
-              {loading ? 'LOADING...' : 'SIGN IN'}
-            </button>
-          </form>
-        </div>
+              <div className="error-msg">
+                {error && <span>{error}</span>}
+                {isVerifying && <span style={{ color: '#1075b9ff' }}>Memverifikasi...</span>}
+              </div>
+
+              <a href="#" onClick={e => e.preventDefault()} style={{ fontSize: '12px', color: '#333', textDecoration: 'none', marginBottom: '15px', display: 'block' }}>Lupa PIN?</a>
+
+              <button className="btn-login" type="submit" disabled={loading || isVerifying}>
+                {loading ? 'LOADING...' : 'MASUK'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* VIEW: REGISTER */}
+        {view === 'register' && (
+          <div className="form-container sign-in-container">
+            <form onSubmit={otpSent ? handleRegister : handleSendOtp} style={{ width: '100%' }}>
+              <h1>Daftar Akun</h1>
+              <span style={{ margin: '15px 0 25px 0', display: 'block' }}>Gunakan Email atau WhatsApp Aktif</span>
+
+              {!otpSent ? (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Email / No. WhatsApp (08...)"
+                    className="inpt"
+                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left' }}
+                    value={regData.identifier}
+                    onChange={e => setRegData({ ...regData, identifier: e.target.value })}
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <button className="btn-login" type="submit" disabled={loading}>
+                    {loading ? 'MENGIRIM...' : 'KIRIM KODE OTP'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{ marginBottom: '15px', fontSize: '0.9rem', color: '#1075b9ff' }}>
+                    Kode dikirim ke: <strong>{regData.identifier}</strong>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="X X X X X X"
+                    className="inpt"
+                    value={regData.otp}
+                    onChange={e => setRegData({ ...regData, otp: e.target.value })}
+                    maxLength={6}
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <div className="error-msg">
+                    {error && <span>{error}</span>}
+                  </div>
+                  <button className="btn-login" type="submit" disabled={loading}>
+                    {loading ? 'MEMPROSES...' : 'VERIFIKASI & DAFTAR'}
+                  </button>
+                  <button
+                    type="button"
+                    style={{ background: 'none', border: 'none', color: '#888', marginTop: '10px', fontSize: '0.8rem', cursor: 'pointer' }}
+                    onClick={() => { setOtpSent(false); setOtpTimer(0); }}
+                  >
+                    Ubah Nomor/Email?
+                  </button>
+                </>
+              )}
+
+              <div className="error-msg" style={{ marginTop: '10px' }}>
+                {error && <span>{error}</span>}
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Overlay Container */}
         <div className="overlay-container">
-          <h1>Halo, Teman!</h1>
+          <h1>{view === 'login' ? 'Halo, Khodimin!' : 'Mari Bergabung!'}</h1>
           <p>
-            Selamat datang di SIM-PPDS. Masukkan PIN anda untuk mulai mengelola data santri.
+            {view === 'login'
+              ? 'Selamat datang di SIM-PPDS. Masukkan PIN anda untuk Masuk.'
+              : 'Daftarkan diri anda untuk mendapatkan akses ke sistem manajemen santri.'}
           </p>
-          <button className="ghost" id="signUp" onClick={() => alert("Silahkan hubungi Administrator untuk pendaftaran.")}>
-            SIGN UP
+          <button className="ghost" id="actionBtn" onClick={() => {
+            setView(view === 'login' ? 'register' : 'login');
+            setError('');
+            setPin('');
+            setRegData({ identifier: '', otp: '', name: '' });
+            setOtpSent(false);
+          }}>
+            {view === 'login' ? 'DAFTAR AKUN' : 'SUDAH PUNYA AKUN?'}
           </button>
         </div>
       </div>
@@ -348,4 +529,3 @@ export default function LoginPage() {
 }
 
 export const dynamic = 'force-dynamic';
-

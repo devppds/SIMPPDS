@@ -121,7 +121,12 @@ CREATE TABLE IF NOT EXISTS users (
     fullname TEXT,
     password TEXT NOT NULL,
     password_plain TEXT,
-    role TEXT DEFAULT 'sekretariat'
+    role TEXT DEFAULT 'absen_pengurus',
+    email TEXT,
+    no_hp TEXT,
+    otp_code TEXT,
+    otp_expires DATETIME,
+    is_verified INTEGER DEFAULT 0
 );
 
 -- 2. KEAMANAN & KETERTIBAN
