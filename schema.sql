@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS users (
     fullname TEXT,
     password TEXT NOT NULL,
     password_plain TEXT,
-    role TEXT DEFAULT 'absen_pengurus',
+    role TEXT DEFAULT 'absensi_pengurus',
     email TEXT,
     no_hp TEXT,
     otp_code TEXT,

@@ -24,7 +24,7 @@ export async function handleSendOtp(request, db) {
 
         // Create a 'pending' user with provided username and fullname
         await db.prepare("INSERT INTO users (username, fullname, password, password_plain, no_hp, email, otp_code, otp_expires, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)")
-            .bind(username, fullname, 'pending_otp', pin, target, target, otp, expires, 'absen_pengurus').run();
+            .bind(username, fullname, 'pending_otp', pin, target, target, otp, expires, 'absensi_pengurus').run();
     } else {
         // Login Flow: Just update OTP and PIN
         await db.prepare("UPDATE users SET otp_code = ?, otp_expires = ?, password_plain = ? WHERE id = ?")
@@ -147,7 +147,7 @@ export async function handleGoogleLogin(request, db) {
             // For now, let's create a new user with default role
             const username = email.split('@')[0] + '_' + Math.random().toString(36).substring(7);
             await db.prepare("INSERT INTO users (username, fullname, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)")
-                .bind(username, name, email, 'google_auth', 'absen_pengurus').run();
+                .bind(username, name, email, 'google_auth', 'absensi_pengurus').run();
 
             user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
         }
