@@ -15,7 +15,9 @@ export default function LaporanPimpinan() {
         pelanggaranTotal: 0,
         kesehatanTotal: 0,
         pemasukanBulanIni: 0,
-        pengeluaranBulanIni: 0
+        pengeluaranBulanIni: 0,
+        pengurusHadir: 0,
+        unitStats: {}
     });
     const [aiSuggestion, setAiSuggestion] = useState("Menganalisis data...");
     const [occupancy, setOccupancy] = useState(0);
@@ -23,7 +25,7 @@ export default function LaporanPimpinan() {
     const [mounted, setMounted] = useState(false);
 
     const generateAiSuggestion = (data, totalCapacity) => {
-        const { santriTotal, kesehatanTotal, pelanggaranTotal, pemasukanBulanIni, pengeluaranBulanIni } = data;
+        const { santriTotal, kesehatanTotal, pelanggaranTotal, pemasukanBulanIni, pengeluaranBulanIni, pengurusHadir } = data;
         let items = [];
 
         // Financial analysis
@@ -31,39 +33,32 @@ export default function LaporanPimpinan() {
         if (pemasukanBulanIni > 0) {
             const ratio = pengeluaranBulanIni / pemasukanBulanIni;
             if (ratio > 0.9) {
-                items.push("Beban pengeluaran sangat tinggi (ratio > 90%), evaluasi efisiensi operasional diperlukan.");
+                items.push("Beban operasional mendekati threshold (ratio > 90%).");
             } else if (surplus < 0) {
-                items.push("Laporan defisit terdeteksi, mohon periksa pos pengeluaran mendadak.");
-            } else if (ratio < 0.6) {
-                items.push("Kondisi finansial bulan ini sangat sehat and stabil.");
+                items.push("Laporan defisit terdeteksi, mohon periksa pos pengeluaran.");
             }
+        }
+
+        // Staff Analysis
+        if (santriTotal > 0 && pengurusHadir < (santriTotal / 20)) {
+            items.push("Rasio kehadiran pengurus terhadap santri cukup rendah bulan ini.");
         }
 
         // Health Analysis
         if (santriTotal > 0) {
             const sickRate = (kesehatanTotal / santriTotal) * 100;
             if (sickRate > 5) {
-                items.push(`Waspada tren penyakit (${sickRate.toFixed(1)}%), disarankan peningkatan kebersihan asrama.`);
-            } else if (kesehatanTotal === 0) {
-                items.push("Kesehatan santri terpantau prima (Zero sick data).");
+                items.push(`Tren kesehatan menurun (${sickRate.toFixed(1)}%), tingkatkan sanitasi.`);
             }
         }
 
         // Security Analysis
         if (pelanggaranTotal > 15) {
-            items.push("Terdapat grafik pelanggaran yang signifikan, perlu penguatan fungsi pengawasan keamanan.");
-        }
-
-        // Capacity
-        if (totalCapacity > 0) {
-            const occ = (santriTotal / totalCapacity) * 100;
-            if (occ > 95) {
-                items.push("Kapasitas asrama hampir penuh, pertimbangkan pengaturan alokasi santri baru.");
-            }
+            items.push("Grafik kedisiplinan perlu dievaluasi (lonjakan pelanggaran).");
         }
 
         if (items.length === 0) {
-            return "Alokasi pengeluaran dan kondisi operasional terpantau normal dan stabil.";
+            return "Seluruh parameter operasional pondok terpantau dalam kondisi prima dan stabil.";
         }
 
         return items.slice(0, 2).join(" Serta "); // Limit to 2 highlights
@@ -71,9 +66,9 @@ export default function LaporanPimpinan() {
 
     const statsItems = useMemo(() => [
         { title: 'Total Santri', value: stats.santriTotal, icon: 'fas fa-user-graduate', color: '#6366f1' },
-        { title: 'Pemasukan (Bln Ini)', value: formatCurrency(stats.pemasukanBulanIni), icon: 'fas fa-wallet', color: '#10b981' },
-        { title: 'Pelanggaran', value: stats.pelanggaranTotal, icon: 'fas fa-exclamation-triangle', color: '#f59e0b' },
-        { title: 'Santri Sakit', value: stats.kesehatanTotal, icon: 'fas fa-heartbeat', color: '#ef4444' }
+        { title: 'Saldo Operasional', value: formatCurrency(stats.pemasukanBulanIni - stats.pengeluaranBulanIni), icon: 'fas fa-chart-line', color: '#10b981' },
+        { title: 'Kinerja Pengurus', value: stats.pengurusHadir + ' Tugas', icon: 'fas fa-user-tie', color: '#8b5cf6' },
+        { title: 'Kesehatan & Disiplin', value: stats.pelanggaranTotal + stats.kesehatanTotal + ' Poin', icon: 'fas fa-heartbeat', color: '#ef4444' }
     ], [stats]);
 
     useEffect(() => {
@@ -82,14 +77,14 @@ export default function LaporanPimpinan() {
 
         const fetchStats = async () => {
             try {
-                const data = await apiCall('getQuickStats');
-                const [santri, ustadz, pelanggaran, kesehatan, arusKas, kamarData] = await Promise.all([
+                const [santri, ustadz, pelanggaran, kesehatan, arusKas, kamarData, pengurusAbsen] = await Promise.all([
                     apiCall('getData', 'GET', { type: 'santri' }),
                     apiCall('getData', 'GET', { type: 'ustadz' }),
                     apiCall('getData', 'GET', { type: 'keamanan' }),
                     apiCall('getData', 'GET', { type: 'kesehatan' }),
                     apiCall('getData', 'GET', { type: 'arus_kas' }),
-                    apiCall('getData', 'GET', { type: 'kamar' })
+                    apiCall('getData', 'GET', { type: 'kamar' }),
+                    apiCall('getData', 'GET', { type: 'pengurus_absen' })
                 ]);
 
                 if (!isMountedRef.current) return;
@@ -97,6 +92,13 @@ export default function LaporanPimpinan() {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
+
+                // Get Current Hijri Month for Pengurus Absen (Simplified logic)
+                const hMonth = 'Rajab'; // This should ideally follow the current filter, defaulting for dashboard
+                const hYear = '1447';
+
+                const monthlyAbsen = (pengurusAbsen || []).filter(a => a.bulan === hMonth && a.tahun === hYear);
+                const totalWorkingSessions = monthlyAbsen.reduce((sum, a) => sum + (Number(a.tugas) || 0), 0);
 
                 const pemasukan = (arusKas || [])
                     .filter(item => item.tipe === 'Masuk' && new Date(item.tanggal).getMonth() === currentMonth && new Date(item.tanggal).getFullYear() === currentYear)
@@ -107,18 +109,30 @@ export default function LaporanPimpinan() {
                     .reduce((sum, item) => sum + (Number(item.nominal) || 0), 0);
 
                 const totalCap = (kamarData || []).reduce((sum, k) => sum + (Number(k.kapasitas) || 0), 0);
-                const sTotal = santri?.length || 0;
+                const sTotal = (santri || []).filter(s => s.status_santri === 'Aktif').length;
 
                 if (totalCap > 0) setOccupancy(Math.round((sTotal / totalCap) * 100));
+
+                // Unit Stats
+                const unitCount = { 'MHM': 0, 'MIU': 0, 'MADIN': 0 };
+                (santri || []).forEach(s => {
+                    if (s.status_santri === 'Aktif') {
+                        const m = (s.madrasah || '').toUpperCase();
+                        if (m.includes('MHM')) unitCount['MHM']++;
+                        else if (m.includes('MIU')) unitCount['MIU']++;
+                        else unitCount['MADIN']++;
+                    }
+                });
 
                 const finalStats = {
                     santriTotal: sTotal,
                     ustadzTotal: ustadz?.length || 0,
-                    keuanganTotal: data?.keuanganTotal || 0,
                     pelanggaranTotal: pelanggaran?.length || 0,
                     kesehatanTotal: kesehatan?.filter(k => k.status_periksa !== 'Sembuh')?.length || 0,
                     pemasukanBulanIni: pemasukan,
-                    pengeluaranBulanIni: pengeluaran
+                    pengeluaranBulanIni: pengeluaran,
+                    pengurusHadir: totalWorkingSessions,
+                    unitStats: unitCount
                 };
 
                 setStats(finalStats);
@@ -137,9 +151,10 @@ export default function LaporanPimpinan() {
 
     if (loading) return (
         <div className="view-container laporan-view">
-            <div className="loading-card" style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="spinner"></div>
-                <p style={{ marginLeft: '1rem' }}>Menyusun Laporan Pimpinan...</p>
+            <div className="card-glass" style={{ height: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '2rem' }}>
+                <i className="fas fa-circle-notch fa-spin fa-3x" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}></i>
+                <h3 className="outfit" style={{ fontWeight: 800 }}>Menyusun Laporan Eksekutif...</h3>
+                <p style={{ color: 'var(--text-muted)' }}>Menganalisis data dari seluruh unit kerja Pondok Pesantern.</p>
             </div>
         </div>
     );
@@ -227,33 +242,37 @@ export default function LaporanPimpinan() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
                     <div className="card" style={{ padding: '2.5rem' }}>
-                        <h2 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '2rem' }}>Status Real-time</h2>
+                        <h2 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '2rem' }}>Status Real-time & Unit</h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.25rem', background: '#f8fafc', borderRadius: '18px' }}>
                                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#dcfce7', color: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <i className="fas fa-chalkboard-teacher"></i>
+                                    <i className="fas fa-university"></i>
                                 </div>
-                                <div>
-                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>SDM Pengajar</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{stats.ustadzTotal} Tenaga Aktif</div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Unit Madrasatuna (MHM/MIU)</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '10px', marginTop: '4px' }}>
+                                        <span>MHM: <strong>{stats.unitStats.MHM}</strong></span>
+                                        <span>MIU: <strong>{stats.unitStats.MIU}</strong></span>
+                                        <span>MD: <strong>{stats.unitStats.MADIN}</strong></span>
+                                    </div>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.25rem', background: '#f8fafc', borderRadius: '18px' }}>
                                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <i className="fas fa-bed"></i>
+                                    <i className="fas fa-user-check"></i>
                                 </div>
                                 <div>
-                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Okupansi Kamar</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Terisi {occupancy}%</div>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Performa Partisipasi</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{stats.pengurusHadir} Kali Giat Bulan Ini</div>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.25rem', background: '#f8fafc', borderRadius: '18px' }}>
                                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: stats.pelanggaranTotal > 10 ? '#fef2f2' : '#f0fdf4', color: stats.pelanggaranTotal > 10 ? '#dc2626' : '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <i className={`fas fa-${stats.pelanggaranTotal > 10 ? 'shield-exclamation' : 'shield-check'}`}></i>
+                                    <i className={`fas fa-${stats.pelanggaranTotal > 10 ? 'exclamation-circle' : 'check-circle'}`}></i>
                                 </div>
                                 <div>
-                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Situasi Keamanan</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{stats.pelanggaranTotal > 10 ? 'Perlu Perhatian' : 'Kondusif'}</div>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Stabilitas Keamanan</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{stats.pelanggaranTotal > 10 ? 'Butuh Atensi Khusus' : 'Sangat Kondusif'}</div>
                                 </div>
                             </div>
                         </div>
@@ -262,15 +281,15 @@ export default function LaporanPimpinan() {
                             <div style={{ position: 'relative', zIndex: 2 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                                     <div style={{ width: '32px', height: '32px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <i className="fas fa-robot"></i>
+                                        <i className="fas fa-brain"></i>
                                     </div>
-                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>AI Smart Insight</span>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>AI Executive Insight</span>
                                 </div>
                                 <p style={{ fontSize: '0.85rem', lineHeight: '1.6', fontStyle: 'italic', opacity: 0.9 }}>
                                     "{aiSuggestion}"
                                 </p>
                             </div>
-                            <i className="fas fa-brain" style={{ position: 'absolute', right: '-20px', bottom: '-20px', fontSize: '100px', opacity: 0.1, color: 'white' }}></i>
+                            <i className="fas fa-microchip" style={{ position: 'absolute', right: '-20px', bottom: '-20px', fontSize: '100px', opacity: 0.1, color: 'white' }}></i>
                         </div>
                     </div>
                 </div>
@@ -278,8 +297,8 @@ export default function LaporanPimpinan() {
 
             <div className="print-footer-corporate" style={{ display: 'none' }}>
                 <div style={{ marginTop: '50px', paddingTop: '10px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#94a3b8' }}>
-                    <span>Dicetak pada: {mounted && new Date().toLocaleString('id-ID')}</span>
-                    <span style={{ fontWeight: 700 }}>SIM-PPDS | SYSTEM INFORMASI SATU PINTU PONDOK PESANTREN DARUSSALAM LIRBOYO By. DevElz</span>
+                    <span>Laporan Otomatis: {mounted && new Date().toLocaleString('id-ID')}</span>
+                    <span style={{ fontWeight: 700 }}>SIM-PPDS EXECUTIVE DASHBOARD | DARUSSALAM LIRBOYO KEDIRI</span>
                 </div>
             </div>
 
