@@ -1159,13 +1159,13 @@ export default function DevelzyControlPage() {
                                 </div>
                             )}
 
-                            <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', overflow: 'hidden', background: 'rgba(255,255,255,0.02)' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead style={{ background: 'rgba(255,255,255,0.05)' }}>
+                            <div className="develzy-audit-table-container">
+                                <table className="develzy-table">
+                                    <thead>
                                         <tr>
-                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>User Action</th>
-                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>IP / Role</th>
-                                            <th style={{ padding: '12px 20px', fontSize: '0.75rem', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Timestamp</th>
+                                            <th>User Action</th>
+                                            <th>IP / Role</th>
+                                            <th>Timestamp</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1174,17 +1174,17 @@ export default function DevelzyControlPage() {
                                                 <td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Belum ada catatan aktivitas.</td>
                                             </tr>
                                         ) : logs.map((log, i) => (
-                                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <td style={{ padding: '12px 20px', fontSize: '0.85rem' }}>
+                                            <tr key={i}>
+                                                <td>
                                                     <div style={{ fontWeight: 700, color: '#f1f5f9' }}>{log.username} <span style={{ fontWeight: 400, opacity: 0.7 }}>melakukan</span> <span style={{ color: '#10b981' }}>{log.action}</span></div>
                                                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Target: {log.target_type} ({log.target_id || '-'})</div>
                                                     {log.details && <div style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '4px', color: '#94a3b8' }}>{log.details}</div>}
                                                 </td>
-                                                <td style={{ padding: '12px 20px', fontSize: '0.8rem' }}>
+                                                <td style={{ fontSize: '0.8rem' }}>
                                                     <div>{log.ip_address}</div>
                                                     <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 800, color: '#94a3b8' }}>{log.role}</div>
                                                 </td>
-                                                <td style={{ padding: '12px 20px', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                                                <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>
                                                     {new Date(log.timestamp).toLocaleString('id-ID')}
                                                 </td>
                                             </tr>
@@ -1247,12 +1247,7 @@ export default function DevelzyControlPage() {
                                         <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Semua user sedang offline atau sesi telah berakhir.</p>
                                     </div>
                                 ) : activeSessions.map((session, i) => (
-                                    <div key={i} style={{
-                                        padding: '1.5rem', position: 'relative',
-                                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px',
-                                        background: 'rgba(15, 23, 42, 0.4)',
-                                        transition: 'all 0.3s ease'
-                                    }}>
+                                    <div key={i} className="develzy-card" style={{ position: 'relative' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' }}>
                                             <div style={{ position: 'relative' }}>
                                                 <img
@@ -1265,13 +1260,13 @@ export default function DevelzyControlPage() {
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '1.1rem' }}>{session.fullname}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '2px 8px', background: session.role === 'admin' || session.role === 'develzy' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.05)', color: session.role === 'admin' || session.role === 'develzy' ? '#f87171' : '#94a3b8', borderRadius: '6px', textTransform: 'uppercase' }}>{session.role}</span>
+                                                    <span className="develzy-badge" style={{ background: session.role === 'admin' || session.role === 'develzy' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.05)', color: session.role === 'admin' || session.role === 'develzy' ? '#f87171' : '#94a3b8' }}>{session.role}</span>
                                                     <span style={{ fontSize: '0.75rem', color: '#475569' }}>@{session.username}</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '16px', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '10px', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div className="develzy-glass-card" style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ color: '#475569' }}><i className="fas fa-network-wired" style={{ width: '20px' }}></i> IP Address</span>
                                                 <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#f1f5f9' }}>{session.ip_address}</span>
@@ -1288,17 +1283,9 @@ export default function DevelzyControlPage() {
 
                                         <button
                                             onClick={() => handleTerminateActiveSession(session.id, session.fullname)}
+                                            className="develzy-btn-kick"
                                             style={{
-                                                width: '100%',
-                                                marginTop: '1.25rem',
-                                                border: '1px solid rgba(239, 68, 68, 0.2)',
-                                                color: '#f87171',
                                                 background: kickLoading === session.id ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
-                                                padding: '12px',
-                                                fontWeight: 800,
-                                                borderRadius: '14px',
-                                                cursor: 'pointer',
-                                                fontSize: '0.85rem'
                                             }}
                                             disabled={kickLoading === session.id || session.username === user?.username}
                                         >
@@ -1327,45 +1314,17 @@ export default function DevelzyControlPage() {
 
                             <div style={{ display: 'grid', gap: '1.5rem' }}>
                                 {rolesList.map((item, idx) => (
-                                    <div key={idx} style={{
-                                        padding: '1.5rem',
-                                        border: '1px solid rgba(255,255,255,0.08)',
-                                        borderRadius: '24px',
-                                        background: 'rgba(255,255,255,0.02)',
-                                        transition: 'all 0.2s',
-                                        display: 'grid',
-                                        gridTemplateColumns: '1fr auto',
-                                        gap: '2rem',
-                                        alignItems: 'center'
-                                    }}>
+                                    <div key={idx} className="develzy-role-card">
                                         <div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                                                <div style={{
-                                                    width: '48px',
-                                                    height: '48px',
-                                                    borderRadius: '12px',
-                                                    background: `${item.color}15`,
-                                                    color: item.color,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontWeight: 800,
-                                                    fontSize: '1.2rem'
-                                                }}>
+                                                <div className="develzy-role-icon" style={{ background: `${item.color}15`, color: item.color }}>
                                                     <i className="fas fa-user-shield"></i>
                                                 </div>
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '1.1rem' }}>{item.label}</div>
                                                     <div style={{ fontSize: '0.8rem', color: '#475569', fontFamily: 'monospace' }}>{item.role}</div>
                                                 </div>
-                                                <div style={{
-                                                    background: 'rgba(255,255,255,0.05)',
-                                                    color: '#cbd5e1',
-                                                    padding: '8px 16px',
-                                                    borderRadius: '10px',
-                                                    fontSize: '0.85rem',
-                                                    fontWeight: 700
-                                                }}>
+                                                <div style={{ background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 700 }}>
                                                     <i className="fas fa-users" style={{ marginRight: '6px', color: item.color }}></i>
                                                     {item.users} User
                                                 </div>
@@ -1385,18 +1344,7 @@ export default function DevelzyControlPage() {
                                             <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 800, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Access Protocol:</div>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                                 {item.menus.map((menu, i) => (
-                                                    <span key={i} style={{
-                                                        background: 'rgba(255,255,255,0.03)',
-                                                        border: '1px solid rgba(255,255,255,0.08)',
-                                                        color: '#94a3b8',
-                                                        padding: '6px 12px',
-                                                        borderRadius: '10px',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 700,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '8px'
-                                                    }}>
+                                                    <span key={i} className="develzy-protocol-badge">
                                                         <i className={`fas fa-${menu.access === 'view' ? 'eye-slash' : 'shield-alt'}`} style={{ color: item.color, fontSize: '0.7rem' }}></i>
                                                         {menu.name}
                                                         <span style={{ fontSize: '0.65rem', opacity: 0.6, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
@@ -1407,19 +1355,11 @@ export default function DevelzyControlPage() {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <button
-                                                className="btn"
-                                                style={{ padding: '10px 20px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                                onClick={() => handleEditRole(item)}
-                                            >
-                                                <i className="fas fa-terminal" style={{ marginRight: '8px', color: '#6366f1' }}></i> Configure
+                                            <button className="develzy-btn-action develzy-btn-action-primary" onClick={() => handleEditRole(item)}>
+                                                <i className="fas fa-terminal" style={{ color: '#6366f1' }}></i> Configure
                                             </button>
-                                            <button
-                                                className="btn"
-                                                style={{ padding: '10px 20px', fontSize: '0.8rem', background: 'transparent', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px' }}
-                                                onClick={() => handleDeleteRole(item)}
-                                            >
-                                                <i className="fas fa-trash-alt" style={{ marginRight: '8px' }}></i> Delete
+                                            <button className="develzy-btn-action develzy-btn-action-danger" onClick={() => handleDeleteRole(item)}>
+                                                <i className="fas fa-trash-alt"></i> Delete
                                             </button>
                                         </div>
                                     </div>
@@ -1530,33 +1470,30 @@ export default function DevelzyControlPage() {
                     {configModal.service?.statusKey === 'whatsapp' && (
                         <div style={{ display: 'grid', gap: '1.25rem' }}>
                             <div className="form-group">
-                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>API Gateway Interface</label>
+                                <label className="develzy-label">API Gateway Interface</label>
                                 <input
                                     type="text"
-                                    className="form-control"
-                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
+                                    className="develzy-input"
                                     placeholder="https://api.whatsapp-gateway.com/v1"
                                     value={configModal.data.whatsapp_api_url || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_api_url: e.target.value } })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Authorization Secret (Token)</label>
+                                <label className="develzy-label">Authorization Secret (Token)</label>
                                 <input
                                     type="password"
-                                    className="form-control"
-                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
+                                    className="develzy-input"
                                     placeholder="Masukkan Token API"
                                     value={configModal.data.whatsapp_token || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_token: e.target.value } })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label" style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>Default Transmission Channel (ID)</label>
+                                <label className="develzy-label">Default Transmission Channel (ID)</label>
                                 <input
                                     type="text"
-                                    className="form-control"
-                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', padding: '12px 16px', borderRadius: '12px', width: '100%' }}
+                                    className="develzy-input"
                                     placeholder="Ex: 512"
                                     value={configModal.data.whatsapp_device_id || ''}
                                     onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_device_id: e.target.value } })}
@@ -1781,28 +1718,23 @@ export default function DevelzyControlPage() {
                                             marginLeft: `${menu.depth * 24}px`,
                                             background: menu.isHeader ? 'rgba(16, 185, 129, 0.03)' : (isChecked ? 'rgba(255,255,255,0.02)' : 'transparent'),
                                             border: (isChecked || areAllChildrenChecked || isPartiallyChecked) ? `1px solid ${roleFormData.color}30` : (menu.isHeader ? '1px solid rgba(255,255,255,0.03)' : '1px solid transparent'),
-                                            marginBottom: menu.isHeader ? '6px' : '2px',
-                                            transition: 'all 0.2s'
+                                            marginBottom: menu.isHeader ? '6px' : '2px'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.85rem', flex: 1 }}>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', width: '100%', margin: 0, color: menu.isHeader ? '#f1f5f9' : '#94a3b8', fontWeight: menu.isHeader ? 800 : 600 }}>
-                                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={menu.isHeader ? areAllChildrenChecked : isChecked}
-                                                            ref={el => {
-                                                                if (el) el.indeterminate = isPartiallyChecked;
-                                                            }}
-                                                            onChange={(e) => handleToggle(e.target.checked)}
-                                                            style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
-                                                        />
-                                                    </div>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', width: '100%', margin: 0, color: menu.isHeader ? '#f8fafc' : '#94a3b8', fontWeight: menu.isHeader ? 800 : 600 }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={menu.isHeader ? areAllChildrenChecked : isChecked}
+                                                        ref={el => {
+                                                            if (el) el.indeterminate = isPartiallyChecked;
+                                                        }}
+                                                        onChange={(e) => handleToggle(e.target.checked)}
+                                                        style={{ width: '18px', height: '18px', accentColor: '#10b981', cursor: 'pointer' }}
+                                                    />
                                                     <span style={{
-                                                        fontWeight: menu.isHeader ? 800 : 500,
-                                                        color: menu.isHeader ? '#1e293b' : 'inherit',
-                                                        fontSize: menu.isHeader ? '0.8rem' : '0.9rem',
+                                                        fontSize: menu.isHeader ? '0.75rem' : '0.85rem',
                                                         textTransform: menu.isHeader ? 'uppercase' : 'none',
-                                                        letterSpacing: menu.isHeader ? '0.5px' : 'normal'
+                                                        letterSpacing: menu.isHeader ? '1px' : 'normal'
                                                     }}>
                                                         {menuName}
                                                     </span>
@@ -1812,6 +1744,7 @@ export default function DevelzyControlPage() {
                                             {isChecked && !menu.isHeader && (
                                                 <select
                                                     value={existingPerm?.access || 'view'}
+                                                    className="develzy-input"
                                                     onChange={(e) => {
                                                         const newAccess = e.target.value;
                                                         setRoleFormData({
@@ -1821,19 +1754,10 @@ export default function DevelzyControlPage() {
                                                             )
                                                         });
                                                     }}
-                                                    style={{
-                                                        padding: '4px 8px',
-                                                        borderRadius: '6px',
-                                                        border: '1px solid #cbd5e1',
-                                                        fontSize: '0.8rem',
-                                                        background: 'white',
-                                                        cursor: 'pointer',
-                                                        outline: 'none'
-                                                    }}
-                                                    onClick={(e) => e.stopPropagation()}
+                                                    style={{ width: 'auto', padding: '4px 28px 4px 10px', fontSize: '0.75rem' }}
                                                 >
-                                                    <option value="view">👁️ View Only</option>
-                                                    <option value="edit">✏️ Full Access</option>
+                                                    <option value="view">READ ONLY</option>
+                                                    <option value="edit">ROOT ACCESS</option>
                                                 </select>
                                             )}
                                         </div>
