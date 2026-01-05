@@ -5,9 +5,11 @@ import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
-import SortableTable from '@/components/SortableTable';
 import Autocomplete from '@/components/Autocomplete';
 import PremiumBanner from '@/components/PremiumBanner';
+import DataViewContainer from '@/components/DataViewContainer';
+import StatsPanel from '@/components/StatsPanel';
+import { TextInput, SelectInput, TextAreaInput } from '@/components/FormInput';
 
 export default function KesehatanPage() {
     const { canEdit, canDelete } = usePagePermission();
@@ -36,19 +38,13 @@ export default function KesehatanPage() {
     }, []);
 
     const loadEnrichedData = useCallback(async () => {
-        if (isMounted.current) setLoading(true);
         try {
-            const [res, resSantri] = await Promise.all([
-                apiCall('getData', 'GET', { type: 'kesehatan' }),
-                apiCall('getData', 'GET', { type: 'santri' })
-            ]);
+            const resSantri = await apiCall('getData', 'GET', { type: 'santri' });
             if (isMounted.current) {
-                setData(res || []);
                 setSantriOptions(resSantri || []);
             }
         } catch (e) { console.error(e); }
-        finally { if (isMounted.current) setLoading(false); }
-    }, [setData, setLoading]);
+    }, []);
 
     useEffect(() => {
         loadEnrichedData();
@@ -59,6 +55,12 @@ export default function KesehatanPage() {
         (d.kelas || '').toLowerCase().includes(search.toLowerCase()) ||
         (d.gejala || '').toLowerCase().includes(search.toLowerCase())
     );
+
+    const stats = useMemo(() => [
+        { title: 'Total Pasien', value: data.length, icon: 'fas fa-hospital-user', color: 'var(--danger)' },
+        { title: 'Dlm Perawatan', value: data.filter(d => d.status_periksa !== 'Sembuh').length, icon: 'fas fa-bed', color: 'var(--warning)' },
+        { title: 'Biaya Obat', value: formatCurrency(data.reduce((sum, d) => sum + (Number(d.biaya_obat) || 0), 0)), icon: 'fas fa-pills', color: 'var(--success)' }
+    ], [data]);
 
     const columns = [
         { key: 'nama_santri', label: 'Nama Santri', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span> },
@@ -115,60 +117,46 @@ export default function KesehatanPage() {
                 bgGradient="linear-gradient(135deg, #be123c 0%, #881337 100%)"
             />
 
+            <StatsPanel items={stats} />
+
             <DataViewContainer
                 title="Data Rekam Medis"
                 subtitle="Manajemen riwayat kesehatan dan pengobatan santri."
                 headerActions={canEdit && <button className="btn btn-primary" onClick={() => {
                     openModal();
-                    // Set default date strictly on client side action
                     setFormData(prev => ({ ...prev, mulai_sakit: new Date().toLocaleDateString('en-CA') }));
                 }}><i className="fas fa-plus"></i> Input Rekam Medis</button>}
                 searchProps={{ value: search, onChange: e => setSearch(e.target.value), placeholder: "Cari nama santri, kelas atau gejala..." }}
                 tableProps={{ columns, data: displayData, loading }}
             />
 
-            {/* Modal Input/Edit */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={editId ? "Update Rekam Medis" : "Input Rekam Medis"}
-                footer={(
-                    <>
-                        <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleSave} disabled={submitting}>
-                            {submitting ? 'Menyimpan...' : 'Simpan'}
-                        </button>
-                    </>
-                )}
+                footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</button>}
             >
-                <form onSubmit={handleSave}>
-                    <div className="form-group">
-                        <label className="form-label">Nama Santri</label>
-                        <Autocomplete
-                            options={santriOptions}
-                            value={formData.nama_santri}
-                            onChange={(val) => setFormData({ ...formData, nama_santri: val })}
-                            onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })}
-                            placeholder="Ketik nama santri untuk mencari..."
-                            required
-                        />
-                    </div>
-                    <div className="form-grid">
-                        <div className="form-group"><label className="form-label">Mulai Sakit</label><input type="date" className="form-control" value={formData.mulai_sakit} onChange={e => setFormData({ ...formData, mulai_sakit: e.target.value })} /></div>
-                        <div className="form-group">
-                            <label className="form-label">Status Periksa</label>
-                            <select className="form-control" value={formData.status_periksa} onChange={e => setFormData({ ...formData, status_periksa: e.target.value })}>
-                                <option value="Rawat Jalan">Rawat Jalan</option><option value="Rawat Inap">Rawat Inap</option><option value="Sembuh">Sudah Sembuh</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div className="form-group"><label className="form-label">Gejala & Keluhan</label><textarea className="form-control" value={formData.gejala} onChange={e => setFormData({ ...formData, gejala: e.target.value })} rows="2"></textarea></div>
-                    <div className="form-group"><label className="form-label">Obat & Tindakan</label><input type="text" className="form-control" value={formData.obat_tindakan} onChange={e => setFormData({ ...formData, obat_tindakan: e.target.value })} placeholder="Diberikan obat apa?" /></div>
-                    <div className="form-grid">
-                        <div className="form-group"><label className="form-label">Biaya Obat (Rp)</label><input type="number" className="form-control" value={formData.biaya_obat} onChange={e => setFormData({ ...formData, biaya_obat: e.target.value })} /></div>
-                        <div className="form-group"><label className="form-label">Keterangan</label><input type="text" className="form-control" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} placeholder="Catatan tambahan" /></div>
-                    </div>
-                </form>
+                <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 800 }}>Nama Santri</label>
+                    <Autocomplete
+                        options={santriOptions}
+                        value={formData.nama_santri}
+                        onChange={(val) => setFormData({ ...formData, nama_santri: val })}
+                        onSelect={(s) => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })}
+                        placeholder="Ketik nama santri untuk mencari..."
+                        required
+                    />
+                </div>
+                <div className="form-grid">
+                    <TextInput label="Mulai Sakit" type="date" value={formData.mulai_sakit} onChange={e => setFormData({ ...formData, mulai_sakit: e.target.value })} />
+                    <SelectInput label="Status Periksa" value={formData.status_periksa} onChange={e => setFormData({ ...formData, status_periksa: e.target.value })} options={['Rawat Jalan', 'Rawat Inap', 'Sembuh']} />
+                </div>
+                <TextAreaInput label="Gejala & Keluhan" value={formData.gejala} onChange={e => setFormData({ ...formData, gejala: e.target.value })} rows="2" />
+                <TextInput label="Obat & Tindakan" value={formData.obat_tindakan} onChange={e => setFormData({ ...formData, obat_tindakan: e.target.value })} placeholder="Diberikan obat apa?" />
+                <div className="form-grid">
+                    <TextInput label="Biaya Obat (Rp)" type="number" value={formData.biaya_obat} onChange={e => setFormData({ ...formData, biaya_obat: e.target.value })} icon="fas fa-coins" />
+                    <TextInput label="Keterangan" value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} placeholder="Catatan tambahan" />
+                </div>
             </Modal>
 
             {/* Modal View Detail */}
