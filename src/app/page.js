@@ -11,7 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, user, loading: authLoading, config } = useAuth();
 
-  // State: View Mode (login | register)
+  // State: View Mode (login | register | verify)
   const [view, setView] = useState('login');
 
   // State: Login
@@ -24,24 +24,20 @@ export default function LoginPage() {
   const [otpTimer, setOtpTimer] = useState(0);
 
   // Shared States
-  const [loading, setLoading] = useState(false); // UI Loader
-  const [isVerifying, setIsVerifying] = useState(false); // Logic Loader
+  const [loading, setLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
   const [cachedUsers, setCachedUsers] = useState([]);
   const hasMounted = useRef(false);
 
-  // 1. Initial Load: Check Auth & Pre-fetch Users for Instant Login
   useEffect(() => {
     hasMounted.current = true;
-
-    // Redirect if already logged in
     if (!authLoading && user) {
       router.push(getFirstAllowedPath(user));
       return;
     }
 
-    // Pre-fetch users and roles data silently
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
         const [usersData, rolesData, jabRes] = await Promise.all([
           apiCall('getData', 'GET', { type: 'users' }),
@@ -50,41 +46,31 @@ export default function LoginPage() {
         ]);
 
         if (hasMounted.current) {
-          // Attach allowedMenus from Role DB
           const enrichedUsers = (usersData || []).map(u => {
             const userRoleConfig = (rolesData || []).find(r => r.role === u.role);
             let allowedMenus = [];
             try {
-              if (userRoleConfig && userRoleConfig.menus) {
-                allowedMenus = JSON.parse(userRoleConfig.menus);
-              }
-            } catch (e) {
-              // Ignore parse error
-            }
+              if (userRoleConfig?.menus) allowedMenus = JSON.parse(userRoleConfig.menus);
+            } catch (e) { }
             return { ...u, allowedMenus };
           });
           setCachedUsers(enrichedUsers);
           setJabatansList(jabRes || []);
         }
       } catch (err) {
-        console.error("Failed to pre-fetch data:", err);
+        console.error("Fetch error:", err);
       }
     };
-
-    fetchUsers();
-
+    fetchData();
     return () => { hasMounted.current = false; };
   }, [user, authLoading, router]);
 
-  // -- LOGIC: GOOGLE LOGIN --
+  // Google Login Logic
   const onGoogleLoginSuccess = async (response) => {
     setLoading(true);
     setError('');
     try {
-      const res = await apiCall('googleLogin', 'POST', {
-        data: { idToken: response.credential }
-      });
-
+      const res = await apiCall('googleLogin', 'POST', { data: { idToken: response.credential } });
       if (res.success) {
         login(res.user);
         router.push(getFirstAllowedPath(res.user));
@@ -92,7 +78,7 @@ export default function LoginPage() {
         setError(res.message || "Gagal login via Google");
       }
     } catch (err) {
-      setError("Terjadi kesalahan sistem saat login Google");
+      setError("Kesalahan sistem login Google");
     } finally {
       setLoading(false);
     }
@@ -100,32 +86,22 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.google && view === 'login') {
-      const clientId = (Array.isArray(config) && config.find(c => c.key === 'google_client_id')?.value) || '765273331300-9h789fbe1kvd1vt5bc4ccn9ve2t1lpav.apps.googleusercontent.com';
-
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: onGoogleLoginSuccess,
+      const clientId = config?.google_client_id || '765273331300-9h789fbe1kvd1vt5bc4ccn9ve2t1lpav.apps.googleusercontent.com';
+      window.google.accounts.id.initialize({ client_id: clientId, callback: onGoogleLoginSuccess });
+      window.google.accounts.id.renderButton(document.getElementById("googleBtn"), {
+        theme: "filled_blue",
+        size: "large",
+        width: "100%",
+        shape: "pill"
       });
-
-      window.google.accounts.id.renderButton(
-        document.getElementById("googleBtn"),
-        { theme: "outline", size: "large", width: 250 }
-      );
     }
   }, [view, config]);
 
-  // -- LOGIC: LOGIN (PIN) --
   const checkPinAndLogin = async (currentPin) => {
-    // Cari user yang password_plain-nya cocok dengan PIN saat ini
     const matchedUser = cachedUsers.find(u => u.password_plain === currentPin);
-
     if (matchedUser) {
-      // MATCH FOUND!
       setIsVerifying(true);
       setLoading(true);
-      setError('');
-
-      // Sedikit delay artifisial biar user sempat lihat (UX)
       setTimeout(() => {
         login({
           id: matchedUser.id,
@@ -136,503 +112,437 @@ export default function LoginPage() {
           avatar: matchedUser.avatar || '',
           allowedMenus: matchedUser.allowedMenus || []
         });
-        const targetPath = getFirstAllowedPath({ role: matchedUser.role, allowedMenus: matchedUser.allowedMenus });
-        router.push(targetPath);
+        router.push(getFirstAllowedPath({ role: matchedUser.role, allowedMenus: matchedUser.allowedMenus }));
       }, 800);
-
       return true;
     }
-
-    // Jika panjang sudah 4 (max) tapi tidak cocok
     if (currentPin.length === 4) {
       setError('PIN Salah!');
-      // Auto clear setelah 0.5 detik
-      setTimeout(() => {
-        if (hasMounted.current) {
-          setPin('');
-          setError('');
-        }
-      }, 800);
-      return false;
+      setTimeout(() => { if (hasMounted.current) { setPin(''); setError(''); } }, 1200);
     }
-
     return false;
   };
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    // Hanya angka
-    if (!/^\d*$/.test(value)) return;
-
-    // Update State
-    if (value.length <= 4) {
-      setPin(value);
-      setError('');
-      // Check langsung jika 4 digit
-      if (cachedUsers.length > 0 && value.length === 4) {
-        checkPinAndLogin(value);
-      }
-    }
-  };
-
-  const handleManualSubmit = (e) => {
-    e.preventDefault();
-    if (pin.length === 4) {
-      checkPinAndLogin(pin);
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    // This is now handled by the Google Rendered Button automatically
-    // But we can trigger One Tap if we want
-    if (window.google) {
-      window.google.accounts.id.prompt();
-    }
-  };
-
-  // -- LOGIC: REGISTER (OTP) --
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!regData.identifier || !regData.username || !regData.fullname || !regData.jabatan) {
-      setError("Semua kolom wajib diisi (termasuk Jabatan)");
+      setError("Semua kolom wajib diisi");
       return;
     }
-
     setLoading(true);
     setError('');
-
     try {
       const res = await apiCall('sendOtp', 'POST', {
-        data: {
-          target: regData.identifier,
-          username: regData.username,
-          fullname: regData.fullname,
-          jabatan: regData.jabatan
-        }
+        data: { target: regData.identifier, username: regData.username, fullname: regData.fullname, jabatan: regData.jabatan }
       });
-
       if (res.success) {
         setOtpSent(true);
-        setLoading(false);
         setOtpTimer(60);
       }
     } catch (err) {
-      setError(err.message || "Gagal mengirim kode. Periksa nomor/token.");
+      setError(err.message || "Gagal mengirim OTP");
+    } finally {
       setLoading(false);
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!regData.otp) {
-      setError("Masukkan Kode OTP");
-      return;
-    }
-
+    if (!regData.otp) return setError("Masukkan Kode OTP");
     setLoading(true);
     setError('');
-
     try {
-      const res = await apiCall('verifyOtp', 'POST', {
-        data: {
-          target: regData.identifier,
-          otp: regData.otp
-        }
-      });
-
+      const res = await apiCall('verifyOtp', 'POST', { data: { target: regData.identifier, otp: regData.otp } });
       if (res.success) {
-        setLoading(false);
-        setRegData({ identifier: '', otp: '', name: '' });
-        setOtpSent(false);
-
-        // Auto login
         login(res.user);
         router.push(getFirstAllowedPath(res.user));
       }
     } catch (err) {
-      setError(err.message || "Kode OTP salah atau kedaluwarsa.");
+      setError(err.message || "OTP salah atau kadaluwarsa");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-root">
+    <div className="auth-wrapper">
       <style jsx global>{`
-        
-        .login-root {
+        .auth-wrapper {
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #f6f5f7;
+          background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
           font-family: 'Outfit', sans-serif;
-        }
-
-        .container {
-          background-color: #fff;
-          border-radius: 10px;
-          box-shadow: 0 14px 28px rgba(0,0,0,0.25), 
-                      0 10px 10px rgba(0,0,0,0.22);
-          position: relative;
+          color: #f8fafc;
+          padding: 20px;
           overflow: hidden;
-          width: 768px;
-          max-width: 100%;
-          min-height: 480px;
-          display: flex;
-        }
-
-        .form-container {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 0 50px;
-          height: 100%;
-          text-align: center;
-          background: white;
-          transition: all 0.6s ease-in-out;
-        }
-
-        .social-container {
-          margin: 20px 0;
-        }
-
-        .social-container a {
-          border: 1px solid #DDDDDD;
-          border-radius: 50%;
-          display: inline-flex;
-          justify-content: center;
-          align-items: center;
-          margin: 0 5px;
-          height: 40px;
-          width: 40px;
-          color: #333;
-          text-decoration: none;
-          transition: 0.3s;
-          cursor: pointer;
-        }
-
-        .social-container a:hover {
-          background: #f1f1f1;
-          border-color: #1075b9ff;
-          color: #1075b9ff;
-        }
-
-        h1 {
-          font-weight: bold;
-          margin: 0;
-          color: #333;
-        }
-
-        h2 {
-          text-align: center;
-        }
-
-        p {
-          font-size: 14px;
-          font-weight: 100;
-          line-height: 20px;
-          letter-spacing: 0.5px;
-          margin: 20px 0 30px;
-        }
-
-        span {
-          font-size: 12px;
-          color: #888;
-          margin-bottom: 15px;
-        }
-
-        .inpt {
-          background-color: #eee;
-          border: none;
-          padding: 12px 15px;
-          margin: 8px 0;
-          width: 100%;
-          border-radius: 8px;
-          font-size: 16px;
-          text-align: center;
-          letter-spacing: 4px;
-          font-weight: bold;
-          outline: none;
-          color: #333;
-        }
-        
-        .inpt:focus {
-           background-color: #e0e0e0;
-           box-shadow: 0 0 0 2px rgba(0, 132, 184, 0.21);
-        }
-
-        button.btn-login {
-          border-radius: 20px;
-          border: 1px solid #1075b9ff;
-          background-color: #1075b9ff;
-          color: #FFFFFF;
-          font-size: 12px;
-          font-weight: bold;
-          padding: 12px 45px;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          transition: transform 80ms ease-in;
-          margin-top: 15px;
-          cursor: pointer;
-        }
-
-        button.btn-login:active {
-          transform: scale(0.95);
-        }
-
-        button.btn-login:focus {
-          outline: none;
-        }
-
-        button.btn-google {
-            background: white;
-            color: #333;
-            border: 1px solid #ddd;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 1.5rem;
-        }
-        button.btn-google:hover {
-            background: #f8fafc;
-            border-color: #ccc;
-        }
-
-        button.ghost {
-          background-color: transparent;
-          border-color: #FFFFFF;
-          border-radius: 20px;
-          border: 1px solid #FFFFFF;
-          color: #FFFFFF;
-          font-size: 12px;
-          font-weight: bold;
-          padding: 12px 45px;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          cursor: pointer;
-          margin-top: 20px;
-        }
-
-        .overlay-container {
-          flex: 1;
-          background: #1075b9ff;
-          background: -webkit-linear-gradient(to right, #1075b9ff, #056696ff);
-          background: linear-gradient(to right, #1075b9ff, #056696ff);
-          background-repeat: no-repeat;
-          background-size: cover;
-          background-position: 0 0;
-          color: #FFFFFF;
           position: relative;
+        }
+
+        .auth-wrapper::before {
+          content: '';
+          position: absolute;
+          width: 600px;
+          height: 600px;
+          background: rgba(37, 99, 235, 0.1);
+          filter: blur(120px);
+          border-radius: 50%;
+          top: -100px;
+          right: -100px;
+          pointer-events: none;
+        }
+
+        .auth-wrapper::after {
+          content: '';
+          position: absolute;
+          width: 500px;
+          height: 500px;
+          background: rgba(16, 185, 129, 0.05);
+          filter: blur(100px);
+          border-radius: 50%;
+          bottom: -100px;
+          left: -100px;
+          pointer-events: none;
+        }
+
+        .auth-card {
+          background: rgba(30, 41, 59, 0.7);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 32px;
+          width: 100%;
+          max-width: 440px;
+          padding: 3rem 2.5rem;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          z-index: 10;
+          animation: cardFadeIn 0.8s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-area {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .logo-box {
+          width: 64px;
+          height: 64px;
+          background: linear-gradient(135deg, var(--primary, #2563eb) 0%, var(--accent, #3b82f6) 100%);
+          margin: 0 auto 1.5rem;
+          border-radius: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
-          flex-direction: column;
-          padding: 0 40px;
+          box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-box img {
+          width: 40px;
+          height: 40px;
+          filter: brightness(0) invert(1);
+        }
+
+        h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.025em; }
+        .subtitle { font-size: 0.95rem; color: #94a3b8; font-weight: 400; }
+
+        .form-group { margin-bottom: 1.25rem; text-align: left; }
+        .form-label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 500; padding-left: 0.5rem; }
+
+        .premium-input {
+          width: 100%;
+          background: rgba(15, 23, 42, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          padding: 12px 16px;
+          color: white;
+          font-size: 1rem;
+          transition: all 0.3s;
+          outline: none;
+        }
+
+        .premium-input:focus {
+          border-color: var(--primary, #2563eb);
+          background: rgba(15, 23, 42, 0.6);
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        }
+
+        .pin-container {
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+          margin: 1.5rem 0;
+        }
+
+        .pin-digit {
+          width: 50px;
+          height: 60px;
+          background: rgba(15, 23, 42, 0.5);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: white;
+          transition: all 0.2s;
+        }
+        
+        .pin-digit.active {
+          border-color: var(--primary, #2563eb);
+          box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+        }
+
+        button.primary-btn {
+          width: 100%;
+          background: linear-gradient(135deg, var(--primary, #2563eb) 0%, var(--accent, #3b82f6) 100%);
+          color: white;
+          border: none;
+          border-radius: 16px;
+          padding: 14px;
+          font-size: 1rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s;
+          margin-top: 1rem;
+          box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+        }
+
+        button.primary-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          filter: brightness(1.1);
+          box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        button.primary-btn:active { transform: scale(0.98); }
+        button.primary-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .divider {
+          display: flex;
+          align-items: center;
+          margin: 2rem 0;
+          color: #475569;
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .divider span { padding: 0 15px; }
+
+        .auth-footer {
+          margin-top: 2rem;
+          text-align: center;
+          font-size: 0.9rem;
+          color: #94a3b8;
+        }
+
+        .auth-toggle-link {
+          color: var(--primary, #2563eb);
+          font-weight: 700;
+          cursor: pointer;
+          margin-left: 5px;
+          text-decoration: none;
+        }
+
+        .error-toast {
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          color: #f87171;
+          padding: 10px;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          margin-bottom: 1.5rem;
           text-align: center;
         }
 
-        .error-msg { 
-          color: #ef4444; 
-          font-size: 12px; 
-          margin-top: 5px; 
-          min-height: 20px;
+        .success-toast {
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          color: #34d399;
+          padding: 10px;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          margin-bottom: 1.5rem;
+          text-align: center;
         }
-        
-        .separator {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            margin: 15px 0;
-        }
-        .separator::before, .separator::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #ddd;
-        }
-        .separator span {
-            padding: 0 10px;
-            color: #888;
-            font-size: 12px;
-            margin: 0;
+
+        /* Hide real input for PIN */
+        .hidden-pin-input {
+          position: absolute;
+          opacity: 0;
+          pointer-events: none;
         }
       `}</style>
 
-      <div className="container" >
+      <div className="auth-card">
+        <div className="logo-area">
+          <div className="logo-box">
+            <img src="/logo.png" alt="PPDS" onError={(e) => e.target.src = "https://ui-avatars.com/api/?name=L&background=transparent&color=fff"} />
+          </div>
+          <h1>{view === 'login' ? 'Selamat Datang' : 'Pendaftaran Akun'}</h1>
+          <p className="subtitle">
+            {view === 'login' ? 'Masuk ke Sistem Informasi SIM-PPDS' : 'Lengkapi data pengurus untuk mendaftar'}
+          </p>
+        </div>
+
+        {error && <div className="error-toast">{error}</div>}
+        {isVerifying && <div className="success-toast">Memverifikasi identitas...</div>}
 
         {/* VIEW: LOGIN */}
         {view === 'login' && (
-          <div className="form-container sign-in-container">
-            <form onSubmit={handleManualSubmit} style={{ width: '100%' }}>
-              <h1>Masuk</h1>
-              <div style={{ margin: '20px 0', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                <div id="googleBtn"></div>
+          <div className="animate-in">
+            <div id="googleBtn" style={{ marginBottom: '1rem' }}></div>
+
+            <div className="divider"><span>ATAU MASUK DENGAN PIN</span></div>
+
+            <div className="form-group" style={{ textAlign: 'center' }}>
+              <span className="form-label">Masukkan PIN Access (4 Digit)</span>
+              <div className="pin-container" onClick={() => document.getElementById('pinInput').focus()}>
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} className={`pin-digit ${pin.length === i ? 'active' : ''}`}>
+                    {pin[i] ? '•' : ''}
+                  </div>
+                ))}
               </div>
-
-              <div className="separator"><span>atau</span></div>
-
               <input
-                type="password"
-                placeholder="PIN Access (4 Digit)"
-                className="inpt"
+                id="pinInput"
+                type="tel"
+                className="hidden-pin-input"
                 value={pin}
-                onChange={handleInputChange}
-                maxLength={4}
-                disabled={loading || isVerifying}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setPin(val);
+                  if (val.length === 4) checkPinAndLogin(val);
+                }}
                 autoFocus
+                disabled={loading}
               />
+            </div>
 
-              <div className="error-msg">
-                {error && <span>{error}</span>}
-                {isVerifying && <span style={{ color: '#1075b9ff' }}>Memverifikasi...</span>}
-              </div>
-
-              <a href="#" onClick={e => e.preventDefault()} style={{ fontSize: '12px', color: '#333', textDecoration: 'none', marginBottom: '15px', display: 'block' }}>Lupa PIN?</a>
-
-              <button className="btn-login" type="submit" disabled={loading || isVerifying}>
-                {loading ? 'LOADING...' : 'MASUK'}
-              </button>
-            </form>
+            <div className="auth-footer">
+              Belum punya akun?
+              <span className="auth-toggle-link" onClick={() => { setView('register'); setError(''); }}>Daftar Sekarang</span>
+            </div>
           </div>
         )}
 
         {/* VIEW: REGISTER */}
-        {view === 'register' && (
-          <div className="form-container sign-in-container">
-            <form onSubmit={otpSent ? handleRegister : handleSendOtp} style={{ width: '100%' }}>
-              <h1>Daftar Akun</h1>
-              <span style={{ margin: '15px 0 25px 0', display: 'block' }}>Gunakan Email atau WhatsApp Aktif</span>
+        {view === 'register' && !otpSent && (
+          <form onSubmit={handleSendOtp} className="animate-in">
+            <div className="form-group">
+              <label className="form-label">Nama Lengkap Sesuai KTP</label>
+              <input
+                type="text"
+                className="premium-input"
+                placeholder="cth: Ahmad Fauzi"
+                value={regData.fullname}
+                onChange={e => setRegData({ ...regData, fullname: e.target.value })}
+                required
+              />
+            </div>
 
-              {!otpSent ? (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Nama Lengkap"
-                    className="inpt"
-                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left' }}
-                    value={regData.fullname}
-                    onChange={e => setRegData({ ...regData, fullname: e.target.value })}
-                    disabled={loading}
-                    autoFocus
-                  />
-                  <input
-                    type="text"
-                    placeholder="Username"
-                    className="inpt"
-                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left' }}
-                    value={regData.username}
-                    onChange={e => setRegData({ ...regData, username: e.target.value })}
-                    disabled={loading}
-                  />
-                  <select
-                    className="inpt"
-                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left', appearance: 'none' }}
-                    value={regData.jabatan}
-                    onChange={e => setRegData({ ...regData, jabatan: e.target.value })}
-                    disabled={loading}
-                  >
-                    <option value="" disabled>--- Pilih Jabatan Sesuai SK ---</option>
+            <div className="form-group">
+              <label className="form-label">Username Pilihan</label>
+              <input
+                type="text"
+                className="premium-input"
+                placeholder="cth: fauzi88"
+                value={regData.username}
+                onChange={e => setRegData({ ...regData, username: e.target.value })}
+                required
+              />
+            </div>
 
-                    {/* Group: Dewan Harian */}
-                    <optgroup label="[ Dewan Harian ]">
-                      {jabatansList.filter(j => j.kelompok === 'Dewan Harian').map((j, idx) => (
-                        <option key={`harian-${idx}`} value={j.nama_jabatan}>{j.nama_jabatan}</option>
-                      ))}
-                    </optgroup>
+            <div className="form-group">
+              <label className="form-label">Jabatan Struktural</label>
+              <select
+                className="premium-input"
+                value={regData.jabatan}
+                onChange={e => setRegData({ ...regData, jabatan: e.target.value })}
+                required
+              >
+                <option value="" disabled>Pilih Jabatan Sesuai SK</option>
+                <optgroup label="[ Dewan Harian ]">
+                  {jabatansList.filter(j => j.kelompok === 'Dewan Harian').map((j, i) => (
+                    <option key={i} value={j.nama_jabatan}>{j.nama_jabatan}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="[ Dewan Pleno ]">
+                  {jabatansList.filter(j => j.kelompok === 'Pleno').map((j, i) => (
+                    <option key={i} value={j.nama_jabatan}>{j.nama_jabatan}</option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
 
-                    {/* Group: Dewan Pleno */}
-                    <optgroup label="[ Dewan Pleno ]">
-                      {jabatansList.filter(j => j.kelompok === 'Pleno').map((j, idx) => (
-                        <option key={`pleno-${idx}`} value={j.nama_jabatan}>{j.nama_jabatan}</option>
-                      ))}
-                    </optgroup>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Email / No. WhatsApp (08...)"
-                    className="inpt"
-                    style={{ fontSize: '0.9rem', letterSpacing: 'normal', textAlign: 'left' }}
-                    value={regData.identifier}
-                    onChange={e => setRegData({ ...regData, identifier: e.target.value })}
-                    disabled={loading}
-                  />
-                  <button className="btn-login" type="submit" disabled={loading}>
-                    {loading ? 'MENGIRIM...' : 'DAFTAR & KIRIM OTP'}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div style={{ marginBottom: '15px', fontSize: '0.9rem', color: '#1075b9ff' }}>
-                    Kode dikirim ke: <strong>{regData.identifier}</strong>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="X X X X X X"
-                    className="inpt"
-                    value={regData.otp}
-                    onChange={e => setRegData({ ...regData, otp: e.target.value })}
-                    maxLength={6}
-                    disabled={loading}
-                    autoFocus
-                  />
-                  <div className="error-msg">
-                    {error && <span>{error}</span>}
-                  </div>
-                  <button className="btn-login" type="submit" disabled={loading}>
-                    {loading ? 'MEMPROSES...' : 'VERIFIKASI & DAFTAR'}
-                  </button>
-                  <button
-                    type="button"
-                    style={{ background: 'none', border: 'none', color: '#888', marginTop: '10px', fontSize: '0.8rem', cursor: 'pointer' }}
-                    onClick={() => { setOtpSent(false); setOtpTimer(0); }}
-                  >
-                    Ubah Nomor/Email?
-                  </button>
-                </>
-              )}
+            <div className="form-group">
+              <label className="form-label">WhatsApp Utama (OTP)</label>
+              <input
+                type="tel"
+                className="premium-input"
+                placeholder="cth: 08123456789"
+                value={regData.identifier}
+                onChange={e => setRegData({ ...regData, identifier: e.target.value })}
+                required
+              />
+            </div>
 
-              <div className="error-msg" style={{ marginTop: '10px' }}>
-                {error && <span>{error}</span>}
-              </div>
-            </form>
-          </div>
+            <button type="submit" className="primary-btn" disabled={loading}>
+              {loading ? 'Mengirim Kode...' : 'Daftar & Kirim OTP'}
+            </button>
+
+            <div className="auth-footer">
+              Sudah ada akun?
+              <span className="auth-toggle-link" onClick={() => { setView('login'); setError(''); }}>Masuk Ke Akun</span>
+            </div>
+          </form>
         )}
 
-        {/* Overlay Container */}
-        <div className="overlay-container">
-          <h1>{view === 'login' ? 'Halo, Khodimin!' : 'Mari Bergabung!'}</h1>
-          <p>
-            {view === 'login'
-              ? 'Selamat datang di SIM-PPDS. Masukkan PIN anda untuk Masuk.'
-              : 'Daftarkan diri anda untuk mendapatkan akses ke sistem manajemen santri.'}
-          </p>
-          <button className="ghost" id="actionBtn" onClick={() => {
-            setView(view === 'login' ? 'register' : 'login');
-            setError('');
-            setPin('');
-            setRegData({ identifier: '', otp: '', name: '' });
-            setOtpSent(false);
-          }}>
-            {view === 'login' ? 'DAFTAR AKUN' : 'SUDAH PUNYA AKUN?'}
-          </button>
-        </div>
+        {/* VIEW: VERIFY OTP */}
+        {otpSent && view === 'register' && (
+          <form onSubmit={handleRegister} className="animate-in">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <div className="subtitle" style={{ marginBottom: '1rem' }}>
+                Kode OTP telah dikirim ke nomor WhatsApp Anda: <br />
+                <strong style={{ color: 'white' }}>{regData.identifier}</strong>
+              </div>
+
+              <div className="form-group">
+                <input
+                  type="text"
+                  className="premium-input"
+                  style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem', fontWeight: 800 }}
+                  placeholder="000000"
+                  maxLength={6}
+                  value={regData.otp}
+                  onChange={e => setRegData({ ...regData, otp: e.target.value })}
+                  required
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="primary-btn" disabled={loading}>
+              {loading ? 'Verifikasi...' : 'Verifikasi & Aktivasi'}
+            </button>
+
+            <div className="auth-footer">
+              Tidak menerima kode?
+              <span className="auth-toggle-link" style={{ opacity: otpTimer > 0 ? 0.5 : 1 }} onClick={() => otpTimer === 0 && handleSendOtp()}>
+                {otpTimer > 0 ? `Kirim Ulang (${otpTimer}s)` : 'Kirim Ulang'}
+              </span>
+            </div>
+          </form>
+        )}
       </div>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => {
-          // Force re-render if loaded after mount
-          setView(v => v);
-        }}
-      />
+
+      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
     </div>
   );
 }
