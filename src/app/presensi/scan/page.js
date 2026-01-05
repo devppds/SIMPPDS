@@ -51,17 +51,22 @@ export default function QRScannerPage() {
                 throw new Error("QR Code tidak dikenali.");
             }
 
-            if (!decoded.includes("SIMPPDS_SALT_2024")) {
+            const isStatic = decoded === "STATIC_QR_TOKEN_SIMPPDS_2024_SALT";
+            const isValidDynamic = decoded.includes("SIMPPDS_SALT_2024");
+
+            if (!isStatic && !isValidDynamic) {
                 throw new Error("QR Code tidak valid.");
             }
 
-            const parts = decoded.split('_');
-            const timeKey = parts[parts.length - 1];
+            if (isValidDynamic) {
+                const parts = decoded.split('_');
+                const timeKey = parts[parts.length - 1];
 
-            // Time validation (max 5 minutes old to account for device time drift)
-            const currentTimeKey = Math.floor(Date.now() / 60000);
-            if (Math.abs(currentTimeKey - parseInt(timeKey)) > 5) {
-                throw new Error("QR Code kadaluarsa, silakan scan yang terbaru.");
+                // Time validation (max 5 minutes old to account for device time drift)
+                const currentTimeKey = Math.floor(Date.now() / 60000);
+                if (Math.abs(currentTimeKey - parseInt(timeKey)) > 5) {
+                    throw new Error("QR Code kadaluarsa, silakan scan yang terbaru.");
+                }
             }
 
             setIsScanning(false);

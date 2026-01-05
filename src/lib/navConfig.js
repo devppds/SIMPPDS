@@ -22,15 +22,34 @@ export const NAV_ITEMS = [
         icon: 'fas fa-file-signature',
         roles: ['admin', 'sekretariat'],
         submenu: [
-            { label: 'Data Santri', path: '/sekretariat/santri', icon: 'fas fa-user-graduate' },
-            { label: 'Asrama & Kamar', path: '/sekretariat/kamar', icon: 'fas fa-bed' },
+            {
+                label: 'Santri & Kamar',
+                icon: 'fas fa-users-cog',
+                submenu: [
+                    { label: 'Data Santri', path: '/sekretariat/santri', icon: 'fas fa-user-graduate' },
+                    { label: 'Asrama & Kamar', path: '/sekretariat/kamar', icon: 'fas fa-bed' }
+                ]
+            },
+            {
+                label: 'Manajemen Pengurus',
+                icon: 'fas fa-user-tie',
+                submenu: [
+                    { label: 'Data Pengurus', path: '/sekretariat/pengurus', icon: 'fas fa-user-tie' },
+                    { label: 'Absensi Pengurus', path: '/sekretariat/absen-pengurus', icon: 'fas fa-calendar-check' },
+                    { label: 'Riwayat Absensi', path: '/sekretariat/absen-pengurus/riwayat', icon: 'fas fa-history' }
+                ]
+            },
+            {
+                label: 'Presensi QR Code',
+                icon: 'fas fa-qrcode',
+                submenu: [
+                    { label: 'Scan Presensi HP', path: '/presensi/scan', icon: 'fas fa-camera' },
+                    { label: 'Display QR Dinamis', path: '/presensi/generator', icon: 'fas fa-sync' },
+                    { label: 'Display QR Statis', path: '/presensi/generator-static', icon: 'fas fa-print' },
+                    { label: 'Log Scan Kehadiran', path: '/presensi/riwayat', icon: 'fas fa-list-alt' }
+                ]
+            },
             { label: 'Layanan Sekretariat', path: '/sekretariat/layanan', icon: 'fas fa-concierge-bell' },
-            { label: 'Data Pengurus', path: '/sekretariat/pengurus', icon: 'fas fa-user-tie' },
-            { label: 'Absensi Pengurus', path: '/sekretariat/absen-pengurus', icon: 'fas fa-calendar-check' },
-            { label: 'Riwayat Absensi Pengurus', path: '/sekretariat/absen-pengurus/riwayat', icon: 'fas fa-history' },
-            { label: 'Log Scan Kehadiran', path: '/presensi/riwayat', icon: 'fas fa-history' },
-            { label: 'Display QR Presensi', path: '/presensi/generator', icon: 'fas fa-display' },
-            { label: 'Scan Presensi HP', path: '/presensi/scan', icon: 'fas fa-camera' },
             { label: 'Kalender Kerja', path: '/sekretariat/kalender', icon: 'fas fa-calendar-alt' },
             {
                 label: 'Arsiparis',
