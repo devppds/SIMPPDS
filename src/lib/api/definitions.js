@@ -1,6 +1,5 @@
 export const HEADERS_CONFIG = {
     'santri': ["stambuk_pondok", "stambuk_madrasah", "tahun_masuk", "kamar", "madrasah", "kelas", "nisn", "nik", "nama_siswa", "tempat_tanggal_lahir", "jenis_kelamin", "agama", "kewarganegaraan", "anak_ke", "alamat", "dusun_jalan", "rt_rw", "desa_kelurahan", "kecamatan", "kota_kabupaten", "provinsi", "kode_pos", "hobi", "cita_cita", "asal_sekolah", "nama_ayah", "nik_ayah", "tempat_tanggal_lahir_ayah", "pendidikan_ayah", "pekerjaan_ayah", "penghasilan_ayah", "no_telp_ayah", "nama_ibu", "nik_ibu", "tempat_tanggal_lahir_ibu", "pendidikan_ibu", "pekerjaan_ibu", "penghasilan_ibu", "no_telp_ibu", "status_santri", "tanggal_nonaktif", "alasan_nonaktif", "foto_santri", "file_kk", "file_akta", "created_at", "pindah_ke", "tahun_pindah", "tanggal_boyong", "jumlah_saudara", "pendidikan_terakhir", "no_ijazah", "tempat_lahir", "tanggal_lahir", "status_mb"],
-    'ustadz': ["foto_ustadz", "nama", "kelas", "alamat", "no_hp", "status", "tanggal_nonaktif"],
     'pengurus': ["foto_pengurus", "nama", "jabatan", "divisi", "no_hp", "tahun_mulai", "tahun_akhir", "status", "tanggal_nonaktif"],
     'keamanan': ["tanggal", "nama_santri", "jenis_pelanggaran", "poin", "takzir", "keterangan", "petugas"],
     'pendidikan': ["tanggal", "nama_santri", "kegiatan", "nilai", "kehadiran", "keterangan", "ustadz"],
@@ -16,7 +15,6 @@ export const HEADERS_CONFIG = {
     'arsip_proposal': ["tanggal", "nomor_proposal", "judul", "pengaju", "nominal", "status", "file_proposal", "keterangan"],
     'arsip_akta_tanah': ["nomor_akta", "tanggal", "lokasi", "luas_tanah", "atas_nama", "status_kepemilikan", "file_akta", "keterangan"],
     'arsip_pengurus_periode': ["periode_mulai", "periode_selesai", "nama", "jabatan", "divisi", "foto_pengurus", "keterangan"],
-    'arsip_pengajar_periode': ["periode_mulai", "periode_selesai", "nama", "kelas_ampu", "foto_pengajar", "keterangan"],
     'master_kelas': ["lembaga", "nama_kelas", "urutan"],
     'master_jabatan': ["kelompok", "nama_jabatan", "urutan"],
     'master_pembimbing': ["nama_jabatan", "urutan"],
@@ -53,13 +51,11 @@ export const HEADERS_CONFIG = {
 
 export const FILE_COLUMNS = {
     'santri': ["foto_santri"],
-    'ustadz': ["foto_ustadz"],
     'pengurus': ["foto_pengurus"],
     'arsip_surat': ["file_surat"],
     'arsip_proposal': ["file_proposal"],
     'arsip_akta_tanah': ["file_akta"],
     'arsip_pengurus_periode': ["foto_pengurus"],
-    'arsip_pengajar_periode': ["foto_pengajar"],
     'kalender_kerja': ["file_kalender"],
     'users': ["avatar"]
 };

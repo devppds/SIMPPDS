@@ -25,7 +25,6 @@ export const NAV_ITEMS = [
             { label: 'Data Santri', path: '/sekretariat/santri', icon: 'fas fa-user-graduate' },
             { label: 'Asrama & Kamar', path: '/sekretariat/kamar', icon: 'fas fa-bed' },
             { label: 'Layanan Sekretariat', path: '/sekretariat/layanan', icon: 'fas fa-concierge-bell' },
-            { label: 'Data Pengajar', path: '/sekretariat/ustadz', icon: 'fas fa-chalkboard-teacher' },
             { label: 'Data Pengurus', path: '/sekretariat/pengurus', icon: 'fas fa-user-tie' },
             { label: 'Absensi Pengurus', path: '/sekretariat/absen-pengurus', icon: 'fas fa-calendar-check' },
             { label: 'Riwayat Absensi Pengurus', path: '/sekretariat/absen-pengurus/riwayat', icon: 'fas fa-history' },
@@ -40,7 +39,6 @@ export const NAV_ITEMS = [
                     { label: 'Proposal', path: '/sekretariat/arsip/proposal', icon: 'fas fa-file-alt' },
                     { label: 'Akta Tanah', path: '/sekretariat/arsip/akta-tanah', icon: 'fas fa-file-contract' },
                     { label: 'Pengurus (Per-Periode)', path: '/sekretariat/arsip/pengurus-periode', icon: 'fas fa-users-cog' },
-                    { label: 'Pengajar (Per-Periode)', path: '/sekretariat/arsip/pengajar-periode', icon: 'fas fa-chalkboard-teacher' }
                 ]
             }
         ]
