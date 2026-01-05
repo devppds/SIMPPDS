@@ -129,9 +129,14 @@ export async function handleDeleteData(request, db, env, type, id) {
 
     // 🛡️ SECURITY: Protect DEVELZY role and users from accidental deletion
     if (type === 'users') {
-        const target = await db.prepare("SELECT role FROM users WHERE id = ?").bind(id).first();
-        if (target?.role === 'dev_elzy' && operatorRole !== 'dev_elzy') {
-            return Response.json({ error: "Otoritas Terbatas: Hanya Develzy yang bisa menghapus akun Develzy." }, { status: 403 });
+        const target = await db.prepare("SELECT role, username FROM users WHERE id = ?").bind(id).first();
+        if (target) {
+            if (target.role === 'dev_elzy' && operatorRole !== 'dev_elzy') {
+                return Response.json({ error: "Otoritas Terbatas: Hanya Develzy yang bisa menghapus akun Develzy." }, { status: 403 });
+            }
+            if (target.username === 'develzy_dash') {
+                return Response.json({ error: "Otoritas Terbatas: Akun Dashboard Develzy bersifat permanen." }, { status: 403 });
+            }
         }
     }
     if (type === 'roles') {

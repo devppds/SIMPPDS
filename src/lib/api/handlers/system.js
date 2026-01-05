@@ -176,6 +176,17 @@ export async function handleInitSystem(request, db) {
         console.error("Seeding roles failed", e);
     }
 
+    // 3.5 Seed 'develzy_dash' user if not exists (Permanent Dashboard Account)
+    try {
+        const dashUser = await db.prepare("SELECT id FROM users WHERE username = 'develzy_dash'").first();
+        if (!dashUser) {
+            await db.prepare("INSERT INTO users (username, fullname, password, password_plain, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)")
+                .bind('develzy_dash', 'DEVELZY Dashboard', '2509', '2509', 'admin').run();
+        }
+    } catch (e) {
+        console.error("Seeding develzy_dash failed", e);
+    }
+
     // 4. Seed master_pembimbing if empty
     try {
         const pembimbingCheck = await db.prepare("SELECT COUNT(*) as count FROM master_pembimbing").first();

@@ -50,6 +50,8 @@ export default function UsersTab() {
     const sortedUsers = [...usersList].sort((a, b) => {
         if (a.role === 'dev_elzy' && b.role !== 'dev_elzy') return -1;
         if (a.role !== 'dev_elzy' && b.role === 'dev_elzy') return 1;
+        if (a.username === 'develzy_dash' && b.username !== 'develzy_dash') return -1; // Dash priority 2
+        if (a.username !== 'develzy_dash' && b.username === 'develzy_dash') return 1;
         return 0;
     });
 
@@ -76,6 +78,10 @@ export default function UsersTab() {
     const handleEditUser = (user) => {
         if (user.role === 'dev_elzy' && currentUser?.role !== 'dev_elzy') {
             showToast("Otoritas Terbatas: Hanya Develzy yang bisa mengedit akun Develzy.", "error");
+            return;
+        }
+        if (user.username === 'develzy_dash' && currentUser?.role !== 'dev_elzy') {
+            showToast("Otoritas Terbatas: Hanya Develzy Inti yang bisa mengedit akun Dashboard.", "error");
             return;
         }
         setEditingUser(user);
@@ -115,6 +121,10 @@ export default function UsersTab() {
     const handleDeleteUser = (user) => {
         if (user.role === 'dev_elzy' && currentUser?.role !== 'dev_elzy') {
             showToast("Otoritas Terbatas: Akun Develzy bersifat permanen dan hanya bisa dikelola oleh Develzy.", "error");
+            return;
+        }
+        if (user.username === 'develzy_dash') {
+            showToast("Otoritas Terbatas: Akun Dashboard Develzy bersifat permanen.", "error");
             return;
         }
         if (user.username === currentUser?.username) {
@@ -197,14 +207,21 @@ export default function UsersTab() {
                                     background: '#10b981', boxShadow: '0 0 10px #10b981'
                                 }}></div>
                             )}
+                            {item.username === 'develzy_dash' && (
+                                <div style={{
+                                    position: 'absolute', top: '12px', left: '12px',
+                                    width: '8px', height: '8px', borderRadius: '50%',
+                                    background: '#2563eb', boxShadow: '0 0 10px #2563eb'
+                                }}></div>
+                            )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                                 <div style={{ position: 'relative' }}>
                                     <div className="develzy-role-icon" style={{
-                                        background: `${getRoleColor(item.role)}15`,
-                                        color: getRoleColor(item.role),
+                                        background: item.username === 'develzy_dash' ? 'rgba(37, 99, 235, 0.1)' : `${getRoleColor(item.role)}15`,
+                                        color: item.username === 'develzy_dash' ? '#2563eb' : getRoleColor(item.role),
                                         width: '50px', height: '50px', borderRadius: '14px'
                                     }}>
-                                        <i className={`fas fa-${item.role === 'dev_elzy' ? 'atom' : 'user'}`}></i>
+                                        <i className={`fas fa-${item.role === 'dev_elzy' ? 'atom' : item.username === 'develzy_dash' ? 'id-badge' : 'user'}`}></i>
                                     </div>
                                     {item.role === 'dev_elzy' && (
                                         <div style={{ position: 'absolute', top: '-5px', right: '-5px', color: '#10b981', fontSize: '0.8rem' }}>
