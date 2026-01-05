@@ -299,7 +299,7 @@ export default function RolesTab({ rolesList, onRefresh }) {
                                             targetIds.forEach(tid => {
                                                 if (!newMenus.some(m => (m.id || m.name) === tid)) {
                                                     const targetMenu = allPossibleMenus.find(am => am.uniqueId === tid);
-                                                    newMenus.push({ id: tid, name: targetMenu?.label || tid, access: 'view' });
+                                                    newMenus.push({ id: tid, name: targetMenu?.label || tid, access: 'edit' });
                                                 }
                                             });
                                         } else {
@@ -340,8 +340,8 @@ export default function RolesTab({ rolesList, onRefresh }) {
 
                                             {isChecked && !menu.isHeader && (
                                                 <select
-                                                    value={existingPerm?.access || 'view'}
-                                                    className="develzy-input"
+                                                    value={existingPerm?.access || 'edit'}
+                                                    className="form-control"
                                                     onChange={(e) => {
                                                         const newAccess = e.target.value;
                                                         setRoleFormData({
@@ -351,10 +351,21 @@ export default function RolesTab({ rolesList, onRefresh }) {
                                                             )
                                                         });
                                                     }}
-                                                    style={{ width: 'auto', padding: '4px 28px 4px 10px', fontSize: '0.75rem' }}
+                                                    style={{
+                                                        width: 'auto',
+                                                        minWidth: '140px',
+                                                        padding: '6px 12px',
+                                                        fontSize: '0.75rem',
+                                                        height: 'auto',
+                                                        cursor: 'pointer',
+                                                        background: 'rgba(255, 255, 255, 0.05)',
+                                                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                                                        color: '#f8fafc',
+                                                        borderRadius: '8px'
+                                                    }}
                                                 >
-                                                    <option value="view">READ ONLY</option>
                                                     <option value="edit">ROOT ACCESS</option>
+                                                    <option value="view">READ ONLY</option>
                                                 </select>
                                             )}
                                         </div>
