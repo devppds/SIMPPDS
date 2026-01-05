@@ -79,10 +79,11 @@ export function AuthProvider({ children }) {
             const activeSessions = await apiCall('getData', 'GET', { type: 'sessions' });
             const isStillActive = activeSessions.some(s => s.token === userData.token && s.status === 'active');
 
-            if (!isStillActive && userData.role !== 'admin' && userData.role !== 'develzy') {
+            if (!isStillActive) {
                 // If not in active list (e.g. revoked/expired), force logout
+                // This now applies to EVERYONE, including Develzy & Admin
                 logout();
-                showToast("Sesi Anda telah berakhir atau dicabut oleh administrator.", "error", 5000);
+                showToast("Sesi Anda telah berakhir atau login di perangkat lain.", "error", 5000);
             }
         } catch (e) {
             // Silently ignore or handle connection issues

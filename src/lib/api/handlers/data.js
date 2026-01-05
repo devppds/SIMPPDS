@@ -60,6 +60,22 @@ export async function handleSaveData(request, db, type, idParam) {
     const config = HEADERS_CONFIG[type];
     if (!config) return Response.json({ error: "Invalid type" }, { status: 400 });
 
+    const operatorRole = request.headers.get('x-user-role');
+    // 🛡️ SECURITY: Protect DEVELZY scope
+    if (type === 'users' && body.role === 'develzy' && operatorRole !== 'develzy') {
+        return Response.json({ error: "Otoritas Terbatas: Hanya Develzy yang bisa mendaftarkan/mengatur akun Develzy." }, { status: 403 });
+    }
+    if (type === 'roles' && (body.role === 'develzy' || idParam)) {
+        // If it's the develzy role, check if it's being modified
+        const targetId = body.id || idParam;
+        if (targetId) {
+            const target = await db.prepare("SELECT role FROM roles WHERE id = ?").bind(targetId).first();
+            if (target?.role === 'develzy') {
+                return Response.json({ error: "Otoritas Terbatas: Role Develzy bersifat permanen dan tidak bisa diubah." }, { status: 403 });
+            }
+        }
+    }
+
     // ✨ AUTO-SYNC logic
     if (type === 'presensi_pengurus' && !body.id && !idParam) {
         try {
@@ -108,6 +124,22 @@ export async function handleSaveData(request, db, type, idParam) {
 
 export async function handleDeleteData(request, db, env, type, id) {
     if (!type || !id) return Response.json({ error: "Type and ID required" }, { status: 400 });
+
+    const operatorRole = request.headers.get('x-user-role');
+
+    // 🛡️ SECURITY: Protect DEVELZY role and users from accidental deletion
+    if (type === 'users') {
+        const target = await db.prepare("SELECT role FROM users WHERE id = ?").bind(id).first();
+        if (target?.role === 'develzy' && operatorRole !== 'develzy') {
+            return Response.json({ error: "Otoritas Terbatas: Hanya Develzy yang bisa menghapus akun Develzy." }, { status: 403 });
+        }
+    }
+    if (type === 'roles') {
+        const target = await db.prepare("SELECT role FROM roles WHERE id = ?").bind(id).first();
+        if (target?.role === 'develzy') {
+            return Response.json({ error: "Otoritas Terbatas: Role Develzy bersifat permanen dan tidak bisa dihapus." }, { status: 403 });
+        }
+    }
 
     // Check for files to delete
     const cols = FILE_COLUMNS[type];

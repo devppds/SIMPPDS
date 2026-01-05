@@ -426,17 +426,28 @@
 
 .theme-dark .form-control,
 .theme-dark select:not(.develzy-input) {
-    background: rgba(2, 6, 23, 0.5) !important;
+    background: #020617 !important;
+    /* Force deep dark background */
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     color: #f1f5f9 !important;
     padding: 10px 14px !important;
-    /* Smaller padding */
     font-size: 0.9rem !important;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 16px !important;
+    padding-right: 40px !important;
 }
 
 .theme-dark select option {
-    background: #0f172a !important;
+    background-color: #0f172a !important;
     color: #f1f5f9 !important;
+}
+
+.theme-dark select option:hover,
+.theme-dark select option:focus {
+    background-color: #1e293b !important;
 }
 
 .theme-dark .form-control:focus {
