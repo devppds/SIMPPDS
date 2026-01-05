@@ -138,36 +138,39 @@ export function usePagePermission() {
         const userMenus = user.menus || user.allowedMenus; // Support both keys
         if (userMenus && Array.isArray(userMenus) && userMenus.length > 0) {
             // Find label for current path
-            const findLabel = (items, path) => {
+            // Find uniqueId/path for current pathname
+            const findUniqueId = (items, path, parentLabels = []) => {
                 if (!items || !Array.isArray(items)) return null;
                 for (const item of items) {
-                    if (item.path === path) return item.label;
+                    const currentLabels = [...parentLabels, item.label];
+                    const uniqueId = item.path || currentLabels.join(' > ');
+
+                    if (item.path === path) return { uniqueId, label: item.label };
+
                     if (item.submenu) {
-                        const found = findLabel(item.submenu, path);
+                        const found = findUniqueId(item.submenu, path, currentLabels);
                         if (found) return found;
                     }
                 }
                 return null;
             };
 
-            const currentLabel = findLabel(NAV_ITEMS, pathname);
+            const pageInfo = findUniqueId(NAV_ITEMS, pathname);
 
-            if (currentLabel) {
+            if (pageInfo) {
                 const permission = userMenus.find(m => {
-                    if (typeof m === 'string') return m === currentLabel;
-                    return m?.name === currentLabel;
+                    if (typeof m === 'string') return m === pageInfo.label;
+                    // Support both new 'id' field and legacy 'name' field (labels)
+                    return m?.id === pageInfo.uniqueId || m?.name === pageInfo.uniqueId || m?.name === pageInfo.label;
                 });
 
                 if (permission) {
-                    // If string (legacy), assume Full Access (Edit + Delete)
                     if (typeof permission === 'string') return { canEdit: true, canDelete: true };
-                    // If object, check access level
                     return {
                         canEdit: ['edit', 'full'].includes(permission.access),
                         canDelete: permission.access === 'full'
                     };
                 }
-                // If label found in NAV but not in userMenus -> No Access (but we return false here)
                 return { canEdit: false, canDelete: false };
             }
         }

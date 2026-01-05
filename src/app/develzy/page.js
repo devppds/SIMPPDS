@@ -56,16 +56,34 @@ export default function DevelzyControlPage() {
     // Generate menu options dynamically with hierarchy info
     const allPossibleMenus = React.useMemo(() => {
         let menus = [];
-        const extract = (items, depth = 0) => {
+        const extract = (items, depth = 0, parentLabels = []) => {
+            const currentLevelItems = [];
             items.forEach(item => {
-                if (item.label === 'DEVELZY Control') return; // Skip System Menu
-                menus.push({
+                if (item.label === 'DEVELZY Control') return;
+                const currentLabels = [...parentLabels, item.label];
+                const uniqueId = item.path || currentLabels.join(' > ');
+
+                const menuObj = {
                     label: item.label,
+                    uniqueId: uniqueId,
                     isHeader: !!item.submenu && item.label !== 'Dashboard',
-                    depth: depth
-                });
-                if (item.submenu) extract(item.submenu, depth + 1);
+                    depth: depth,
+                    path: item.path,
+                    childrenIds: []
+                };
+
+                menus.push(menuObj);
+                currentLevelItems.push(menuObj);
+
+                if (item.submenu) {
+                    const children = extract(item.submenu, depth + 1, currentLabels);
+                    // Collect all recursive children IDs
+                    menuObj.childrenIds = children.reduce((acc, child) => {
+                        return [...acc, child.uniqueId, ...(child.childrenIds || [])];
+                    }, []);
+                }
             });
+            return currentLevelItems;
         };
         extract(NAV_ITEMS);
         return menus;
@@ -1279,11 +1297,40 @@ export default function DevelzyControlPage() {
                         <label className="form-label">Akses Menu</label>
                         <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                             <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>Centang menu yang diizinkan:</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '5px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '5px' }}>
                                 {allPossibleMenus.map((menu, i) => {
                                     const menuName = menu.label;
-                                    const existingPerm = roleFormData.menus.find(m => m.name === menuName);
+                                    const uniqueId = menu.uniqueId;
+                                    const existingPerm = roleFormData.menus.find(m => (m.id || m.name) === uniqueId || (m.name === menuName && !m.id));
                                     const isChecked = !!existingPerm;
+
+                                    // Check if all children are checked
+                                    const areAllChildrenChecked = menu.isHeader && menu.childrenIds.length > 0 &&
+                                        menu.childrenIds.every(cid => roleFormData.menus.some(m => (m.id || m.name) === cid));
+
+                                    const isPartiallyChecked = menu.isHeader && !areAllChildrenChecked &&
+                                        menu.childrenIds.some(cid => roleFormData.menus.some(m => (m.id || m.name) === cid));
+
+                                    const handleToggle = (checked) => {
+                                        let newMenus = [...roleFormData.menus];
+
+                                        const targetIds = [uniqueId, ...menu.childrenIds];
+
+                                        if (checked) {
+                                            // Add this and all children if not already present
+                                            targetIds.forEach(tid => {
+                                                if (!newMenus.some(m => (m.id || m.name) === tid)) {
+                                                    const targetMenu = allPossibleMenus.find(am => am.uniqueId === tid);
+                                                    newMenus.push({ id: tid, name: targetMenu?.label || tid, access: 'view' });
+                                                }
+                                            });
+                                        } else {
+                                            // Remove this and all children
+                                            newMenus = newMenus.filter(m => !targetIds.includes(m.id || m.name));
+                                        }
+
+                                        setRoleFormData({ ...roleFormData, menus: newMenus });
+                                    };
 
                                     return (
                                         <div key={i} style={{
@@ -1291,38 +1338,32 @@ export default function DevelzyControlPage() {
                                             padding: '8px 12px', borderRadius: '8px',
                                             marginLeft: `${menu.depth * 20}px`,
                                             background: menu.isHeader ? '#f8fafc' : (isChecked ? '#f1f5f9' : 'transparent'),
-                                            border: isChecked ? '1px solid #cbd5e1' : (menu.isHeader ? '1px solid #f1f5f9' : '1px solid transparent'),
+                                            border: isChecked || areAllChildrenChecked || isPartiallyChecked ? '1px solid #cbd5e1' : (menu.isHeader ? '1px solid #f1f5f9' : '1px solid transparent'),
                                             marginBottom: menu.isHeader ? '4px' : '0'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', flex: 1 }}>
-                                                {!menu.isHeader ? (
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', width: '100%', margin: 0 }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', width: '100%', margin: 0 }}>
+                                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                         <input
                                                             type="checkbox"
-                                                            checked={isChecked}
-                                                            onChange={(e) => {
-                                                                const checked = e.target.checked;
-                                                                if (checked) {
-                                                                    setRoleFormData({
-                                                                        ...roleFormData,
-                                                                        menus: [...roleFormData.menus, { name: menuName, access: 'view' }]
-                                                                    });
-                                                                } else {
-                                                                    setRoleFormData({
-                                                                        ...roleFormData,
-                                                                        menus: roleFormData.menus.filter(m => m.name !== menuName)
-                                                                    });
-                                                                }
+                                                            checked={menu.isHeader ? areAllChildrenChecked : isChecked}
+                                                            ref={el => {
+                                                                if (el) el.indeterminate = isPartiallyChecked;
                                                             }}
-                                                            style={{ width: '16px', height: '16px', accentColor: '#3b82f6', cursor: 'pointer' }}
+                                                            onChange={(e) => handleToggle(e.target.checked)}
+                                                            style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
                                                         />
-                                                        {menuName}
-                                                    </label>
-                                                ) : (
-                                                    <span style={{ fontWeight: 800, color: '#1e293b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                    </div>
+                                                    <span style={{
+                                                        fontWeight: menu.isHeader ? 800 : 500,
+                                                        color: menu.isHeader ? '#1e293b' : 'inherit',
+                                                        fontSize: menu.isHeader ? '0.8rem' : '0.9rem',
+                                                        textTransform: menu.isHeader ? 'uppercase' : 'none',
+                                                        letterSpacing: menu.isHeader ? '0.5px' : 'normal'
+                                                    }}>
                                                         {menuName}
                                                     </span>
-                                                )}
+                                                </label>
                                             </div>
 
                                             {isChecked && !menu.isHeader && (
@@ -1333,7 +1374,7 @@ export default function DevelzyControlPage() {
                                                         setRoleFormData({
                                                             ...roleFormData,
                                                             menus: roleFormData.menus.map(m =>
-                                                                m.name === menuName ? { ...m, access: newAccess } : m
+                                                                (m.id || m.name) === uniqueId ? { ...m, access: newAccess } : m
                                                             )
                                                         });
                                                     }}

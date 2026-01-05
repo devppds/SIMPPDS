@@ -205,18 +205,22 @@ export const getFirstAllowedPath = (user) => {
     if (count > 1) return '/dashboard';
 
     // Helper to check if a menu item is allowed
-    const isAllowed = (item) => {
+    const isAllowed = (item, parentLabels = []) => {
         if (!item.roles && !item.path && !item.submenu) return true;
+
+        const currentLabels = [...parentLabels, item.label];
+        const uniqueId = item.path || currentLabels.join(' > ');
 
         // Check dynamic permissions
         if (user.allowedMenus && Array.isArray(user.allowedMenus) && user.allowedMenus.length > 0) {
-            const hasAccess = (label) => user.allowedMenus.some(m => {
-                if (typeof m === 'string') return m === label;
-                return m.name === label;
+            const hasAccess = user.allowedMenus.some(m => {
+                const mid = typeof m === 'string' ? m : (m.id || m.name);
+                return mid === uniqueId || mid === item.label;
             });
+
             if (item.label === 'Dashboard') return true;
-            if (hasAccess(item.label)) return true;
-            if (item.submenu) return item.submenu.some(sub => hasAccess(sub.label));
+            if (hasAccess) return true;
+            if (item.submenu) return item.submenu.some(sub => isAllowed(sub, currentLabels));
             return false;
         }
 
@@ -232,11 +236,11 @@ export const getFirstAllowedPath = (user) => {
             if (item.path) return item.path;
             if (item.submenu) {
                 for (const sub of item.submenu) {
-                    if (isAllowed(sub)) {
+                    if (isAllowed(sub, [item.label])) {
                         if (sub.path) return sub.path;
                         if (sub.submenu) {
                             for (const deep of sub.submenu) {
-                                if (isAllowed(deep) && deep.path) return deep.path;
+                                if (isAllowed(deep, [item.label, sub.label]) && deep.path) return deep.path;
                             }
                         }
                     }
@@ -252,17 +256,21 @@ export const countAllowedMenus = (user) => {
     if (!user) return 0;
     if (user.role === 'admin' || user.role === 'develzy') return 99; // Unlimited
 
-    const isAllowed = (item) => {
+    const isAllowed = (item, parentLabels = []) => {
         if (!item.roles && !item.path && !item.submenu) return true;
 
+        const currentLabels = [...parentLabels, item.label];
+        const uniqueId = item.path || currentLabels.join(' > ');
+
         if (user.allowedMenus && Array.isArray(user.allowedMenus) && user.allowedMenus.length > 0) {
-            const hasAccess = (label) => user.allowedMenus.some(m => {
-                if (typeof m === 'string') return m === label;
-                return m.name === label;
+            const hasAccess = user.allowedMenus.some(m => {
+                const mid = typeof m === 'string' ? m : (m.id || m.name);
+                return mid === uniqueId || mid === item.label;
             });
+
             if (item.label === 'Dashboard') return true;
-            if (hasAccess(item.label)) return true;
-            if (item.submenu) return item.submenu.some(sub => hasAccess(sub.label));
+            if (hasAccess) return true;
+            if (item.submenu) return item.submenu.some(sub => isAllowed(sub, currentLabels));
             return false;
         }
 
@@ -277,11 +285,11 @@ export const countAllowedMenus = (user) => {
             if (item.path) count++;
             if (item.submenu) {
                 item.submenu.forEach(sub => {
-                    if (isAllowed(sub)) {
+                    if (isAllowed(sub, [item.label])) {
                         if (sub.path) count++;
                         if (sub.submenu) {
                             sub.submenu.forEach(deep => {
-                                if (isAllowed(deep) && deep.path) count++;
+                                if (isAllowed(deep, [item.label, sub.label]) && deep.path) count++;
                             });
                         }
                     }
