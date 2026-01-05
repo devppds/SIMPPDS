@@ -1,5 +1,5 @@
 // Build trigger: update Cloudinary configuration
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { verifyAdmin } from '@/lib/api/utils';
 
 // Import Handlers
@@ -8,8 +8,6 @@ import * as StatsHandler from '@/lib/api/handlers/stats';
 import * as DataHandler from '@/lib/api/handlers/data';
 import * as FilesHandler from '@/lib/api/handlers/files';
 import * as AuthHandler from '@/lib/api/handlers/auth';
-
-export const runtime = 'edge';
 
 export async function GET(request) { return dispatcher(request); }
 export async function POST(request) { return dispatcher(request); }
@@ -30,7 +28,7 @@ async function dispatcher(request) {
     // 2. Setup Context
     let env;
     try {
-        const ctx = getRequestContext();
+        const ctx = await getCloudflareContext();
         env = ctx?.env;
     } catch (e) {
         return Response.json({ status: "error", error: "CONTEXT_ERROR", message: "Gagal mengambil Cloudflare Context.", details: e.message }, { status: 500 });

@@ -132,7 +132,16 @@ export default function LaporanPimpinan() {
                     .reduce((sum, item) => sum + (Number(item.nominal) || 0), 0);
 
                 const totalCap = (kamarData || []).reduce((sum, k) => sum + (Number(k.kapasitas) || 0), 0);
-                const activeSantri = (santri || []).filter(s => !s.status_santri || s.status_santri === 'Aktif');
+
+                // Filter santri: Only Active AND (MHM or MIU) - Explicitly excluding MD/Other
+                const activeSantri = (santri || []).filter(s => {
+                    const isActive = !s.status_santri || s.status_santri === 'Aktif';
+                    const m = (s.madrasah || '').toUpperCase();
+                    // Ensure we ONLY count MHM and MIU, excluding MD or others
+                    const isValidUnit = m.includes('MHM') || m.includes('MIU');
+                    return isActive && isValidUnit;
+                });
+
                 const sTotal = activeSantri.length;
 
                 if (totalCap > 0) setOccupancy(Math.round((sTotal / totalCap) * 100));
@@ -175,7 +184,7 @@ export default function LaporanPimpinan() {
             <div className="card-glass" style={{ height: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '2rem' }}>
                 <i className="fas fa-circle-notch fa-spin fa-3x" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}></i>
                 <h3 className="outfit" style={{ fontWeight: 800 }}>Menyusun Laporan Eksekutif...</h3>
-                <p style={{ color: 'var(--text-muted)' }}>Menganalisis data dari seluruh unit kerja Pondok Pesantern.</p>
+                <p style={{ color: 'var(--text-muted)' }}>Menganalisis data dari seluruh unit kerja Pondok Pesantren.</p>
             </div>
         </div>
     );
@@ -303,7 +312,7 @@ export default function LaporanPimpinan() {
                                     <div style={{ width: '32px', height: '32px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <i className="fas fa-brain"></i>
                                     </div>
-                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>AI Executive Insight</span>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>Wawasan Eksekutif AI</span>
                                 </div>
                                 <p style={{ fontSize: '0.85rem', lineHeight: '1.6', fontStyle: 'italic', opacity: 0.9 }}>
                                     "{aiSuggestion}"

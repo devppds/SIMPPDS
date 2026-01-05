@@ -1,9 +1,9 @@
 import { AuthProvider } from '@/lib/AuthContext';
 import { ToastProvider } from '@/lib/ToastContext';
 import ContentWrapper from '@/components/ContentWrapper';
-import './globals.css';
+import '@/app/globals.css';
 
-export const runtime = 'edge';
+
 
 export const metadata = {
   title: 'SIM-PPDS | SYSTEM INFORMASI SATU PINTU PONDOK PESANTREN DARUSSALAM LIRBOYO By. DevElz',

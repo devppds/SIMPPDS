@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap');
 
 :root {
   --primary: #0f172a;
@@ -1901,13 +1901,13 @@ textarea {
 
 @media print {
 
-  :global(.sidebar),
-  :global(header),
+  .sidebar,
+  header,
   .card-actions {
     display: none !important;
   }
 
-  :global(.content-wrapper) {
+  .content-wrapper {
     margin-left: 0 !important;
     padding: 0 !important;
   }
