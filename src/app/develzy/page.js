@@ -11,11 +11,12 @@ import FileUploader from '@/components/FileUploader';
 import { NAV_ITEMS } from '@/lib/navConfig';
 
 export default function DevelzyControlPage() {
-    const { isDevelzy, loading: authLoading, refreshConfig } = useAuth(); // Pakai isDevelzy
+    const { user, isDevelzy, loading: authLoading, refreshConfig } = useAuth(); // Pakai isDevelzy
     const router = useRouter();
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState('general');
     const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const [loading, setLoading] = useState(false);
     const isMounted = useRef(false);
 
     // Real Data State
