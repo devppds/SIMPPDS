@@ -4,9 +4,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { apiCall } from '@/lib/utils';
 
+import { useToast } from '@/lib/ToastContext';
+
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+    const { showToast } = useToast();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [config, setConfig] = useState({
@@ -74,7 +77,7 @@ export function AuthProvider({ children }) {
             if (!isStillActive && userData.role !== 'admin' && userData.role !== 'develzy') {
                 // If not in active list (e.g. revoked/expired), force logout
                 logout();
-                alert("Sesi Anda telah berakhir atau dicabut oleh administrator.");
+                showToast("Sesi Anda telah berakhir atau dicabut oleh administrator.", "error", 5000);
             }
         } catch (e) {
             // Silently ignore or handle connection issues

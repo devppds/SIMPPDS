@@ -61,6 +61,7 @@ export default function DevelzyControlPage() {
     // Sessions Management State
     const [activeSessions, setActiveSessions] = useState([]);
     const [kickLoading, setKickLoading] = useState(null);
+    const [confirmKick, setConfirmKick] = useState({ isOpen: false, sessionId: null, username: '' });
 
     const handleOpenConfig = async (service) => {
         setLoading(true);
@@ -99,12 +100,17 @@ export default function DevelzyControlPage() {
         }
     };
 
-    const handleTerminateActiveSession = async (sessionId, username) => {
-        if (!confirm(`Apakah Anda yakin ingin mengeluarkan paksa user ${username}?`)) return;
+    const handleTerminateActiveSession = (sessionId, username) => {
+        setConfirmKick({ isOpen: true, sessionId, username });
+    };
+
+    const executeTerminateSession = async () => {
+        const { sessionId, username } = confirmKick;
         setKickLoading(sessionId);
         try {
             await apiCall('terminateSession', 'POST', { data: { tokenId: sessionId, username } });
             showToast("User Berhasil Dikeluarkan!", "success");
+            setConfirmKick({ isOpen: false, sessionId: null, username: '' });
             loadData(); // Refresh list
         } catch (e) {
             showToast("Gagal mengeluarkan user: " + e.message, "error");
@@ -807,6 +813,15 @@ export default function DevelzyControlPage() {
                 onConfirm={executeDeleteRole}
                 title="Hapus Role?"
                 message={`Apakah Anda yakin ingin menghapus role "${confirmDelete.role?.label}"? Tindakan ini tidak dapat dibatalkan.`}
+            />
+            <ConfirmModal
+                isOpen={confirmKick.isOpen}
+                onClose={() => setConfirmKick({ isOpen: false, sessionId: null, username: '' })}
+                onConfirm={executeTerminateSession}
+                title="Keluarkan Paksa User?"
+                message={`Apakah Anda yakin ingin mengeluarkan paksa user ${confirmKick.username}? Sesi mereka akan segera dibatalkan.`}
+                confirmText="Ya, Keluarkan"
+                loading={kickLoading === confirmKick.sessionId}
             />
             {/* Hero Header */}
             <div className="develzy-hero" style={{

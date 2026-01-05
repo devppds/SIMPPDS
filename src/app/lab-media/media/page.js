@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall, formatDate, formatCurrency } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 import Autocomplete from '@/components/Autocomplete';
@@ -21,6 +22,7 @@ export default function MediaPage() {
     const [kasData, setKasData] = useState([]);
     const [loadingKas, setLoadingKas] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null, type: 'layanan' });
+    const [confirmSetoran, setConfirmSetoran] = useState({ open: false, balance: 0 });
     const [mounted, setMounted] = useState(false); // Fix: Hydration check
 
     // 1. Incomes (layanan_admin)
@@ -74,13 +76,16 @@ export default function MediaPage() {
         ];
     }, [mediaLayananData, kasData]);
 
+    const { showToast } = useToast();
+
     const handleSaveExpense = async (e) => {
         if (e) e.preventDefault();
         try {
             await apiCall('saveData', 'POST', { type: 'unit_lab_media_kas', data: expenseForm });
+            showToast("Biaya Pemeliharaan Berhasil Dicatat", "success");
             setIsExpenseModalOpen(false);
             loadData();
-        } catch (err) { alert(err.message); }
+        } catch (err) { showToast(err.message, "error"); }
     };
 
     const handleSetoran = async () => {
@@ -88,36 +93,43 @@ export default function MediaPage() {
         const expense = kasData.filter(k => k.tipe === 'Keluar').reduce((acc, k) => acc + (parseInt(k.nominal) || 0), 0);
         const balance = income - expense;
 
-        if (balance <= 0) return alert("Tidak ada saldo untuk disetorkan.");
+        if (balance <= 0) return showToast("Tidak ada saldo untuk disetorkan.", "warning");
+        setConfirmSetoran({ open: true, balance });
+    };
 
-        if (confirm(`Setorkan saldo Media sebesar ${formatCurrency(balance)} ke Bendahara?`)) {
-            // ... (rest of logic remains same, just ensure it uses correct values)
-            try {
-                // 1. Record in Media Kas as Setoran (Keluar)
-                await apiCall('saveData', 'POST', {
-                    type: 'unit_lab_media_kas',
-                    data: {
-                        tanggal: new Date().toISOString().split('T')[0],
-                        unit: 'Media', tipe: 'Keluar', kategori: 'Setoran ke Bendahara',
-                        nominal: balance, keterangan: 'Penyetoran pendapatan Media ke pusat',
-                        petugas: user?.fullname || 'Admin'
-                    }
-                });
+    const executeSetoran = async () => {
+        const { balance } = confirmSetoran;
+        try {
+            setLoadingKas(true);
+            // 1. Record in Media Kas as Setoran (Keluar)
+            await apiCall('saveData', 'POST', {
+                type: 'unit_lab_media_kas',
+                data: {
+                    tanggal: new Date().toISOString().split('T')[0],
+                    unit: 'Media', tipe: 'Keluar', kategori: 'Setoran ke Bendahara',
+                    nominal: balance, keterangan: 'Penyetoran pendapatan Media ke pusat',
+                    petugas: user?.fullname || 'Admin'
+                }
+            });
 
-                // 2. Record in Central Kas Unit (Masuk)
-                await apiCall('saveData', 'POST', {
-                    type: 'kas_unit',
-                    data: {
-                        tanggal: new Date().toISOString().split('T')[0],
-                        tipe: 'Masuk', kategori: 'Setoran Unit Media',
-                        nominal: balance, keterangan: 'Penerimaan biaya penyewaan Media',
-                        petugas: user?.fullname || 'Admin'
-                    }
-                });
+            // 2. Record in Central Kas Unit (Masuk)
+            await apiCall('saveData', 'POST', {
+                type: 'kas_unit',
+                data: {
+                    tanggal: new Date().toISOString().split('T')[0],
+                    tipe: 'Masuk', kategori: 'Setoran Unit Media',
+                    nominal: balance, keterangan: 'Penerimaan biaya penyewaan Media',
+                    petugas: user?.fullname || 'Admin'
+                }
+            });
 
-                loadData();
-                alert("Setoran berhasil dicatat!");
-            } catch (err) { alert(err.message); }
+            setConfirmSetoran({ open: false, balance: 0 });
+            showToast("Setoran berhasil dicatat!", "success");
+            loadData();
+        } catch (err) {
+            showToast(err.message, "error");
+        } finally {
+            setLoadingKas(false);
         }
     };
 
@@ -221,6 +233,16 @@ export default function MediaPage() {
                 <TextAreaInput label="Keterangan Service" value={expenseForm.keterangan} onChange={e => setExpenseForm({ ...expenseForm, keterangan: e.target.value })} />
             </Modal>
 
+            <ConfirmModal
+                isOpen={confirmSetoran.open}
+                onClose={() => setConfirmSetoran({ open: false, balance: 0 })}
+                onConfirm={executeSetoran}
+                title="Konfirmasi Setoran"
+                message={`Anda akan menyetorkan saldo sebesar ${formatCurrency(confirmSetoran.balance)} ke Bendahara Pusat. Lanjutkan?`}
+                type="info"
+                confirmText="Ya, Setorkan"
+                loading={loadingKas}
+            />
             <ConfirmModal
                 isOpen={confirmDelete.open}
                 onClose={() => setConfirmDelete({ open: false, id: null })}

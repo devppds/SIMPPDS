@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiCall } from '@/lib/utils';
 import { usePagePermission } from '@/lib/AuthContext';
+import { useToast } from '@/lib/ToastContext';
 import { useDataManagement } from '@/hooks/useDataManagement';
 import Modal from '@/components/Modal';
 
@@ -58,6 +59,7 @@ export default function PengurusPage() {
         }));
     }, [getAcademicYear, setFormData]);
 
+    const { showToast } = useToast();
     const [isMutasiModalOpen, setIsMutasiModalOpen] = useState(false);
     const [mutasiData, setMutasiData] = useState({ id: null, nama: '', status: 'Non-Aktif', tanggal: '' });
 
@@ -85,11 +87,12 @@ export default function PengurusPage() {
             };
 
             await apiCall('saveData', 'POST', { type: 'pengurus', id: mutasiData.id, data: updated });
+            showToast("Mutasi Berhasil!", "success");
             setIsMutasiModalOpen(false);
             loadEnrichedData();
         } catch (e) {
             console.error(e);
-            alert("Gagal melakukan mutasi");
+            showToast("Gagal melakukan mutasi: " + e.message, "error");
         } finally {
             setLoading(false);
         }

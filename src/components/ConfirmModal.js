@@ -43,39 +43,57 @@ export default function ConfirmModal({
             title={title}
             width="450px"
             footer={(
-                <>
-                    <button className="btn btn-outline" onClick={onClose} disabled={loading}>{cancelText}</button>
+                <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+                    <button className="btn btn-outline" onClick={onClose} disabled={loading} style={{ flex: 1, borderRadius: '14px' }}>{cancelText}</button>
                     <button
                         className={`btn ${type === 'danger' ? 'btn-danger' : 'btn-primary'}`}
                         onClick={onConfirm}
                         style={{
-                            background: type === 'danger' ? 'var(--danger)' : getColor(),
-                            borderColor: type === 'danger' ? 'var(--danger)' : getColor()
+                            flex: 1,
+                            borderRadius: '14px',
+                            background: type === 'danger' ? '#ef4444' : getColor(),
+                            borderColor: type === 'danger' ? '#ef4444' : getColor(),
+                            color: 'white',
+                            fontWeight: 800
                         }}
                         disabled={loading}
                     >
-                        {loading ? 'Memproses...' : confirmText}
+                        {loading ? <><i className="fas fa-circle-notch fa-spin"></i> Tunggu...</> : confirmText}
                     </button>
-                </>
+                </div>
             )}
         >
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 <div style={{
-                    width: '70px',
-                    height: '70px',
-                    borderRadius: '50%',
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '24px',
                     background: `${getColor()}15`,
                     color: getColor(),
-                    fontSize: '2rem',
+                    fontSize: '2.5rem',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 1.5rem'
+                    margin: '0 auto 1.5rem',
+                    transform: 'rotate(-5deg)',
+                    boxShadow: `0 10px 20px -5px ${getColor()}30`
                 }}>
                     <i className={`fas ${getIcon()}`}></i>
                 </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--primary-dark)' }}>{title}</h3>
-                <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>{message}</p>
+                <h3 style={{
+                    fontFamily: 'Outfit, sans-serif',
+                    fontSize: '1.5rem',
+                    fontWeight: 900,
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    letterSpacing: '-0.5px'
+                }}>{title}</h3>
+                <p style={{
+                    color: '#64748b',
+                    lineHeight: '1.6',
+                    fontSize: '1rem',
+                    fontWeight: 500
+                }}>{message}</p>
             </div>
         </Modal>
     );
