@@ -18,6 +18,7 @@ const AuditTab = dynamic(() => import('./components/AuditTab'), { loading: () =>
 const SessionsTab = dynamic(() => import('./components/SessionsTab'), { loading: () => <p className="p-4 text-slate-400">Loading Sessions...</p> });
 const RolesTab = dynamic(() => import('./components/RolesTab'), { loading: () => <p className="p-4 text-slate-400">Loading Access Control...</p> });
 const SystemTab = dynamic(() => import('./components/SystemTab'), { loading: () => <p className="p-4 text-slate-400">Loading System Core...</p> });
+const UsersTab = dynamic(() => import('./components/UsersTab'), { loading: () => <p className="p-4 text-slate-400">Loading Identity Registry...</p> });
 
 export default function DevelzyControlPage() {
     const { user, isDevelzy, loading: authLoading } = useAuth();
@@ -316,6 +317,7 @@ export default function DevelzyControlPage() {
                         {activeTab === 'audit' && <AuditTab logs={logs} pagination={logsPagination} onPageChange={(p) => setLogsPagination({ ...logsPagination, page: p })} onRefresh={loadData} />}
                         {activeTab === 'sessions' && <SessionsTab activeSessions={activeSessions} onRefresh={loadData} />}
                         {activeTab === 'roles' && <RolesTab rolesList={rolesList} onRefresh={loadData} />}
+                        {activeTab === 'users' && <UsersTab />}
                         {activeTab === 'system' && <SystemTab dbHealth={dbHealth} configs={configs} onRefresh={() => { loadData(); loadSystemStats(); }} />}
                     </div>
                 </div>

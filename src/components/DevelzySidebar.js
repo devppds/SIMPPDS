@@ -25,6 +25,7 @@ export default function DevelzySidebar() {
         { label: 'Intelijen Sistem', icon: 'fas fa-brain', path: '/develzy?tab=reality' },
         { label: 'Log Audit', icon: 'fas fa-file-contract', path: '/develzy?tab=audit' },
         { label: 'Sesi Aktif', icon: 'fas fa-users-viewfinder', path: '/develzy?tab=sessions' },
+        { label: 'Manajemen User', icon: 'fas fa-user-gear', path: '/develzy?tab=users' },
         { label: 'Manajemen Role', icon: 'fas fa-user-shield', path: '/develzy?tab=roles' },
         { label: 'Kesehatan Sistem', icon: 'fas fa-server', path: '/develzy?tab=system' },
     ];
