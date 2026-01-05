@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { useAuth } from '@/lib/AuthContext';
 import { apiCall } from '@/lib/utils';
 import { getFirstAllowedPath } from '@/lib/navConfig';
@@ -72,6 +73,44 @@ export default function LoginPage() {
     return () => { hasMounted.current = false; };
   }, [user, authLoading, router]);
 
+  // -- LOGIC: GOOGLE LOGIN --
+  const onGoogleLoginSuccess = async (response) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await apiCall('googleLogin', 'POST', {
+        data: { idToken: response.credential }
+      });
+
+      if (res.success) {
+        login(res.user);
+        router.push(getFirstAllowedPath(res.user));
+      } else {
+        setError(res.message || "Gagal login via Google");
+      }
+    } catch (err) {
+      setError("Terjadi kesalahan sistem saat login Google");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.google && view === 'login') {
+      const clientId = config.find(c => c.key === 'google_client_id')?.value || '765273331300-9h789fbe1kvd1vt5bc4ccn9ve2t1lpav.apps.googleusercontent.com';
+
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: onGoogleLoginSuccess,
+      });
+
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleBtn"),
+        { theme: "outline", size: "large", width: 250 }
+      );
+    }
+  }, [view, config]);
+
   // -- LOGIC: LOGIN (PIN) --
   const checkPinAndLogin = async (currentPin) => {
     // Cari user yang password_plain-nya cocok dengan PIN saat ini
@@ -140,9 +179,11 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    // Placeholder Logic
-    // In real implementation this would use Firebase Auth or NextAuth
-    alert("Fitur Google Login akan segera aktif! (Memerlukan konfigurasi GCP)");
+    // This is now handled by the Google Rendered Button automatically
+    // But we can trigger One Tap if we want
+    if (window.google) {
+      window.google.accounts.id.prompt();
+    }
   };
 
   // -- LOGIC: REGISTER (OTP) --
@@ -424,10 +465,7 @@ export default function LoginPage() {
             <form onSubmit={handleManualSubmit} style={{ width: '100%' }}>
               <h1>Masuk</h1>
               <div style={{ margin: '20px 0', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                <button type="button" className="btn-google" onClick={handleGoogleLogin}>
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20" alt="G" />
-                  Masuk dengan Google
-                </button>
+                <div id="googleBtn"></div>
               </div>
 
               <div className="separator"><span>atau</span></div>
@@ -537,6 +575,14 @@ export default function LoginPage() {
           </button>
         </div>
       </div>
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={() => {
+          // Force re-render if loaded after mount
+          setView(v => v);
+        }}
+      />
     </div>
   );
 }
