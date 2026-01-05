@@ -142,6 +142,7 @@ export async function handleInitSystem(request, db) {
             { key: 'smtp_port', value: '465' },
             { key: 'smtp_user', value: 'email@gmail.com' },
             { key: 'smtp_password', value: 'password_app_gmail' },
+            { key: 'google_client_id', value: '' },
             { key: 'smtp_from_email', value: 'no-reply@ppdsl.com' }
         ];
 

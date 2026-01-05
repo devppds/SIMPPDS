@@ -3,7 +3,7 @@ export const HEADERS_CONFIG = {
     'pengurus': ["foto_pengurus", "nama", "jabatan", "divisi", "no_hp", "tahun_mulai", "tahun_akhir", "status", "tanggal_nonaktif"],
     'keamanan': ["tanggal", "nama_santri", "jenis_pelanggaran", "poin", "takzir", "keterangan", "petugas"],
     'pendidikan': ["tanggal", "nama_santri", "kegiatan", "nilai", "kehadiran", "keterangan", "ustadz"],
-    'users': ["fullname", "username", "email", "password", "password_plain", "role", "avatar"],
+    'users': ["fullname", "username", "email", "password", "password_plain", "role", "avatar", "no_hp", "otp_code", "otp_expires", "is_verified"],
     'kamar': ["nama_kamar", "asrama", "kapasitas"],
     'kesehatan': ["nama_santri", "mulai_sakit", "gejala", "obat_tindakan", "status_periksa", "keterangan", "biaya_obat"],
     'izin': ["nama_santri", "kelas", "kamar", "alasan", "tanggal_mulai", "tanggal_selesai", "tipe_izin", "keperluan", "penjemput", "status", "petugas", "keterangan"],

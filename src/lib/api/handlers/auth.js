@@ -103,3 +103,50 @@ export async function handleVerifyOtp(request, db) {
         }
     });
 }
+
+export async function handleGoogleLogin(request, db) {
+    const { idToken } = await request.json();
+    if (!idToken) return Response.json({ error: "Token Google tidak valid" }, { status: 400 });
+
+    try {
+        // 1. Verify Token via Google API
+        const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+        const payload = await verifyRes.json();
+
+        if (payload.error) {
+            return Response.json({ status: "error", message: "Verifikasi Google Gagal: " + payload.error_description }, { status: 401 });
+        }
+
+        const email = payload.email;
+        const name = payload.name;
+        const googleId = payload.sub;
+
+        // 2. Check if user exists by email
+        let user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+
+        if (!user) {
+            // Auto Register if user doesn't exist? (Or reject?)
+            // For now, let's create a new user with default role
+            const username = email.split('@')[0] + '_' + Math.random().toString(36).substring(7);
+            await db.prepare("INSERT INTO users (username, fullname, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)")
+                .bind(username, name, email, 'google_auth', 'absen_pengurus').run();
+
+            user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+        }
+
+        return Response.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                fullname: user.fullname,
+                role: user.role,
+                avatar: user.avatar || payload.picture
+            }
+        });
+
+    } catch (err) {
+        return Response.json({ status: "error", message: err.message }, { status: 500 });
+    }
+}
+
