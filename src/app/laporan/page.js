@@ -137,12 +137,11 @@ export default function LaporanPimpinan() {
 
                 if (totalCap > 0) setOccupancy(Math.round((sTotal / totalCap) * 100));
 
-                const unitCount = { 'MHM': 0, 'MIU': 0, 'MADIN': 0 };
+                const unitCount = { 'MHM': 0, 'MIU': 0 };
                 activeSantri.forEach(s => {
                     const m = (s.madrasah || '').toUpperCase();
                     if (m.includes('MHM')) unitCount['MHM']++;
                     else if (m.includes('MIU')) unitCount['MIU']++;
-                    else unitCount['MADIN']++;
                 });
 
                 const finalStats = {
@@ -275,7 +274,6 @@ export default function LaporanPimpinan() {
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '10px', marginTop: '4px' }}>
                                         <span>MHM: <strong>{stats.unitStats.MHM}</strong></span>
                                         <span>MIU: <strong>{stats.unitStats.MIU}</strong></span>
-                                        <span>MD: <strong>{stats.unitStats.MADIN}</strong></span>
                                     </div>
                                 </div>
                             </div>
