@@ -38,7 +38,10 @@ export function AuthProvider({ children }) {
         const session = localStorage.getItem('sim_session');
         if (session) {
             try {
-                setUser(JSON.parse(session));
+                const parsed = JSON.parse(session);
+                setUser(parsed);
+                // Verify session still active (Optional but recommended)
+                checkSessionValidity(parsed);
             } catch (e) {
                 localStorage.removeItem('sim_session');
                 setUser(null);
@@ -48,14 +51,67 @@ export function AuthProvider({ children }) {
         }
         refreshConfig();
         setLoading(false);
+
+        // Heartbeat to keep session alive and check if revoked
+        const interval = setInterval(() => {
+            const currentSession = localStorage.getItem('sim_session');
+            if (currentSession) {
+                checkSessionValidity(JSON.parse(currentSession));
+            }
+        }, 60000); // Every 1 minute
+
+        return () => clearInterval(interval);
     }, []);
 
-    const login = (userData) => {
-        setUser(userData);
-        localStorage.setItem('sim_session', JSON.stringify(userData));
+    const checkSessionValidity = async (userData) => {
+        if (!userData || !userData.token) return;
+        try {
+            // We could add a dedicated 'checkSession' action, 
+            // but for now we can just check if any API call fails with 401/status error or check sessions table
+            const activeSessions = await apiCall('getData', 'GET', { type: 'sessions' });
+            const isStillActive = activeSessions.some(s => s.token === userData.token && s.status === 'active');
+
+            if (!isStillActive && userData.role !== 'admin' && userData.role !== 'develzy') {
+                // If not in active list (e.g. revoked/expired), force logout
+                logout();
+                alert("Sesi Anda telah berakhir atau dicabut oleh administrator.");
+            }
+        } catch (e) {
+            // Silently ignore or handle connection issues
+        }
     };
 
-    const logout = () => {
+    const login = async (userData) => {
+        const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const enrichedUser = { ...userData, token };
+
+        setUser(enrichedUser);
+        localStorage.setItem('sim_session', JSON.stringify(enrichedUser));
+
+        try {
+            await apiCall('createSession', 'POST', {
+                data: {
+                    user: enrichedUser,
+                    token,
+                    userAgent: navigator.userAgent
+                }
+            });
+        } catch (e) {
+            console.error("Failed to record session:", e);
+        }
+    };
+
+    const logout = async () => {
+        const currentUser = user || JSON.parse(localStorage.getItem('sim_session') || '{}');
+        if (currentUser.token) {
+            try {
+                await apiCall('logout', 'POST', {
+                    data: { token: currentUser.token, username: currentUser.username }
+                });
+            } catch (e) {
+                console.error("Logout report failed:", e);
+            }
+        }
         setUser(null);
         localStorage.removeItem('sim_session');
         window.location.href = '/';

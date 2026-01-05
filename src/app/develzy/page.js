@@ -57,6 +57,10 @@ export default function DevelzyControlPage() {
     const [configModal, setConfigModal] = useState({ isOpen: false, service: null, data: {} });
     const [submittingConfig, setSubmittingConfig] = useState(false);
 
+    // Sessions Management State
+    const [activeSessions, setActiveSessions] = useState([]);
+    const [kickLoading, setKickLoading] = useState(null);
+
     const handleOpenConfig = async (service) => {
         setLoading(true);
         try {
@@ -91,6 +95,20 @@ export default function DevelzyControlPage() {
             showToast("Gagal menyimpan konfigurasi: " + e.message, "error");
         } finally {
             setSubmittingConfig(false);
+        }
+    };
+
+    const handleTerminateActiveSession = async (sessionId, username) => {
+        if (!confirm(`Apakah Anda yakin ingin mengeluarkan paksa user ${username}?`)) return;
+        setKickLoading(sessionId);
+        try {
+            await apiCall('terminateSession', 'POST', { data: { tokenId: sessionId, username } });
+            showToast("User Berhasil Dikeluarkan!", "success");
+            loadData(); // Refresh list
+        } catch (e) {
+            showToast("Gagal mengeluarkan user: " + e.message, "error");
+        } finally {
+            setKickLoading(null);
         }
     };
 
@@ -215,6 +233,12 @@ export default function DevelzyControlPage() {
                         if (item.key === 'maintenance_mode') setMaintenanceMode(item.value === 'true');
                     });
                     setConfigs(newConfigs);
+                }
+            }
+            if (activeTab === 'sessions') {
+                const res = await apiCall('getActiveSessions', 'GET');
+                if (isMounted.current) {
+                    setActiveSessions(Array.isArray(res) ? res : []);
                 }
             }
             if (activeTab === 'roles' || activeTab === 'branding') { // Load for branding too strictly speaking not needed if using 'general' api logic but let's be safe
@@ -758,6 +782,7 @@ export default function DevelzyControlPage() {
         { id: 'branding', label: 'Branding & Tampilan', icon: 'fas fa-paint-brush' },
         { id: 'integration', label: 'Integrasi API', icon: 'fas fa-plug' },
         { id: 'audit', label: 'Log Audit', icon: 'fas fa-history' },
+        { id: 'sessions', label: 'Daftar Sesi Aktif', icon: 'fas fa-users-cog' },
         { id: 'roles', label: 'Manajemen Akses', icon: 'fas fa-user-shield' },
         { id: 'system', label: 'Kondisi Sistem', icon: 'fas fa-heartbeat' },
     ];
@@ -1111,6 +1136,86 @@ export default function DevelzyControlPage() {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {activeTab === 'sessions' && (
+                        <div className="animate-in">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                                <h1 className="outfit" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Daftar Sesi Aktif</h1>
+                                <button className="btn btn-secondary" onClick={loadData}><i className="fas fa-sync"></i> Refresh</button>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                                {activeSessions.length === 0 ? (
+                                    <div style={{ gridColumn: '1 / -1', padding: '4rem 2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '24px', border: '2px dashed #e2e8f0' }}>
+                                        <div style={{ width: '80px', height: '80px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                                            <i className="fas fa-users-slash" style={{ fontSize: '2.5rem', color: '#cbd5e1' }}></i>
+                                        </div>
+                                        <h3 style={{ color: '#1e293b', marginBottom: '8px' }}>Tidak Ada Sesi Aktif</h3>
+                                        <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Semua user sedang offline atau sesi telah berakhir.</p>
+                                    </div>
+                                ) : activeSessions.map((session, i) => (
+                                    <div key={i} className="card" style={{ padding: '1.5rem', position: 'relative', border: '1.5px solid #f1f5f9', transition: 'all 0.3s ease' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                                            <div style={{ position: 'relative' }}>
+                                                <img
+                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(session.fullname)}&background=random&color=fff&bold=true`}
+                                                    style={{ width: '56px', height: '56px', borderRadius: '16px', objectFit: 'cover' }}
+                                                    alt="User"
+                                                />
+                                                <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', border: '3px solid white', boxShadow: '0 0 10px rgba(16, 185, 129, 0.4)' }}></div>
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1.1rem' }}>{session.fullname}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', background: session.role === 'admin' || session.role === 'develzy' ? '#fee2e2' : '#f1f5f9', color: session.role === 'admin' || session.role === 'develzy' ? '#ef4444' : '#64748b', borderRadius: '6px', textTransform: 'uppercase' }}>{session.role}</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>@{session.username}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '16px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px', color: '#475569', border: '1px solid #f1f5f9' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ color: '#94a3b8' }}><i className="fas fa-network-wired" style={{ width: '20px' }}></i> IP Address</span>
+                                                <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#1e293b' }}>{session.ip_address}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ color: '#94a3b8' }}><i className="fas fa-sign-in-alt" style={{ width: '20px' }}></i> Login</span>
+                                                <span style={{ fontWeight: 700, color: '#1e293b' }}>{new Date(session.login_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ color: '#94a3b8' }}><i className="fas fa-heartbeat" style={{ width: '20px' }}></i> Aktivitas</span>
+                                                <span style={{ fontWeight: 700, color: '#3b82f6' }}>{new Date(session.last_active).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            className="btn btn-secondary"
+                                            onClick={() => handleTerminateActiveSession(session.id, session.fullname)}
+                                            style={{
+                                                width: '100%',
+                                                marginTop: '1.25rem',
+                                                borderColor: '#fee2e2',
+                                                color: '#ef4444',
+                                                background: kickLoading === session.id ? '#fef2f2' : 'transparent',
+                                                padding: '12px',
+                                                fontWeight: 700,
+                                                borderRadius: '12px'
+                                            }}
+                                            disabled={kickLoading === session.id || session.username === user?.username}
+                                        >
+                                            {kickLoading === session.id ? (
+                                                <><i className="fas fa-circle-notch fa-spin" style={{ marginRight: '8px' }}></i> Memproses...</>
+                                            ) : session.username === user?.username ? (
+                                                <><i className="fas fa-user-check" style={{ marginRight: '8px' }}></i> Sesi Anda</>
+                                            ) : (
+                                                <><i className="fas fa-sign-out-alt" style={{ marginRight: '8px' }}></i> Keluarkan Paksa</>
+                                            )}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 

@@ -61,6 +61,20 @@ async function dispatcher(request) {
             return await SystemHandler.handleGetAuditLogs(db, request);
         }
 
+        // Sessions
+        if (action === 'createSession') return await SystemHandler.handleCreateSession(request, db);
+        if (action === 'logout') return await SystemHandler.handleLogout(request, db);
+        if (action === 'getActiveSessions') {
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+            return await SystemHandler.handleGetActiveSessions(db);
+        }
+        if (action === 'terminateSession') {
+            const isAdmin = await verifyAdmin(request, db);
+            if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+            return await SystemHandler.handleTerminateSession(request, db);
+        }
+
         // --- Stats ---
         if (action === 'getQuickStats') return await StatsHandler.handleGetQuickStats(db);
 

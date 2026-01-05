@@ -26,6 +26,19 @@ export async function handleInitSystem(request, db) {
         updated_at TEXT
     )`);
 
+    statements.push(`CREATE TABLE IF NOT EXISTS sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token TEXT UNIQUE,
+        username TEXT,
+        fullname TEXT,
+        role TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        login_at TEXT,
+        last_active TEXT,
+        status TEXT DEFAULT 'active'
+    )`);
+
     // 2. Prepare Dynamic Table Creation Statements
     for (const [tableName, columns] of Object.entries(HEADERS_CONFIG)) {
         // Create table with ID if not exists
@@ -191,5 +204,50 @@ export async function handleUpdateConfig(request, db) {
         .bind(key, value, new Date().toISOString()).run();
 
     await logAudit(db, request, 'UPDATE_CONFIG', 'system_configs', key, `Value: ${value}`);
+    return Response.json({ success: true });
+}
+
+// ✨ Session Management
+export async function handleCreateSession(request, db) {
+    const { user, token, userAgent } = await request.json();
+    const ip = request.headers.get('cf-connecting-ip') || '127.0.0.1';
+    const now = new Date().toISOString();
+
+    await db.prepare(`INSERT INTO sessions (token, username, fullname, role, ip_address, user_agent, login_at, last_active, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`)
+        .bind(token, user.username, user.fullname, user.role, ip, userAgent, now, now).run();
+
+    await logAudit(db, request, 'LOGIN', 'users', user.username, `Session Created: ${token}`);
+    return Response.json({ success: true });
+}
+
+export async function handleLogout(request, db) {
+    const { token, username } = await request.json();
+    const now = new Date().toISOString();
+
+    await db.prepare(`UPDATE sessions SET status = 'logout', last_active = ? WHERE token = ?`)
+        .bind(now, token).run();
+
+    await logAudit(db, request, 'LOGOUT', 'users', username, `Session Ended: ${token}`);
+    return Response.json({ success: true });
+}
+
+export async function handleGetActiveSessions(db) {
+    // Also clean up old sessions (inactive > 24h)
+    const dayAgo = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
+    await db.prepare(`UPDATE sessions SET status = 'expired' WHERE status = 'active' AND last_active < ?`)
+        .bind(dayAgo).run();
+
+    const { results } = await db.prepare(`SELECT * FROM sessions WHERE status = 'active' ORDER BY last_active DESC`).all();
+    return Response.json(results || []);
+}
+
+export async function handleTerminateSession(request, db) {
+    const { tokenId, username } = await request.json();
+
+    await db.prepare(`UPDATE sessions SET status = 'revoked' WHERE id = ? OR token = ?`)
+        .bind(tokenId, tokenId).run();
+
+    await logAudit(db, request, 'KICK_USER', 'users', username, `Session Revoked (Kicked)`);
     return Response.json({ success: true });
 }
