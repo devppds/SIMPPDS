@@ -133,15 +133,18 @@ export default function LoginPage() {
       <style jsx global>{`
         .auth-wrapper {
           min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
           background: #020617;
           font-family: 'Outfit', sans-serif;
           color: #f8fafc;
-          padding: 20px;
-          overflow: hidden;
+          padding: 2rem 1rem;
           position: relative;
+          overflow-x: hidden;
+          overflow-y: auto;
         }
 
         /* Animated Background Orbs */
@@ -152,6 +155,7 @@ export default function LoginPage() {
           z-index: 1;
           opacity: 0.35;
           animation: float 20s infinite alternate;
+          pointer-events: none;
         }
 
         .orb-1 { width: 600px; height: 600px; background: rgba(37, 99, 235, 0.4); top: -200px; right: -100px; }
@@ -172,12 +176,13 @@ export default function LoginPage() {
           border-radius: 40px;
           width: 100%;
           max-width: 480px;
-          padding: 4rem 3rem;
+          padding: 3.5rem 2.5rem;
           box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.7);
           z-index: 10;
           animation: cardEntrance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
           position: relative;
           overflow: hidden;
+          margin: auto; /* Centering helper */
         }
 
         .auth-card::before {
@@ -194,20 +199,20 @@ export default function LoginPage() {
 
         .logo-area {
           text-align: center;
-          margin-bottom: 3rem;
+          margin-bottom: 2.5rem;
         }
 
         .logo-box {
-          width: 88px;
-          height: 88px;
+          width: 80px;
+          height: 80px;
           background: rgba(255, 255, 255, 0.03);
-          margin: 0 auto 2rem;
-          border-radius: 24px;
+          margin: 0 auto 1.5rem;
+          border-radius: 22px;
           display: flex;
           align-items: center;
           justify-content: center;
           border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 12px;
+          padding: 10px;
           box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4);
           transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -222,19 +227,19 @@ export default function LoginPage() {
         }
 
         h1 { 
-          font-size: 2.25rem; 
+          font-size: 2.1rem; 
           font-weight: 900; 
           margin-bottom: 0.75rem; 
-          letter-spacing: -2px; 
+          letter-spacing: -1.5px; 
           background: linear-gradient(to bottom, #fff, #94a3b8);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
         
-        .subtitle { font-size: 1rem; color: #64748b; font-weight: 500; line-height: 1.6; text-wrap: balance; }
+        .subtitle { font-size: 0.95rem; color: #64748b; font-weight: 500; line-height: 1.5; text-wrap: balance; }
 
         .form-group { margin-bottom: 1.5rem; text-align: left; position: relative; }
-        .form-label { display: block; font-size: 0.8rem; color: #475569; margin-bottom: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 0.25rem; }
+        .form-label { display: block; font-size: 0.75rem; color: #475569; margin-bottom: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 0.25rem; }
 
         .premium-input {
           width: 100%;
@@ -259,20 +264,20 @@ export default function LoginPage() {
           display: flex;
           justify-content: center;
           gap: 16px;
-          margin: 2rem 0;
+          margin: 1.5rem 0;
           cursor: pointer;
         }
 
         .pin-digit {
-          width: 64px;
-          height: 72px;
+          width: 60px;
+          height: 68px;
           background: rgba(2, 6, 23, 0.4);
           border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 20px;
+          border-radius: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 2rem;
+          font-size: 1.8rem;
           font-weight: 900;
           color: white;
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -309,7 +314,7 @@ export default function LoginPage() {
           font-weight: 800;
           cursor: pointer;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          margin-top: 1.5rem;
+          margin-top: 1rem;
           box-shadow: 0 15px 35px -10px rgba(59, 130, 246, 0.5);
           display: flex;
           align-items: center;
@@ -327,9 +332,9 @@ export default function LoginPage() {
         button.primary-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .auth-footer {
-          margin-top: 2.5rem;
+          margin-top: 2rem;
           text-align: center;
-          font-size: 0.95rem;
+          font-size: 0.9rem;
           color: #475569;
           font-weight: 500;
         }
@@ -351,7 +356,7 @@ export default function LoginPage() {
         .status-toast {
           padding: 12px 20px;
           border-radius: 16px;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           margin-bottom: 2rem;
           text-align: center;
           display: flex;
@@ -382,22 +387,27 @@ export default function LoginPage() {
 
         /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 480px) {
-          .orb-1 { width: 300px; height: 300px; }
-          .orb-2 { width: 200px; height: 200px; }
-          .orb-3 { width: 150px; height: 150px; }
+          .orb-1 { width: 300px; height: 300px; top: -150px; }
+          .orb-2 { width: 200px; height: 200px; bottom: -100px; }
+
+          .auth-wrapper {
+            padding: 1.5rem 0.75rem;
+            justify-content: flex-start; /* Better for keyboard */
+          }
 
           .auth-card {
-            padding: 3rem 1.5rem;
+            padding: 2.5rem 1.25rem;
             border-radius: 32px;
+            margin-top: 1rem;
           }
 
           h1 {
-            font-size: 1.75rem;
+            font-size: 1.7rem;
             letter-spacing: -1px;
           }
 
           .subtitle {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
           }
 
           .logo-area {
@@ -405,21 +415,21 @@ export default function LoginPage() {
           }
 
           .logo-box {
-            width: 72px;
-            height: 72px;
+            width: 70px;
+            height: 70px;
             border-radius: 20px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
           }
 
           .pin-container {
-            gap: 12px;
+            gap: 10px;
           }
 
           .pin-digit {
-            width: 50px;
-            height: 60px;
-            border-radius: 16px;
-            font-size: 1.5rem;
+            width: 48px;
+            height: 58px;
+            border-radius: 14px;
+            font-size: 1.4rem;
           }
 
           .premium-input {
@@ -433,19 +443,9 @@ export default function LoginPage() {
           }
         }
 
-        @media (max-width: 360px) {
-          .auth-wrapper {
-            padding: 10px;
-          }
-
+        @media (max-width: 340px) {
           .auth-card {
             padding: 2rem 1rem;
-          }
-
-          .logo-box {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
           }
 
           .pin-container {
@@ -456,6 +456,7 @@ export default function LoginPage() {
             width: 42px;
             height: 52px;
             border-radius: 12px;
+            font-size: 1.2rem;
           }
 
           h1 {
