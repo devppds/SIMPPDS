@@ -170,13 +170,13 @@ export default function AbsensiPengurusPage() {
     };
 
     const handleExportExcel = () => {
-        const sortedList = [...pengurusList].sort((a, b) => (a.divisi || '').localeCompare(b.divisi || ''));
+        const sortedList = [...pengurusList].sort((a, b) => (a.jabatan || '').localeCompare(b.jabatan || ''));
         const exportData = sortedList.map(p => {
             const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '' };
             return {
-                'Unit Kerja': p.divisi || '-',
+                'Jabatan / Seksi': p.jabatan || '-',
                 'Nama Pengurus': p.nama,
-                'Jabatan': p.jabatan || '-',
+                'Unit': p.divisi || '-',
                 'Total Tugas': values.tugas,
                 'Total Izin': values.izin,
                 'Total Alfa': values.alfa,
@@ -184,16 +184,16 @@ export default function AbsensiPengurusPage() {
             };
         });
 
-        exportToExcel(exportData, `Rekap_Absensi_Pengurus_${filterMonth}_${filterYear}`, ['Unit Kerja', 'Nama Pengurus', 'Jabatan', 'Total Tugas', 'Total Izin', 'Total Alfa', 'Keterangan']);
+        exportToExcel(exportData, `Rekap_Absensi_Pengurus_${filterMonth}_${filterYear}`, ['Jabatan / Seksi', 'Nama Pengurus', 'Unit', 'Total Tugas', 'Total Izin', 'Total Alfa', 'Keterangan']);
     };
 
     // Grouping logic
     const groupedData = useMemo(() => {
         const groups = {};
         pengurusList.forEach(p => {
-            const unit = p.divisi || 'Lainnya';
-            if (!groups[unit]) groups[unit] = [];
-            groups[unit].push(p);
+            const groupKey = p.jabatan || 'Lainnya';
+            if (!groups[groupKey]) groups[groupKey] = [];
+            groups[groupKey].push(p);
         });
         return groups;
     }, [pengurusList]);
@@ -249,10 +249,10 @@ export default function AbsensiPengurusPage() {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '50px' }}><i className="fas fa-spinner fa-spin fa-2x"></i><p>Memuat data...</p></div>
             ) : (
-                Object.entries(groupedData).map(([unit, list]) => (
-                    <div key={unit} style={{ marginBottom: '30px' }}>
+                Object.entries(groupedData).map(([role, list]) => (
+                    <div key={role} style={{ marginBottom: '30px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', borderLeft: '4px solid var(--primary)', paddingLeft: '15px' }}>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Unit: {unit}</h3>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Jabatan / Seksi: {role}</h3>
                             <span className="th-badge" style={{ fontSize: '0.7rem' }}>{list.length} Orang</span>
                         </div>
 
