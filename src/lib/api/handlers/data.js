@@ -1,5 +1,53 @@
+import moment from 'moment-hijri';
 import { HEADERS_CONFIG, FILE_COLUMNS } from '../definitions';
 import { logAudit, deleteCloudinaryFile } from '../utils';
+
+const HIJRI_MONTHS = [
+    'Muharram', 'Shafar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir',
+    'Rajab', 'Sya\'ban', 'Ramadhan', 'Syawal', 'Dzulqa\'dah', 'Dzulhijjah'
+];
+
+async function syncToAttendance(db, body) {
+    const { pengurus_id, nama, tanggal } = body;
+    if (!nama || !tanggal) return;
+
+    // 1. Resolve Staff ID (Attempt to match name to get correct ID from 'pengurus' table if possible)
+    const staffRecord = await db.prepare('SELECT id FROM "pengurus" WHERE "nama" = ?').bind(nama).first();
+    const effective_id = staffRecord ? staffRecord.id : pengurus_id;
+
+    if (!effective_id) return;
+
+    // 2. Validasi: Apakah sudah ada scan hari ini? (Gunakan effective_id)
+    const existingScan = await db.prepare(
+        'SELECT id FROM "presensi_pengurus" WHERE "pengurus_id" = ? AND "tanggal" = ?'
+    ).bind(effective_id, tanggal).first();
+
+    // Jika sudah ada (berarti ini scan ke-2 dst), jangan tambah hitungan tugas
+    if (existingScan) return;
+
+    // 3. Konversi tanggal ke Hijriyah
+    const m = moment(tanggal);
+    const hMonthIdx = m.iMonth();
+    const hMonth = HIJRI_MONTHS[hMonthIdx];
+    const hYear = m.iYear().toString();
+
+    // 4. Cari rekap bulanan di pengurus_absen
+    const existingAbsen = await db.prepare(
+        'SELECT id, tugas FROM "pengurus_absen" WHERE "pengurus_id" = ? AND "bulan" = ? AND "tahun" = ?'
+    ).bind(effective_id, hMonth, hYear).first();
+
+    if (existingAbsen) {
+        // Update: Tambah tugas + 1
+        await db.prepare(
+            'UPDATE "pengurus_absen" SET "tugas" = CAST("tugas" AS INTEGER) + 1 WHERE id = ?'
+        ).bind(existingAbsen.id).run();
+    } else {
+        // Create new rekap for this month
+        await db.prepare(
+            'INSERT INTO "pengurus_absen" (pengurus_id, nama_pengurus, bulan, tahun, tugas, izin, alfa, petugas) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(effective_id, nama, hMonth, hYear, 1, 0, 0, 'Auto-Scan').run();
+    }
+}
 
 export async function handleGetData(db, type) {
     if (!type || !HEADERS_CONFIG[type]) return Response.json({ error: "Invalid type" }, { status: 400 });
@@ -11,6 +59,16 @@ export async function handleSaveData(request, db, type, idParam) {
     const body = await request.json();
     const config = HEADERS_CONFIG[type];
     if (!config) return Response.json({ error: "Invalid type" }, { status: 400 });
+
+    // ✨ AUTO-SYNC logic
+    if (type === 'presensi_pengurus' && !body.id && !idParam) {
+        try {
+            await syncToAttendance(db, body);
+        } catch (e) {
+            console.error("Auto-Sync Error:", e);
+            // We don't block the scan even if sync fails
+        }
+    }
 
     const fields = [];
     const values = [];

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { apiCall } from '@/lib/utils';
+import { apiCall, exportToExcel } from '@/lib/utils';
 import { useAuth, usePagePermission } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 
@@ -11,8 +11,6 @@ import KopSurat from '@/components/KopSurat';
 import Modal from '@/components/Modal';
 import { TextInput, SelectInput, NumberInput } from '@/components/FormInput';
 import StatsPanel from '@/components/StatsPanel';
-
-
 
 const MONTHS = [
     'Muharram', 'Shafar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir',
@@ -32,15 +30,10 @@ export default function AbsensiPengurusPage() {
     const [loading, setLoading] = useState(false);
     const [pengurusList, setPengurusList] = useState([]);
     const [absenData, setAbsenData] = useState([]);
-    const [targetData, setTargetData] = useState([]);
 
     // Form State (Local tracking for inputs)
     const [formState, setFormState] = useState({});
     const [submitting, setSubmitting] = useState(false);
-
-    // Modal State
-    const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
-    const [targetForm, setTargetForm] = useState({ target: 30, applyToAll: true });
     const [mounted, setMounted] = useState(false);
 
     const isMounted = React.useRef(false);
@@ -54,10 +47,9 @@ export default function AbsensiPengurusPage() {
         if (!filterMonth || !filterYear) return;
         if (isMounted.current) setLoading(true);
         try {
-            const [resPengurus, resAbsen, resTarget] = await Promise.all([
+            const [resPengurus, resAbsen] = await Promise.all([
                 apiCall('getData', 'GET', { type: 'pengurus' }),
-                apiCall('getData', 'GET', { type: 'pengurus_absen' }),
-                apiCall('getData', 'GET', { type: 'pengurus_target' })
+                apiCall('getData', 'GET', { type: 'pengurus_absen' })
             ]);
 
             if (isMounted.current) {
@@ -65,23 +57,18 @@ export default function AbsensiPengurusPage() {
                 setPengurusList(activePengurus);
 
                 const monthAbsen = (resAbsen || []).filter(a => a.bulan === filterMonth && a.tahun === filterYear);
-                const monthTarget = (resTarget || []).filter(t => t.bulan === filterMonth && t.tahun === filterYear);
 
                 setAbsenData(monthAbsen);
-                setTargetData(monthTarget);
 
                 const initialState = {};
                 activePengurus.forEach(p => {
                     const existing = monthAbsen.find(a => Number(a.pengurus_id) === Number(p.id));
-                    const target = monthTarget.find(t => Number(t.pengurus_id) === Number(p.id));
                     initialState[p.id] = {
                         tugas: existing ? existing.tugas : 0,
                         izin: existing ? existing.izin : 0,
                         alfa: existing ? existing.alfa : 0,
                         alasan_izin: existing ? existing.alasan_izin : '',
-                        id: existing ? existing.id : null,
-                        target_tugas: target ? Number(target.target_tugas) : 0,
-                        target_id: target ? target.id : null
+                        id: existing ? existing.id : null
                     };
                 });
                 setFormState(initialState);
@@ -171,23 +158,9 @@ export default function AbsensiPengurusPage() {
                         petugas: user?.fullname || 'Sekretariat'
                     }
                 });
-
-                // 2. Save Target
-                await apiCall('saveData', 'POST', {
-                    type: 'pengurus_target',
-                    data: {
-                        id: val.target_id,
-                        pengurus_id: pid,
-                        nama_pengurus: pengurus.nama,
-                        bulan: filterMonth,
-                        tahun: filterYear,
-                        target_tugas: val.target_tugas,
-                        keterangan: `Target manual ${filterMonth} ${filterYear}`
-                    }
-                });
             }
 
-            showToast(`Data absensi dan target bulan ${filterMonth} berhasil disimpan!`, "success");
+            showToast(`Data absensi bulan ${filterMonth} berhasil disimpan!`, "success");
             loadData();
         } catch (e) {
             showToast(e.message || "Gagal menyimpan data.", "error");
@@ -196,43 +169,31 @@ export default function AbsensiPengurusPage() {
         }
     };
 
-    const handleApplyTarget = async () => {
-        if (!targetForm.target) return showToast("Masukkan jumlah target!", "warning");
-        setSubmitting(true);
-        try {
-            for (const p of pengurusList) {
-                const existing = targetData.find(t => Number(t.pengurus_id) === Number(p.id));
-                await apiCall('saveData', 'POST', {
-                    type: 'pengurus_target',
-                    data: {
-                        id: existing ? existing.id : null,
-                        pengurus_id: p.id,
-                        nama_pengurus: p.nama,
-                        bulan: filterMonth,
-                        tahun: filterYear,
-                        target_tugas: targetForm.target,
-                        keterangan: `Target otomatis ${filterMonth} ${filterYear}`
-                    }
-                });
-            }
+    const handleExportExcel = () => {
+        const sortedList = [...pengurusList].sort((a, b) => (a.divisi || '').localeCompare(b.divisi || ''));
+        const exportData = sortedList.map(p => {
+            const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '' };
+            return {
+                'Unit Kerja': p.divisi || '-',
+                'Nama Pengurus': p.nama,
+                'Jabatan': p.jabatan || '-',
+                'Total Tugas': values.tugas,
+                'Total Izin': values.izin,
+                'Total Alfa': values.alfa,
+                'Keterangan': values.alasan_izin || '-'
+            };
+        });
 
-            showToast("Target tugas bulanan berhasil diterapkan!", "success");
-            setIsTargetModalOpen(false);
-            loadData();
-        } catch (e) {
-            showToast(e.message || "Gagal menerapkan target.", "error");
-        } finally {
-            setSubmitting(false);
-        }
+        exportToExcel(exportData, `Rekap_Absensi_Pengurus_${filterMonth}_${filterYear}`, ['Unit Kerja', 'Nama Pengurus', 'Jabatan', 'Total Tugas', 'Total Izin', 'Total Alfa', 'Keterangan']);
     };
 
     // Grouping logic
     const groupedData = useMemo(() => {
         const groups = {};
         pengurusList.forEach(p => {
-            const jab = p.jabatan || 'Lainnya';
-            if (!groups[jab]) groups[jab] = [];
-            groups[jab].push(p);
+            const unit = p.divisi || 'Lainnya';
+            if (!groups[unit]) groups[unit] = [];
+            groups[unit].push(p);
         });
         return groups;
     }, [pengurusList]);
@@ -243,7 +204,7 @@ export default function AbsensiPengurusPage() {
         const totalIzin = Object.values(formState).reduce((acc, curr) => acc + Number(curr.izin || 0), 0);
         return [
             { title: 'Total Pengurus', value: totalPengurus, icon: 'fas fa-user-tie', color: 'var(--primary)' },
-            { title: 'Total Tugas Hari Ini', value: totalTugas, icon: 'fas fa-check-circle', color: 'var(--success)' },
+            { title: 'Total Tugas Bulan Ini', value: totalTugas, icon: 'fas fa-check-circle', color: 'var(--success)' },
             { title: 'Total Izin', value: totalIzin, icon: 'fas fa-envelope-open-text', color: 'var(--warning)' }
         ];
     }, [pengurusList, formState]);
@@ -273,11 +234,11 @@ export default function AbsensiPengurusPage() {
                         <button className="btn btn-outline" onClick={() => window.location.href = '/sekretariat/absen-pengurus/riwayat'} style={{ height: '45px' }}>
                             <i className="fas fa-history"></i> <span className="hide-mobile">Riwayat</span>
                         </button>
+                        <button className="btn btn-outline" onClick={handleExportExcel} style={{ height: '45px' }}>
+                            <i className="fas fa-file-excel"></i> <span className="hide-mobile">Export Excel</span>
+                        </button>
                         <button className="btn btn-primary" onClick={handleSaveAbsensi} disabled={submitting || !canEdit} style={{ height: '45px', flex: 1 }}>
                             <i className="fas fa-save"></i> <span>{submitting ? 'Menyimpan...' : 'Simpan Absensi'}</span>
-                        </button>
-                        <button className="btn btn-outline" onClick={() => setIsTargetModalOpen(true)} disabled={!canEdit} style={{ height: '45px' }}>
-                            <i className="fas fa-cog"></i> <span className="hide-mobile">Atur Target</span>
                         </button>
                     </div>
                 </div>
@@ -288,10 +249,10 @@ export default function AbsensiPengurusPage() {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '50px' }}><i className="fas fa-spinner fa-spin fa-2x"></i><p>Memuat data...</p></div>
             ) : (
-                Object.entries(groupedData).map(([jabatan, list]) => (
-                    <div key={jabatan} style={{ marginBottom: '30px' }}>
+                Object.entries(groupedData).map(([unit, list]) => (
+                    <div key={unit} style={{ marginBottom: '30px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', borderLeft: '4px solid var(--primary)', paddingLeft: '15px' }}>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>{jabatan}</h3>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Unit: {unit}</h3>
                             <span className="th-badge" style={{ fontSize: '0.7rem' }}>{list.length} Orang</span>
                         </div>
 
@@ -300,43 +261,30 @@ export default function AbsensiPengurusPage() {
                                 <thead>
                                     <tr>
                                         <th>Nama Pengurus</th>
-                                        <th width="100px">Target</th>
                                         <th width="120px">Tugas</th>
                                         <th width="120px">Izin</th>
                                         <th width="120px">Alfa</th>
                                         <th>Alasan Izin / Keterangan</th>
-                                        <th width="100px">Progres</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {list.map(p => {
-                                        const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '', target_tugas: 0 };
-                                        const targetVal = Number(values.target_tugas || 0);
-                                        const progress = targetVal > 0 ? Math.min(100, Math.round((values.tugas / targetVal) * 100)) : 0;
+                                        const values = formState[p.id] || { tugas: 0, izin: 0, alfa: 0, alasan_izin: '' };
 
                                         return (
                                             <tr key={p.id}>
                                                 <td><strong>{p.nama}</strong><br /><small style={{ color: 'var(--text-muted)' }}>{p.divisi || '-'}</small></td>
                                                 <td>
-                                                    <input type="number" className="form-control-sm target-input" value={values.target_tugas} onChange={e => handleInputChange(p.id, 'target_tugas', e.target.value)} style={{ width: '70px', textAlign: 'center', background: '#f0f9ff', fontWeight: 700, borderColor: '#bae6fd' }} />
+                                                    <input type="number" className="form-control-sm" value={values.tugas} onChange={e => handleInputChange(p.id, 'tugas', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
                                                 </td>
                                                 <td>
-                                                    <input type="number" className="form-control-sm" value={values.tugas} onChange={e => handleInputChange(p.id, 'tugas', e.target.value)} style={{ width: '70px', textAlign: 'center' }} />
+                                                    <input type="number" className="form-control-sm" value={values.izin} onChange={e => handleInputChange(p.id, 'izin', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
                                                 </td>
                                                 <td>
-                                                    <input type="number" className="form-control-sm" value={values.izin} onChange={e => handleInputChange(p.id, 'izin', e.target.value)} style={{ width: '70px', textAlign: 'center' }} />
-                                                </td>
-                                                <td>
-                                                    <input type="number" className="form-control-sm" value={values.alfa} onChange={e => handleInputChange(p.id, 'alfa', e.target.value)} style={{ width: '70px', textAlign: 'center' }} />
+                                                    <input type="number" className="form-control-sm" value={values.alfa} onChange={e => handleInputChange(p.id, 'alfa', e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
                                                 </td>
                                                 <td>
                                                     <input type="text" className="form-control-sm" placeholder="Alasan..." value={values.alasan_izin} onChange={e => handleInputChange(p.id, 'alasan_izin', e.target.value)} style={{ width: '100%' }} />
-                                                </td>
-                                                <td style={{ textAlign: 'center' }}>
-                                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, marginBottom: '4px' }}>{progress}%</div>
-                                                    <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
-                                                        <div style={{ width: `${progress}%`, height: '100%', background: progress >= 100 ? 'var(--success)' : 'var(--primary)', transition: '0.3s' }}></div>
-                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -347,22 +295,6 @@ export default function AbsensiPengurusPage() {
                     </div>
                 ))
             )}
-
-            <Modal isOpen={isTargetModalOpen} onClose={() => setIsTargetModalOpen(false)} title={`Atur Target Tugas: ${filterMonth} ${filterYear}`}>
-                <div style={{ padding: '10px' }}>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                        Tentukan berapa kali pengurus harus bertugas dalam bulan ini untuk menghitung persentase kinerja.
-                    </p>
-                    <NumberInput label="Target Tugas (Kali)" value={targetForm.target} onChange={e => setTargetForm({ ...targetForm, target: e.target.value })} required />
-                    <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                        <button className="btn btn-outline" onClick={() => setIsTargetModalOpen(false)}>Batal</button>
-                        <button className="btn btn-primary" onClick={handleApplyTarget} disabled={submitting}>
-                            {submitting ? 'Menerapkan...' : 'Terapkan Ke Semua Pengurus'}
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
         </div>
     );
 }
