@@ -215,12 +215,12 @@ export default function DevelzyControlPage() {
                     setSpeedColor('#f59e0b'); // Yellow
                     setSpeedLabel('Sistem Melambat');
                 } else {
-                    setSpeedColor('#ef4444'); // Red
+                    setSpeedColor('#a00909ff'); // Red
                     setSpeedLabel('Sangat Lambat');
                 }
             } catch (e) {
                 setSysLatency(9999);
-                setSpeedColor('#ef4444');
+                setSpeedColor('#7f0303ff');
                 setSpeedLabel('Offline / Error');
             }
         };
