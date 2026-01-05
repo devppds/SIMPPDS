@@ -156,20 +156,18 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    // Placeholder API Call for sending OTP
     try {
-      // await apiCall('sendOtp', 'POST', { target: regData.identifier });
+      const res = await apiCall('sendOtp', 'POST', {
+        data: { target: regData.identifier }
+      });
 
-      // Simulating success
-      setTimeout(() => {
+      if (res.success) {
         setOtpSent(true);
         setLoading(false);
-        setOtpTimer(60); // 60s countdown
-        alert(`Kode OTP terkirim ke ${regData.identifier}\n(Mode Demo: Kode bebas)`);
-      }, 1500);
-
+        setOtpTimer(60);
+      }
     } catch (err) {
-      setError("Gagal mengirim kode. Coba lagi.");
+      setError(err.message || "Gagal mengirim kode. Periksa nomor/token.");
       setLoading(false);
     }
   };
@@ -182,14 +180,29 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    // Placeholder Verification
-    setTimeout(() => {
-      alert("Pendaftaran Berhasil! Harap tunggu persetujuan Admin.\nRole Default: Absensi Pengurus");
+    setError('');
+
+    try {
+      const res = await apiCall('verifyOtp', 'POST', {
+        data: {
+          target: regData.identifier,
+          otp: regData.otp
+        }
+      });
+
+      if (res.success) {
+        setLoading(false);
+        setRegData({ identifier: '', otp: '', name: '' });
+        setOtpSent(false);
+
+        // Auto login
+        login(res.user);
+        router.push(getFirstAllowedPath(res.user));
+      }
+    } catch (err) {
+      setError(err.message || "Kode OTP salah atau kedaluwarsa.");
       setLoading(false);
-      setView('login');
-      setRegData({ identifier: '', otp: '', name: '' });
-      setOtpSent(false);
-    }, 1500);
+    }
   };
 
   return (

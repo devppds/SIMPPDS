@@ -7,6 +7,7 @@ import * as SystemHandler from '@/lib/api/handlers/system';
 import * as StatsHandler from '@/lib/api/handlers/stats';
 import * as DataHandler from '@/lib/api/handlers/data';
 import * as FilesHandler from '@/lib/api/handlers/files';
+import * as AuthHandler from '@/lib/api/handlers/auth';
 
 export const runtime = 'edge';
 
@@ -60,6 +61,10 @@ async function dispatcher(request) {
             if (!isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
             return await SystemHandler.handleGetAuditLogs(db, request);
         }
+
+        // --- Auth & OTP ---
+        if (action === 'sendOtp') return await AuthHandler.handleSendOtp(request, db);
+        if (action === 'verifyOtp') return await AuthHandler.handleVerifyOtp(request, db);
 
         // Sessions
         if (action === 'createSession') return await SystemHandler.handleCreateSession(request, db);
