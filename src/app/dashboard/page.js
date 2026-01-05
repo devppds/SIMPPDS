@@ -115,6 +115,54 @@ export default function DashboardPage() {
                 </div>
             </div>
 
+            {/* ✨ Quick Access Scanner */}
+            {(hasAccess('Scan Presensi HP') || hasAccess('Presensi QR Code') || role === 'keamanan' || role === 'sekretariat') && (
+                <Link href="/presensi/scan" style={{ textDecoration: 'none' }}>
+                    <div className="card hover-scale" style={{
+                        marginBottom: '3rem',
+                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                        color: 'white',
+                        border: 'none',
+                        boxShadow: '0 20px 25px -5px rgba(37, 99, 235, 0.4), 0 8px 10px -6px rgba(37, 99, 235, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '2rem 3rem',
+                        cursor: 'pointer'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                            <div style={{
+                                width: '80px', height: '80px',
+                                background: 'rgba(255,255,255,0.2)',
+                                borderRadius: '24px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '2.5rem',
+                                color: 'white'
+                            }}>
+                                <i className="fas fa-qrcode"></i>
+                            </div>
+                            <div>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '6px', color: 'white' }}>Scan Presensi Cepat</h2>
+                                <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9, fontWeight: 500 }}>
+                                    Klik di sini untuk membuka pemindai kartu santri secara instan.
+                                </p>
+                            </div>
+                        </div>
+                        <div style={{
+                            background: 'white', color: '#2563eb',
+                            width: '60px', height: '60px',
+                            borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '1.5rem',
+                            fontWeight: 'bold',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}>
+                            <i className="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </Link>
+            )}
+
             {statsItems.length > 0 ? (
                 <StatsPanel items={statsItems} />
             ) : (
