@@ -68,6 +68,10 @@ export default function UsersTab() {
     };
 
     const handleEditUser = (user) => {
+        if (user.role === 'develzy' && currentUser?.role !== 'develzy') {
+            showToast("Otoritas Terbatas: Hanya Develzy yang bisa mengedit akun Develzy.", "error");
+            return;
+        }
         setEditingUser(user);
         setUserFormData({
             fullname: user.fullname,
@@ -103,6 +107,10 @@ export default function UsersTab() {
     };
 
     const handleDeleteUser = (user) => {
+        if (user.role === 'develzy' && currentUser?.role !== 'develzy') {
+            showToast("Otoritas Terbatas: Akun Develzy bersifat permanen dan hanya bisa dikelola oleh Develzy.", "error");
+            return;
+        }
         if (user.username === currentUser?.username) {
             showToast("Anda tidak bisa menghapus akun Anda sendiri!", "warning");
             return;
@@ -303,9 +311,11 @@ export default function UsersTab() {
                             value={userFormData.role}
                             onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
                         >
-                            {rolesList.map(r => (
-                                <option key={r.id} value={r.role}>{r.label} ({r.role})</option>
-                            ))}
+                            {rolesList
+                                .filter(r => r.role !== 'develzy' || currentUser?.role === 'develzy')
+                                .map(r => (
+                                    <option key={r.id} value={r.role}>{r.label} ({r.role})</option>
+                                ))}
                         </select>
                     </div>
                     <div className="form-group">

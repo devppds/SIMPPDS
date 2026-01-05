@@ -173,10 +173,22 @@ export default function RolesTab({ rolesList, onRefresh }) {
                             </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <button className="develzy-btn-action develzy-btn-action-primary" onClick={() => handleEditRole(item)}>
-                                <i className="fas fa-terminal" style={{ color: '#6366f1' }}></i> Configure
+                            <button
+                                className="develzy-btn-action develzy-btn-action-primary"
+                                onClick={() => handleEditRole(item)}
+                                disabled={item.role === 'develzy'}
+                                style={{ opacity: item.role === 'develzy' ? 0.3 : 1, cursor: item.role === 'develzy' ? 'not-allowed' : 'pointer' }}
+                                title={item.role === 'develzy' ? "Core Protocol cannot be modified" : ""}
+                            >
+                                <i className="fas fa-terminal" style={{ color: item.role === 'develzy' ? '#475569' : '#6366f1' }}></i>
+                                {item.role === 'develzy' ? 'Core Protocol' : 'Configure'}
                             </button>
-                            <button className="develzy-btn-action develzy-btn-action-danger" onClick={() => handleDeleteRole(item)}>
+                            <button
+                                className="develzy-btn-action develzy-btn-action-danger"
+                                onClick={() => handleDeleteRole(item)}
+                                disabled={item.role === 'develzy'}
+                                style={{ opacity: item.role === 'develzy' ? 0.3 : 1, cursor: item.role === 'develzy' ? 'not-allowed' : 'pointer' }}
+                            >
                                 <i className="fas fa-trash-alt"></i> Delete
                             </button>
                         </div>
