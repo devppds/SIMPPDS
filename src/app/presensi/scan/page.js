@@ -70,15 +70,25 @@ export default function QRScannerPage() {
             }
 
             if (isStatic) {
-                // Check if user belongs to allowed divisions for Static QR
-                const allowedStaticDivisions = ["Kesehatan", "Jam'iyyah", "Lab & Media", "Humasy", "PLP", "Pembangunan"];
+                // Fetch latest presensi configuration
+                const configRes = await apiCall('getData', 'GET', { type: 'presensi_config' });
+                const config = (configRes || []).find(c => c.key === 'allowed_static_jabatan');
 
-                // Fetch latest pengurus data to verify division
-                const res = await apiCall('getData', 'GET', { type: 'pengurus' });
-                const currentPengurus = (res || []).find(p => Number(p.id) === Number(user?.id));
+                let allowedStaticJabatans = ["Kesehatan", "Jam'iyyah", "Dok-Media Pondok", "Humasy & Logistik", "PLP", "Pembangunan"]; // Fallback
+                if (config && config.value) {
+                    try {
+                        allowedStaticJabatans = JSON.parse(config.value);
+                    } catch (e) {
+                        console.error("Failed to parse allowed_static_jabatan", e);
+                    }
+                }
 
-                if (!currentPengurus || !allowedStaticDivisions.includes(currentPengurus.divisi)) {
-                    throw new Error("Unit Anda tidak diizinkan menggunakan QR Statis. Gunakan QR Dinamis di kantor.");
+                // Fetch latest pengurus data to verify jabatan
+                const pengurusRes = await apiCall('getData', 'GET', { type: 'pengurus' });
+                const currentPengurus = (pengurusRes || []).find(p => Number(p.id) === Number(user?.id));
+
+                if (!currentPengurus || !allowedStaticJabatans.includes(currentPengurus.jabatan)) {
+                    throw new Error(`Jabatan Anda (${currentPengurus?.jabatan || 'Tidak Diketahui'}) tidak diizinkan menggunakan QR Statis. Silakan gunakan QR Dinamis di kantor.`);
                 }
             }
 
