@@ -47,7 +47,13 @@ export default function UsersTab() {
         loadInitialData();
     }, []);
 
-    const filteredUsers = usersList.filter(u =>
+    const sortedUsers = [...usersList].sort((a, b) => {
+        if (a.role === 'develzy' && b.role !== 'develzy') return -1;
+        if (a.role !== 'develzy' && b.role === 'develzy') return 1;
+        return 0;
+    });
+
+    const filteredUsers = sortedUsers.filter(u =>
         u.fullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.role.toLowerCase().includes(searchTerm.toLowerCase())
@@ -176,10 +182,21 @@ export default function UsersTab() {
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
                     {filteredUsers.map((item, idx) => (
-                        <div key={idx} className="develzy-card" style={{
-                            border: item.role === 'develzy' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
-                            background: item.role === 'develzy' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(15, 23, 42, 0.4)'
+                        <div key={idx} className={`develzy-card ${item.role === 'develzy' ? 'pulse-online' : ''}`} style={{
+                            border: item.role === 'develzy' ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
+                            background: item.role === 'develzy'
+                                ? 'linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(2, 6, 23, 0.6))'
+                                : 'rgba(15, 23, 42, 0.4)',
+                            boxShadow: item.role === 'develzy' ? '0 0 25px rgba(16, 185, 129, 0.15)' : 'none',
+                            position: 'relative'
                         }}>
+                            {item.role === 'develzy' && (
+                                <div style={{
+                                    position: 'absolute', top: '12px', left: '12px',
+                                    width: '8px', height: '8px', borderRadius: '50%',
+                                    background: '#10b981', boxShadow: '0 0 10px #10b981'
+                                }}></div>
+                            )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                                 <div style={{ position: 'relative' }}>
                                     <div className="develzy-role-icon" style={{
