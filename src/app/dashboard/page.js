@@ -3,11 +3,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { formatCurrency, formatDate, apiCall } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { getFirstAllowedPath } from '@/lib/navConfig';
 import Link from 'next/link';
 import SortableTable from '@/components/SortableTable';
 import StatsPanel from '@/components/StatsPanel';
 
 export default function DashboardPage() {
+    const router = useRouter();
     const { user, isDevelzy } = useAuth();
     const [stats, setStats] = useState({
         santriTotal: 0, ustadzTotal: 0, pengurusTotal: 0, keuanganTotal: 0,
@@ -34,6 +37,21 @@ export default function DashboardPage() {
         setMounted(true);
         isMounted.current = true;
         const fetchDashboardData = async () => {
+            // Safety Check: If not authorized for dashboard, redirect elsewhere
+            const dashboardItem = (require('@/lib/navConfig').NAV_ITEMS).find(i => i.label === 'Dashboard');
+            const canSeeDashboard = isDevelzy || (user && (
+                (dashboardItem.roles && dashboardItem.roles.includes(user.role)) ||
+                (user.allowedMenus && user.allowedMenus.some(m => (m.id || m.name || m) === 'Dashboard' || (m.id || m) === '/dashboard'))
+            ));
+
+            if (user && !canSeeDashboard) {
+                const target = getFirstAllowedPath(user);
+                if (target !== '/dashboard') {
+                    router.push(target);
+                    return;
+                }
+            }
+
             try {
                 const [quickStats, activities] = await Promise.all([
                     apiCall('getQuickStats'),

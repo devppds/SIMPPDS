@@ -199,10 +199,20 @@ export const NAV_ITEMS = [
 
 export const getFirstAllowedPath = (user) => {
     if (!user) return '/';
+
+    // Check if user has explicit access to Dashboard
+    const dashboardItem = NAV_ITEMS.find(i => i.label === 'Dashboard');
+    const canSeeDashboard = dashboardItem && (
+        (dashboardItem.roles && dashboardItem.roles.includes(user.role)) ||
+        (user.allowedMenus && user.allowedMenus.some(m => (m.id || m.name || m) === 'Dashboard' || (m.id || m) === '/dashboard'))
+    );
+
     if (user.role === 'admin' || user.role === 'develzy') return '/dashboard';
 
     const count = countAllowedMenus(user);
-    if (count > 1) return '/dashboard';
+
+    // If they have multiple menus AND can see dashboard, go to dashboard
+    if (count > 1 && canSeeDashboard) return '/dashboard';
 
     // Helper to check if a menu item is allowed
     const isAllowed = (item, parentLabels = []) => {
@@ -218,7 +228,7 @@ export const getFirstAllowedPath = (user) => {
                 return mid === uniqueId || mid === item.label;
             });
 
-            if (item.label === 'Dashboard') return true;
+            if (item.label === 'Dashboard') return canSeeDashboard;
             if (hasAccess) return true;
             if (item.submenu) return item.submenu.some(sub => isAllowed(sub, currentLabels));
             return false;
@@ -229,9 +239,9 @@ export const getFirstAllowedPath = (user) => {
         return item.roles.includes(user.role);
     };
 
-    // Find first leaf path (excluding Dashboard)
+    // Find first leaf path (excluding Dashboard if not allowed)
     for (const item of NAV_ITEMS) {
-        if (item.label === 'Dashboard') continue;
+        if (item.label === 'Dashboard' && !canSeeDashboard) continue;
         if (isAllowed(item)) {
             if (item.path) return item.path;
             if (item.submenu) {
@@ -249,7 +259,7 @@ export const getFirstAllowedPath = (user) => {
         }
     }
 
-    return '/dashboard'; // Fallback
+    return canSeeDashboard ? '/dashboard' : '/'; // Fallback
 };
 
 export const countAllowedMenus = (user) => {
@@ -268,7 +278,10 @@ export const countAllowedMenus = (user) => {
                 return mid === uniqueId || mid === item.label;
             });
 
-            if (item.label === 'Dashboard') return true;
+            if (item.label === 'Dashboard') {
+                const dashboardItem = NAV_ITEMS.find(i => i.label === 'Dashboard');
+                return dashboardItem && dashboardItem.roles && dashboardItem.roles.includes(user.role);
+            }
             if (hasAccess) return true;
             if (item.submenu) return item.submenu.some(sub => isAllowed(sub, currentLabels));
             return false;
