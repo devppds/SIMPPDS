@@ -99,6 +99,7 @@ async function dispatcher(request) {
         }
 
         // --- Auth & OTP ---
+        if (action === 'login') return await AuthHandler.handleLogin(request, db);
         if (action === 'sendOtp') return await AuthHandler.handleSendOtp(request, db);
         if (action === 'verifyOtp') return await AuthHandler.handleVerifyOtp(request, db);
         if (action === 'googleLogin') return await AuthHandler.handleGoogleLogin(request, db);

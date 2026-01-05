@@ -184,3 +184,35 @@ export async function handleGoogleLogin(request, db) {
         return Response.json({ status: "error", message: err.message }, { status: 500 });
     }
 }
+
+export async function handleLogin(request, db) {
+    const { pin } = await request.json();
+    if (!pin) return Response.json({ error: "PIN wajib diisi" }, { status: 400 });
+
+    // 1. Find user with this PIN
+    const user = await db.prepare("SELECT * FROM users WHERE password_plain = ?").bind(pin).first();
+
+    if (!user) {
+        return Response.json({ error: "PIN Akses tidak dikenali" }, { status: 401 });
+    }
+
+    // 2. Fetch allowed menus for this role
+    const roleConfig = await db.prepare("SELECT menus FROM roles WHERE role = ?").bind(user.role).first();
+    let allowedMenus = [];
+    try {
+        if (roleConfig?.menus) allowedMenus = JSON.parse(roleConfig.menus);
+    } catch (e) { }
+
+    return Response.json({
+        success: true,
+        user: {
+            id: user.id,
+            username: user.username,
+            fullname: user.fullname,
+            role: user.role,
+            pengurus_id: user.pengurus_id,
+            avatar: user.avatar || '',
+            allowedMenus
+        }
+    });
+}

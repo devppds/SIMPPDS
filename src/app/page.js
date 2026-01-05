@@ -38,22 +38,12 @@ export default function LoginPage() {
 
     const fetchData = async () => {
       try {
-        const [usersData, rolesData, jabRes] = await Promise.all([
-          apiCall('getData', 'GET', { type: 'users' }),
+        const [rolesData, jabRes] = await Promise.all([
           apiCall('getData', 'GET', { type: 'roles' }),
           apiCall('getData', 'GET', { type: 'master_jabatan' })
         ]);
 
         if (hasMounted.current) {
-          const enrichedUsers = (usersData || []).map(u => {
-            const userRoleConfig = (rolesData || []).find(r => r.role === u.role);
-            let allowedMenus = [];
-            try {
-              if (userRoleConfig?.menus) allowedMenus = JSON.parse(userRoleConfig.menus);
-            } catch (e) { }
-            return { ...u, allowedMenus };
-          });
-          setCachedUsers(enrichedUsers);
           setJabatansList(jabRes || []);
         }
       } catch (err) {
@@ -73,27 +63,26 @@ export default function LoginPage() {
   }, [otpTimer]);
 
   const checkPinAndLogin = async (currentPin) => {
-    const matchedUser = cachedUsers.find(u => u.password_plain === currentPin);
-    if (matchedUser) {
-      setIsVerifying(true);
-      setLoading(true);
-      setTimeout(() => {
-        login({
-          id: matchedUser.id,
-          username: matchedUser.username,
-          fullname: matchedUser.fullname,
-          role: matchedUser.role,
-          pengurus_id: matchedUser.pengurus_id,
-          avatar: matchedUser.avatar || '',
-          allowedMenus: matchedUser.allowedMenus || []
-        });
-        router.push(getFirstAllowedPath({ role: matchedUser.role, allowedMenus: matchedUser.allowedMenus }));
-      }, 800);
-      return true;
-    }
-    if (currentPin.length === 4) {
-      setError('PIN Akses tidak dikenali');
+    setIsVerifying(true);
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await apiCall('login', 'POST', { pin: currentPin });
+      if (res.success && res.user) {
+        login(res.user);
+        router.push(getFirstAllowedPath(res.user));
+        return true;
+      } else {
+        setError(res.error || 'PIN Akses tidak dikenali');
+        setTimeout(() => { if (hasMounted.current) { setPin(''); setError(''); } }, 1500);
+      }
+    } catch (err) {
+      setError(err.message || 'Gagal memvalidasi identitas');
       setTimeout(() => { if (hasMounted.current) { setPin(''); setError(''); } }, 1500);
+    } finally {
+      setIsVerifying(false);
+      setLoading(false);
     }
     return false;
   };
