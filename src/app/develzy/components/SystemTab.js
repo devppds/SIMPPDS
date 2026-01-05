@@ -150,10 +150,10 @@ export default function SystemTab({ dbHealth, configs, onRefresh }) {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
 
-                {/* Database Vitality */}
-                <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.5rem', position: 'relative' }}>
+                {/* Database Vitality - Taking 2 columns for better space usage */}
+                <div style={{ gridColumn: 'span 2', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.5rem', position: 'relative' }}>
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                             <div style={{ width: '36px', height: '36px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -161,79 +161,65 @@ export default function SystemTab({ dbHealth, configs, onRefresh }) {
                             </div>
                             <h4 className="font-bold text-gray-100" style={{ fontSize: '1rem', letterSpacing: '0.5px' }}>Database Vitality</h4>
                         </div>
-                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '6px' }}>Normal</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '6px' }}>Normal Mode</span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
                         {Object.entries(dbHealth).map(([table, count]) => (
                             <div key={table} style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>{table.replace('_', ' ')}</div>
-                                <div style={{ fontSize: '1.2rem', color: '#f8fafc', fontWeight: 900, fontFamily: 'monospace' }}>{count}</div>
+                                <div style={{ fontSize: '0.6rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>{table.replace('_', ' ')}</div>
+                                <div style={{ fontSize: '1.1rem', color: '#f8fafc', fontWeight: 900, fontFamily: 'monospace' }}>{count}</div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Integration Health */}
-                <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.5rem', position: 'relative' }}>
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div style={{ width: '36px', height: '36px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <i className="fas fa-link"></i>
-                            </div>
-                            <h4 className="font-bold text-gray-100" style={{ fontSize: '1rem', letterSpacing: '0.5px' }}>External Nodes</h4>
+                {/* Right Column: Combined small metrics to save space */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {/* Integration Health (Compact) */}
+                    <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.2rem', position: 'relative' }}>
+                        <div className="flex items-center gap-3 mb-4">
+                            <i className="fas fa-link text-green-500 text-sm"></i>
+                            <h4 className="font-bold text-gray-100 text-sm">External Nodes</h4>
                         </div>
-                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Live Check</span>
-                    </div>
-
-                    <div className="space-y-3">
-                        {Object.entries(serviceStatus).map(([name, info]) => (
-                            <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="space-y-2">
+                            {Object.entries(serviceStatus).map(([name, info]) => (
+                                <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#cbd5e1', textTransform: 'capitalize' }}>{name}</span>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: info.color, boxShadow: `0 0 8px ${info.color}` }}></div>
-                                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#cbd5e1', textTransform: 'capitalize' }}>{name}</span>
                                 </div>
-                                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: info.color, textTransform: 'uppercase' }}>{info.status}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* System Morale */}
-                <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.5rem', position: 'relative' }}>
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div style={{ width: '36px', height: '36px', background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <i className="fas fa-brain"></i>
-                            </div>
-                            <h4 className="font-bold text-gray-100" style={{ fontSize: '1rem', letterSpacing: '0.5px' }}>System Morale</h4>
+                            ))}
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '1.5rem' }}>
+                    {/* System Morale (Compact) */}
+                    <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.2rem', position: 'relative' }}>
+                        <div className="flex items-center gap-3 mb-4">
+                            <i className="fas fa-brain text-purple-500 text-sm"></i>
+                            <h4 className="font-bold text-gray-100 text-sm">System Morale</h4>
+                        </div>
                         <div className="flex justify-between mb-2">
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8' }}>Fatigue Status: <span style={{ color: fatigueColor }}>{morale.status}</span></span>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 900, color: '#f8fafc' }}>{morale.fatigue}%</span>
+                            <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Fatigue: <span style={{ color: fatigueColor }}>{morale.status}</span></span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 900, color: '#f8fafc' }}>{morale.fatigue}%</span>
                         </div>
-                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden', marginBottom: '1rem' }}>
                             <div style={{ width: `${morale.fatigue}%`, height: '100%', background: fatigueColor, transition: 'all 1s ease' }}></div>
                         </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                        <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Latency</div>
-                            <div style={{ fontSize: '1rem', fontWeight: 900, color: '#10b981' }}>{morale.metrics?.db_latency_ms || 0}ms</div>
-                        </div>
-                        <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Errors (1h)</div>
-                            <div style={{ fontSize: '1rem', fontWeight: 900, color: morale.metrics?.recent_errors > 0 ? '#ef4444' : '#10b981' }}>{morale.metrics?.recent_errors || 0}</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <div style={{ padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '0.55rem', color: '#64748b', fontWeight: 800 }}>LATENCY</div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#10b981' }}>{morale.metrics?.db_latency_ms || 0}ms</div>
+                            </div>
+                            <div style={{ padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '0.55rem', color: '#64748b', fontWeight: 800 }}>ERRORS</div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#ef4444' }}>{morale.metrics?.recent_errors || 0}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Emergency Control */}
-                <div style={{ gridColumn: 'span 2', background: 'rgba(239, 68, 68, 0.03)', borderRadius: '24px', border: '1px solid rgba(239, 68, 68, 0.15)', padding: '1.5rem', position: 'relative' }}>
+                {/* Emergency Control - Full Width */}
+                <div style={{ gridColumn: 'span 3', background: 'rgba(239, 68, 68, 0.03)', borderRadius: '24px', border: '1px solid rgba(239, 68, 68, 0.15)', padding: '1.5rem', position: 'relative' }}>
                     <div className="flex items-center gap-3 mb-6">
                         <div style={{ width: '36px', height: '36px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <i className="fas fa-radiation"></i>
@@ -241,7 +227,7 @@ export default function SystemTab({ dbHealth, configs, onRefresh }) {
                         <h4 className="font-bold text-red-500" style={{ fontSize: '1rem', letterSpacing: '0.5px' }}>Critical Protocol Engine</h4>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.2rem', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
                             <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '12px' }}>System Lockdown</div>
                             <button
@@ -255,7 +241,7 @@ export default function SystemTab({ dbHealth, configs, onRefresh }) {
                                 }}
                             >
                                 <i className={`fas ${isLockdown ? 'fa-lock' : 'fa-lock-open'} mr-2`}></i>
-                                {isLockdown ? 'DEACTIVATE LOCKDOWN' : 'ACTIVATE LOCKDOWN'}
+                                {isLockdown ? 'DISABLE LOCKDOWN' : 'ENABLE LOCKDOWN'}
                             </button>
                         </div>
 
@@ -272,7 +258,7 @@ export default function SystemTab({ dbHealth, configs, onRefresh }) {
                                 }}
                             >
                                 <i className={`fas ${isApiKilled ? 'fa-power-off' : 'fa-ban'} mr-2`}></i>
-                                {isApiKilled ? 'RESTORE API ACCESS' : 'KILL PUBLIC API'}
+                                {isApiKilled ? 'RESTORE API' : 'KILL PUBLIC API'}
                             </button>
                         </div>
 
@@ -289,13 +275,14 @@ export default function SystemTab({ dbHealth, configs, onRefresh }) {
                                 }}
                             >
                                 <i className="fas fa-user-slash mr-2"></i>
-                                KILL ALL ACTIVE SESSIONS
+                                PURGE ALL SESSIONS
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div style={{ gridColumn: 'span 2' }}>
+                {/* Live Console - Full Width */}
+                <div style={{ gridColumn: 'span 3' }}>
                     <LiveConsole />
                 </div>
             </div>
