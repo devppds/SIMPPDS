@@ -6,7 +6,7 @@ export const HEADERS_CONFIG = {
     'users': ["fullname", "username", "email", "password", "password_plain", "role", "avatar"],
     'kamar': ["nama_kamar", "asrama", "kapasitas"],
     'kesehatan': ["nama_santri", "mulai_sakit", "gejala", "obat_tindakan", "status_periksa", "keterangan", "biaya_obat"],
-    'izin': ["nama_santri", "alasan", "tanggal_pulang", "tanggal_kembali", "jam_mulai", "jam_selesai", "tipe_izin", "petugas", "keterangan"],
+    'izin': ["nama_santri", "kelas", "kamar", "alasan", "tanggal_mulai", "tanggal_selesai", "tipe_izin", "keperluan", "penjemput", "status", "petugas", "keterangan"],
     'barang_sitaan': ["tanggal", "nama_santri", "jenis_barang", "nama_barang", "petugas", "status_barang", "keterangan"],
     'keamanan_reg': ["nama_santri", "jenis_barang", "detail_barang", "jenis_kendaraan", "jenis_elektronik", "plat_nomor", "warna", "merk", "aksesoris_1", "aksesoris_2", "aksesoris_3", "keadaan", "kamar_penempatan", "tanggal_registrasi", "petugas_penerima", "keterangan", "status_barang_reg"],
     'layanan_master': ["unit", "nama_layanan", "harga", "status"],

@@ -29,7 +29,7 @@ export default function IzinPage() {
         handleSave, handleDelete, openModal: baseOpenModal, openView
     } = useDataManagement('izin', {
         tanggal_mulai: new Date().toISOString().split('T')[0],
-        tanggal_selesai: '', nama_santri: '', kelas: '', alasan: '',
+        tanggal_selesai: '', nama_santri: '', kelas: '', kamar: '', alasan: '',
         keperluan: 'Pulang Rumah', status: 'Menunggu', penjemput: '', petugas: ''
     });
 
@@ -67,13 +67,17 @@ export default function IzinPage() {
 
     const displayData = data.filter(d =>
         (d.nama_santri || '').toLowerCase().includes(search.toLowerCase()) ||
-        (d.alasan || '').toLowerCase().includes(search.toLowerCase())
+        (d.alasan || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.kamar || '').toLowerCase().includes(search.toLowerCase()) ||
+        (d.kelas || '').toLowerCase().includes(search.toLowerCase())
     );
 
     const columns = [
         { key: 'nama_santri', label: 'Nama Santri', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama_santri}</span> },
-        { key: 'kelas', label: 'Kelas', className: 'hide-mobile', render: (row) => <span className="th-badge">{row.kelas || '-'}</span> },
-        { key: 'alasan', label: 'Alasan', className: 'hide-mobile' },
+        { key: 'kamar', label: 'Kamar', render: (row) => <span className="th-badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{row.kamar || '-'}</span> },
+        { key: 'alasan', label: 'Alasan' },
+        { key: 'tanggal_mulai', label: 'Mulai Izin', render: (row) => formatDate(row.tanggal_mulai) },
+        { key: 'tanggal_selesai', label: 'Izin Sampai', render: (row) => <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{formatDate(row.tanggal_selesai)}</span> },
         {
             key: 'status', label: 'Status', render: (row) => (
                 <span className="th-badge" style={{ background: row.status === 'Aktif' ? '#dcfce7' : row.status === 'Menunggu' ? '#fffbeb' : '#f1f5f9', color: row.status === 'Aktif' ? '#166534' : row.status === 'Menunggu' ? '#9a3412' : '#475569' }}>{row.status}</span>
@@ -111,9 +115,20 @@ export default function IzinPage() {
             />
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Update Data Izin" : "Buat Izin Baru"} width="750px" footer={<button className="btn btn-primary" onClick={handleSave} disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan Izin'}</button>}>
-                <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 800 }}>Nama Santri</label>
-                    <Autocomplete options={santriOptions} value={formData.nama_santri} onChange={v => setFormData({ ...formData, nama_santri: v })} onSelect={s => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas })} placeholder="Cari santri..." labelKey="nama_siswa" subLabelKey="kelas" />
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800 }}>Nama Santri</label>
+                        <Autocomplete
+                            options={santriOptions}
+                            value={formData.nama_santri}
+                            onChange={v => setFormData({ ...formData, nama_santri: v })}
+                            onSelect={s => setFormData({ ...formData, nama_santri: s.nama_siswa, kelas: s.kelas, kamar: s.kamar })}
+                            placeholder="Cari santri..."
+                            labelKey="nama_siswa"
+                            subLabelKey="kelas"
+                        />
+                    </div>
+                    <TextInput label="Kamar" value={formData.kamar} onChange={e => setFormData({ ...formData, kamar: e.target.value })} icon="fas fa-bed" placeholder="Otomatis dari data santri..." />
                 </div>
                 <div className="form-grid">
                     <TextInput label="Tanggal Mulai" type="date" value={formData.tanggal_mulai} onChange={e => setFormData({ ...formData, tanggal_mulai: e.target.value })} />
@@ -159,11 +174,13 @@ export default function IzinPage() {
                         </div>
 
                         <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '25px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div><small>Kamar / Asrama</small><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{viewData.kamar || '-'}</div></div>
+                            <div><small>Kelas Santri</small><div style={{ fontWeight: 700 }}>{viewData.kelas || '-'}</div></div>
                             <div><small>Tanggal Berangkat</small><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{formatDate(viewData.tanggal_mulai)}</div></div>
                             <div><small>Estimasi Kembali</small><div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--danger)' }}>{formatDate(viewData.tanggal_selesai)}</div></div>
                             <div><small>Keperluan</small><div style={{ fontWeight: 700 }}>{viewData.keperluan}</div></div>
                             <div><small>Penjemput</small><div style={{ fontWeight: 700 }}>{viewData.penjemput || '-'}</div></div>
-                            <div><small>Petugas</small><div style={{ fontWeight: 700 }}>{viewData.petugas || '-'}</div></div>
+                            <div style={{ gridColumn: 'span 2' }}><small>Petugas Record</small><div style={{ fontWeight: 700 }}>{viewData.petugas || '-'}</div></div>
                         </div>
 
                         <div style={{ marginTop: '1.5rem' }}>
