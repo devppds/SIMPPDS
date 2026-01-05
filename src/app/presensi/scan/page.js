@@ -69,6 +69,19 @@ export default function QRScannerPage() {
                 }
             }
 
+            if (isStatic) {
+                // Check if user belongs to allowed divisions for Static QR
+                const allowedStaticDivisions = ["Kesehatan", "Jam'iyyah", "Lab & Media", "Humasy", "PLP", "Pembangunan"];
+
+                // Fetch latest pengurus data to verify division
+                const res = await apiCall('getData', 'GET', { type: 'pengurus' });
+                const currentPengurus = (res || []).find(p => Number(p.id) === Number(user?.id));
+
+                if (!currentPengurus || !allowedStaticDivisions.includes(currentPengurus.divisi)) {
+                    throw new Error("Unit Anda tidak diizinkan menggunakan QR Statis. Gunakan QR Dinamis di kantor.");
+                }
+            }
+
             setIsScanning(false);
             if (scannerRef.current) await scannerRef.current.stop();
 
