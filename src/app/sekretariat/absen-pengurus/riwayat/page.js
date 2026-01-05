@@ -19,6 +19,8 @@ export default function RiwayatAbsensiPengurusPage() {
     const [targetData, setTargetData] = useState([]);
     const [search, setSearch] = useState('');
     const [viewData, setViewData] = useState(null);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('Semua');
     const [mounted, setMounted] = useState(false);
     const [expandedSections, setExpandedSections] = useState(['DEWAN HARIAN', 'PLENO']);
 
