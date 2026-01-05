@@ -68,7 +68,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await apiCall('login', 'POST', { pin: currentPin });
+      const res = await apiCall('login', 'POST', { data: { pin: currentPin } });
       if (res.success && res.user) {
         login(res.user);
         router.push(getFirstAllowedPath(res.user));
