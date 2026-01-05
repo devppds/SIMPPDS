@@ -56,7 +56,23 @@ export async function handleSendOtp(request, db) {
             },
             body: new URLSearchParams({
                 target: target,
-                message: `*[SIM-PPDS]* Kode verifikasi Anda adalah: *${otp}*. Kode ini berlaku selama 5 menit. Jangan bagikan ke siapapun.`
+                message: `*PONDOK PESANTREN DARUSSALAM LIRBOYO*
+_Sistem Informasi Manajemen (SIM-PPDS)_
+
+--------------------------------------------------
+*KODE VERIFIKASI (OTP)*
+--------------------------------------------------
+
+Halo Khodimin, 
+
+Kode verifikasi Anda adalah: 
+*${otp}*
+
+Kode ini bersifat *RAHASIA* dan berlaku selama *5 menit*. 
+Mohon jangan bagikan kode ini kepada siapapun demi keamanan akun Anda.
+
+Terima Kasih,
+*Admin SIM-PPDS*`
             })
         });
 
