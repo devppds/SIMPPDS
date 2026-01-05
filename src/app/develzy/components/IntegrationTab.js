@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import Modal from '@/components/Modal';
 import { apiCall } from '@/lib/utils';
 import { useToast } from '@/lib/ToastContext';
-import FileUploader from '@/components/FileUploader'; // Actually FileUploader is used in Branding, not Integration. Wait.
-// Integration tab modal doesn't use FileUploader. Branding tab does.
 
 export default function IntegrationTab() {
     const { showToast } = useToast();

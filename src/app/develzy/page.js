@@ -104,19 +104,15 @@ export default function DevelzyControlPage() {
 
     const loadData = async () => {
         try {
-            // Configs (General/Branding)
-            if (activeTab === 'general' || activeTab === 'branding') {
-                const res = await apiCall('getConfigs', 'GET');
-                if (res && Array.isArray(res) && isMounted.current) {
-                    // Start with current state to preserve any other keys, but prioritize DB values
-                    const dbConfigs = {};
-                    res.forEach(item => {
-                        dbConfigs[item.key] = item.value;
-                        if (item.key === 'maintenance_mode') setMaintenanceMode(item.value === 'true');
-                    });
-
-                    setConfigs(prev => ({ ...prev, ...dbConfigs }));
-                }
+            // Configs (Global: General, Branding, and Killswitches)
+            const configRes = await apiCall('getConfigs', 'GET');
+            if (configRes && Array.isArray(configRes) && isMounted.current) {
+                const dbConfigs = {};
+                configRes.forEach(item => {
+                    dbConfigs[item.key] = item.value;
+                    if (item.key === 'maintenance_mode') setMaintenanceMode(item.value === 'true');
+                });
+                setConfigs(prev => ({ ...prev, ...dbConfigs }));
             }
 
             // Audit Logs
