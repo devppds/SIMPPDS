@@ -77,24 +77,36 @@ export default function LaporanPimpinan() {
 
         const fetchStats = async () => {
             try {
-                const [santri, ustadz, pelanggaran, kesehatan, arusKas, kamarData, pengurusAbsen] = await Promise.all([
+                // Using allSettled to prevent one failure from breaking everything
+                const results = await Promise.allSettled([
                     apiCall('getData', 'GET', { type: 'santri' }),
-                    apiCall('getData', 'GET', { type: 'ustadz' }),
+                    apiCall('getData', 'GET', { type: 'pengurus' }),
                     apiCall('getData', 'GET', { type: 'keamanan' }),
                     apiCall('getData', 'GET', { type: 'kesehatan' }),
-                    apiCall('getData', 'GET', { type: 'arus_kas' }),
+                    apiCall('getData', 'GET', { type: 'keuangan_kas' }),
                     apiCall('getData', 'GET', { type: 'kamar' }),
                     apiCall('getData', 'GET', { type: 'pengurus_absen' })
                 ]);
 
                 if (!isMountedRef.current) return;
 
+                const santri = results[0].status === 'fulfilled' ? results[0].value : [];
+                const pengurus = results[1].status === 'fulfilled' ? results[1].value : [];
+                const pelanggaran = results[2].status === 'fulfilled' ? results[2].value : [];
+                const kesehatan = results[3].status === 'fulfilled' ? results[3].value : [];
+                const arusKas = results[4].status === 'fulfilled' ? results[4].value : [];
+                const kamarData = results[5].status === 'fulfilled' ? results[5].value : [];
+                const pengurusAbsen = results[6].status === 'fulfilled' ? results[6].value : [];
+
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
 
-                // Get Current Hijri Month for Pengurus Absen (Simplified logic)
-                const hMonth = 'Rajab'; // This should ideally follow the current filter, defaulting for dashboard
+                // Dynamic Hijri logic (Simplified for display)
+                const HIJRI_MONTHS = ['Muharram', 'Shafar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', 'Sya\'ban', 'Ramadhan', 'Syawal', 'Dzulqa\'dah', 'Dzulhijjah'];
+
+                // Approximate Hijri for now (Rajab 1447 starts late Dec 2025/Jan 2026)
+                const hMonth = 'Rajab';
                 const hYear = '1447';
 
                 const monthlyAbsen = (pengurusAbsen || []).filter(a => a.bulan === hMonth && a.tahun === hYear);
@@ -109,26 +121,25 @@ export default function LaporanPimpinan() {
                     .reduce((sum, item) => sum + (Number(item.nominal) || 0), 0);
 
                 const totalCap = (kamarData || []).reduce((sum, k) => sum + (Number(k.kapasitas) || 0), 0);
-                const sTotal = (santri || []).filter(s => s.status_santri === 'Aktif').length;
+                const activeSantri = (santri || []).filter(s => !s.status_santri || s.status_santri === 'Aktif');
+                const sTotal = activeSantri.length;
 
                 if (totalCap > 0) setOccupancy(Math.round((sTotal / totalCap) * 100));
 
                 // Unit Stats
                 const unitCount = { 'MHM': 0, 'MIU': 0, 'MADIN': 0 };
-                (santri || []).forEach(s => {
-                    if (s.status_santri === 'Aktif') {
-                        const m = (s.madrasah || '').toUpperCase();
-                        if (m.includes('MHM')) unitCount['MHM']++;
-                        else if (m.includes('MIU')) unitCount['MIU']++;
-                        else unitCount['MADIN']++;
-                    }
+                activeSantri.forEach(s => {
+                    const m = (s.madrasah || '').toUpperCase();
+                    if (m.includes('MHM')) unitCount['MHM']++;
+                    else if (m.includes('MIU')) unitCount['MIU']++;
+                    else unitCount['MADIN']++;
                 });
 
                 const finalStats = {
                     santriTotal: sTotal,
-                    ustadzTotal: ustadz?.length || 0,
-                    pelanggaranTotal: pelanggaran?.length || 0,
-                    kesehatanTotal: kesehatan?.filter(k => k.status_periksa !== 'Sembuh')?.length || 0,
+                    ustadzTotal: (pengurus || []).length,
+                    pelanggaranTotal: (pelanggaran || []).length,
+                    kesehatanTotal: (kesehatan || []).filter(k => k.status_periksa !== 'Sembuh')?.length || 0,
                     pemasukanBulanIni: pemasukan,
                     pengeluaranBulanIni: pengeluaran,
                     pengurusHadir: totalWorkingSessions,
@@ -138,7 +149,7 @@ export default function LaporanPimpinan() {
                 setStats(finalStats);
                 setAiSuggestion(generateAiSuggestion(finalStats, totalCap));
             } catch (error) {
-                console.error("Failed to fetch report data:", error);
+                console.error("Critical error in report page:", error);
             } finally {
                 if (isMountedRef.current) setLoading(false);
             }
