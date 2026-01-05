@@ -105,6 +105,43 @@ export async function handleInitSystem(request, db) {
         console.error("Seeding master_pembimbing failed", e);
     }
 
+    // 5. Seed default system_configs (API & Branding)
+    try {
+        const defaultConfigs = [
+            // Branding
+            { key: 'logo_url', value: 'https://ui-avatars.com/api/?name=LIRBOYO&background=2563eb&color=fff&size=128&bold=true' },
+            { key: 'nama_instansi', value: 'Pondok Pesantren Darussalam Lirboyo' },
+            { key: 'primary_color', value: '#2563eb' },
+            { key: 'sidebar_theme', value: '#1e1b4b' },
+
+            // WhatsApp Integration (Default: Fonnte Style)
+            { key: 'whatsapp_api_url', value: 'https://api.fonnte.com/send' },
+            { key: 'whatsapp_token', value: 'ISI_TOKEN_FONNTE_DISINI' },
+            { key: 'whatsapp_device_id', value: 'DEVICE_01' },
+
+            // Cloudinary Integration
+            { key: 'cloudinary_cloud_name', value: 'cloud_name_anda' },
+            { key: 'cloudinary_api_key', value: 'api_key_anda' },
+            { key: 'cloudinary_api_secret', value: 'api_secret_anda' },
+
+            // Email Integration (Default: Gmail SMTP)
+            { key: 'smtp_host', value: 'smtp.gmail.com' },
+            { key: 'smtp_port', value: '465' },
+            { key: 'smtp_user', value: 'email@gmail.com' },
+            { key: 'smtp_password', value: 'password_app_gmail' },
+            { key: 'smtp_from_email', value: 'no-reply@ppdsl.com' }
+        ];
+
+        const now = new Date().toISOString();
+        for (const c of defaultConfigs) {
+            // Use INSERT OR IGNORE so we don't overwrite existing user settings if they already set some
+            await db.prepare(`INSERT OR IGNORE INTO system_configs (key, value, updated_at) VALUES (?, ?, ?)`)
+                .bind(c.key, c.value, now).run();
+        }
+    } catch (e) {
+        console.error("Seeding system_configs failed", e);
+    }
+
     return Response.json({ success: true, message: "System tables initialized and all module schemas synchronized." });
 }
 

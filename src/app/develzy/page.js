@@ -53,6 +53,47 @@ export default function DevelzyControlPage() {
     const [roleFormData, setRoleFormData] = useState({ label: '', role: '', color: '#64748b', menus: [], is_public: 1 });
     const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, role: null });
 
+    // Service Configuration State
+    const [configModal, setConfigModal] = useState({ isOpen: false, service: null, data: {} });
+    const [submittingConfig, setSubmittingConfig] = useState(false);
+
+    const handleOpenConfig = async (service) => {
+        setLoading(true);
+        try {
+            const res = await apiCall('getConfigs', 'GET');
+            const data = {};
+            if (res && Array.isArray(res)) {
+                res.forEach(item => {
+                    data[item.key] = item.value;
+                });
+            }
+            setConfigModal({ isOpen: true, service, data });
+        } catch (e) {
+            showToast("Gagal memuat konfigurasi", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSaveServiceConfig = async () => {
+        setSubmittingConfig(true);
+        try {
+            const data = configModal.data;
+            for (const [key, value] of Object.entries(data)) {
+                // Only save keys relevant to the current service to avoid overwriting everything unnecessarily
+                // or just save the ones that were in the modal
+                await apiCall('updateConfig', 'POST', { data: { key, value } });
+            }
+            showToast(`Konfigurasi ${configModal.service.name} Berhasil Disimpan!`, "success");
+            setConfigModal({ isOpen: false, service: null, data: {} });
+            loadData(); // Reload stats/integration view
+        } catch (e) {
+            showToast("Gagal menyimpan konfigurasi: " + e.message, "error");
+        } finally {
+            setSubmittingConfig(false);
+        }
+    };
+
     // Generate menu options dynamically with hierarchy info
     const allPossibleMenus = React.useMemo(() => {
         let menus = [];
@@ -957,7 +998,7 @@ export default function DevelzyControlPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.75rem' }}>Configure</button>
+                                        <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.75rem' }} onClick={() => handleOpenConfig(service)}>Configure</button>
                                     </div>
                                 );
                             })}
@@ -1225,6 +1266,165 @@ export default function DevelzyControlPage() {
                     )}
                 </div>
             </div>
+
+            {/* Service Config Modal */}
+            <Modal
+                isOpen={configModal.isOpen}
+                onClose={() => setConfigModal({ isOpen: false, service: null, data: {} })}
+                title={`Konfigurasi: ${configModal.service?.name}`}
+                footer={(
+                    <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" onClick={() => setConfigModal({ isOpen: false, service: null, data: {} })}>Batal</button>
+                        <button className="btn btn-primary" onClick={handleSaveServiceConfig} disabled={submittingConfig}>
+                            {submittingConfig ? 'Menyimpan...' : 'Simpan Konfigurasi'}
+                        </button>
+                    </div>
+                )}
+            >
+                <div style={{ padding: '10px' }}>
+                    <div style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #bae6fd', display: 'flex', gap: '12px' }}>
+                        <i className="fas fa-info-circle" style={{ color: '#0ea5e9', marginTop: '3px' }}></i>
+                        <p style={{ fontSize: '0.85rem', color: '#0369a1', margin: 0 }}>
+                            Hati-hati saat mengubah pengaturan ini. Parameter yang salah dapat menyebabkan layanan terkait berhenti berfungsi.
+                        </p>
+                    </div>
+
+                    {configModal.service?.statusKey === 'whatsapp' && (
+                        <div className="grid gap-4">
+                            <div className="form-group">
+                                <label className="form-label">API Gateway URL</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="https://api.whatsapp-gateway.com/v1"
+                                    value={configModal.data.whatsapp_api_url || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_api_url: e.target.value } })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">API Token</label>
+                                <input
+                                    type="password"
+                                    className="form-control"
+                                    placeholder="Masukkan Token API"
+                                    value={configModal.data.whatsapp_token || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_token: e.target.value } })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Device ID</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Ex: 512"
+                                    value={configModal.data.whatsapp_device_id || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, whatsapp_device_id: e.target.value } })}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {configModal.service?.statusKey === 'cloudinary' && (
+                        <div className="grid gap-4">
+                            <div className="form-group">
+                                <label className="form-label">Cloud Name</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={configModal.data.cloudinary_cloud_name || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, cloudinary_cloud_name: e.target.value } })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">API Key</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={configModal.data.cloudinary_api_key || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, cloudinary_api_key: e.target.value } })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">API Secret</label>
+                                <input
+                                    type="password"
+                                    className="form-control"
+                                    value={configModal.data.cloudinary_api_secret || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, cloudinary_api_secret: e.target.value } })}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {configModal.service?.statusKey === 'email' && (
+                        <div className="grid gap-4">
+                            <div className="form-grid">
+                                <div className="form-group">
+                                    <label className="form-label">SMTP Host</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="smtp.gmail.com"
+                                        value={configModal.data.smtp_host || ''}
+                                        onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_host: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Port</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="465 (SSL) / 587 (TLS)"
+                                        value={configModal.data.smtp_port || ''}
+                                        onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_port: e.target.value } })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">SMTP Username</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={configModal.data.smtp_user || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_user: e.target.value } })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">SMTP Password</label>
+                                <input
+                                    type="password"
+                                    className="form-control"
+                                    value={configModal.data.smtp_password || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_password: e.target.value } })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Sender Email (From)</label>
+                                <input
+                                    type="email"
+                                    className="form-control"
+                                    placeholder="noreply@pondok.com"
+                                    value={configModal.data.smtp_from_email || ''}
+                                    onChange={e => setConfigModal({ ...configModal, data: { ...configModal.data, smtp_from_email: e.target.value } })}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {configModal.service?.statusKey === 'database' && (
+                        <div style={{ textAlign: 'center', padding: '2rem' }}>
+                            <i className="fas fa-database" style={{ fontSize: '3rem', color: '#e2e8f0', marginBottom: '1rem' }}></i>
+                            <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                                Konfigurasi database dikelola langsung melalui variabel lingkungan (Secrets) di Cloudflare Dashboard untuk keamanan maksimal.
+                            </p>
+                            <div style={{ marginTop: '1rem', padding: '10px', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+                                <small style={{ color: '#92400e', fontWeight: 700 }}>Catatan: Tidak dapat diubah dari panel ini.</small>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Modal>
+
             {/* Role Form Modal */}
             <Modal
                 isOpen={isRoleModalOpen}
