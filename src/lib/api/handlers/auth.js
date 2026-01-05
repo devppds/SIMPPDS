@@ -189,8 +189,8 @@ export async function handleLogin(request, db) {
     const { pin } = await request.json();
     if (!pin) return Response.json({ error: "PIN wajib diisi" }, { status: 400 });
 
-    // 1. Find user with this PIN
-    const user = await db.prepare("SELECT * FROM users WHERE password_plain = ?").bind(pin).first();
+    // 1. Find user with this PIN (Check both password types)
+    const user = await db.prepare("SELECT * FROM users WHERE password_plain = ? OR password = ?").bind(pin, pin).first();
 
     if (!user) {
         return Response.json({ error: "PIN Akses tidak dikenali" }, { status: 401 });
@@ -200,17 +200,29 @@ export async function handleLogin(request, db) {
     if (user.role === 'develzy') {
         const newRole = 'dev_elzy';
         await db.prepare("UPDATE users SET role = ? WHERE id = ?").bind(newRole, user.id).run();
-        user.role = newRole; // Update local variable for response
+        user.role = newRole; // Update local variable
+    }
+
+    // 🛡️ DUAL ACCESS PROTOCOL for Develzy
+    // - password_plain (Master Key) -> Full Access (dev_elzy)
+    // - password (Dashboard Key) -> Limited Access (admin)
+    let sessionRole = user.role;
+    if (user.role === 'dev_elzy') {
+        // If matched 'password' column but NOT 'password_plain' (and they are different)
+        if (String(user.password) === String(pin) && String(user.password_plain) !== String(pin)) {
+            sessionRole = 'admin'; // Downgrade to Admin for Dashboard access only
+        }
     }
 
     // 2. Fetch allowed menus for this role
-    const roleConfig = await db.prepare("SELECT menus FROM roles WHERE role = ?").bind(user.role).first();
+    // We use the sessionRole to determine menus, effectively hiding Develzy Control if downgraded
+    const roleConfig = await db.prepare("SELECT menus FROM roles WHERE role = ?").bind(sessionRole).first();
     let allowedMenus = [];
     try {
         if (roleConfig?.menus) allowedMenus = JSON.parse(roleConfig.menus);
     } catch (e) {
-        // Fallback for dev_elzy if role config missing
-        if (user.role === 'dev_elzy') allowedMenus = ['Semua Menu', 'DEVELZY Control'];
+        // Fallback
+        if (sessionRole === 'dev_elzy') allowedMenus = ['Semua Menu', 'DEVELZY Control'];
     }
 
     return Response.json({
@@ -219,7 +231,8 @@ export async function handleLogin(request, db) {
             id: user.id,
             username: user.username,
             fullname: user.fullname,
-            role: user.role,
+            role: sessionRole, // Send the determined session role
+            real_role: user.role, // Keep track of real role if needed
             pengurus_id: user.pengurus_id,
             avatar: user.avatar || '',
             allowedMenus
