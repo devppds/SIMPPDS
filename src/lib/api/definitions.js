@@ -48,7 +48,8 @@ export const HEADERS_CONFIG = {
     'unit_lab_media_kas': ["tanggal", "unit", "tipe", "kategori", "nominal", "keterangan", "petugas"],
     'unit_lab_media_tarif': ["unit", "nama_layanan", "harga", "keterangan"],
     'presensi_pengurus': ["pengurus_id", "nama", "tanggal", "jam", "tipe", "keterangan"],
-    'presensi_config': ["key", "value", "keterangan"]
+    'presensi_config': ["key", "value", "keterangan"],
+    'sessions': ["token", "username", "fullname", "role", "ip_address", "user_agent", "login_at", "last_active", "status"]
 };
 
 export const FILE_COLUMNS = {

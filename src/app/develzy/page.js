@@ -182,6 +182,17 @@ export default function DevelzyControlPage() {
         };
     }, [isDevelzy, authLoading, activeTab, router, logsPagination.page]);
 
+    const safeTime = (dateStr) => {
+        if (!dateStr) return '--:--';
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '--:--';
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return '--:--';
+        }
+    };
+
     const loadSystemStats = async () => {
         try {
             // Calculate uptime based on deployment time (you can store this in configs)
@@ -1183,11 +1194,11 @@ export default function DevelzyControlPage() {
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ color: '#94a3b8' }}><i className="fas fa-sign-in-alt" style={{ width: '20px' }}></i> Login</span>
-                                                <span style={{ fontWeight: 700, color: '#1e293b' }}>{new Date(session.login_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span style={{ fontWeight: 700, color: '#1e293b' }}>{safeTime(session.login_at)}</span>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ color: '#94a3b8' }}><i className="fas fa-heartbeat" style={{ width: '20px' }}></i> Aktivitas</span>
-                                                <span style={{ fontWeight: 700, color: '#3b82f6' }}>{new Date(session.last_active).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span style={{ fontWeight: 700, color: '#3b82f6' }}>{safeTime(session.last_active)}</span>
                                             </div>
                                         </div>
 
