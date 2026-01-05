@@ -58,7 +58,8 @@ export const NAV_ITEMS = [
             { label: 'Absensi Formal', path: '/keamanan/absensi-formal', icon: 'fas fa-clipboard-check' },
             { label: 'Riwayat Absensi Formal', path: '/keamanan/absensi-formal/riwayat', icon: 'fas fa-history' },
             { label: 'Atur Kelompok Formal', path: '/keamanan/pengaturan-formal', icon: 'fas fa-users-cog' },
-            { label: 'Layanan Keamanan', path: '/keamanan/layanan', icon: 'fas fa-concierge-bell' }
+            { label: 'Layanan Keamanan', path: '/keamanan/layanan', icon: 'fas fa-concierge-bell' },
+            { label: 'Log Scan Kehadiran', path: '/keamanan/riwayat-presensi', icon: 'fas fa-history' }
         ]
     },
     {
@@ -86,7 +87,8 @@ export const NAV_ITEMS = [
                 ]
             },
             { label: 'Takhōṣus & Seminar', path: '/pendidikan/takhosus', icon: 'fas fa-graduation-cap' },
-            { label: 'Layanan Pendidikan', path: '/pendidikan/layanan', icon: 'fas fa-concierge-bell' }
+            { label: 'Layanan Pendidikan', path: '/pendidikan/layanan', icon: 'fas fa-concierge-bell' },
+            { label: 'Log Scan Kehadiran', path: '/pendidikan/riwayat-presensi', icon: 'fas fa-history' }
         ]
     },
     {
@@ -98,7 +100,8 @@ export const NAV_ITEMS = [
             { label: 'Murottil Malam', path: '/wajar-murottil/murottil-malam', icon: 'fas fa-moon' },
             { label: 'Murottil Pagi', path: '/wajar-murottil/murottil-pagi', icon: 'fas fa-sun' },
             { label: 'Riwayat Absensi', path: '/wajar-murottil/riwayat-absensi', icon: 'fas fa-history' },
-            { label: 'Pengaturan Kelompok', path: '/wajar-murottil/pengaturan', icon: 'fas fa-users-cog' }
+            { label: 'Pengaturan Kelompok', path: '/wajar-murottil/pengaturan', icon: 'fas fa-users-cog' },
+            { label: 'Log Scan Kehadiran', path: '/wajar-murottil/riwayat-presensi', icon: 'fas fa-history' }
         ]
     },
     {
@@ -107,7 +110,8 @@ export const NAV_ITEMS = [
         roles: ['admin', 'kesehatan'],
         submenu: [
             { label: 'Data Kesehatan', path: '/kesehatan', icon: 'fas fa-notes-medical' },
-            { label: 'Layanan Kesehatan', path: '/kesehatan/layanan', icon: 'fas fa-concierge-bell' }
+            { label: 'Layanan Kesehatan', path: '/kesehatan/layanan', icon: 'fas fa-concierge-bell' },
+            { label: 'Log Scan Kehadiran', path: '/kesehatan/riwayat-presensi', icon: 'fas fa-history' }
         ]
     },
     {
@@ -117,7 +121,8 @@ export const NAV_ITEMS = [
         submenu: [
             { label: 'Arus Kas Pondok', path: '/bendahara/arus-kas', icon: 'fas fa-exchange-alt' },
             { label: 'Setoran Unit', path: '/bendahara/kas-unit', icon: 'fas fa-file-invoice-dollar' },
-            { label: 'Atur Layanan', path: '/bendahara/atur-layanan', icon: 'fas fa-cogs' }
+            { label: 'Atur Layanan', path: '/bendahara/atur-layanan', icon: 'fas fa-cogs' },
+            { label: 'Log Scan Kehadiran', path: '/bendahara/riwayat-presensi', icon: 'fas fa-history' }
         ]
     },
     {
@@ -135,10 +140,10 @@ export const NAV_ITEMS = [
                 icon: 'fas fa-sitemap',
                 path: '/jamiyyah/manajemen',
             },
-            { label: "Layanan Jam'iyyah", path: '/jamiyyah/layanan', icon: 'fas fa-concierge-bell' }
+            { label: "Layanan Jam'iyyah", path: '/jamiyyah/layanan', icon: 'fas fa-concierge-bell' },
+            { label: 'Log Scan Kehadiran', path: '/jamiyyah/riwayat-presensi', icon: 'fas fa-history' }
         ]
     },
-
     {
         label: 'Keuangan Santri',
         icon: 'fas fa-wallet',
@@ -159,7 +164,8 @@ export const NAV_ITEMS = [
             { label: 'Layanan Lab', path: '/lab-media/lab', icon: 'fas fa-desktop' },
             { label: 'Layanan Media', path: '/lab-media/media', icon: 'fas fa-camera' },
             { label: 'Histori & Rekap', path: '/lab-media/histori', icon: 'fas fa-history' },
-            { label: 'Atur Tarif Layanan', path: '/lab-media/tarif', icon: 'fas fa-tags' }
+            { label: 'Atur Tarif Layanan', path: '/lab-media/tarif', icon: 'fas fa-tags' },
+            { label: 'Log Scan Kehadiran', path: '/lab-media/riwayat-presensi', icon: 'fas fa-history' }
         ]
     },
 
