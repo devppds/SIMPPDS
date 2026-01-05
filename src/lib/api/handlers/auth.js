@@ -3,7 +3,7 @@
  */
 
 export async function handleSendOtp(request, db) {
-    const { target } = await request.json();
+    const { target, username, fullname } = await request.json();
     if (!target) return Response.json({ error: "Kolom target (Email/WA) wajib diisi" }, { status: 400 });
 
     // 1. Generate OTP (6 digits) and PIN (4 digits starting with 25)
@@ -16,8 +16,19 @@ export async function handleSendOtp(request, db) {
         .bind(target, target).first();
 
     if (!user) {
-        // Registration Flow: Check if username already exists
+        // Registration Flow: Check if provided details exist in 'pengurus' table
         if (!username || !fullname) return Response.json({ error: "Username dan Nama Lengkap wajib diisi" }, { status: 400 });
+
+        // Validate against pengurus table
+        const pengurus = await db.prepare("SELECT * FROM pengurus WHERE nama = ? AND (no_hp = ? OR no_hp = ?)")
+            .bind(fullname, target, target.replace(/^0/, '62')).first();
+
+        if (!pengurus) {
+            return Response.json({
+                error: "Pendaftaran Gagal",
+                message: "Nama atau No. WA Anda tidak terdaftar di Basis Data Pengurus. Silakan hubungi Sekretariat."
+            }, { status: 404 });
+        }
 
         const existingUsername = await db.prepare("SELECT id FROM users WHERE username = ?").bind(username).first();
         if (existingUsername) return Response.json({ error: "Username sudah digunakan, silakan pilih yang lain" }, { status: 400 });
