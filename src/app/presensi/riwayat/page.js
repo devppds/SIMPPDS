@@ -17,8 +17,8 @@ export default function RiwayatPresensiPage() {
 
     const stats = useMemo(() => [
         { title: 'Total Scanning', value: data.length, icon: 'fas fa-qrcode', color: 'var(--primary)' },
-        { title: 'Hadir Masuk', value: data.filter(d => d.tipe === 'Masuk').length, icon: 'fas fa-sign-in-alt', color: 'var(--success)' },
-        { title: 'Selesai Tugas', value: data.filter(d => d.tipe === 'Pulang').length, icon: 'fas fa-sign-out-alt', color: 'var(--warning)' }
+        { title: 'Presensi Hadir', value: data.filter(d => d.tipe === 'Hadir').length, icon: 'fas fa-user-check', color: 'var(--success)' },
+        { title: 'Unique Staff', value: [...new Set(data.map(d => d.pengurus_id))].length, icon: 'fas fa-users', color: 'var(--warning)' }
     ], [data]);
 
     const displayData = useMemo(() => {
@@ -35,15 +35,15 @@ export default function RiwayatPresensiPage() {
         { key: 'nama', label: 'Nama Pengurus', render: (row) => <span style={{ fontWeight: 800 }}>{row.nama}</span> },
         {
             key: 'tipe',
-            label: 'Aktivitas',
+            label: 'Status',
             render: (row) => (
                 <span className="th-badge" style={{
-                    background: row.tipe === 'Masuk' ? '#dcfce7' : '#fffbeb',
-                    color: row.tipe === 'Masuk' ? '#166534' : '#9a3412',
+                    background: '#dcfce7',
+                    color: '#166534',
                     borderRadius: '8px',
                     fontWeight: 700
                 }}>
-                    <i className={`fas ${row.tipe === 'Masuk' ? 'fa-arrow-right' : 'fa-arrow-left'}`}></i> {row.tipe.toUpperCase()}
+                    <i className="fas fa-check-circle"></i> {row.tipe.toUpperCase()}
                 </span>
             )
         },

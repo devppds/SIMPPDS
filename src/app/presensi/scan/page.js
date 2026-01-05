@@ -41,31 +41,34 @@ export default function QRScannerPage() {
         try {
             // Basic Token Validate
             const decoded = atob(decodedText);
-            if (!decoded.includes("SIMPPDS_SALT_2024")) {
-                throw new Error("QR Code tidak valid atau sudah kadaluarsa.");
+            const [datePart, salt, timeKey] = decoded.split('_');
+
+            if (salt !== "SIMPPDS_SALT_2024") {
+                throw new Error("QR Code tidak valid.");
+            }
+
+            // Time validation (max 2 minutes old to account for slight clock drift)
+            const currentTimeKey = Math.floor(Date.now() / 60000);
+            if (Math.abs(currentTimeKey - parseInt(timeKey)) > 2) {
+                throw new Error("QR Code sudah kadaluarsa (sudah berganti).");
             }
 
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
             const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
 
-            // Determine Masuk/Pulang based on time (Simplified)
-            // Or just record every scan
-            const hour = now.getHours();
-            const tipe = hour >= 13 ? "Pulang" : "Masuk";
-
             const payload = {
                 pengurus_id: user?.id || 0,
                 nama: user?.fullname || user?.username || 'Unknown Staff',
                 tanggal: dateStr,
                 jam: timeStr,
-                tipe: tipe,
+                tipe: "Hadir",
                 keterangan: 'Scan QR Code HP'
             };
 
             await apiCall('saveData', 'POST', { type: 'presensi_pengurus', data: payload });
-            setScanResult({ success: true, message: `Berhasil Absen ${tipe} pada ${timeStr}` });
-            showToast(`Absensi ${tipe} Berhasil!`, 'success');
+            setScanResult({ success: true, message: `Berhasil Absen Kehadiran pada ${timeStr}` });
+            showToast(`Absensi Berhasil!`, 'success');
         } catch (err) {
             console.error(err);
             setScanResult({ success: false, message: err.message });
