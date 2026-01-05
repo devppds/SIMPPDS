@@ -17,19 +17,25 @@ export default function QRScannerPage() {
     useEffect(() => {
         if (!isScanning) return;
 
-        const scanner = new Html5QrcodeScanner("reader", {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            rememberLastUsedCamera: true,
-            supportedScanTypes: [0] // 0 = QR CODE
+        const html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess
+        ).catch(err => {
+            console.error("Failed to start scanner", err);
+            // Fallback to any camera if environment (back) fails
+            html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)
+                .catch(fallbackErr => console.error("Failed to start scanner with fallback", fallbackErr));
         });
 
-        scanner.render(onScanSuccess, onScanError);
-        scannerRef.current = scanner;
+        scannerRef.current = html5QrCode;
 
         return () => {
-            if (scannerRef.current) {
-                scannerRef.current.clear().catch(err => console.error("Failed to clear scanner", err));
+            if (scannerRef.current && scannerRef.current.isScanning) {
+                scannerRef.current.stop().catch(err => console.error("Failed to stop scanner", err));
             }
         };
     }, [isScanning]);
@@ -37,21 +43,29 @@ export default function QRScannerPage() {
     const onScanSuccess = async (decodedText) => {
         if (!isScanning) return;
 
-        setIsScanning(false);
         try {
-            // Basic Token Validate
-            const decoded = atob(decodedText);
-            const [datePart, salt, timeKey] = decoded.split('_');
+            let decoded = "";
+            try {
+                decoded = atob(decodedText);
+            } catch (e) {
+                throw new Error("QR Code tidak dikenali.");
+            }
 
-            if (salt !== "SIMPPDS_SALT_2024") {
+            if (!decoded.includes("SIMPPDS_SALT_2024")) {
                 throw new Error("QR Code tidak valid.");
             }
 
-            // Time validation (max 2 minutes old to account for slight clock drift)
+            const parts = decoded.split('_');
+            const timeKey = parts[parts.length - 1];
+
+            // Time validation (max 5 minutes old to account for device time drift)
             const currentTimeKey = Math.floor(Date.now() / 60000);
-            if (Math.abs(currentTimeKey - parseInt(timeKey)) > 2) {
-                throw new Error("QR Code sudah kadaluarsa (sudah berganti).");
+            if (Math.abs(currentTimeKey - parseInt(timeKey)) > 5) {
+                throw new Error("QR Code kadaluarsa, silakan scan yang terbaru.");
             }
+
+            setIsScanning(false);
+            if (scannerRef.current) await scannerRef.current.stop();
 
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
@@ -71,8 +85,14 @@ export default function QRScannerPage() {
             showToast(`Absensi Berhasil!`, 'success');
         } catch (err) {
             console.error(err);
-            setScanResult({ success: false, message: err.message });
+            // Don't stop scanning on "invalid" error, just show toast
             showToast(err.message, 'error');
+            // If it's a critical error we show the failure screen
+            if (err.message.includes("kadaluarsa")) {
+                setIsScanning(false);
+                setScanResult({ success: false, message: err.message });
+                if (scannerRef.current) scannerRef.current.stop();
+            }
         }
     };
 
